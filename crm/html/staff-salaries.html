@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>עובדים ומשכורות — מערכת גנים</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Heebo',sans-serif;
+      background:#F4EFE6;
+      color:#3D3228;
+      direction:rtl;
+      min-height:100vh;
+      padding:30px 20px;
+    }
+    .container { max-width:1200px; margin:0 auto; }
+    .tabs { display:flex; gap:10px; margin-bottom:30px; border-bottom:2px solid #e8e4de; }
+    .tab { padding:12px 20px; background:none; border:none; cursor:pointer; font-family:'Heebo'; font-weight:600; color:#9B8E82; border-bottom:3px solid transparent; margin-bottom:-2px; }
+    .tab.active { color:#1F3D34; border-color:#C4846C; }
+    .tab:hover { color:#1F3D34; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
+    .header h2 { font-size:22px; color:#1F3D34; }
+    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:600; font-size:13px; }
+    .btn-add:hover { background:#154428; }
+    .form-container { background:#FFF; border-radius:16px; padding:25px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:25px; display:none; }
+    .form-container.show { display:block; }
+    .form-group { margin-bottom:15px; }
+    label { display:block; font-size:12px; color:#3D3228; font-weight:600; margin-bottom:6px; }
+    input, select { width:100%; padding:10px 12px; border:1px solid #e8e4de; border-radius:8px; font-family:'Heebo'; font-size:13px; outline:none; direction:ltr; text-align:right; }
+    input:focus, select:focus { border-color:#1F3D34; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; }
+    .btn-submit { background:#1F3D34; color:#FFF; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Heebo'; font-weight:600; }
+    .btn-submit:hover { background:#154428; }
+    .btn-cancel { background:#f0f0f0; color:#333; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Heebo'; margin-left:10px; }
+    table { width:100%; border-collapse:collapse; background:#FFF; border-radius:16px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
+    th { background:#1F3D34; color:#FFF; padding:12px; font-weight:600; font-size:12px; text-align:right; }
+    td { padding:12px; border-bottom:1px solid #f0ece6; font-size:12px; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:#FAF8F4; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:15px; font-size:11px; font-weight:600; }
+    .badge-active { background:#d4edda; color:#155724; }
+    .badge-draft { background:#e7e7e7; color:#666; }
+    .badge-approved { background:#d4edda; color:#155724; }
+    .badge-paid { background:#d4edda; color:#155724; }
+    .actions { display:flex; gap:6px; }
+    .btn-edit, .btn-delete, .btn-approve { padding:5px 10px; border:none; border-radius:6px; cursor:pointer; font-size:11px; font-family:'Heebo'; }
+    .btn-edit { background:#C4846C; color:#FFF; }
+    .btn-delete { background:#e74c3c; color:#FFF; }
+    .btn-approve { background:#27ae60; color:#FFF; }
+    .error { background:#fdf0ef; color:#c94147; padding:10px; border-radius:10px; margin-bottom:15px; display:none; font-size:12px; }
+    .error.show { display:block; }
+    .success { background:#d4edda; color:#155724; padding:10px; border-radius:10px; margin-bottom:15px; display:none; font-size:12px; }
+    .success.show { display:block; }
+    .loading { text-align:center; padding:30px; color:#9B8E82; }
+    .back-link { display:inline-block; margin-bottom:20px; color:#1F3D34; text-decoration:none; font-weight:600; font-size:13px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <a href="dashboard.html" class="back-link">← חזור לעמוד הבית</a>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('staff')">👔 עובדים</button>
+    <button class="tab" onclick="switchTab('salaries')">💰 משכורות</button>
+  </div>
+
+  <div id="error" class="error"></div>
+  <div id="success" class="success"></div>
+
+  <!-- STAFF TAB -->
+  <div id="staff" class="tab-content active">
+    <div class="header">
+      <h2>ניהול עובדים</h2>
+      <button class="btn-add" onclick="toggleStaffForm()">+ הוסף עובד</button>
+    </div>
+
+    <div id="staffForm" class="form-container">
+      <h3 style="margin-bottom:15px;">הוסף / ערוך עובד</h3>
+      <form id="staffFormElement">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="staffName">שם מלא *</label>
+            <input type="text" id="staffName" required>
+          </div>
+          <div class="form-group">
+            <label for="staffPosition">תפקיד *</label>
+            <select id="staffPosition" required>
+              <option value="teacher">מורה</option>
+              <option value="assistant">עוזרת</option>
+              <option value="manager">מנהלת</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="staffEmail">דוא״ל</label>
+            <input type="email" id="staffEmail">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="staffPhone">טלפון</label>
+          <input type="tel" id="staffPhone">
+        </div>
+        <div class="form-group">
+          <label for="staffHireDate">תאריך התחלה</label>
+          <input type="date" id="staffHireDate">
+        </div>
+        <div style="display:flex;">
+          <button type="submit" class="btn-submit">שמור עובד</button>
+          <button type="button" class="btn-cancel" onclick="toggleStaffForm()">ביטול</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="staffTable" class="loading">טוען...</div>
+  </div>
+
+  <!-- SALARIES TAB -->
+  <div id="salaries" class="tab-content">
+    <div class="header">
+      <h2>משכורות</h2>
+      <button class="btn-add" onclick="toggleSalaryForm()">+ משכורת חדשה</button>
+    </div>
+
+    <div class="form-group" style="margin-bottom:20px;">
+      <label for="monthYear">בחרו חודש:</label>
+      <input type="month" id="monthYear" style="max-width:200px;">
+    </div>
+
+    <div id="salaryForm" class="form-container">
+      <h3 style="margin-bottom:15px;">הוסף / ערוך משכורת</h3>
+      <form id="salaryFormElement">
+        <div class="form-group">
+          <label for="salaryStaff">עובד *</label>
+          <select id="salaryStaff" required>
+            <option value="">-- בחרו --</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="grossSalary">משכורת גרוסה *</label>
+            <input type="number" id="grossSalary" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="deductions">ניכויים</label>
+            <input type="number" id="deductions" step="0.01" value="0">
+          </div>
+          <div class="form-group">
+            <label for="netSalary">משכורת נטו *</label>
+            <input type="number" id="netSalary" step="0.01" required>
+          </div>
+        </div>
+        <div style="display:flex;">
+          <button type="submit" class="btn-submit">שמור משכורת</button>
+          <button type="button" class="btn-cancel" onclick="toggleSalaryForm()">ביטול</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="salaryTable" class="loading">טוען...</div>
+  </div>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/api.js"></script>
+<script>
+let staff = [];
+let salaries = [];
+let editingStaffId = null;
+let editingSalaryId = null;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+  document.getElementById(tab).classList.add('active');
+
+  if (tab === 'salaries') {
+    loadSalaries();
+  }
+}
+
+async function loadStaff() {
+  try {
+    const res = await api.getStaff();
+    if (res.success) {
+      staff = res.data;
+      renderStaffTable();
+      populateStaffSelect();
+    }
+  } catch (err) {
+    showError('שגיאה בטעינת העובדים: ' + err.message);
+  }
+}
+
+function renderStaffTable() {
+  if (!staff.length) {
+    document.getElementById('staffTable').innerHTML = '<p style="padding:20px; text-align:center; color:#9B8E82;">אין עובדים</p>';
+    return;
+  }
+
+  const rows = staff.map(s => `
+    <tr>
+      <td>${s.full_name_he}</td>
+      <td>${s.position_he}</td>
+      <td>${s.email || '-'}</td>
+      <td>${s.phone || '-'}</td>
+      <td><span class="badge badge-active">פעיל</span></td>
+      <td>
+        <div class="actions">
+          <button class="btn-edit" onclick="editStaff('${s.id}')">ערוך</button>
+          <button class="btn-delete" onclick="deleteStaff('${s.id}')">מחק</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  document.getElementById('staffTable').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>שם</th>
+        <th>תפקיד</th>
+        <th>דוא״ל</th>
+        <th>טלפון</th>
+        <th>סטטוס</th>
+        <th>פעולות</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function populateStaffSelect() {
+  const select = document.getElementById('salaryStaff');
+  select.innerHTML = '<option value="">-- בחרו עובד --</option>';
+  staff.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.full_name_he;
+    select.appendChild(opt);
+  });
+}
+
+async function loadSalaries() {
+  const month = document.getElementById('monthYear').value || new Date().toISOString().slice(0, 7);
+  try {
+    const res = await api.getSalaries(month);
+    if (res.success) {
+      salaries = res.data;
+      renderSalaryTable();
+    }
+  } catch (err) {
+    showError('שגיאה בטעינת המשכורות: ' + err.message);
+  }
+}
+
+function renderSalaryTable() {
+  if (!salaries.length) {
+    document.getElementById('salaryTable').innerHTML = '<p style="padding:20px; text-align:center; color:#9B8E82;">אין משכורות</p>';
+    return;
+  }
+
+  const rows = salaries.map(s => `
+    <tr>
+      <td>${s.staff_name}</td>
+      <td>${formatCurrency(s.gross_salary)}</td>
+      <td>${formatCurrency(s.deductions)}</td>
+      <td>${formatCurrency(s.net_salary)}</td>
+      <td><span class="badge badge-${s.status}">${s.status === 'draft' ? 'טיוטה' : s.status === 'approved' ? 'אושרה' : 'שולמה'}</span></td>
+      <td>
+        <div class="actions">
+          ${s.status !== 'paid' ? `<button class="btn-approve" onclick="approveSalary('${s.id}')">אישור</button>` : ''}
+          <button class="btn-delete" onclick="deleteSalary('${s.id}')">מחק</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  document.getElementById('salaryTable').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>עובד</th>
+        <th>גרוסה</th>
+        <th>ניכויים</th>
+        <th>נטו</th>
+        <th>סטטוס</th>
+        <th>פעולות</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function toggleStaffForm() {
+  document.getElementById('staffForm').classList.toggle('show');
+  if (!document.getElementById('staffForm').classList.contains('show')) {
+    document.getElementById('staffFormElement').reset();
+    editingStaffId = null;
+  }
+}
+
+function toggleSalaryForm() {
+  document.getElementById('salaryForm').classList.toggle('show');
+  if (!document.getElementById('salaryForm').classList.contains('show')) {
+    document.getElementById('salaryFormElement').reset();
+    editingSalaryId = null;
+  }
+}
+
+async function editStaff(id) {
+  const s = staff.find(x => x.id === id);
+  if (!s) return;
+  editingStaffId = id;
+  document.getElementById('staffName').value = s.full_name_he;
+  document.getElementById('staffPosition').value = s.position_he;
+  document.getElementById('staffEmail').value = s.email || '';
+  document.getElementById('staffPhone').value = s.phone || '';
+  document.getElementById('staffHireDate').value = s.hire_date || '';
+  document.getElementById('staffForm').classList.add('show');
+}
+
+async function deleteStaff(id) {
+  if (!confirm('מחק עובד?')) return;
+  try {
+    await api.deleteStaff(id);
+    showSuccess('עובד נמחק');
+    loadStaff();
+  } catch (err) {
+    showError('שגיאה: ' + err.message);
+  }
+}
+
+document.getElementById('staffFormElement').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = {
+    full_name_he: document.getElementById('staffName').value,
+    position_he: document.getElementById('staffPosition').value,
+    email: document.getElementById('staffEmail').value || null,
+    phone: document.getElementById('staffPhone').value || null,
+    hire_date: document.getElementById('staffHireDate').value || null,
+  };
+  try {
+    if (editingStaffId) {
+      await api.updateStaff(editingStaffId, data);
+    } else {
+      await api.createStaff(data);
+    }
+    showSuccess('שמור בהצלחה');
+    toggleStaffForm();
+    loadStaff();
+  } catch (err) {
+    showError('שגיאה: ' + err.message);
+  }
+});
+
+document.getElementById('monthYear').addEventListener('change', loadSalaries);
+
+document.getElementById('salaryFormElement').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const month = document.getElementById('monthYear').value;
+  const data = {
+    staff_id: document.getElementById('salaryStaff').value,
+    month_year: month,
+    gross_salary: parseFloat(document.getElementById('grossSalary').value),
+    deductions: parseFloat(document.getElementById('deductions').value),
+    net_salary: parseFloat(document.getElementById('netSalary').value),
+  };
+  try {
+    if (editingSalaryId) {
+      await api.updateSalary(editingSalaryId, data);
+    } else {
+      await api.createSalary(data);
+    }
+    showSuccess('שמור בהצלחה');
+    toggleSalaryForm();
+    loadSalaries();
+  } catch (err) {
+    showError('שגיאה: ' + err.message);
+  }
+});
+
+async function approveSalary(id) {
+  try {
+    await api.updateSalary(id, { status: 'paid' });
+    showSuccess('משכורת אושרה');
+    loadSalaries();
+  } catch (err) {
+    showError('שגיאה: ' + err.message);
+  }
+}
+
+async function deleteSalary(id) {
+  if (!confirm('מחק משכורת?')) return;
+  try {
+    // Note: no delete endpoint for salaries, just update to archived
+    showError('שלוך משכורות לא זמין');
+  } catch (err) {
+    showError('שגיאה: ' + err.message);
+  }
+}
+
+loadStaff();
+document.getElementById('monthYear').value = new Date().toISOString().slice(0, 7);
+</script>
+
+</body>
+</html>
