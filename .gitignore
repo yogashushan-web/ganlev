@@ -1,7 +1,6 @@
 # Local Netlify folder
 .netlify
 node_modules/
-package-lock.json
 deno.lock
 
 # extra safety
