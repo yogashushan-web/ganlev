@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>משרד החינוך ועירייה — מערכת גנים</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    h1 { font-size:26px; color:#1F3D34; margin-bottom:6px; }
+    .lead { color:#9B8E82; font-size:14px; margin-bottom:24px; }
+    .section-title { font-size:18px; font-weight:700; color:#1F3D34; margin:6px 0 14px; }
+    .card { background:#FFF; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:24px; }
+    .doc-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-radius:10px; background:#FAF8F4; margin-bottom:8px; flex-wrap:wrap; gap:8px; }
+    .doc-title { font-weight:600; font-size:14px; }
+    .doc-actions { display:flex; gap:8px; }
+    .dl { background:#1F3D34; color:#fff; text-decoration:none; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; }
+    .dl:hover { background:#154428; }
+    .del { background:#e74c3c; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-family:'Heebo'; }
+    .empty { color:#9B8E82; font-size:13px; padding:8px 4px; }
+    .upload-row { display:flex; gap:10px; align-items:center; margin-top:14px; flex-wrap:wrap; padding-top:14px; border-top:1px dashed #e3ddd2; }
+    .upload-row input[type=text] { flex:1; min-width:200px; padding:10px 13px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .upload-row input[type=file] { font-size:13px; font-family:'Heebo'; max-width:230px; }
+    .up-btn { background:#C4846C; color:#fff; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .up-btn:hover { background:#a96b54; }
+
+    .u-form { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
+    .u-form input { padding:10px 12px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:13px; outline:none; }
+    .u-form input:focus { border-color:#1F3D34; }
+    @media(max-width:900px){ .u-form { grid-template-columns:1fr 1fr; } }
+    .u-add { background:#1F3D34; color:#fff; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    table { width:100%; border-collapse:collapse; background:#FFF; border-radius:12px; overflow:hidden; }
+    th { background:#1F3D34; color:#FFF; padding:11px 12px; font-size:12px; text-align:right; }
+    td { padding:10px 12px; border-bottom:1px solid #f0ece6; font-size:13px; }
+    tr:last-child td { border-bottom:none; }
+    .muted { color:#c4bcae; }
+    .del-sm { background:#e74c3c; color:#fff; border:none; padding:5px 11px; border-radius:7px; font-size:12px; cursor:pointer; font-family:'Heebo'; }
+    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .error.show { display:block; }
+  </style>
+</head>
+<body>
+
+  <h1>🏛️ משרד החינוך ועירייה</h1>
+  <div class="lead">אישורים ומסמכים רשמיים + מעקב חשבונות (מים, חשמל, ארנונה).</div>
+  <div id="error" class="error"></div>
+
+  <div class="section-title">📑 אישורים ומסמכים</div>
+  <div class="card">
+    <div id="docList"></div>
+    <div class="upload-row">
+      <input type="text" list="dlAuth" id="docTitle" placeholder="שם המסמך (לדוגמה: אישור משרד החינוך)">
+      <datalist id="dlAuth">
+        <option value="אישור משרד החינוך">
+        <option value="אישור בטיחות">
+        <option value="אישור מכבי אש">
+        <option value="תכנית הגן (שטח)">
+      </datalist>
+      <input type="file" id="docFile">
+      <button class="up-btn" onclick="uploadDoc(this)">⬆ העלה</button>
+    </div>
+  </div>
+
+  <div class="section-title">💡 חשבונות ושירותים</div>
+  <div class="card">
+    <div class="u-form">
+      <input type="text" list="dlKind" id="uKind" placeholder="סוג (מים/חשמל/ארנונה)">
+      <datalist id="dlKind">
+        <option value="מים"><option value="חשמל"><option value="ארנונה"><option value="גז"><option value="אינטרנט"><option value="טלפון">
+      </datalist>
+      <input type="text" id="uProvider" placeholder="ספק">
+      <input type="text" id="uAccount" placeholder="מספר חשבון">
+      <input type="text" id="uContract" placeholder="חוזה / מנוי">
+      <input type="text" id="uNotes" placeholder="הערות">
+    </div>
+    <button class="u-add" onclick="addUtil(this)">+ הוסף שורה</button>
+    <div id="utilTable" style="margin-top:16px;"></div>
+  </div>
+
+<script src="js/common.js?v=3"></script>
+<script src="js/api.js?v=3"></script>
+<script>
+const esc = s => (s || '').replace(/</g, '&lt;');
+
+/* ---------- documents ---------- */
+let docs = [];
+async function loadDocs() {
+  try { const r = await api.getDocuments('authorities'); docs = r.data || []; renderDocs(); }
+  catch (e) { showError('שגיאה בטעינת מסמכים: ' + e.message); }
+}
+function renderDocs() {
+  document.getElementById('docList').innerHTML = docs.length ? docs.map(d => `
+    <div class="doc-row">
+      <span class="doc-title">📄 ${esc(d.title)}</span>
+      <span class="doc-actions">
+        ${d.file_url ? `<a class="dl" href="${d.file_url}" target="_blank">פתח / הורד</a>` : ''}
+        <button class="del" onclick="delDoc('${d.id}')">מחק</button>
+      </span>
+    </div>`).join('') : '<div class="empty">אין מסמכים עדיין.</div>';
+}
+function fileToB64(file) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
+}
+async function uploadDoc(btn) {
+  const title = document.getElementById('docTitle').value.trim();
+  const file = document.getElementById('docFile').files[0];
+  if (!title) { alert('צריך שם למסמך'); return; }
+  if (!file) { alert('בחרי קובץ'); return; }
+  if (file.size > 5 * 1024 * 1024) { alert('הקובץ גדול מדי (מקסימום 5MB)'); return; }
+  btn.disabled = true; btn.textContent = 'מעלה...';
+  try {
+    const b64 = await fileToB64(file);
+    await api.uploadDocument({ section: 'authorities', category: 'אישורים', title, file_base64: b64, file_name: file.name, content_type: file.type });
+    document.getElementById('docTitle').value = ''; document.getElementById('docFile').value = '';
+    loadDocs();
+  } catch (e) { alert('שגיאה: ' + e.message); }
+  btn.disabled = false; btn.textContent = '⬆ העלה';
+}
+async function delDoc(id) {
+  if (!confirm('למחוק את המסמך?')) return;
+  try { await api.deleteDocument(id); loadDocs(); } catch (e) { alert(e.message); }
+}
+
+/* ---------- utilities ---------- */
+let utils = [];
+async function loadUtils() {
+  try { const r = await api.getUtilities(); utils = r.data || []; renderUtils(); }
+  catch (e) { showError('שגיאה בטעינת חשבונות: ' + e.message); }
+}
+function renderUtils() {
+  if (!utils.length) { document.getElementById('utilTable').innerHTML = '<div class="empty">אין חשבונות עדיין.</div>'; return; }
+  const rows = utils.map(u => `
+    <tr>
+      <td><b>${esc(u.kind)}</b></td>
+      <td>${esc(u.provider) || '<span class="muted">-</span>'}</td>
+      <td>${esc(u.account_number) || '<span class="muted">-</span>'}</td>
+      <td>${esc(u.contract) || '<span class="muted">-</span>'}</td>
+      <td>${esc(u.notes) || '<span class="muted">-</span>'}</td>
+      <td><button class="del-sm" onclick="delUtil('${u.id}')">מחק</button></td>
+    </tr>`).join('');
+  document.getElementById('utilTable').innerHTML = `<table>
+    <thead><tr><th>סוג</th><th>ספק</th><th>מספר חשבון</th><th>חוזה / מנוי</th><th>הערות</th><th></th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+async function addUtil(btn) {
+  const kind = document.getElementById('uKind').value.trim();
+  if (!kind) { alert('צריך סוג (מים/חשמל/ארנונה...)'); return; }
+  const data = {
+    kind,
+    provider: document.getElementById('uProvider').value || null,
+    account_number: document.getElementById('uAccount').value || null,
+    contract: document.getElementById('uContract').value || null,
+    notes: document.getElementById('uNotes').value || null,
+  };
+  btn.disabled = true;
+  try {
+    await api.createUtility(data);
+    ['uKind','uProvider','uAccount','uContract','uNotes'].forEach(id => document.getElementById(id).value = '');
+    loadUtils();
+  } catch (e) { alert('שגיאה: ' + e.message); }
+  btn.disabled = false;
+}
+async function delUtil(id) {
+  if (!confirm('למחוק את השורה?')) return;
+  try { await api.deleteUtility(id); loadUtils(); } catch (e) { alert(e.message); }
+}
+
+loadDocs();
+loadUtils();
+</script>
+
+</body>
+</html>

@@ -120,6 +120,8 @@ function renderNavSidebar() {
     { href: 'children-manage.html', icon: '👶', label: 'ילדים' },
     { href: 'parents-tuition.html', icon: '👨‍👩‍👧', label: 'הורים' },
     { href: 'staff-salaries.html',  icon: '👔', label: 'עובדים ומשכורות' },
+    { href: 'forms.html',           icon: '📋', label: 'טפסים' },
+    { href: 'authorities.html',     icon: '🏛️', label: 'משרד החינוך ועירייה' },
     { href: 'income-expenses.html', icon: '💰', label: 'הכנסות והוצאות' },
     { href: 'import.html',          icon: '📥', label: 'ייבוא מטבלה' },
   ];

@@ -112,4 +112,15 @@ const api = {
   createEvent: (data) => apiCall(`/events?garden_id=${getGardenId()}`, 'POST', data),
   updateEvent: (id, data) => apiCall(`/events/${id}?garden_id=${getGardenId()}`, 'PUT', data),
   deleteEvent: (id) => apiCall(`/events/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+
+  // Documents (file library)
+  getDocuments: (section) => apiCall(`/documents?garden_id=${getGardenId()}${section ? `&section=${section}` : ''}`),
+  uploadDocument: (data) => apiCall(`/documents?garden_id=${getGardenId()}`, 'POST', data),
+  deleteDocument: (id) => apiCall(`/documents/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+
+  // Utilities (water / electricity / property tax ...)
+  getUtilities: () => apiCall(`/utilities?garden_id=${getGardenId()}`),
+  createUtility: (data) => apiCall(`/utilities?garden_id=${getGardenId()}`, 'POST', data),
+  updateUtility: (id, data) => apiCall(`/utilities/${id}?garden_id=${getGardenId()}`, 'PUT', data),
+  deleteUtility: (id) => apiCall(`/utilities/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 };

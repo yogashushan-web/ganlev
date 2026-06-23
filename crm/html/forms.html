@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>טפסים — מערכת גנים</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    h1 { font-size:26px; color:#1F3D34; margin-bottom:6px; }
+    .lead { color:#9B8E82; font-size:14px; margin-bottom:24px; }
+    .card { background:#FFF; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:20px; }
+    .card h3 { font-size:17px; color:#1F3D34; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #f0ece6; }
+    .doc-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-radius:10px; background:#FAF8F4; margin-bottom:8px; flex-wrap:wrap; gap:8px; }
+    .doc-title { font-weight:600; font-size:14px; }
+    .doc-actions { display:flex; gap:8px; }
+    .dl { background:#1F3D34; color:#fff; text-decoration:none; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; }
+    .dl:hover { background:#154428; }
+    .del { background:#e74c3c; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-family:'Heebo'; }
+    .empty { color:#9B8E82; font-size:13px; padding:8px 4px; }
+    .upload-row { display:flex; gap:10px; align-items:center; margin-top:14px; flex-wrap:wrap; padding-top:14px; border-top:1px dashed #e3ddd2; }
+    .upload-row input[type=text] { flex:1; min-width:200px; padding:10px 13px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .upload-row input[type=text]:focus { border-color:#1F3D34; }
+    .upload-row input[type=file] { font-size:13px; font-family:'Heebo'; max-width:230px; }
+    .up-btn { background:#C4846C; color:#fff; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .up-btn:hover { background:#a96b54; }
+    .up-btn:disabled { background:#cfc8bd; cursor:not-allowed; }
+    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .error.show { display:block; }
+  </style>
+</head>
+<body>
+
+  <h1>📋 טפסים</h1>
+  <div class="lead">קבצים שנשמרים ונגישים בכל רגע - חוזים, תפריטים, תכניות וטפסים. (קובץ עד 5MB)</div>
+  <div id="error" class="error"></div>
+  <div id="groups"></div>
+
+<script src="js/common.js?v=3"></script>
+<script src="js/api.js?v=3"></script>
+<script>
+const SECTION = 'forms';
+const GROUPS = [
+  { category:'גן לב',  icon:'🏫',    suggestions:['חוזה גן','תפריט שבועי','סדר יום','תכנית שנתית'] },
+  { category:'עובדים', icon:'👔',    suggestions:['טופס 101','שימוע','חוזה לעובד לדוגמא'] },
+  { category:'הורים',  icon:'👨‍👩‍👧', suggestions:['השארות שנה נוספת','ויתור על מקום'] },
+];
+const esc = s => (s || '').replace(/</g, '&lt;');
+let docs = [];
+
+async function load() {
+  try { const r = await api.getDocuments(SECTION); docs = r.data || []; }
+  catch (e) { docs = []; showError('שגיאה בטעינה (ייתכן שצריך להריץ את ה-SQL): ' + e.message); }
+  render();
+}
+
+function render() {
+  document.getElementById('groups').innerHTML = GROUPS.map(g => {
+    const items = docs.filter(d => d.category === g.category);
+    const rows = items.length ? items.map(d => `
+      <div class="doc-row">
+        <span class="doc-title">📄 ${esc(d.title)}</span>
+        <span class="doc-actions">
+          ${d.file_url ? `<a class="dl" href="${d.file_url}" target="_blank">פתח / הורד</a>` : ''}
+          <button class="del" onclick="delDoc('${d.id}')">מחק</button>
+        </span>
+      </div>`).join('') : '<div class="empty">אין קבצים עדיין בקטגוריה זו.</div>';
+    const dl = g.suggestions.map(s => `<option value="${s}">`).join('');
+    return `<div class="card">
+      <h3>${g.icon} ${g.category}</h3>
+      <div>${rows}</div>
+      <div class="upload-row">
+        <input type="text" list="dl-${g.category}" id="title-${g.category}" placeholder="שם הקובץ (לדוגמה: ${g.suggestions[0]})">
+        <datalist id="dl-${g.category}">${dl}</datalist>
+        <input type="file" id="file-${g.category}">
+        <button class="up-btn" onclick="upload('${g.category}', this)">⬆ העלה</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function fileToB64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function upload(category, btn) {
+  const title = document.getElementById('title-' + category).value.trim();
+  const file = document.getElementById('file-' + category).files[0];
+  if (!title) { alert('צריך שם לקובץ'); return; }
+  if (!file) { alert('בחרי קובץ'); return; }
+  if (file.size > 5 * 1024 * 1024) { alert('הקובץ גדול מדי (מקסימום 5MB)'); return; }
+  btn.disabled = true; btn.textContent = 'מעלה...';
+  try {
+    const b64 = await fileToB64(file);
+    await api.uploadDocument({ section: SECTION, category, title, file_base64: b64, file_name: file.name, content_type: file.type });
+    load();
+  } catch (e) { alert('שגיאה בהעלאה: ' + e.message); btn.disabled = false; btn.textContent = '⬆ העלה'; }
+}
+
+async function delDoc(id) {
+  if (!confirm('למחוק את הקובץ?')) return;
+  try { await api.deleteDocument(id); load(); }
+  catch (e) { alert('שגיאה: ' + e.message); }
+}
+
+load();
+</script>
+
+</body>
+</html>
