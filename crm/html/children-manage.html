@@ -14,12 +14,13 @@
     .btn-add { background:#1F3D34; color:#FFF; border:none; padding:12px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; }
     .btn-add:hover { background:#154428; }
     .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
-    .toolbar input { padding:10px 14px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; min-width:240px; }
+    .toolbar input { padding:9px 14px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:13px; outline:none; flex:1; min-width:160px; }
     .toolbar input:focus { border-color:#1F3D34; }
-    .toolbar select { padding:10px 14px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; cursor:pointer; background:#fff; }
-    .gender-filter { display:flex; gap:6px; }
-    .gf { padding:9px 14px; border:1.5px solid #e3ddd2; background:#fff; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:600; font-size:13px; color:#9B8E82; }
-    .gf.active { background:#1F3D34; color:#fff; border-color:#1F3D34; }
+    .btn-group { display:flex; align-items:center; gap:4px; background:#fff; border-radius:10px; padding:3px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+    .grp-lbl { font-size:11px; color:#9B8E82; font-weight:700; padding:0 5px; white-space:nowrap; }
+    .sb, .gf { padding:6px 11px; border:none; background:transparent; border-radius:8px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:12px; color:#9B8E82; white-space:nowrap; }
+    .sb:hover, .gf:hover { background:#f1ece3; }
+    .sb.active, .gf.active { background:#1F3D34; color:#fff; }
     .count-pill { background:#fff; border-radius:20px; padding:8px 16px; font-size:13px; box-shadow:0 2px 8px rgba(0,0,0,.05); font-weight:600; color:#1F3D34; }
     .year-tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .year-tab { padding:9px 18px; border:none; background:#fff; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; color:#9B8E82; box-shadow:0 2px 8px rgba(0,0,0,.04); transition:all .15s; }
@@ -69,16 +70,17 @@
   <div class="year-tabs" id="yearTabs"></div>
 
   <div class="toolbar">
-    <input type="text" id="search" placeholder="🔍 חיפוש לפי שם...">
-    <select id="sortBy">
-      <option value="age">↕ מיון: גיל</option>
-      <option value="name">↕ מיון: שם א-ב</option>
-      <option value="gender">↕ מיון: מין</option>
-    </select>
-    <div class="gender-filter" id="genderFilter">
-      <button data-g="all" class="gf active">הכל</button>
-      <button data-g="זכר" class="gf">זכר</button>
-      <button data-g="נקבה" class="gf">נקבה</button>
+    <input type="text" id="search" placeholder="🔍 חיפוש...">
+    <div class="btn-group">
+      <span class="grp-lbl">מיון</span>
+      <button class="sb active" data-sort="age">גיל</button>
+      <button class="sb" data-sort="name">שם</button>
+      <button class="sb" data-sort="gender">מין</button>
+    </div>
+    <div class="btn-group" id="genderFilter">
+      <button class="gf active" data-g="all">הכל</button>
+      <button class="gf" data-g="זכר">זכר</button>
+      <button class="gf" data-g="נקבה">נקבה</button>
     </div>
     <span class="count-pill" id="countPill">—</span>
   </div>
@@ -164,7 +166,6 @@ async function loadChildren() {
 
 function renderTable() {
   const q = (document.getElementById('search').value || '').trim();
-  const sortBy = document.getElementById('sortBy').value;
   let list = children.filter(c => (c.school_year || CUR_YEAR) === selectedYear);
   if (genderFilter !== 'all') list = list.filter(c => c.gender_he === genderFilter);
   if (q) list = list.filter(c =>
@@ -218,8 +219,12 @@ function renderTable() {
 }
 
 let genderFilter = 'all';
+let sortBy = 'age';
 document.getElementById('search').addEventListener('input', renderTable);
-document.getElementById('sortBy').addEventListener('change', renderTable);
+document.querySelectorAll('.sb').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.sb').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); sortBy = b.dataset.sort; renderTable();
+}));
 document.querySelectorAll('#genderFilter .gf').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#genderFilter .gf').forEach(x => x.classList.remove('active'));
   b.classList.add('active'); genderFilter = b.dataset.g; renderTable();
