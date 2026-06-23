@@ -22,11 +22,12 @@ const handler = withAuth(async (event) => {
     }
 
     if (event.httpMethod === 'POST') {
-      const { kind, provider, account_number, contract, notes } = JSON.parse(event.body || '{}');
+      const { kind, provider, phone, email, website, account_number, contract, notes } = JSON.parse(event.body || '{}');
       if (!kind) return { statusCode: 400, body: JSON.stringify({ success: false, error: 'Missing kind' }) };
       const { data, error } = await supabase.from('utilities').insert({
-        garden_id, kind, provider: provider || null, account_number: account_number || null,
-        contract: contract || null, notes: notes || null,
+        garden_id, kind, provider: provider || null,
+        phone: phone || null, email: email || null, website: website || null,
+        account_number: account_number || null, contract: contract || null, notes: notes || null,
       }).select().single();
       if (error) throw error;
       await auditLog(garden_id, user.id, 'created', 'utilities', data.id, { kind });
