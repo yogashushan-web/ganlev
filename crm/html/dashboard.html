@@ -20,7 +20,10 @@
     .chip-s { background:#FFF; border-radius:12px; padding:9px 15px; box-shadow:0 2px 8px rgba(0,0,0,.04); font-size:13px; }
     .chip-s b { color:#1F3D34; font-size:15px; }
 
-    .cal-section { font-size:18px; color:#1F3D34; margin:0 0 12px; }
+    .cal-section { font-size:18px; color:#1F3D34; margin:0 0 12px; cursor:pointer; user-select:none; display:flex; align-items:center; gap:8px; }
+    .cal-section .chev { font-size:13px; color:#9B8E82; transition:transform .2s; }
+    .cal-section.collapsed { margin-bottom:18px; }
+    .cal-section.collapsed .chev { transform:rotate(-90deg); }
     .pane { display:block; margin-bottom:30px; }
 
     .cal-card { background:#FFF; border-radius:16px; padding:20px; box-shadow:0 4px 16px rgba(31,61,52,.06); }
@@ -40,6 +43,7 @@
     .cal-cell.empty { background:transparent; cursor:default; }
     .cal-cell.today { outline:2px solid #C4846C; }
     .cal-d { font-size:12px; font-weight:700; color:#6f6457; margin-bottom:4px; }
+    .cal-d .he-d { font-weight:400; color:#b3a995; font-size:11px; }
     .ev-chip { font-size:10.5px; padding:2px 6px; border-radius:5px; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
 
     .legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; font-size:11.5px; color:#6f6457; }
@@ -87,7 +91,7 @@
   </div>
 
   <!-- GARDEN CALENDAR -->
-  <h2 class="cal-section">🏫 לוח הגן</h2>
+  <h2 class="cal-section" onclick="togglePane('garden')"><span class="chev">▾</span>🏫 לוח הגן</h2>
   <div class="pane" id="pane-garden">
     <div class="cal-card">
       <div class="cal-head">
@@ -104,7 +108,7 @@
   </div>
 
   <!-- YOEL CALENDAR (Google) -->
-  <h2 class="cal-section">👤 לוח יואל</h2>
+  <h2 class="cal-section" onclick="togglePane('yoel')"><span class="chev">▾</span>👤 לוח יואל</h2>
   <div class="pane" id="pane-yoel">
     <div class="cal-card">
       <div class="gc-note" id="yoelNote">
@@ -147,6 +151,9 @@ const GARDEN_CATS = [
 ];
 const pad = n => String(n).padStart(2, '0');
 const esc = s => (s || '').replace(/</g, '&lt;');
+let heDayFmt = null;
+try { heDayFmt = new Intl.DateTimeFormat('he-u-ca-hebrew-nu-hebr', { day: 'numeric' }); } catch (e) {}
+function heDay(y, m, d) { try { return heDayFmt ? heDayFmt.format(new Date(y, m, d)) : ''; } catch (e) { return ''; } }
 function todayStr() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function catColor(c) { const f = GARDEN_CATS.find(x => x.key === c); return f ? f.color : '#6f6457'; }
 
@@ -221,7 +228,7 @@ async function renderGarden() {
       const c = catColor(e.category);
       chips += `<div class="ev-chip" style="background:${c}22;color:${c};border-right:3px solid ${c};" title="${esc(e.title)} — לחיצה לעריכה" onclick="event.stopPropagation(); editEvt('${e.id}')">${e.event_time ? e.event_time.slice(0,5)+' ' : ''}${esc(e.title)}</div>`;
     });
-    html += `<div class="cal-cell ${dateStr === tStr ? 'today' : ''}" onclick="openEvt('${dateStr}')"><div class="cal-d">${d}</div>${chips}</div>`;
+    html += `<div class="cal-cell ${dateStr === tStr ? 'today' : ''}" onclick="openEvt('${dateStr}')"><div class="cal-d">${d} <span class="he-d">${heDay(y, m, d)}</span></div>${chips}</div>`;
   }
   html += '</div>';
   document.getElementById('gardenGrid').innerHTML = html;
@@ -303,6 +310,16 @@ async function init() {
 
   renderGarden();
 }
+
+function togglePane(id, save = true) {
+  const pane = document.getElementById('pane-' + id);
+  const h2 = pane.previousElementSibling;
+  const willCollapse = pane.style.display !== 'none';
+  pane.style.display = willCollapse ? 'none' : 'block';
+  h2.classList.toggle('collapsed', willCollapse);
+  if (save) { try { localStorage.setItem('calc_' + id, willCollapse ? '1' : '0'); } catch (e) {} }
+}
+['garden', 'yoel'].forEach(id => { try { if (localStorage.getItem('calc_' + id) === '1') togglePane(id, false); } catch (e) {} });
 
 init();
 </script>
