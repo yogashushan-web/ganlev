@@ -35,7 +35,7 @@ const handler = withAuth(async (event) => {
 
     if (event.httpMethod === 'POST') {
       // Create child
-      const { first_name_he, last_name_he, birth_date } = JSON.parse(event.body || '{}');
+      const { first_name_he, last_name_he, birth_date, name_en, gender_he, national_id, prev_framework } = JSON.parse(event.body || '{}');
 
       if (!first_name_he || !last_name_he) {
         return {
@@ -51,6 +51,10 @@ const handler = withAuth(async (event) => {
           first_name_he,
           last_name_he,
           birth_date: birth_date || null,
+          name_en: name_en || null,
+          gender_he: gender_he || null,
+          national_id: national_id || null,
+          prev_framework: prev_framework || null,
           status: 'active',
         })
         .select()

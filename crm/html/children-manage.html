@@ -4,86 +4,87 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ניהול ילדים — מערכת גנים</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family:'Heebo',sans-serif;
-      background:#F4EFE6;
-      color:#3D3228;
-      direction:rtl;
-      min-height:100vh;
-      padding:30px 20px;
-    }
-    .container { max-width:1000px; margin:0 auto; }
-    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; }
-    .header h1 { font-size:28px; color:#1F3D34; }
-    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:12px 24px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:600; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:12px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .header .sub { font-size:13px; color:#9B8E82; }
+    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:12px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; }
     .btn-add:hover { background:#154428; }
-    .form-container { background:#FFF; border-radius:16px; padding:30px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:30px; display:none; }
+    .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+    .toolbar input { padding:10px 14px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; min-width:240px; }
+    .toolbar input:focus { border-color:#1F3D34; }
+    .count-pill { background:#fff; border-radius:20px; padding:8px 16px; font-size:13px; box-shadow:0 2px 8px rgba(0,0,0,.05); font-weight:600; color:#1F3D34; }
+    .form-container { background:#FFF; border-radius:16px; padding:26px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:24px; display:none; }
     .form-container.show { display:block; }
-    .form-group { margin-bottom:20px; }
-    label { display:block; font-size:13px; color:#3D3228; font-weight:600; margin-bottom:8px; }
-    input, textarea, select { width:100%; padding:12px 14px; border:1px solid #e8e4de; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; direction:ltr; text-align:right; }
-    input:focus, textarea:focus, select:focus { border-color:#1F3D34; }
-    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-    .btn-submit { background:#1F3D34; color:#FFF; border:none; padding:12px 24px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:600; width:100%; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+    .form-group { margin-bottom:16px; }
+    label { display:block; font-size:12px; color:#3D3228; font-weight:700; margin-bottom:6px; }
+    input, select { width:100%; padding:11px 13px; border:1px solid #e8e4de; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; text-align:right; }
+    input:focus, select:focus { border-color:#1F3D34; }
+    .btn-submit { background:#1F3D34; color:#FFF; border:none; padding:12px 24px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; }
     .btn-submit:hover { background:#154428; }
-    .btn-cancel { background:#f0f0f0; color:#333; border:none; padding:12px 24px; border-radius:10px; cursor:pointer; font-family:'Heebo'; margin-right:10px; }
-    .btn-cancel:hover { background:#e0e0e0; }
-    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:20px; display:none; }
+    .btn-cancel { background:#f0ece6; color:#333; border:none; padding:12px 24px; border-radius:10px; cursor:pointer; font-family:'Heebo'; margin-right:10px; }
+    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
     .error.show { display:block; }
-    .success { background:#d4edda; color:#155724; padding:12px; border-radius:10px; margin-bottom:20px; display:none; }
+    .success { background:#d4edda; color:#155724; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
     .success.show { display:block; }
-    table { width:100%; border-collapse:collapse; background:#FFF; border-radius:16px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
-    th { background:#1F3D34; color:#FFF; padding:14px; font-weight:600; font-size:13px; text-align:right; }
-    td { padding:14px; border-bottom:1px solid #f0ece6; font-size:13px; }
+    .tbl-wrap { overflow-x:auto; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
+    table { width:100%; border-collapse:collapse; background:#FFF; }
+    th { background:#1F3D34; color:#FFF; padding:12px 14px; font-weight:600; font-size:12px; text-align:right; white-space:nowrap; }
+    td { padding:11px 14px; border-bottom:1px solid #f0ece6; font-size:13px; white-space:nowrap; }
     tr:last-child td { border-bottom:none; }
     tr:hover td { background:#FAF8F4; }
-    .badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; }
-    .badge-active { background:#d4edda; color:#155724; }
-    .actions { display:flex; gap:8px; }
-    .btn-edit, .btn-delete { padding:6px 12px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; }
+    td.en { direction:ltr; text-align:left; color:#6f6457; }
+    .g-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .g-m { background:#dbeafe; color:#1e4e8c; }
+    .g-f { background:#fce7f3; color:#9d2463; }
+    .muted { color:#c4bcae; }
+    .btn-edit, .btn-delete { padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; }
     .btn-edit { background:#C4846C; color:#FFF; }
-    .btn-edit:hover { background:#b57058; }
     .btn-delete { background:#e74c3c; color:#FFF; }
-    .btn-delete:hover { background:#c0392b; }
     .loading { text-align:center; padding:40px; color:#9B8E82; }
-    .back-link { display:inline-block; margin-bottom:20px; color:#1F3D34; text-decoration:none; font-weight:600; }
-    .back-link:hover { text-decoration:underline; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <a href="dashboard.html" class="back-link">← חזור לעמוד הבית</a>
-
   <div class="header">
-    <h1>ניהול ילדים</h1>
+    <div>
+      <h1>👶 ניהול ילדים</h1>
+      <div class="sub" id="gardenSub"></div>
+    </div>
     <button class="btn-add" onclick="toggleForm()">+ הוסף ילד</button>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="🔍 חיפוש לפי שם...">
+    <span class="count-pill" id="countPill">—</span>
   </div>
 
   <div id="error" class="error"></div>
   <div id="success" class="success"></div>
 
   <div id="form" class="form-container">
-    <h2 style="margin-bottom:20px;">הוסף / ערוך ילד</h2>
+    <h2 style="margin-bottom:18px; color:#1F3D34;">הוסף / ערוך ילד</h2>
     <form id="childForm">
       <div class="form-row">
-        <div class="form-group">
-          <label for="firstName">שם פרטי *</label>
-          <input type="text" id="firstName" required>
-        </div>
-        <div class="form-group">
-          <label for="lastName">שם משפחה *</label>
-          <input type="text" id="lastName" required>
-        </div>
+        <div class="form-group"><label>שם פרטי *</label><input type="text" id="firstName" required></div>
+        <div class="form-group"><label>שם משפחה *</label><input type="text" id="lastName" required></div>
+        <div class="form-group"><label>שם באנגלית</label><input type="text" id="nameEn" dir="ltr"></div>
       </div>
-      <div class="form-group">
-        <label for="birthDate">תאריך לידה</label>
-        <input type="date" id="birthDate">
+      <div class="form-row">
+        <div class="form-group"><label>מין</label>
+          <select id="gender"><option value="">--</option><option value="זכר">זכר</option><option value="נקבה">נקבה</option></select>
+        </div>
+        <div class="form-group"><label>תעודת זהות</label><input type="text" id="nationalId" dir="ltr"></div>
+        <div class="form-group"><label>תאריך לידה</label><input type="date" id="birthDate"></div>
       </div>
-      <div style="display:flex; gap:10px;">
+      <div class="form-row">
+        <div class="form-group"><label>מסגרת קודמת</label><input type="text" id="prevFramework"></div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:8px;">
         <button type="submit" class="btn-submit">שמור</button>
         <button type="button" class="btn-cancel" onclick="toggleForm()">ביטול</button>
       </div>
@@ -91,7 +92,6 @@
   </div>
 
   <div id="table" class="loading">טוען...</div>
-</div>
 
 <script src="js/common.js"></script>
 <script src="js/api.js"></script>
@@ -99,114 +99,120 @@
 let children = [];
 let editingId = null;
 
+const monthNames = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+function ageStr(bd) {
+  if (!bd) return '-';
+  const b = new Date(bd), n = new Date();
+  let months = (n.getFullYear() - b.getFullYear()) * 12 + (n.getMonth() - b.getMonth());
+  if (n.getDate() < b.getDate()) months--;
+  if (months < 0) return '-';
+  return Math.floor(months / 12) + ':' + (months % 12);
+}
+function birthMonthNum(bd) { return bd ? (new Date(bd).getMonth() + 1) : '-'; }
+
 async function loadChildren() {
   try {
     const res = await api.getChildren();
-    if (res.success) {
-      children = res.data;
-      renderTable();
-    }
+    if (res.success) { children = res.data || []; renderTable(); }
   } catch (err) {
     showError('שגיאה בטעינת הנתונים: ' + err.message);
   }
 }
 
 function renderTable() {
+  const q = (document.getElementById('search').value || '').trim();
+  const list = q ? children.filter(c =>
+    ((c.first_name_he || '') + ' ' + (c.last_name_he || '') + ' ' + (c.name_en || '')).includes(q)) : children;
+
+  document.getElementById('countPill').textContent = list.length + ' ילדים';
+
   if (!children.length) {
-    document.getElementById('table').innerHTML = '<p style="padding:20px; color:#9B8E82; text-align:center;">אין ילדים</p>';
+    document.getElementById('table').innerHTML = '<p style="padding:24px; color:#9B8E82; text-align:center;">אין ילדים עדיין. אפשר להוסיף או לייבא מטבלה.</p>';
     return;
   }
 
-  const rows = children.map(c => `
+  const rows = list.map(c => {
+    const g = c.gender_he;
+    const gBadge = g === 'זכר' ? '<span class="g-badge g-m">זכר</span>'
+                 : g === 'נקבה' ? '<span class="g-badge g-f">נקבה</span>'
+                 : '<span class="muted">-</span>';
+    return `
     <tr>
-      <td>${c.first_name_he} ${c.last_name_he}</td>
-      <td>${c.birth_date ? formatDate(c.birth_date) : '-'}</td>
-      <td><span class="badge badge-active">${c.status === 'active' ? 'פעיל' : c.status}</span></td>
-      <td>
-        <div class="actions">
-          <button class="btn-edit" onclick="editChild('${c.id}')">ערוך</button>
-          <button class="btn-delete" onclick="deleteChild('${c.id}')">מחק</button>
-        </div>
+      <td><b>${c.first_name_he} ${c.last_name_he || ''}</b></td>
+      <td class="en">${c.name_en || '<span class="muted">-</span>'}</td>
+      <td>${gBadge}</td>
+      <td>${c.national_id || '<span class="muted">-</span>'}</td>
+      <td>${c.birth_date ? formatDate(c.birth_date) : '<span class="muted">-</span>'}</td>
+      <td>${ageStr(c.birth_date)}</td>
+      <td>${c.birth_date ? monthNames[birthMonthNum(c.birth_date)] : '<span class="muted">-</span>'}</td>
+      <td style="display:flex; gap:6px;">
+        <button class="btn-edit" onclick="editChild('${c.id}')">ערוך</button>
+        <button class="btn-delete" onclick="deleteChild('${c.id}')">מחק</button>
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 
   document.getElementById('table').innerHTML = `
-    <table>
+    <div class="tbl-wrap"><table>
       <thead><tr>
-        <th>שם</th>
-        <th>תאריך לידה</th>
-        <th>סטטוס</th>
-        <th>פעולות</th>
+        <th>שם הילד</th><th>Name</th><th>מין</th><th>ת"ז</th>
+        <th>תאריך לידה</th><th>גיל</th><th>חודש לידה</th><th>פעולות</th>
       </tr></thead>
       <tbody>${rows}</tbody>
-    </table>
-  `;
+    </table></div>`;
 }
+
+document.getElementById('search').addEventListener('input', renderTable);
 
 function toggleForm() {
-  document.getElementById('form').classList.toggle('show');
-  if (!document.getElementById('form').classList.contains('show')) {
-    resetForm();
-  }
+  const f = document.getElementById('form');
+  f.classList.toggle('show');
+  if (!f.classList.contains('show')) resetForm();
 }
+function resetForm() { document.getElementById('childForm').reset(); editingId = null; }
 
-function resetForm() {
-  document.getElementById('childForm').reset();
-  editingId = null;
-}
-
-async function editChild(id) {
-  const child = children.find(c => c.id === id);
-  if (!child) return;
-
+function editChild(id) {
+  const c = children.find(x => x.id === id);
+  if (!c) return;
   editingId = id;
-  document.getElementById('firstName').value = child.first_name_he;
-  document.getElementById('lastName').value = child.last_name_he;
-  document.getElementById('birthDate').value = child.birth_date || '';
+  document.getElementById('firstName').value = c.first_name_he || '';
+  document.getElementById('lastName').value = c.last_name_he || '';
+  document.getElementById('nameEn').value = c.name_en || '';
+  document.getElementById('gender').value = c.gender_he || '';
+  document.getElementById('nationalId').value = c.national_id || '';
+  document.getElementById('birthDate').value = c.birth_date || '';
+  document.getElementById('prevFramework').value = c.prev_framework || '';
   document.getElementById('form').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function deleteChild(id) {
-  if (!confirm('האם ברצונך למחוק את הילד?')) return;
-
+  if (!confirm('למחוק את הילד?')) return;
   try {
     const res = await api.deleteChild(id);
-    if (res.success) {
-      showSuccess('הילד נמחק בהצלחה');
-      loadChildren();
-    }
-  } catch (err) {
-    showError('שגיאה במחיקת הילד: ' + err.message);
-  }
+    if (res.success) { showSuccess('הילד נמחק'); loadChildren(); }
+  } catch (err) { showError('שגיאה במחיקה: ' + err.message); }
 }
 
 document.getElementById('childForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-
   const data = {
     first_name_he: document.getElementById('firstName').value,
     last_name_he: document.getElementById('lastName').value,
+    name_en: document.getElementById('nameEn').value || null,
+    gender_he: document.getElementById('gender').value || null,
+    national_id: document.getElementById('nationalId').value || null,
     birth_date: document.getElementById('birthDate').value || null,
+    prev_framework: document.getElementById('prevFramework').value || null,
   };
-
   try {
-    let res;
-    if (editingId) {
-      res = await api.updateChild(editingId, data);
-    } else {
-      res = await api.createChild(data);
-    }
-
+    const res = editingId ? await api.updateChild(editingId, data) : await api.createChild(data);
     if (res.success) {
-      showSuccess(editingId ? 'הילד עודכן בהצלחה' : 'הילד נוסף בהצלחה');
-      toggleForm();
-      resetForm();
-      loadChildren();
+      showSuccess(editingId ? 'הילד עודכן' : 'הילד נוסף');
+      toggleForm(); resetForm(); loadChildren();
     }
-  } catch (err) {
-    showError('שגיאה: ' + err.message);
-  }
+  } catch (err) { showError('שגיאה: ' + err.message); }
 });
 
 loadChildren();

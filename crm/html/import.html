@@ -89,10 +89,10 @@ let parsedRows = [];
 
 const SCHEMAS = {
   children: {
-    fields: ['first_name_he', 'last_name_he', 'birth_date'],
-    headers: { first_name_he: 'שם פרטי', last_name_he: 'שם משפחה', birth_date: 'תאריך לידה' },
+    fields: ['first_name_he', 'last_name_he', 'name_en', 'gender_he', 'national_id', 'birth_date'],
+    headers: { first_name_he: 'שם פרטי', last_name_he: 'שם משפחה', name_en: 'Name', gender_he: 'מין', national_id: 'ת"ז', birth_date: 'תאריך לידה' },
     required: ['first_name_he'],
-    hint: 'עמודות: <code>שם פרטי</code> <code>שם משפחה</code> <code>תאריך לידה</code> (לא חובה). אפשר גם עמודה אחת <code>שם מלא</code>.',
+    hint: 'עמודות: <code>שם פרטי</code> <code>שם משפחה</code> <code>Name</code> <code>מין</code> <code>תאריך לידה</code> - הכל לא חובה חוץ מהשם. אפשר גם עמודה אחת <code>שם מלא</code>.',
   },
   income: {
     fields: ['source_he', 'amount', 'receipt_date', 'category_he', 'notes_he'],
@@ -109,9 +109,12 @@ const SCHEMAS = {
 };
 
 const SYNONYMS = {
-  first_name_he: ['שם פרטי', 'פרטי', 'first', 'first name', 'firstname', 'name', 'שם'],
-  last_name_he: ['שם משפחה', 'משפחה', 'last', 'last name', 'lastname', 'surname'],
+  first_name_he: ['שם פרטי', 'פרטי', 'first name', 'firstname', 'first'],
+  last_name_he: ['שם משפחה', 'משפחה', 'last name', 'lastname', 'surname'],
   _full: ['שם מלא', 'שם הילד', 'ילד', 'child', 'full name'],
+  name_en: ['name', 'english', 'אנגלית', 'שם באנגלית', 'name en'],
+  gender_he: ['מין', 'gender', 'sex'],
+  national_id: ['תעודת זהות', 'ת"ז', 'תז', 'national id'],
   birth_date: ['תאריך לידה', 'לידה', 'birth', 'birthday', 'birthdate', 'dob'],
   source_he: ['מקור', 'source', 'סוג', 'type'],
   amount: ['סכום', 'amount', '₪', 'price', 'סך', 'עלות', 'total'],

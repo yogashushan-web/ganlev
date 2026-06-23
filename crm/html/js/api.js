@@ -68,38 +68,38 @@ function logout() {
 const api = {
   // Children
   getChildren: () => apiCall(`/children?garden_id=${getGardenId()}`),
-  createChild: (data) => apiCall('/children', 'POST', { ...data, garden_id: getGardenId() }),
-  updateChild: (id, data) => apiCall(`/children/${id}`, 'PUT', data),
-  deleteChild: (id) => apiCall(`/children/${id}`, 'DELETE'),
+  createChild: (data) => apiCall(`/children?garden_id=${getGardenId()}`, 'POST', data),
+  updateChild: (id, data) => apiCall(`/children/${id}?garden_id=${getGardenId()}`, 'PUT', data),
+  deleteChild: (id) => apiCall(`/children/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 
   // Parents
   getParents: (childId) => apiCall(`/parents?garden_id=${getGardenId()}${childId ? `&child_id=${childId}` : ''}`),
-  createParent: (data) => apiCall('/parents', 'POST', { ...data, garden_id: getGardenId() }),
-  updateParent: (id, data) => apiCall(`/parents/${id}`, 'PUT', data),
-  deleteParent: (id) => apiCall(`/parents/${id}`, 'DELETE'),
+  createParent: (data) => apiCall(`/parents?garden_id=${getGardenId()}`, 'POST', data),
+  updateParent: (id, data) => apiCall(`/parents/${id}?garden_id=${getGardenId()}`, 'PUT', data),
+  deleteParent: (id) => apiCall(`/parents/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 
   // Staff
   getStaff: () => apiCall(`/staff?garden_id=${getGardenId()}`),
-  createStaff: (data) => apiCall('/staff', 'POST', { ...data, garden_id: getGardenId() }),
-  updateStaff: (id, data) => apiCall(`/staff/${id}`, 'PUT', data),
-  deleteStaff: (id) => apiCall(`/staff/${id}`, 'DELETE'),
+  createStaff: (data) => apiCall(`/staff?garden_id=${getGardenId()}`, 'POST', data),
+  updateStaff: (id, data) => apiCall(`/staff/${id}?garden_id=${getGardenId()}`, 'PUT', data),
+  deleteStaff: (id) => apiCall(`/staff/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 
   // Salaries
   getSalaries: (monthYear) => apiCall(`/salaries?garden_id=${getGardenId()}&month_year=${monthYear}`),
-  createSalary: (data) => apiCall('/salaries', 'POST', { ...data, garden_id: getGardenId() }),
-  updateSalary: (id, data) => apiCall(`/salaries/${id}`, 'PUT', data),
+  createSalary: (data) => apiCall(`/salaries?garden_id=${getGardenId()}`, 'POST', data),
+  updateSalary: (id, data) => apiCall(`/salaries/${id}?garden_id=${getGardenId()}`, 'PUT', data),
 
   // Tuition
   getTuition: (status) => apiCall(`/tuition?garden_id=${getGardenId()}${status ? `&status=${status}` : ''}`),
-  createTuition: (data) => apiCall('/tuition', 'POST', { ...data, garden_id: getGardenId() }),
-  updateTuition: (id, data) => apiCall(`/tuition/${id}`, 'PUT', data),
+  createTuition: (data) => apiCall(`/tuition?garden_id=${getGardenId()}`, 'POST', data),
+  updateTuition: (id, data) => apiCall(`/tuition/${id}?garden_id=${getGardenId()}`, 'PUT', data),
 
   // Income/Expenses
   getIncome: (dateFrom, dateTo) => apiCall(`/income?garden_id=${getGardenId()}&date_from=${dateFrom}&date_to=${dateTo}`),
   getExpenses: (dateFrom, dateTo) => apiCall(`/expenses?garden_id=${getGardenId()}&date_from=${dateFrom}&date_to=${dateTo}`),
-  createIncome: (data) => apiCall('/income', 'POST', { ...data, garden_id: getGardenId() }),
-  createExpense: (data) => apiCall('/expenses', 'POST', { ...data, garden_id: getGardenId() }),
-  updateExpense: (id, data) => apiCall(`/expenses/${id}`, 'PUT', data),
+  createIncome: (data) => apiCall(`/income?garden_id=${getGardenId()}`, 'POST', data),
+  createExpense: (data) => apiCall(`/expenses?garden_id=${getGardenId()}`, 'POST', data),
+  updateExpense: (id, data) => apiCall(`/expenses/${id}?garden_id=${getGardenId()}`, 'PUT', data),
 
   // Dashboard
   getDashboardSummary: () => apiCall(`/dashboard-summary?garden_id=${getGardenId()}`),

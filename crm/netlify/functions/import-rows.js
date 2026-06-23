@@ -56,6 +56,9 @@ const handler = withAuth(async (event) => {
           first_name_he: first || last,
           last_name_he: last || '-',
           birth_date: cleanDate(r.birth_date),
+          name_en: r.name_en ? String(r.name_en).trim() : null,
+          gender_he: r.gender_he ? String(r.gender_he).trim() : null,
+          national_id: r.national_id ? String(r.national_id).trim() : null,
           status: 'active',
         });
       } else if (type === 'income') {
