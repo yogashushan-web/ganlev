@@ -153,7 +153,13 @@ const pad = n => String(n).padStart(2, '0');
 const esc = s => (s || '').replace(/</g, '&lt;');
 let heDayFmt = null;
 try { heDayFmt = new Intl.DateTimeFormat('he-u-ca-hebrew-nu-hebr', { day: 'numeric' }); } catch (e) {}
-function heDay(y, m, d) { try { return heDayFmt ? heDayFmt.format(new Date(y, m, d)) : ''; } catch (e) { return ''; } }
+function heDay(y, m, d) {
+  try {
+    if (!heDayFmt) return '';
+    const s = heDayFmt.format(new Date(y, m, d));
+    return /[א-ת]/.test(s) ? s : ''; // only show if it rendered as Hebrew letters
+  } catch (e) { return ''; }
+}
 function todayStr() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function catColor(c) { const f = GARDEN_CATS.find(x => x.key === c); return f ? f.color : '#6f6457'; }
 
@@ -168,13 +174,12 @@ async function fetchHolidays(y, m) {
   const key = y + '-' + m;
   if (holidaysCache[key]) return holidaysCache[key];
   try {
-    const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&i=on&lg=h&year=${y}&month=${m + 1}`;
+    const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&i=on&lg=h&year=${y}&month=${m + 1}`;
     const r = await fetch(url);
     const j = await r.json();
-    const list = (j.items || []).filter(it => it.category === 'holiday').map(it => ({
-      date: (it.date || '').slice(0, 10),
-      title: it.title,
-    }));
+    const list = (j.items || [])
+      .filter(it => it.category === 'holiday' || it.category === 'roshchodesh')
+      .map(it => ({ date: (it.date || '').slice(0, 10), title: it.title }));
     holidaysCache[key] = list;
     return list;
   } catch (e) { return []; }
