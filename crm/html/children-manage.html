@@ -16,7 +16,15 @@
     .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
     .toolbar input { padding:10px 14px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; min-width:240px; }
     .toolbar input:focus { border-color:#1F3D34; }
+    .toolbar select { padding:10px 14px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; cursor:pointer; background:#fff; }
+    .gender-filter { display:flex; gap:6px; }
+    .gf { padding:9px 14px; border:1.5px solid #e3ddd2; background:#fff; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:600; font-size:13px; color:#9B8E82; }
+    .gf.active { background:#1F3D34; color:#fff; border-color:#1F3D34; }
     .count-pill { background:#fff; border-radius:20px; padding:8px 16px; font-size:13px; box-shadow:0 2px 8px rgba(0,0,0,.05); font-weight:600; color:#1F3D34; }
+    .year-tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .year-tab { padding:9px 18px; border:none; background:#fff; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; color:#9B8E82; box-shadow:0 2px 8px rgba(0,0,0,.04); transition:all .15s; }
+    .year-tab:hover { background:#f1ece3; }
+    .year-tab.active { background:#1F3D34; color:#fff; }
     .form-container { background:#FFF; border-radius:16px; padding:26px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:24px; display:none; }
     .form-container.show { display:block; }
     .form-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
@@ -58,8 +66,20 @@
     <button class="btn-add" onclick="toggleForm()">+ הוסף ילד</button>
   </div>
 
+  <div class="year-tabs" id="yearTabs"></div>
+
   <div class="toolbar">
     <input type="text" id="search" placeholder="🔍 חיפוש לפי שם...">
+    <select id="sortBy">
+      <option value="age">↕ מיון: גיל</option>
+      <option value="name">↕ מיון: שם א-ב</option>
+      <option value="gender">↕ מיון: מין</option>
+    </select>
+    <div class="gender-filter" id="genderFilter">
+      <button data-g="all" class="gf active">הכל</button>
+      <button data-g="זכר" class="gf">זכר</button>
+      <button data-g="נקבה" class="gf">נקבה</button>
+    </div>
     <span class="count-pill" id="countPill">—</span>
   </div>
 
@@ -83,6 +103,7 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label>מסגרת קודמת</label><input type="text" id="prevFramework"></div>
+        <div class="form-group"><label>שנת לימוד</label><select id="schoolYear"></select></div>
       </div>
       <div style="display:flex; gap:10px; margin-top:8px;">
         <button type="submit" class="btn-submit">שמור</button>
@@ -93,11 +114,32 @@
 
   <div id="table" class="loading">טוען...</div>
 
-<script src="js/common.js"></script>
-<script src="js/api.js"></script>
+<script src="js/common.js?v=3"></script>
+<script src="js/api.js?v=3"></script>
 <script>
 let children = [];
 let editingId = null;
+
+function currentSchoolYear() {
+  const d = new Date(), y = d.getFullYear();
+  const s = d.getMonth() >= 8 ? y : y - 1;
+  return s + '-' + String(s + 1).slice(2);
+}
+const CUR_YEAR = currentSchoolYear();
+const startY = parseInt(CUR_YEAR);
+const SCHOOL_YEARS = [startY - 2, startY - 1, startY, startY + 1].map(y => y + '-' + String(y + 1).slice(2));
+let selectedYear = CUR_YEAR;
+
+function renderYearTabs() {
+  document.getElementById('yearTabs').innerHTML = SCHOOL_YEARS.map(y =>
+    `<button class="year-tab ${y === selectedYear ? 'active' : ''}" onclick="selectYear('${y}')">${y}${y === CUR_YEAR ? ' (נוכחית)' : ''}</button>`).join('');
+}
+function selectYear(y) { selectedYear = y; renderYearTabs(); renderTable(); }
+function fillYearSelect(val) {
+  document.getElementById('schoolYear').innerHTML = SCHOOL_YEARS.map(y =>
+    `<option value="${y}">${y}${y === CUR_YEAR ? ' (נוכחית)' : ''}</option>`).join('');
+  document.getElementById('schoolYear').value = val || selectedYear;
+}
 
 const monthNames = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 
@@ -122,13 +164,25 @@ async function loadChildren() {
 
 function renderTable() {
   const q = (document.getElementById('search').value || '').trim();
-  const list = q ? children.filter(c =>
-    ((c.first_name_he || '') + ' ' + (c.last_name_he || '') + ' ' + (c.name_en || '')).includes(q)) : children;
+  const sortBy = document.getElementById('sortBy').value;
+  let list = children.filter(c => (c.school_year || CUR_YEAR) === selectedYear);
+  if (genderFilter !== 'all') list = list.filter(c => c.gender_he === genderFilter);
+  if (q) list = list.filter(c =>
+    ((c.first_name_he || '') + ' ' + (c.last_name_he || '') + ' ' + (c.name_en || '')).includes(q));
+  list.sort((a, b) => {
+    if (sortBy === 'name')
+      return ((a.first_name_he || '') + ' ' + (a.last_name_he || '')).localeCompare((b.first_name_he || '') + ' ' + (b.last_name_he || ''), 'he');
+    if (sortBy === 'gender') {
+      const g = (a.gender_he || '').localeCompare(b.gender_he || '', 'he');
+      return g !== 0 ? g : (a.birth_date || '').localeCompare(b.birth_date || '');
+    }
+    return (a.birth_date || '').localeCompare(b.birth_date || ''); // age: oldest first
+  });
 
   document.getElementById('countPill').textContent = list.length + ' ילדים';
 
-  if (!children.length) {
-    document.getElementById('table').innerHTML = '<p style="padding:24px; color:#9B8E82; text-align:center;">אין ילדים עדיין. אפשר להוסיף או לייבא מטבלה.</p>';
+  if (!list.length) {
+    document.getElementById('table').innerHTML = `<p style="padding:24px; color:#9B8E82; text-align:center;">אין ילדים בשנת ${selectedYear}. אפשר להוסיף ילד או לייבא מטבלה.</p>`;
     return;
   }
 
@@ -163,12 +217,19 @@ function renderTable() {
     </table></div>`;
 }
 
+let genderFilter = 'all';
 document.getElementById('search').addEventListener('input', renderTable);
+document.getElementById('sortBy').addEventListener('change', renderTable);
+document.querySelectorAll('#genderFilter .gf').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#genderFilter .gf').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); genderFilter = b.dataset.g; renderTable();
+}));
 
 function toggleForm() {
   const f = document.getElementById('form');
   f.classList.toggle('show');
-  if (!f.classList.contains('show')) resetForm();
+  if (!f.classList.contains('show')) { resetForm(); }
+  else if (!editingId) { fillYearSelect(selectedYear); }
 }
 function resetForm() { document.getElementById('childForm').reset(); editingId = null; }
 
@@ -183,6 +244,7 @@ function editChild(id) {
   document.getElementById('nationalId').value = c.national_id || '';
   document.getElementById('birthDate').value = c.birth_date || '';
   document.getElementById('prevFramework').value = c.prev_framework || '';
+  fillYearSelect(c.school_year || CUR_YEAR);
   document.getElementById('form').classList.add('show');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -205,6 +267,7 @@ document.getElementById('childForm').addEventListener('submit', async (e) => {
     national_id: document.getElementById('nationalId').value || null,
     birth_date: document.getElementById('birthDate').value || null,
     prev_framework: document.getElementById('prevFramework').value || null,
+    school_year: document.getElementById('schoolYear').value || selectedYear,
   };
   try {
     const res = editingId ? await api.updateChild(editingId, data) : await api.createChild(data);
@@ -215,6 +278,7 @@ document.getElementById('childForm').addEventListener('submit', async (e) => {
   } catch (err) { showError('שגיאה: ' + err.message); }
 });
 
+renderYearTabs();
 loadChildren();
 </script>
 

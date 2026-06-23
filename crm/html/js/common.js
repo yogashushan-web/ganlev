@@ -118,7 +118,7 @@ function renderNavSidebar() {
   const links = [
     { href: 'dashboard.html',       icon: '🏠', label: 'עמוד הבית' },
     { href: 'children-manage.html', icon: '👶', label: 'ילדים' },
-    { href: 'parents-tuition.html', icon: '👨‍👩‍👧', label: 'הורים ודמי לימוד' },
+    { href: 'parents-tuition.html', icon: '👨‍👩‍👧', label: 'הורים' },
     { href: 'staff-salaries.html',  icon: '👔', label: 'עובדים ומשכורות' },
     { href: 'income-expenses.html', icon: '💰', label: 'הכנסות והוצאות' },
     { href: 'import.html',          icon: '📥', label: 'ייבוא מטבלה' },

@@ -23,7 +23,7 @@ const handler = withAuth(async (event) => {
         .select('*')
         .eq('garden_id', garden_id)
         .neq('status', 'archived')
-        .order('first_name_he');
+        .order('birth_date', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
 
@@ -35,7 +35,7 @@ const handler = withAuth(async (event) => {
 
     if (event.httpMethod === 'POST') {
       // Create child
-      const { first_name_he, last_name_he, birth_date, name_en, gender_he, national_id, prev_framework } = JSON.parse(event.body || '{}');
+      const { first_name_he, last_name_he, birth_date, name_en, gender_he, national_id, prev_framework, school_year } = JSON.parse(event.body || '{}');
 
       if (!first_name_he || !last_name_he) {
         return {
@@ -55,6 +55,7 @@ const handler = withAuth(async (event) => {
           gender_he: gender_he || null,
           national_id: national_id || null,
           prev_framework: prev_framework || null,
+          school_year: school_year || null,
           status: 'active',
         })
         .select()

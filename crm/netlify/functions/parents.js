@@ -39,9 +39,9 @@ const handler = withAuth(async (event) => {
 
     if (event.httpMethod === 'POST') {
       // Create parent
-      const { child_id, full_name_he, phone, email, relationship_type, is_primary } = JSON.parse(event.body || '{}');
+      const { child_id, full_name_he, phone, email, relationship_type, is_primary, address, occupation } = JSON.parse(event.body || '{}');
 
-      if (!child_id || !full_name_he) {
+      if (!full_name_he) {
         return {
           statusCode: 400,
           body: JSON.stringify({ success: false, error: 'Missing required fields' }),
@@ -52,11 +52,13 @@ const handler = withAuth(async (event) => {
         .from('parents')
         .insert({
           garden_id,
-          child_id,
+          child_id: child_id || null,
           full_name_he,
           phone: phone || null,
           email: email || null,
-          relationship_type: relationship_type || 'parent',
+          address: address || null,
+          occupation: occupation || null,
+          relationship_type: relationship_type || null,
           is_primary: is_primary || false,
         })
         .select()

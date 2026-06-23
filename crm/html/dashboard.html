@@ -124,10 +124,10 @@
     </div>
   </div>
 
-  <!-- ADD EVENT MODAL (garden) -->
+  <!-- ADD / EDIT EVENT MODAL (garden) -->
   <div class="modal-ov" id="evtModal">
     <div class="modal">
-      <h3>אירוע חדש — לוח הגן</h3>
+      <h3 id="evtModalTitle">אירוע חדש — לוח הגן</h3>
       <label>תאריך</label><input type="date" id="evtDate">
       <label>כותרת</label><input type="text" id="evtTitle" placeholder="לדוגמה: הדרכת בטיחות">
       <label>קטגוריה</label><select id="evtCat"></select>
@@ -136,11 +136,12 @@
         <button class="b-save" onclick="saveEvt()">שמור</button>
         <button class="b-cancel" onclick="closeEvt()">ביטול</button>
       </div>
+      <button id="evtDelBtn" onclick="delCurrentEvt()" style="display:none; width:100%; margin-top:10px; background:#e74c3c; color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer;">🗑 מחק אירוע</button>
     </div>
   </div>
 
-<script src="js/common.js"></script>
-<script src="js/api.js"></script>
+<script src="js/common.js?v=3"></script>
+<script src="js/api.js?v=3"></script>
 <script>
 const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const GARDEN_CATS = [
@@ -158,6 +159,8 @@ function catColor(c) { const f = GARDEN_CATS.find(x => x.key === c); return f ? 
 
 let view = { y: new Date().getFullYear(), m: new Date().getMonth() };
 let childrenCache = [];
+let gardenEvents = [];
+let editingEvtId = null;
 
 // tabs
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
@@ -192,6 +195,7 @@ async function renderGarden() {
 
   let events = [];
   try { const r = await api.getEvents('garden', from, to); events = r.data || []; } catch (e) {}
+  gardenEvents = events;
 
   const bdays = childrenCache
     .filter(c => c.birth_date && new Date(c.birth_date).getMonth() === m)
@@ -209,7 +213,7 @@ async function renderGarden() {
       chips += `<div class="ev-chip" style="background:#fce7f3;color:#9d2463;" title="יום הולדת">🎂 ${esc(b.name)}</div>`);
     events.filter(e => e.event_date === dateStr).forEach(e => {
       const c = catColor(e.category);
-      chips += `<div class="ev-chip" style="background:${c}22;color:${c};border-right:3px solid ${c};" title="${esc(e.title)} — לחיצה למחיקה" onclick="event.stopPropagation(); delEvt('${e.id}')">${e.event_time ? e.event_time.slice(0,5)+' ' : ''}${esc(e.title)}</div>`;
+      chips += `<div class="ev-chip" style="background:${c}22;color:${c};border-right:3px solid ${c};" title="${esc(e.title)} — לחיצה לעריכה" onclick="event.stopPropagation(); editEvt('${e.id}')">${e.event_time ? e.event_time.slice(0,5)+' ' : ''}${esc(e.title)}</div>`;
     });
     html += `<div class="cal-cell ${dateStr === tStr ? 'today' : ''}" onclick="openEvt('${dateStr}')"><div class="cal-d">${d}</div>${chips}</div>`;
   }
@@ -221,13 +225,32 @@ async function renderGarden() {
 }
 
 // modal
-function openEvt(dateStr) {
-  document.getElementById('evtDate').value = dateStr;
-  document.getElementById('evtTitle').value = '';
-  document.getElementById('evtTime').value = '';
+function fillCats() {
   document.getElementById('evtCat').innerHTML = GARDEN_CATS
     .filter(c => !c.key.includes('יום הולדת'))
     .map(c => `<option value="${c.key}">${c.key}</option>`).join('');
+}
+function openEvt(dateStr) {
+  editingEvtId = null;
+  document.getElementById('evtModalTitle').textContent = 'אירוע חדש — לוח הגן';
+  document.getElementById('evtDelBtn').style.display = 'none';
+  fillCats();
+  document.getElementById('evtDate').value = dateStr;
+  document.getElementById('evtTitle').value = '';
+  document.getElementById('evtTime').value = '';
+  document.getElementById('evtModal').classList.add('show');
+}
+function editEvt(id) {
+  const e = gardenEvents.find(x => x.id === id);
+  if (!e) return;
+  editingEvtId = id;
+  document.getElementById('evtModalTitle').textContent = 'עריכת אירוע';
+  document.getElementById('evtDelBtn').style.display = 'block';
+  fillCats();
+  document.getElementById('evtDate').value = e.event_date;
+  document.getElementById('evtTitle').value = e.title || '';
+  document.getElementById('evtCat').value = e.category || '';
+  document.getElementById('evtTime').value = e.event_time ? e.event_time.slice(0, 5) : '';
   document.getElementById('evtModal').classList.add('show');
 }
 function closeEvt() { document.getElementById('evtModal').classList.remove('show'); }
@@ -235,18 +258,21 @@ async function saveEvt() {
   const title = document.getElementById('evtTitle').value.trim();
   const event_date = document.getElementById('evtDate').value;
   if (!title || !event_date) { alert('צריך כותרת ותאריך'); return; }
+  const data = {
+    calendar: 'garden', title, event_date,
+    category: document.getElementById('evtCat').value,
+    event_time: document.getElementById('evtTime').value || null,
+  };
   try {
-    await api.createEvent({
-      calendar: 'garden', title, event_date,
-      category: document.getElementById('evtCat').value,
-      event_time: document.getElementById('evtTime').value || null,
-    });
+    if (editingEvtId) await api.updateEvent(editingEvtId, data);
+    else await api.createEvent(data);
     closeEvt(); renderGarden();
   } catch (err) { alert('שגיאה בשמירה: ' + err.message); }
 }
-async function delEvt(id) {
+async function delCurrentEvt() {
+  if (!editingEvtId) return;
   if (!confirm('למחוק את האירוע?')) return;
-  try { await api.deleteEvent(id); renderGarden(); }
+  try { await api.deleteEvent(editingEvtId); closeEvt(); renderGarden(); }
   catch (err) { alert('שגיאה: ' + err.message); }
 }
 
