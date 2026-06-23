@@ -8,57 +8,62 @@
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
-
-    .header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; padding-bottom:18px; border-bottom:2px solid #e8e4de; }
-    .header h1 { font-size:28px; color:#1F3D34; }
+    .header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; }
+    .header h1 { font-size:26px; color:#1F3D34; }
     .header .sub { font-size:13px; color:#9B8E82; margin-top:4px; }
     .user-info { display:flex; align-items:center; gap:12px; }
-    .user-avatar { width:42px; height:42px; border-radius:50%; background:#C4846C; color:#FFF; display:flex; align-items:center; justify-content:center; font-weight:700; }
-    .user-text { text-align:left; }
+    .user-avatar { width:40px; height:40px; border-radius:50%; background:#C4846C; color:#FFF; display:flex; align-items:center; justify-content:center; font-weight:700; }
     .user-name { font-weight:700; color:#1F3D34; font-size:13px; }
     .user-role { font-size:12px; color:#9B8E82; }
 
-    .kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(210px,1fr)); gap:18px; margin-bottom:14px; }
-    .kpi { background:#FFF; border-radius:18px; padding:20px 22px; box-shadow:0 4px 16px rgba(31,61,52,0.06); position:relative; overflow:hidden; }
-    .kpi::before { content:''; position:absolute; top:0; right:0; width:6px; height:100%; background:var(--c,#C4846C); }
-    .kpi .ico { font-size:20px; margin-bottom:10px; display:inline-block; }
-    .kpi .lbl { font-size:13px; color:#9B8E82; margin-bottom:6px; }
-    .kpi .val { font-size:27px; font-weight:800; color:#1F3D34; line-height:1.1; }
-    .kpi .meta { font-size:12px; margin-top:6px; color:var(--c,#C4846C); font-weight:600; }
+    .chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+    .chip-s { background:#FFF; border-radius:12px; padding:9px 15px; box-shadow:0 2px 8px rgba(0,0,0,.04); font-size:13px; }
+    .chip-s b { color:#1F3D34; font-size:15px; }
 
-    .chips { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
-    .chip { background:#FFF; border-radius:12px; padding:10px 16px; box-shadow:0 2px 8px rgba(0,0,0,0.04); font-size:13px; color:#3D3228; }
-    .chip b { color:#1F3D34; font-size:15px; }
+    .tabs { display:flex; gap:8px; margin-bottom:18px; }
+    .tab { padding:11px 22px; border:none; background:#fff; border-radius:12px 12px 0 0; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:15px; color:#9B8E82; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+    .tab.active { background:#1F3D34; color:#fff; }
+    .pane { display:none; }
+    .pane.active { display:block; }
 
-    .panel { background:#FFF; border-radius:18px; padding:22px 24px; box-shadow:0 4px 16px rgba(31,61,52,0.06); margin-bottom:24px; }
-    .panel h3 { font-size:15px; color:#1F3D34; margin-bottom:16px; }
-    .bar-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
-    .bar-row .name { width:90px; font-size:13px; color:#3D3228; }
-    .bar-track { flex:1; background:#F0ECE6; border-radius:10px; height:22px; overflow:hidden; }
-    .bar-fill { height:100%; border-radius:10px; transition:width .6s cubic-bezier(.2,1,.3,1); }
-    .bar-row .amt { width:110px; text-align:left; font-weight:700; font-size:14px; }
+    .cal-card { background:#FFF; border-radius:0 16px 16px 16px; padding:20px; box-shadow:0 4px 16px rgba(31,61,52,.06); }
+    .cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+    .cal-head h2 { font-size:18px; color:#1F3D34; }
+    .cal-nav { display:flex; align-items:center; gap:10px; }
+    .cal-nav button { border:none; background:#F4EFE6; width:34px; height:34px; border-radius:9px; cursor:pointer; font-size:16px; color:#1F3D34; }
+    .cal-nav button:hover { background:#e8e0d4; }
+    .cal-nav .lbl { font-weight:700; color:#1F3D34; min-width:120px; text-align:center; }
+    .btn-add-evt { background:#C4846C; color:#fff; border:none; padding:9px 16px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn-add-evt:hover { background:#a96b54; }
 
-    .actions { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px,1fr)); gap:13px; margin-bottom:30px; }
-    .action-btn { background:#1F3D34; color:#FFF; border:none; border-radius:13px; padding:15px 18px; font-family:'Heebo'; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
-    .action-btn:hover { background:#154428; transform:translateY(-2px); box-shadow:0 6px 16px rgba(31,61,52,0.22); }
-    .action-btn.alt { background:#C4846C; }
-    .action-btn.alt:hover { background:#a96b54; }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+    .cal-dow { text-align:center; font-weight:700; color:#9B8E82; font-size:12px; padding:6px 0; }
+    .cal-cell { min-height:84px; background:#FAF8F4; border-radius:10px; padding:6px; cursor:pointer; transition:background .15s; overflow:hidden; }
+    .cal-cell:hover { background:#f1ece3; }
+    .cal-cell.empty { background:transparent; cursor:default; }
+    .cal-cell.today { outline:2px solid #C4846C; }
+    .cal-d { font-size:12px; font-weight:700; color:#6f6457; margin-bottom:4px; }
+    .ev-chip { font-size:10.5px; padding:2px 6px; border-radius:5px; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
 
-    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
-    @media(max-width:1100px){ .grid2 { grid-template-columns:1fr; } }
-    .section-title { font-size:16px; font-weight:700; color:#1F3D34; margin-bottom:14px; }
-    table { width:100%; border-collapse:collapse; background:#FFF; border-radius:16px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
-    th { background:#1F3D34; color:#FFF; padding:12px 14px; font-weight:500; font-size:12px; text-align:right; }
-    td { padding:11px 14px; border-bottom:1px solid #f0ece6; font-size:13px; }
-    tr:last-child td { border-bottom:none; }
-    tr:hover td { background:#FAF8F4; }
-    .amt-pos { color:#1F7a4f; font-weight:700; }
-    .amt-neg { color:#c0563f; font-weight:700; }
-    .loading { text-align:center; padding:30px; color:#9B8E82; }
-    .empty { padding:18px; color:#9B8E82; font-size:13px; }
-    .error { background:#fdf0ef; border:1px solid #f5c6c0; color:#c94147; padding:14px; border-radius:12px; margin-bottom:20px; display:none; }
+    .legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; font-size:11.5px; color:#6f6457; }
+    .legend span { display:inline-flex; align-items:center; gap:5px; }
+    .legend i { width:11px; height:11px; border-radius:3px; display:inline-block; }
+
+    .gc-note { background:#eef3f1; border:1px solid #d9ead9; border-radius:12px; padding:12px 16px; font-size:13px; color:#3D3228; margin-bottom:14px; line-height:1.6; }
+
+    .modal-ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center; justify-content:center; z-index:99999; }
+    .modal-ov.show { display:flex; }
+    .modal { background:#fff; border-radius:18px; padding:26px; width:92%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .modal h3 { color:#1F3D34; margin-bottom:18px; }
+    .modal label { display:block; font-size:12px; font-weight:700; color:#3D3228; margin:12px 0 6px; }
+    .modal input, .modal select, .modal textarea { width:100%; padding:11px 13px; border:1px solid #e8e4de; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .modal input:focus, .modal select:focus { border-color:#1F3D34; }
+    .modal-actions { display:flex; gap:10px; margin-top:20px; }
+    .modal-actions button { flex:1; padding:12px; border:none; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
+    .b-save { background:#1F3D34; color:#fff; }
+    .b-cancel { background:#f0ece6; color:#333; }
+    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
     .error.show { display:block; }
-    @media(max-width:600px){ .header{flex-direction:column;align-items:flex-start;gap:14px;} }
   </style>
 </head>
 <body>
@@ -69,8 +74,8 @@
       <div class="sub" id="gardenSub">טוען...</div>
     </div>
     <div class="user-info">
-      <div class="user-avatar" id="userAvatar">👤</div>
-      <div class="user-text">
+      <div class="user-avatar">👤</div>
+      <div>
         <div class="user-name" id="currentUser">משתמש</div>
         <div class="user-role" id="currentRole">מנהל</div>
       </div>
@@ -79,67 +84,58 @@
 
   <div id="error" class="error"></div>
 
-  <div class="kpis">
-    <div class="kpi" style="--c:#1F7a4f;">
-      <span class="ico">📈</span>
-      <div class="lbl">הכנסות החודש</div>
-      <div class="val" id="kpiIncome">-</div>
-    </div>
-    <div class="kpi" style="--c:#c0563f;">
-      <span class="ico">📉</span>
-      <div class="lbl">הוצאות החודש</div>
-      <div class="val" id="kpiExpense">-</div>
-    </div>
-    <div class="kpi" id="kpiNetCard" style="--c:#1F3D34;">
-      <span class="ico">⚖️</span>
-      <div class="lbl">מאזן החודש</div>
-      <div class="val" id="kpiNet">-</div>
-      <div class="meta" id="kpiNetMeta"></div>
-    </div>
-    <div class="kpi" style="--c:#C4846C;">
-      <span class="ico">⏳</span>
-      <div class="lbl">דמי לימוד שטרם שולמו</div>
-      <div class="val" id="kpiOutstanding">-</div>
-      <div class="meta" id="kpiOutstandingMeta"></div>
-    </div>
-  </div>
-
   <div class="chips">
-    <div class="chip">👶 ילדים פעילים: <b id="chipChildren">-</b></div>
-    <div class="chip">👔 עובדים: <b id="chipStaff">-</b></div>
-    <div class="chip">📅 <span id="chipMonth"></span></div>
+    <div class="chip-s">👶 ילדים: <b id="chipChildren">-</b></div>
+    <div class="chip-s">👔 עובדים: <b id="chipStaff">-</b></div>
+    <div class="chip-s">⏳ דמי לימוד פתוחים: <b id="chipTuition">-</b></div>
   </div>
 
-  <div class="panel">
-    <h3>הכנסות מול הוצאות — החודש</h3>
-    <div class="bar-row">
-      <div class="name">הכנסות</div>
-      <div class="bar-track"><div class="bar-fill" id="barIncome" style="width:0; background:linear-gradient(90deg,#2e9b66,#1F7a4f);"></div></div>
-      <div class="amt amt-pos" id="barIncomeAmt">₪0</div>
-    </div>
-    <div class="bar-row">
-      <div class="name">הוצאות</div>
-      <div class="bar-track"><div class="bar-fill" id="barExpense" style="width:0; background:linear-gradient(90deg,#d77a63,#c0563f);"></div></div>
-      <div class="amt amt-neg" id="barExpenseAmt">₪0</div>
+  <div class="tabs">
+    <button class="tab active" data-pane="garden">🏫 לוח הגן</button>
+    <button class="tab" data-pane="yoel">👤 לוח יואל</button>
+  </div>
+
+  <!-- GARDEN CALENDAR -->
+  <div class="pane active" id="pane-garden">
+    <div class="cal-card">
+      <div class="cal-head">
+        <div class="cal-nav">
+          <button onclick="moveMonth(-1)">‹</button>
+          <span class="lbl" id="gardenMonthLbl"></span>
+          <button onclick="moveMonth(1)">›</button>
+        </div>
+        <button class="btn-add-evt" onclick="openEvt(todayStr())">+ אירוע חדש</button>
+      </div>
+      <div id="gardenGrid"></div>
+      <div class="legend" id="gardenLegend"></div>
     </div>
   </div>
 
-  <div class="actions">
-    <button class="action-btn" onclick="location.href='children-manage.html'">+ ילד חדש</button>
-    <button class="action-btn" onclick="location.href='income-expenses.html'">+ הכנסה</button>
-    <button class="action-btn" onclick="location.href='income-expenses.html#expenses'">+ הוצאה</button>
-    <button class="action-btn" onclick="location.href='parents-tuition.html'">+ דמי לימוד</button>
-    <button class="action-btn alt" onclick="location.href='import.html'">📥 ייבוא מטבלה</button>
+  <!-- YOEL CALENDAR (Google) -->
+  <div class="pane" id="pane-yoel">
+    <div class="cal-card">
+      <div class="gc-note" id="yoelNote">
+        מחובר ל-Google Calendar של יואל (<b>joelkarmeli@gmail.com</b>). אם הלוח ריק - יואל צריך
+        <b>לשתף את היומן</b> (הגדרות היומן ב-Google → "שיתוף עם אנשים מסוימים" או "הפיכה לציבורי") כדי שהאירועים יוצגו כאן.
+      </div>
+      <iframe id="yoelFrame"
+        src="https://calendar.google.com/calendar/embed?src=joelkarmeli%40gmail.com&ctz=Asia%2FJerusalem&mode=MONTH&showTitle=0&showPrint=0&showCalendars=0&wkst=1"
+        style="border:0; width:100%; height:620px; border-radius:14px;"></iframe>
+    </div>
   </div>
 
-  <div class="grid2">
-    <div>
-      <div class="section-title">דמי לימוד שטרם שולמו</div>
-      <div id="pendingTuitionTable" class="loading">טוען...</div>
-    </div>
-    <div>
-      <div class="section-title">תנועות אחרונות</div>
-      <div id="recentTxTable" class="loading">טוען...</div>
+  <!-- ADD EVENT MODAL (garden) -->
+  <div class="modal-ov" id="evtModal">
+    <div class="modal">
+      <h3>אירוע חדש — לוח הגן</h3>
+      <label>תאריך</label><input type="date" id="evtDate">
+      <label>כותרת</label><input type="text" id="evtTitle" placeholder="לדוגמה: הדרכת בטיחות">
+      <label>קטגוריה</label><select id="evtCat"></select>
+      <label>שעה (לא חובה)</label><input type="time" id="evtTime">
+      <div class="modal-actions">
+        <button class="b-save" onclick="saveEvt()">שמור</button>
+        <button class="b-cancel" onclick="closeEvt()">ביטול</button>
+      </div>
     </div>
   </div>
 
@@ -147,108 +143,135 @@
 <script src="js/api.js"></script>
 <script>
 const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const GARDEN_CATS = [
+  { key:'הדרכת צוות',     color:'#2D5A50' },
+  { key:'חוג',           color:'#3b82f6' },
+  { key:'יום הורים',      color:'#C4846C' },
+  { key:'אירוע מיוחד',    color:'#8b5cf6' },
+  { key:'יום הולדת ילד',  color:'#ec4899' },
+  { key:'יום הולדת צוות', color:'#16a34a' },
+];
+const pad = n => String(n).padStart(2, '0');
+const esc = s => (s || '').replace(/</g, '&lt;');
+function todayStr() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function catColor(c) { const f = GARDEN_CATS.find(x => x.key === c); return f ? f.color : '#6f6457'; }
 
-function sumBy(arr, key) {
-  return (arr || []).reduce((s, x) => s + (parseFloat(x[key]) || 0), 0);
-}
+let view = { y: new Date().getFullYear(), m: new Date().getMonth() };
+let childrenCache = [];
+
+// tabs
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('pane-' + t.dataset.pane).classList.add('active');
+}));
 
 async function loadGardenName() {
   try {
     const token = localStorage.getItem('crm_token');
     const res = await fetch('/.netlify/functions/gardens', { headers: { 'Authorization': 'Bearer ' + token } });
     const json = await res.json();
-    const active = getGardenId();
-    const g = (json.data || []).find(x => x.id === active);
+    const g = (json.data || []).find(x => x.id === getGardenId());
     return g ? g.name : '';
   } catch (e) { return ''; }
 }
 
-async function loadDashboard() {
-  try {
-    const user = getUser();
-    document.getElementById('currentUser').textContent = user?.full_name_he || 'משתמש';
-    document.getElementById('currentRole').textContent =
-      { admin:'מנהל', manager:'מנהל גן', staff:'עובד' }[user?.role] || 'משתמש';
-
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const todayStr = now.toISOString().split('T')[0];
-    document.getElementById('chipMonth').textContent = monthNames[now.getMonth()] + ' ' + now.getFullYear();
-
-    loadGardenName().then(name => {
-      document.getElementById('gardenSub').textContent = name ? ('גן פעיל: ' + name) : '';
-    });
-
-    const [summary, incomeRes, expenseRes, tuitionRes] = await Promise.all([
-      api.getDashboardSummary().catch(() => ({})),
-      api.getIncome(monthStart, todayStr).catch(() => ({ data: [] })),
-      api.getExpenses(monthStart, todayStr).catch(() => ({ data: [] })),
-      api.getTuition('pending').catch(() => ({ data: [] })),
-    ]);
-
-    const income = incomeRes.data || [];
-    const expenses = expenseRes.data || [];
-    const tuition = tuitionRes.data || [];
-
-    const incomeTotal = sumBy(income, 'amount');
-    const expenseTotal = sumBy(expenses, 'amount');
-    const net = incomeTotal - expenseTotal;
-    const outstanding = (summary.data && summary.data.pending_tuition_amount) || sumBy(tuition, 'amount');
-
-    document.getElementById('kpiIncome').textContent = formatCurrency(incomeTotal);
-    document.getElementById('kpiExpense').textContent = formatCurrency(expenseTotal);
-    document.getElementById('kpiNet').textContent = formatCurrency(net);
-    const netCard = document.getElementById('kpiNetCard');
-    netCard.style.setProperty('--c', net >= 0 ? '#1F7a4f' : '#c0563f');
-    const netMeta = document.getElementById('kpiNetMeta');
-    netMeta.textContent = net >= 0 ? 'עודף 🙂' : 'גירעון';
-    netMeta.style.color = net >= 0 ? '#1F7a4f' : '#c0563f';
-    document.getElementById('kpiOutstanding').textContent = formatCurrency(outstanding);
-    document.getElementById('kpiOutstandingMeta').textContent =
-      (((summary.data && summary.data.pending_tuition_count) || tuition.length) || 0) + ' חיובים פתוחים';
-
-    document.getElementById('chipChildren').textContent = (summary.data && summary.data.children_count) || 0;
-    document.getElementById('chipStaff').textContent = (summary.data && summary.data.staff_count) || 0;
-
-    const max = Math.max(incomeTotal, expenseTotal, 1);
-    document.getElementById('barIncome').style.width = (incomeTotal / max * 100) + '%';
-    document.getElementById('barExpense').style.width = (expenseTotal / max * 100) + '%';
-    document.getElementById('barIncomeAmt').textContent = formatCurrency(incomeTotal);
-    document.getElementById('barExpenseAmt').textContent = formatCurrency(expenseTotal);
-
-    if (tuition.length) {
-      const rows = tuition.slice(0, 6).map(t => `
-        <tr><td>${t.child_name || t.child_id || '-'}</td><td>${formatCurrency(t.amount)}</td><td>${formatDate(t.due_date)}</td></tr>`).join('');
-      document.getElementById('pendingTuitionTable').innerHTML =
-        `<table><thead><tr><th>ילד</th><th>סכום</th><th>תאריך יעד</th></tr></thead><tbody>${rows}</tbody></table>`;
-    } else {
-      document.getElementById('pendingTuitionTable').innerHTML = '<div class="empty">אין דמי לימוד פתוחים 🎉</div>';
-    }
-
-    const tx = [
-      ...income.map(i => ({ date:i.receipt_date, label:i.source_he, cat:i.category_he, amount:+i.amount, type:'in' })),
-      ...expenses.map(e => ({ date:e.expense_date, label:e.description_he, cat:e.category_he, amount:-Math.abs(+e.amount), type:'out' })),
-    ].sort((a,b) => (b.date || '').localeCompare(a.date || '')).slice(0, 8);
-
-    if (tx.length) {
-      const rows = tx.map(t => `
-        <tr>
-          <td>${t.type === 'in' ? '🟢 הכנסה' : '🔴 הוצאה'}</td>
-          <td>${t.label || '-'}${t.cat ? ` <span style="color:#9B8E82;">· ${t.cat}</span>` : ''}</td>
-          <td class="${t.amount >= 0 ? 'amt-pos' : 'amt-neg'}">${t.amount >= 0 ? '+' : '-'}${formatCurrency(Math.abs(t.amount))}</td>
-          <td>${formatDate(t.date)}</td>
-        </tr>`).join('');
-      document.getElementById('recentTxTable').innerHTML =
-        `<table><thead><tr><th>סוג</th><th>פירוט</th><th>סכום</th><th>תאריך</th></tr></thead><tbody>${rows}</tbody></table>`;
-    } else {
-      document.getElementById('recentTxTable').innerHTML = '<div class="empty">אין תנועות החודש. אפשר לייבא טבלה 📥</div>';
-    }
-  } catch (err) {
-    showError('שגיאה בטעינת הנתונים: ' + err.message);
-  }
+function moveMonth(d) {
+  view.m += d;
+  if (view.m < 0) { view.m = 11; view.y--; }
+  if (view.m > 11) { view.m = 0; view.y++; }
+  renderGarden();
 }
 
-loadDashboard();
+async function renderGarden() {
+  const { y, m } = view;
+  document.getElementById('gardenMonthLbl').textContent = monthNames[m] + ' ' + y;
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  const from = `${y}-${pad(m+1)}-01`, to = `${y}-${pad(m+1)}-${pad(lastDay)}`;
+
+  let events = [];
+  try { const r = await api.getEvents('garden', from, to); events = r.data || []; } catch (e) {}
+
+  const bdays = childrenCache
+    .filter(c => c.birth_date && new Date(c.birth_date).getMonth() === m)
+    .map(c => ({ day: new Date(c.birth_date).getDate(), name: c.first_name_he }));
+
+  const firstDow = new Date(y, m, 1).getDay();
+  const tStr = todayStr();
+  let html = '<div class="cal-grid">';
+  ['א','ב','ג','ד','ה','ו','ש'].forEach(d => html += `<div class="cal-dow">${d}</div>`);
+  for (let i = 0; i < firstDow; i++) html += '<div class="cal-cell empty"></div>';
+  for (let d = 1; d <= lastDay; d++) {
+    const dateStr = `${y}-${pad(m+1)}-${pad(d)}`;
+    let chips = '';
+    bdays.filter(b => b.day === d).forEach(b =>
+      chips += `<div class="ev-chip" style="background:#fce7f3;color:#9d2463;" title="יום הולדת">🎂 ${esc(b.name)}</div>`);
+    events.filter(e => e.event_date === dateStr).forEach(e => {
+      const c = catColor(e.category);
+      chips += `<div class="ev-chip" style="background:${c}22;color:${c};border-right:3px solid ${c};" title="${esc(e.title)} — לחיצה למחיקה" onclick="event.stopPropagation(); delEvt('${e.id}')">${e.event_time ? e.event_time.slice(0,5)+' ' : ''}${esc(e.title)}</div>`;
+    });
+    html += `<div class="cal-cell ${dateStr === tStr ? 'today' : ''}" onclick="openEvt('${dateStr}')"><div class="cal-d">${d}</div>${chips}</div>`;
+  }
+  html += '</div>';
+  document.getElementById('gardenGrid').innerHTML = html;
+
+  document.getElementById('gardenLegend').innerHTML =
+    GARDEN_CATS.map(c => `<span><i style="background:${c.color};"></i>${c.key}</span>`).join('');
+}
+
+// modal
+function openEvt(dateStr) {
+  document.getElementById('evtDate').value = dateStr;
+  document.getElementById('evtTitle').value = '';
+  document.getElementById('evtTime').value = '';
+  document.getElementById('evtCat').innerHTML = GARDEN_CATS
+    .filter(c => !c.key.includes('יום הולדת'))
+    .map(c => `<option value="${c.key}">${c.key}</option>`).join('');
+  document.getElementById('evtModal').classList.add('show');
+}
+function closeEvt() { document.getElementById('evtModal').classList.remove('show'); }
+async function saveEvt() {
+  const title = document.getElementById('evtTitle').value.trim();
+  const event_date = document.getElementById('evtDate').value;
+  if (!title || !event_date) { alert('צריך כותרת ותאריך'); return; }
+  try {
+    await api.createEvent({
+      calendar: 'garden', title, event_date,
+      category: document.getElementById('evtCat').value,
+      event_time: document.getElementById('evtTime').value || null,
+    });
+    closeEvt(); renderGarden();
+  } catch (err) { alert('שגיאה בשמירה: ' + err.message); }
+}
+async function delEvt(id) {
+  if (!confirm('למחוק את האירוע?')) return;
+  try { await api.deleteEvent(id); renderGarden(); }
+  catch (err) { alert('שגיאה: ' + err.message); }
+}
+
+async function init() {
+  const user = getUser();
+  document.getElementById('currentUser').textContent = user?.full_name_he || 'משתמש';
+  document.getElementById('currentRole').textContent =
+    { admin:'מנהל', manager:'מנהל גן', staff:'עובד' }[user?.role] || 'משתמש';
+  loadGardenName().then(n => document.getElementById('gardenSub').textContent = n ? ('גן פעיל: ' + n) : '');
+
+  const [summary, tuitionRes, childrenRes] = await Promise.all([
+    api.getDashboardSummary().catch(() => ({})),
+    api.getTuition('pending').catch(() => ({ data: [] })),
+    api.getChildren().catch(() => ({ data: [] })),
+  ]);
+  const s = summary.data || {};
+  childrenCache = childrenRes.data || [];
+  document.getElementById('chipChildren').textContent = s.children_count != null ? s.children_count : childrenCache.length;
+  document.getElementById('chipStaff').textContent = s.staff_count || 0;
+  document.getElementById('chipTuition').textContent = (s.pending_tuition_count || (tuitionRes.data || []).length) || 0;
+
+  renderGarden();
+}
+
+init();
 </script>
 
 </body>

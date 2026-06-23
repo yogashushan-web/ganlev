@@ -106,4 +106,10 @@ const api = {
 
   // Bulk import (children / income / expenses)
   importRows: (type, rows) => apiCall('/import-rows', 'POST', { type, rows, garden_id: getGardenId() }),
+
+  // Calendar events
+  getEvents: (calendar, from, to) => apiCall(`/events?garden_id=${getGardenId()}${calendar ? `&calendar=${calendar}` : ''}${from ? `&date_from=${from}` : ''}${to ? `&date_to=${to}` : ''}`),
+  createEvent: (data) => apiCall(`/events?garden_id=${getGardenId()}`, 'POST', data),
+  updateEvent: (id, data) => apiCall(`/events/${id}?garden_id=${getGardenId()}`, 'PUT', data),
+  deleteEvent: (id) => apiCall(`/events/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 };
