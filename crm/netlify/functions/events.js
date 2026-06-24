@@ -26,7 +26,7 @@ const handler = withAuth(async (event) => {
     }
 
     if (event.httpMethod === 'POST') {
-      const { calendar: cal, title, category, event_date, event_time, notes } = JSON.parse(event.body || '{}');
+      const { calendar: cal, title, category, event_date, event_time, end_time, notes } = JSON.parse(event.body || '{}');
       if (!title || !event_date) {
         return { statusCode: 400, body: JSON.stringify({ success: false, error: 'Missing title or date' }) };
       }
@@ -37,6 +37,7 @@ const handler = withAuth(async (event) => {
         category: category || null,
         event_date,
         event_time: event_time || null,
+        end_time: end_time || null,
         notes: notes || null,
       }).select().single();
       if (error) throw error;

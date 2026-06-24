@@ -49,6 +49,11 @@
     .legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; font-size:11.5px; color:#6f6457; }
     .legend span { display:inline-flex; align-items:center; gap:5px; }
     .legend i { width:11px; height:11px; border-radius:3px; display:inline-block; }
+    .legend .lg { cursor:pointer; padding:3px 6px; border-radius:6px; transition:background .15s; }
+    .legend .lg:hover { background:#f1ece3; }
+    .cat-item { display:flex; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom:1px solid #f0ece6; font-size:13px; cursor:pointer; }
+    .cat-item:hover { background:#FAF8F4; }
+    .cat-item .d { color:#9B8E82; white-space:nowrap; }
 
     .gc-note { background:#eef3f1; border:1px solid #d9ead9; border-radius:12px; padding:12px 16px; font-size:13px; color:#3D3228; margin-bottom:14px; line-height:1.6; }
 
@@ -128,7 +133,10 @@
       <label>תאריך</label><input type="date" id="evtDate">
       <label>כותרת</label><input type="text" id="evtTitle" placeholder="לדוגמה: הדרכת בטיחות">
       <label>קטגוריה</label><select id="evtCat"></select>
-      <label>שעה (לא חובה)</label><input type="time" id="evtTime">
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1;"><label>שעת התחלה</label><input type="time" id="evtTime"></div>
+        <div style="flex:1;"><label>שעת סיום</label><input type="time" id="evtEndTime"></div>
+      </div>
       <div class="modal-actions">
         <button class="b-save" onclick="saveEvt()">שמור</button>
         <button class="b-cancel" onclick="closeEvt()">ביטול</button>
@@ -137,11 +145,21 @@
     </div>
   </div>
 
+  <!-- CATEGORY EVENTS MODAL -->
+  <div class="modal-ov" id="catModal">
+    <div class="modal">
+      <h3 id="catTitle"></h3>
+      <div id="catList" style="max-height:60vh; overflow:auto; margin-top:6px;"></div>
+      <div class="modal-actions"><button class="b-cancel" onclick="closeCat()">סגור</button></div>
+    </div>
+  </div>
+
 <script src="js/common.js?v=3"></script>
 <script src="js/api.js?v=3"></script>
 <script>
 const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const GARDEN_CATS = [
+  { key:'סידור',         color:'#0891b2' },
   { key:'הדרכת צוות',     color:'#2D5A50' },
   { key:'חוג',           color:'#3b82f6' },
   { key:'יום הורים',      color:'#C4846C' },
@@ -231,7 +249,8 @@ async function renderGarden() {
       chips += `<div class="ev-chip" style="background:#fce7f3;color:#9d2463;" title="יום הולדת">🎂 ${esc(b.name)}</div>`);
     events.filter(e => e.event_date === dateStr).forEach(e => {
       const c = catColor(e.category);
-      chips += `<div class="ev-chip" style="background:${c}22;color:${c};border-right:3px solid ${c};" title="${esc(e.title)} — לחיצה לעריכה" onclick="event.stopPropagation(); editEvt('${e.id}')">${e.event_time ? e.event_time.slice(0,5)+' ' : ''}${esc(e.title)}</div>`;
+      const tt = e.event_time ? (e.event_time.slice(0,5) + (e.end_time ? '-' + e.end_time.slice(0,5) : '') + ' ') : '';
+      chips += `<div class="ev-chip" style="background:${c}22;color:${c};border-right:3px solid ${c};" title="${esc(e.title)} — לחיצה לעריכה" onclick="event.stopPropagation(); editEvt('${e.id}')">${tt}${esc(e.title)}</div>`;
     });
     html += `<div class="cal-cell ${dateStr === tStr ? 'today' : ''}" onclick="openEvt('${dateStr}')"><div class="cal-d">${d} <span class="he-d">${heDay(y, m, d)}</span></div>${chips}</div>`;
   }
@@ -239,8 +258,8 @@ async function renderGarden() {
   document.getElementById('gardenGrid').innerHTML = html;
 
   document.getElementById('gardenLegend').innerHTML =
-    '<span><i style="background:#d97706;"></i>חגים ומועדים</span>' +
-    GARDEN_CATS.map(c => `<span><i style="background:${c.color};"></i>${c.key}</span>`).join('');
+    `<span class="lg" onclick="showCategory('חגים ומועדים')"><i style="background:#d97706;"></i>חגים ומועדים</span>` +
+    GARDEN_CATS.map(c => `<span class="lg" onclick="showCategory('${c.key}')"><i style="background:${c.color};"></i>${c.key}</span>`).join('');
 }
 
 // modal
@@ -257,6 +276,7 @@ function openEvt(dateStr) {
   document.getElementById('evtDate').value = dateStr;
   document.getElementById('evtTitle').value = '';
   document.getElementById('evtTime').value = '';
+  document.getElementById('evtEndTime').value = '';
   document.getElementById('evtModal').classList.add('show');
 }
 function editEvt(id) {
@@ -270,6 +290,7 @@ function editEvt(id) {
   document.getElementById('evtTitle').value = e.title || '';
   document.getElementById('evtCat').value = e.category || '';
   document.getElementById('evtTime').value = e.event_time ? e.event_time.slice(0, 5) : '';
+  document.getElementById('evtEndTime').value = e.end_time ? e.end_time.slice(0, 5) : '';
   document.getElementById('evtModal').classList.add('show');
 }
 function closeEvt() { document.getElementById('evtModal').classList.remove('show'); }
@@ -281,6 +302,7 @@ async function saveEvt() {
     calendar: 'garden', title, event_date,
     category: document.getElementById('evtCat').value,
     event_time: document.getElementById('evtTime').value || null,
+    end_time: document.getElementById('evtEndTime').value || null,
   };
   try {
     if (editingEvtId) await api.updateEvent(editingEvtId, data);
@@ -293,6 +315,38 @@ async function delCurrentEvt() {
   if (!confirm('למחוק את האירוע?')) return;
   try { await api.deleteEvent(editingEvtId); closeEvt(); renderGarden(); }
   catch (err) { alert('שגיאה: ' + err.message); }
+}
+
+// category filter (click a category in the legend to see all its events)
+function closeCat() { document.getElementById('catModal').classList.remove('show'); }
+async function showCategory(cat) {
+  document.getElementById('catTitle').textContent = 'אירועים: ' + cat;
+  const listEl = document.getElementById('catList');
+  listEl.innerHTML = '<div style="padding:12px;color:#9B8E82;">טוען...</div>';
+  document.getElementById('catModal').classList.add('show');
+
+  if (cat === 'חגים ומועדים') {
+    listEl.innerHTML = '<div style="padding:14px;color:#9B8E82;font-size:13px;">חגים ומועדים מוצגים אוטומטית מלוח השנה העברי, על התאריכים שלהם בלוח.</div>';
+    return;
+  }
+  if (cat === 'יום הולדת ילד') {
+    const items = childrenCache.filter(c => c.birth_date).map(c => ({
+      name: c.first_name_he + ' ' + (c.last_name_he || ''),
+      mo: new Date(c.birth_date).getMonth(), day: new Date(c.birth_date).getDate(),
+    })).sort((a, b) => a.mo - b.mo || a.day - b.day);
+    listEl.innerHTML = items.length ? items.map(i =>
+      `<div class="cat-item"><span>🎂 ${esc(i.name)}</span><span class="d">${i.day}/${i.mo + 1}</span></div>`).join('')
+      : '<div style="padding:14px;color:#9B8E82;">אין ימי הולדת.</div>';
+    return;
+  }
+  let evs = [];
+  try { const r = await api.getEvents('garden'); evs = (r.data || []).filter(e => e.category === cat); }
+  catch (e) { listEl.innerHTML = '<div style="padding:14px;color:#c94147;">שגיאה בטעינה</div>'; return; }
+  evs.sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''));
+  listEl.innerHTML = evs.length ? evs.map(e => {
+    const t = e.event_time ? (e.event_time.slice(0, 5) + (e.end_time ? '-' + e.end_time.slice(0, 5) : '')) : '';
+    return `<div class="cat-item" onclick="closeCat(); editEvt('${e.id}')"><span>${esc(e.title)}</span><span class="d">${t ? t + ' · ' : ''}${formatDate(e.event_date)}</span></div>`;
+  }).join('') : '<div style="padding:14px;color:#9B8E82;">אין אירועים בקטגוריה זו עדיין.</div>';
 }
 
 async function init() {
