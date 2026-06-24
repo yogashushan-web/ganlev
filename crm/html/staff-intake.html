@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שאלון עובד/ת חדש/ה — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:linear-gradient(135deg,#1F3D34 0%,#2D5A50 100%); color:#3D3228; direction:rtl; min-height:100vh; padding:24px; }
+    .card { background:#fff; border-radius:22px; max-width:560px; margin:20px auto; padding:36px 32px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .head { text-align:center; margin-bottom:26px; }
+    .head h1 { font-size:25px; color:#1F3D34; margin-bottom:6px; }
+    .head p { font-size:14px; color:#9B8E82; }
+    .grp { margin-bottom:16px; }
+    label { display:block; font-size:13px; font-weight:700; color:#3D3228; margin-bottom:6px; }
+    input, select, textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo',sans-serif; font-size:15px; outline:none; }
+    input:focus, select:focus, textarea:focus { border-color:#1F3D34; }
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:520px){ .two{grid-template-columns:1fr;} }
+    .btn { width:100%; margin-top:10px; padding:15px; border:none; border-radius:12px; background:#1F3D34; color:#fff; font-family:'Heebo'; font-size:16px; font-weight:700; cursor:pointer; }
+    .btn:hover { background:#154428; }
+    .btn:disabled { background:#cfc8bd; cursor:not-allowed; }
+    .msg { display:none; text-align:center; padding:30px 10px; }
+    .msg .v { font-size:46px; }
+    .msg h2 { color:#1F3D34; margin:10px 0 6px; }
+    .msg p { color:#9B8E82; }
+    .err { background:#fdf0ef; color:#c0563f; padding:12px; border-radius:10px; font-size:14px; margin-bottom:14px; display:none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="form-wrap">
+      <div class="head">
+        <img src="logo.png" alt="גן לב" style="width:90px;height:90px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:block;">
+        <h1>שאלון עובד/ת חדש/ה</h1>
+        <p>נעים להכיר! מלאו את הפרטים ונחזור אליכם.</p>
+      </div>
+      <div class="err" id="err"></div>
+      <form id="intakeForm">
+        <div class="two">
+          <div class="grp"><label>שם מלא *</label><input type="text" id="name" required></div>
+          <div class="grp"><label>טלפון נייד *</label><input type="tel" id="phone" dir="ltr" required></div>
+        </div>
+        <div class="two">
+          <div class="grp"><label>אימייל</label><input type="email" id="email" dir="ltr"></div>
+          <div class="grp"><label>תעודת זהות</label><input type="text" id="nid" dir="ltr"></div>
+        </div>
+        <div class="two">
+          <div class="grp"><label>תאריך לידה</label><input type="date" id="bdate"></div>
+          <div class="grp"><label>כתובת מגורים</label><input type="text" id="address"></div>
+        </div>
+        <div class="two">
+          <div class="grp"><label>שנות ניסיון בחינוך</label><input type="number" id="exp" min="0" placeholder="0"></div>
+          <div class="grp"><label>הכשרה לגיל הרך</label>
+            <select id="ece"><option value="">--</option><option>כן</option><option>לא</option><option>בתהליך</option></select>
+          </div>
+        </div>
+        <div class="two">
+          <div class="grp"><label>מגורים בשכונה</label>
+            <select id="hood"><option value="">--</option><option>כן</option><option>לא</option></select>
+          </div>
+          <div class="grp"><label>היקף משרה</label>
+            <select id="scope"><option value="">--</option><option>מלאה</option><option>חלקית</option></select>
+          </div>
+        </div>
+        <div class="two">
+          <div class="grp"><label>סוג שכר</label>
+            <select id="salary"><option value="">--</option><option>גלובלי</option><option>שעתי</option></select>
+          </div>
+          <div class="grp"><label>תפקיד מבוקש</label><input type="text" id="position" placeholder="גננת / סייעת / ..."></div>
+        </div>
+        <div class="grp"><label>משהו שתרצו להוסיף</label><textarea id="notes" rows="2"></textarea></div>
+        <button type="submit" class="btn" id="submitBtn">שליחה</button>
+      </form>
+    </div>
+    <div class="msg" id="thanks">
+      <div class="v">✅</div>
+      <h2>תודה רבה!</h2>
+      <p>קיבלנו את הפרטים שלך. ניצור איתך קשר בקרוב 🌿</p>
+    </div>
+  </div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const GARDEN = params.get('garden') || '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
+
+document.getElementById('intakeForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.style.display = 'none';
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'שולח...';
+  const body = {
+    garden_id: GARDEN,
+    full_name_he: document.getElementById('name').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    email: document.getElementById('email').value.trim() || null,
+    national_id: document.getElementById('nid').value.trim() || null,
+    birth_date: document.getElementById('bdate').value || null,
+    address: document.getElementById('address').value.trim() || null,
+    years_experience: document.getElementById('exp').value || null,
+    ece_training: document.getElementById('ece').value || null,
+    in_neighborhood: document.getElementById('hood').value || null,
+    job_scope: document.getElementById('scope').value || null,
+    salary_type: document.getElementById('salary').value || null,
+    position_he: document.getElementById('position').value.trim() || null,
+    notes_he: document.getElementById('notes').value.trim() || null,
+  };
+  try {
+    const res = await fetch('/.netlify/functions/staff-intake', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאה');
+    document.getElementById('form-wrap').style.display = 'none';
+    document.getElementById('thanks').style.display = 'block';
+  } catch (e2) {
+    err.textContent = 'שגיאה בשליחה: ' + e2.message;
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'שליחה';
+  }
+});
+</script>
+</body>
+</html>

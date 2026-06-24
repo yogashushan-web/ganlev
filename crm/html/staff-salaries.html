@@ -3,408 +3,212 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>עובדים ומשכורות — מערכת גנים</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <title>עובדים — מערכת גנים</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family:'Heebo',sans-serif;
-      background:#F4EFE6;
-      color:#3D3228;
-      direction:rtl;
-      min-height:100vh;
-      padding:30px 20px;
-    }
-    .container { max-width:1200px; margin:0 auto; }
-    .tabs { display:flex; gap:10px; margin-bottom:30px; border-bottom:2px solid #e8e4de; }
-    .tab { padding:12px 20px; background:none; border:none; cursor:pointer; font-family:'Heebo'; font-weight:600; color:#9B8E82; border-bottom:3px solid transparent; margin-bottom:-2px; }
-    .tab.active { color:#1F3D34; border-color:#C4846C; }
-    .tab:hover { color:#1F3D34; }
-    .tab-content { display:none; }
-    .tab-content.active { display:block; }
-    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
-    .header h2 { font-size:22px; color:#1F3D34; }
-    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:600; font-size:13px; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .acts { display:flex; gap:8px; flex-wrap:wrap; }
+    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
     .btn-add:hover { background:#154428; }
-    .form-container { background:#FFF; border-radius:16px; padding:25px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:25px; display:none; }
+    .btn-link { background:#C4846C; color:#fff; border:none; padding:11px 18px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn-link:hover { background:#a96b54; }
+    .error, .success { padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .error { background:#fdf0ef; color:#c94147; } .error.show { display:block; }
+    .success { background:#d4edda; color:#155724; } .success.show { display:block; }
+    .form-container { background:#FFF; border-radius:16px; padding:24px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:22px; display:none; }
     .form-container.show { display:block; }
-    .form-group { margin-bottom:15px; }
-    label { display:block; font-size:12px; color:#3D3228; font-weight:600; margin-bottom:6px; }
-    input, select { width:100%; padding:10px 12px; border:1px solid #e8e4de; border-radius:8px; font-family:'Heebo'; font-size:13px; outline:none; direction:ltr; text-align:right; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+    @media(max-width:700px){ .form-row{grid-template-columns:1fr 1fr;} }
+    .fg { margin-bottom:14px; }
+    label { display:block; font-size:12px; color:#3D3228; font-weight:700; margin-bottom:5px; }
+    input, select, textarea { width:100%; padding:10px 12px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:14px; outline:none; }
     input:focus, select:focus { border-color:#1F3D34; }
-    .form-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; }
-    .btn-submit { background:#1F3D34; color:#FFF; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Heebo'; font-weight:600; }
-    .btn-submit:hover { background:#154428; }
-    .btn-cancel { background:#f0f0f0; color:#333; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Heebo'; margin-left:10px; }
-    table { width:100%; border-collapse:collapse; background:#FFF; border-radius:16px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
-    th { background:#1F3D34; color:#FFF; padding:12px; font-weight:600; font-size:12px; text-align:right; }
-    td { padding:12px; border-bottom:1px solid #f0ece6; font-size:12px; }
+    .btn-submit { background:#1F3D34; color:#FFF; border:none; padding:11px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; }
+    .btn-cancel { background:#f0ece6; color:#333; border:none; padding:11px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; margin-right:10px; }
+    .tbl-wrap { overflow-x:auto; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
+    table { width:100%; border-collapse:collapse; background:#FFF; }
+    th { background:#1F3D34; color:#FFF; padding:12px 14px; font-size:12px; text-align:right; white-space:nowrap; }
+    td { padding:11px 14px; border-bottom:1px solid #f0ece6; font-size:13px; }
     tr:last-child td { border-bottom:none; }
     tr:hover td { background:#FAF8F4; }
-    .badge { display:inline-block; padding:3px 10px; border-radius:15px; font-size:11px; font-weight:600; }
-    .badge-active { background:#d4edda; color:#155724; }
-    .badge-draft { background:#e7e7e7; color:#666; }
-    .badge-approved { background:#d4edda; color:#155724; }
-    .badge-paid { background:#d4edda; color:#155724; }
-    .actions { display:flex; gap:6px; }
-    .btn-edit, .btn-delete, .btn-approve { padding:5px 10px; border:none; border-radius:6px; cursor:pointer; font-size:11px; font-family:'Heebo'; }
-    .btn-edit { background:#C4846C; color:#FFF; }
-    .btn-delete { background:#e74c3c; color:#FFF; }
-    .btn-approve { background:#27ae60; color:#FFF; }
-    .error { background:#fdf0ef; color:#c94147; padding:10px; border-radius:10px; margin-bottom:15px; display:none; font-size:12px; }
-    .error.show { display:block; }
-    .success { background:#d4edda; color:#155724; padding:10px; border-radius:10px; margin-bottom:15px; display:none; font-size:12px; }
-    .success.show { display:block; }
-    .loading { text-align:center; padding:30px; color:#9B8E82; }
-    .back-link { display:inline-block; margin-bottom:20px; color:#1F3D34; text-decoration:none; font-weight:600; font-size:13px; }
+    .name-link { color:#1F3D34; font-weight:700; cursor:pointer; text-decoration:underline; }
+    a.wa { color:#1F7a4f; text-decoration:none; font-weight:600; direction:ltr; display:inline-block; }
+    .muted { color:#c4bcae; }
+    .btn-edit,.btn-delete { padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; }
+    .btn-edit { background:#C4846C; color:#FFF; } .btn-delete { background:#e74c3c; color:#FFF; }
+    .loading { text-align:center; padding:40px; color:#9B8E82; }
+    /* profile modal */
+    .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center; justify-content:center; z-index:99999; }
+    .ov.show { display:flex; }
+    .pf { background:#fff; border-radius:18px; padding:26px; width:92%; max-width:460px; max-height:85vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .pf h2 { color:#1F3D34; margin-bottom:4px; }
+    .pf .role { color:#9B8E82; font-size:13px; margin-bottom:16px; }
+    .pf .row { display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid #f3efe8; font-size:14px; }
+    .pf .row .k { color:#9B8E82; }
+    .pf .row .v { font-weight:600; text-align:left; }
+    .pf .close { margin-top:18px; width:100%; background:#f0ece6; border:none; border-radius:10px; padding:11px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <a href="dashboard.html" class="back-link">← חזור לעמוד הבית</a>
-
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('staff')">👔 עובדים</button>
-    <button class="tab" onclick="switchTab('salaries')">💰 משכורות</button>
+  <div class="header">
+    <h1>👔 עובדים</h1>
+    <div class="acts">
+      <button class="btn-link" onclick="copyIntakeLink(this)">📋 העתק לינק שאלון</button>
+      <button class="btn-add" onclick="toggleForm()">+ הוסף עובד</button>
+    </div>
   </div>
 
   <div id="error" class="error"></div>
   <div id="success" class="success"></div>
 
-  <!-- STAFF TAB -->
-  <div id="staff" class="tab-content active">
-    <div class="header">
-      <h2>ניהול עובדים</h2>
-      <button class="btn-add" onclick="toggleStaffForm()">+ הוסף עובד</button>
-    </div>
-
-    <div id="staffForm" class="form-container">
-      <h3 style="margin-bottom:15px;">הוסף / ערוך עובד</h3>
-      <form id="staffFormElement">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="staffName">שם מלא *</label>
-            <input type="text" id="staffName" required>
-          </div>
-          <div class="form-group">
-            <label for="staffPosition">תפקיד *</label>
-            <select id="staffPosition" required>
-              <option value="teacher">מורה</option>
-              <option value="assistant">עוזרת</option>
-              <option value="manager">מנהלת</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="staffEmail">דוא״ל</label>
-            <input type="email" id="staffEmail">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="staffPhone">טלפון</label>
-          <input type="tel" id="staffPhone">
-        </div>
-        <div class="form-group">
-          <label for="staffHireDate">תאריך התחלה</label>
-          <input type="date" id="staffHireDate">
-        </div>
-        <div style="display:flex;">
-          <button type="submit" class="btn-submit">שמור עובד</button>
-          <button type="button" class="btn-cancel" onclick="toggleStaffForm()">ביטול</button>
-        </div>
-      </form>
-    </div>
-
-    <div id="staffTable" class="loading">טוען...</div>
+  <div id="form" class="form-container">
+    <h2 style="margin-bottom:16px; color:#1F3D34;">הוסף / ערוך עובד</h2>
+    <form id="staffForm">
+      <div class="form-row">
+        <div class="fg"><label>שם מלא *</label><input type="text" id="sName" required></div>
+        <div class="fg"><label>טלפון</label><input type="tel" id="sPhone" dir="ltr"></div>
+        <div class="fg"><label>אימייל</label><input type="email" id="sEmail" dir="ltr"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>תעודת זהות</label><input type="text" id="sNid" dir="ltr"></div>
+        <div class="fg"><label>תאריך לידה</label><input type="date" id="sBirth"></div>
+        <div class="fg"><label>תפקיד</label><input type="text" id="sPosition" placeholder="גננת / סייעת"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>כתובת</label><input type="text" id="sAddress"></div>
+        <div class="fg"><label>תאריך תחילת עבודה</label><input type="date" id="sHire"></div>
+        <div class="fg"><label>שנות ניסיון</label><input type="number" id="sExp" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>הכשרה לגיל הרך</label><select id="sEce"><option value="">--</option><option>כן</option><option>לא</option><option>בתהליך</option></select></div>
+        <div class="fg"><label>מגורים בשכונה</label><select id="sHood"><option value="">--</option><option>כן</option><option>לא</option></select></div>
+        <div class="fg"><label>היקף משרה</label><select id="sScope"><option value="">--</option><option>מלאה</option><option>חלקית</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>סוג שכר</label><select id="sSalary"><option value="">--</option><option>גלובלי</option><option>שעתי</option></select></div>
+        <div class="fg" style="grid-column:span 2;"><label>הערות</label><input type="text" id="sNotes"></div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button type="submit" class="btn-submit">שמור</button>
+        <button type="button" class="btn-cancel" onclick="toggleForm()">ביטול</button>
+      </div>
+    </form>
   </div>
 
-  <!-- SALARIES TAB -->
-  <div id="salaries" class="tab-content">
-    <div class="header">
-      <h2>משכורות</h2>
-      <button class="btn-add" onclick="toggleSalaryForm()">+ משכורת חדשה</button>
-    </div>
+  <div id="table" class="loading">טוען...</div>
 
-    <div class="form-group" style="margin-bottom:20px;">
-      <label for="monthYear">בחרו חודש:</label>
-      <input type="month" id="monthYear" style="max-width:200px;">
-    </div>
+  <div class="ov" id="pfOv"><div class="pf" id="pfBox"></div></div>
 
-    <div id="salaryForm" class="form-container">
-      <h3 style="margin-bottom:15px;">הוסף / ערוך משכורת</h3>
-      <form id="salaryFormElement">
-        <div class="form-group">
-          <label for="salaryStaff">עובד *</label>
-          <select id="salaryStaff" required>
-            <option value="">-- בחרו --</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="grossSalary">משכורת גרוסה *</label>
-            <input type="number" id="grossSalary" step="0.01" required>
-          </div>
-          <div class="form-group">
-            <label for="deductions">ניכויים</label>
-            <input type="number" id="deductions" step="0.01" value="0">
-          </div>
-          <div class="form-group">
-            <label for="netSalary">משכורת נטו *</label>
-            <input type="number" id="netSalary" step="0.01" required>
-          </div>
-        </div>
-        <div style="display:flex;">
-          <button type="submit" class="btn-submit">שמור משכורת</button>
-          <button type="button" class="btn-cancel" onclick="toggleSalaryForm()">ביטול</button>
-        </div>
-      </form>
-    </div>
-
-    <div id="salaryTable" class="loading">טוען...</div>
-  </div>
-</div>
-
-<script src="js/common.js"></script>
-<script src="js/api.js"></script>
+<script src="js/common.js?v=6"></script>
+<script src="js/api.js?v=6"></script>
 <script>
 let staff = [];
-let salaries = [];
-let editingStaffId = null;
-let editingSalaryId = null;
+let editingId = null;
+const esc = s => (s || '').replace(/</g, '&lt;');
 
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
-  document.getElementById(tab).classList.add('active');
-
-  if (tab === 'salaries') {
-    loadSalaries();
-  }
+function ageStr(bd) {
+  if (!bd) return '-';
+  const b = new Date(bd), n = new Date();
+  let y = n.getFullYear() - b.getFullYear();
+  if (n.getMonth() < b.getMonth() || (n.getMonth() === b.getMonth() && n.getDate() < b.getDate())) y--;
+  return y >= 0 ? y : '-';
 }
 
 async function loadStaff() {
-  try {
-    const res = await api.getStaff();
-    if (res.success) {
-      staff = res.data;
-      renderStaffTable();
-      populateStaffSelect();
-    }
-  } catch (err) {
-    showError('שגיאה בטעינת העובדים: ' + err.message);
-  }
+  try { const r = await api.getStaff(); staff = r.data || []; renderTable(); }
+  catch (e) { showError('שגיאה בטעינה: ' + e.message); }
 }
 
-function renderStaffTable() {
+function renderTable() {
   if (!staff.length) {
-    document.getElementById('staffTable').innerHTML = '<p style="padding:20px; text-align:center; color:#9B8E82;">אין עובדים</p>';
+    document.getElementById('table').innerHTML = '<p style="padding:24px;color:#9B8E82;text-align:center;">אין עובדים עדיין. אפשר להוסיף או לשלוח לינק שאלון.</p>';
     return;
   }
-
   const rows = staff.map(s => `
     <tr>
-      <td>${s.full_name_he}</td>
-      <td>${s.position_he}</td>
-      <td>${s.email || '-'}</td>
-      <td>${s.phone || '-'}</td>
-      <td><span class="badge badge-active">פעיל</span></td>
-      <td>
-        <div class="actions">
-          <button class="btn-edit" onclick="editStaff('${s.id}')">ערוך</button>
-          <button class="btn-delete" onclick="deleteStaff('${s.id}')">מחק</button>
-        </div>
+      <td><span class="name-link" onclick="showProfile('${s.id}')">${esc(s.full_name_he)}</span></td>
+      <td>${esc(s.position_he) || '<span class="muted">-</span>'}</td>
+      <td>${s.phone ? `<a class="wa" href="${waHref(s.phone)}" target="_blank">💬 ${esc(s.phone)}</a>` : '<span class="muted">-</span>'}</td>
+      <td>${esc(s.job_scope) || '<span class="muted">-</span>'}</td>
+      <td>${ageStr(s.birth_date)}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn-edit" onclick="editStaff('${s.id}')">ערוך</button>
+        <button class="btn-delete" onclick="deleteStaff('${s.id}')">מחק</button>
       </td>
-    </tr>
-  `).join('');
-
-  document.getElementById('staffTable').innerHTML = `
-    <table>
-      <thead><tr>
-        <th>שם</th>
-        <th>תפקיד</th>
-        <th>דוא״ל</th>
-        <th>טלפון</th>
-        <th>סטטוס</th>
-        <th>פעולות</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
+    </tr>`).join('');
+  document.getElementById('table').innerHTML = `<div class="tbl-wrap"><table>
+    <thead><tr><th>שם</th><th>תפקיד</th><th>טלפון</th><th>היקף משרה</th><th>גיל</th><th>פעולות</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
 }
 
-function populateStaffSelect() {
-  const select = document.getElementById('salaryStaff');
-  select.innerHTML = '<option value="">-- בחרו עובד --</option>';
-  staff.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id;
-    opt.textContent = s.full_name_he;
-    select.appendChild(opt);
-  });
+function row(k, v) { return v ? `<div class="row"><span class="k">${k}</span><span class="v">${esc(String(v))}</span></div>` : ''; }
+function showProfile(id) {
+  const s = staff.find(x => x.id === id); if (!s) return;
+  const phone = s.phone ? `<a class="wa" href="${waHref(s.phone)}" target="_blank">💬 ${esc(s.phone)}</a>` : '';
+  document.getElementById('pfBox').innerHTML =
+    `<h2>${esc(s.full_name_he)}</h2><div class="role">${esc(s.position_he) || 'עובד/ת'}</div>` +
+    (phone ? `<div class="row"><span class="k">טלפון</span><span class="v">${phone}</span></div>` : '') +
+    row('אימייל', s.email) + row('גיל', ageStr(s.birth_date) !== '-' ? ageStr(s.birth_date) + ' (' + formatDate(s.birth_date) + ')' : '') +
+    row('תעודת זהות', s.national_id) + row('כתובת', s.address) +
+    row('שנות ניסיון בחינוך', s.years_experience) + row('הכשרה לגיל הרך', s.ece_training) +
+    row('מגורים בשכונה', s.in_neighborhood) + row('היקף משרה', s.job_scope) +
+    row('סוג שכר', s.salary_type) + row('תחילת עבודה', s.hire_date ? formatDate(s.hire_date) : '') +
+    row('הערות', s.notes_he) +
+    `<button class="close" onclick="document.getElementById('pfOv').classList.remove('show')">סגור</button>`;
+  document.getElementById('pfOv').classList.add('show');
 }
 
-async function loadSalaries() {
-  const month = document.getElementById('monthYear').value || new Date().toISOString().slice(0, 7);
-  try {
-    const res = await api.getSalaries(month);
-    if (res.success) {
-      salaries = res.data;
-      renderSalaryTable();
-    }
-  } catch (err) {
-    showError('שגיאה בטעינת המשכורות: ' + err.message);
-  }
+function toggleForm() {
+  const f = document.getElementById('form');
+  f.classList.toggle('show');
+  if (!f.classList.contains('show')) { document.getElementById('staffForm').reset(); editingId = null; }
 }
-
-function renderSalaryTable() {
-  if (!salaries.length) {
-    document.getElementById('salaryTable').innerHTML = '<p style="padding:20px; text-align:center; color:#9B8E82;">אין משכורות</p>';
-    return;
-  }
-
-  const rows = salaries.map(s => `
-    <tr>
-      <td>${s.staff_name}</td>
-      <td>${formatCurrency(s.gross_salary)}</td>
-      <td>${formatCurrency(s.deductions)}</td>
-      <td>${formatCurrency(s.net_salary)}</td>
-      <td><span class="badge badge-${s.status}">${s.status === 'draft' ? 'טיוטה' : s.status === 'approved' ? 'אושרה' : 'שולמה'}</span></td>
-      <td>
-        <div class="actions">
-          ${s.status !== 'paid' ? `<button class="btn-approve" onclick="approveSalary('${s.id}')">אישור</button>` : ''}
-          <button class="btn-delete" onclick="deleteSalary('${s.id}')">מחק</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-
-  document.getElementById('salaryTable').innerHTML = `
-    <table>
-      <thead><tr>
-        <th>עובד</th>
-        <th>גרוסה</th>
-        <th>ניכויים</th>
-        <th>נטו</th>
-        <th>סטטוס</th>
-        <th>פעולות</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
+function editStaff(id) {
+  const s = staff.find(x => x.id === id); if (!s) return;
+  editingId = id;
+  const set = (k, v) => document.getElementById(k).value = v || '';
+  set('sName', s.full_name_he); set('sPhone', s.phone); set('sEmail', s.email); set('sNid', s.national_id);
+  set('sBirth', s.birth_date); set('sPosition', s.position_he); set('sAddress', s.address); set('sHire', s.hire_date);
+  set('sExp', s.years_experience); set('sEce', s.ece_training); set('sHood', s.in_neighborhood);
+  set('sScope', s.job_scope); set('sSalary', s.salary_type); set('sNotes', s.notes_he);
+  document.getElementById('form').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-function toggleStaffForm() {
-  document.getElementById('staffForm').classList.toggle('show');
-  if (!document.getElementById('staffForm').classList.contains('show')) {
-    document.getElementById('staffFormElement').reset();
-    editingStaffId = null;
-  }
-}
-
-function toggleSalaryForm() {
-  document.getElementById('salaryForm').classList.toggle('show');
-  if (!document.getElementById('salaryForm').classList.contains('show')) {
-    document.getElementById('salaryFormElement').reset();
-    editingSalaryId = null;
-  }
-}
-
-async function editStaff(id) {
-  const s = staff.find(x => x.id === id);
-  if (!s) return;
-  editingStaffId = id;
-  document.getElementById('staffName').value = s.full_name_he;
-  document.getElementById('staffPosition').value = s.position_he;
-  document.getElementById('staffEmail').value = s.email || '';
-  document.getElementById('staffPhone').value = s.phone || '';
-  document.getElementById('staffHireDate').value = s.hire_date || '';
-  document.getElementById('staffForm').classList.add('show');
-}
-
 async function deleteStaff(id) {
-  if (!confirm('מחק עובד?')) return;
-  try {
-    await api.deleteStaff(id);
-    showSuccess('עובד נמחק');
-    loadStaff();
-  } catch (err) {
-    showError('שגיאה: ' + err.message);
-  }
+  if (!confirm('למחוק את העובד? (אפשר לשחזר מהפח)')) return;
+  try { const r = await api.deleteStaff(id); if (r.success) { showSuccess('נמחק'); loadStaff(); } }
+  catch (e) { showError('שגיאה: ' + e.message); }
 }
 
-document.getElementById('staffFormElement').addEventListener('submit', async (e) => {
+document.getElementById('staffForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const g = k => document.getElementById(k).value;
   const data = {
-    full_name_he: document.getElementById('staffName').value,
-    position_he: document.getElementById('staffPosition').value,
-    email: document.getElementById('staffEmail').value || null,
-    phone: document.getElementById('staffPhone').value || null,
-    hire_date: document.getElementById('staffHireDate').value || null,
+    full_name_he: g('sName'), phone: g('sPhone') || null, email: g('sEmail') || null,
+    national_id: g('sNid') || null, birth_date: g('sBirth') || null, position_he: g('sPosition') || null,
+    address: g('sAddress') || null, hire_date: g('sHire') || null, years_experience: g('sExp') || null,
+    ece_training: g('sEce') || null, in_neighborhood: g('sHood') || null, job_scope: g('sScope') || null,
+    salary_type: g('sSalary') || null, notes_he: g('sNotes') || null,
   };
   try {
-    if (editingStaffId) {
-      await api.updateStaff(editingStaffId, data);
-    } else {
-      await api.createStaff(data);
-    }
-    showSuccess('שמור בהצלחה');
-    toggleStaffForm();
-    loadStaff();
-  } catch (err) {
-    showError('שגיאה: ' + err.message);
-  }
+    const r = editingId ? await api.updateStaff(editingId, data) : await api.createStaff(data);
+    if (r.success) { showSuccess(editingId ? 'עודכן' : 'נוסף'); toggleForm(); loadStaff(); }
+  } catch (e2) { showError('שגיאה: ' + e2.message); }
 });
 
-document.getElementById('monthYear').addEventListener('change', loadSalaries);
-
-document.getElementById('salaryFormElement').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const month = document.getElementById('monthYear').value;
-  const data = {
-    staff_id: document.getElementById('salaryStaff').value,
-    month_year: month,
-    gross_salary: parseFloat(document.getElementById('grossSalary').value),
-    deductions: parseFloat(document.getElementById('deductions').value),
-    net_salary: parseFloat(document.getElementById('netSalary').value),
-  };
-  try {
-    if (editingSalaryId) {
-      await api.updateSalary(editingSalaryId, data);
-    } else {
-      await api.createSalary(data);
-    }
-    showSuccess('שמור בהצלחה');
-    toggleSalaryForm();
-    loadSalaries();
-  } catch (err) {
-    showError('שגיאה: ' + err.message);
-  }
-});
-
-async function approveSalary(id) {
-  try {
-    await api.updateSalary(id, { status: 'paid' });
-    showSuccess('משכורת אושרה');
-    loadSalaries();
-  } catch (err) {
-    showError('שגיאה: ' + err.message);
-  }
-}
-
-async function deleteSalary(id) {
-  if (!confirm('מחק משכורת?')) return;
-  try {
-    // Note: no delete endpoint for salaries, just update to archived
-    showError('שלוך משכורות לא זמין');
-  } catch (err) {
-    showError('שגיאה: ' + err.message);
-  }
+function copyIntakeLink(btn) {
+  const url = location.origin + '/crm/html/staff-intake.html?garden=' + getGardenId();
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✓ הועתק!';
+    setTimeout(() => btn.textContent = '📋 העתק לינק שאלון', 2000);
+  }, () => { prompt('העתיקי את הלינק:', url); });
 }
 
 loadStaff();
-document.getElementById('monthYear').value = new Date().toISOString().slice(0, 7);
 </script>
-
 </body>
 </html>

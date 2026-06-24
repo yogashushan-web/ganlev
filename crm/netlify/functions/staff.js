@@ -35,9 +35,9 @@ const handler = withAuth(async (event) => {
 
     if (event.httpMethod === 'POST') {
       // Create staff
-      const { full_name_he, email, phone, position_he, hire_date } = JSON.parse(event.body || '{}');
+      const b = JSON.parse(event.body || '{}');
 
-      if (!full_name_he) {
+      if (!b.full_name_he) {
         return {
           statusCode: 400,
           body: JSON.stringify({ success: false, error: 'Missing required fields' }),
@@ -48,11 +48,20 @@ const handler = withAuth(async (event) => {
         .from('staff')
         .insert({
           garden_id,
-          full_name_he,
-          email: email || null,
-          phone: phone || null,
-          position_he: position_he || 'teacher',
-          hire_date: hire_date || null,
+          full_name_he: b.full_name_he,
+          email: b.email || null,
+          phone: b.phone || null,
+          position_he: b.position_he || null,
+          hire_date: b.hire_date || null,
+          national_id: b.national_id || null,
+          birth_date: b.birth_date || null,
+          address: b.address || null,
+          years_experience: (b.years_experience !== undefined && b.years_experience !== '') ? parseInt(b.years_experience) : null,
+          ece_training: b.ece_training || null,
+          in_neighborhood: b.in_neighborhood || null,
+          job_scope: b.job_scope || null,
+          salary_type: b.salary_type || null,
+          notes_he: b.notes_he || null,
           status: 'active',
         })
         .select()
@@ -60,7 +69,7 @@ const handler = withAuth(async (event) => {
 
       if (error) throw error;
 
-      await auditLog(garden_id, user.id, 'created', 'staff', data.id, { full_name_he, position_he });
+      await auditLog(garden_id, user.id, 'created', 'staff', data.id, { full_name_he: b.full_name_he });
 
       return {
         statusCode: 201,

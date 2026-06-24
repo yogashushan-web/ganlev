@@ -232,7 +232,7 @@ function renderNavSidebar() {
   const bar = document.createElement('div');
   bar.id = 'crmSidebar';
   bar.innerHTML =
-    '<div class="cs-logo">🌿 ניהול גנים</div>' +
+    '<div class="cs-logo"><img src="logo.png" alt="גן לב" style="width:66px;height:66px;border-radius:50%;background:#fff;display:block;margin:0 auto 7px;object-fit:cover;"><div>גן לב</div></div>' +
     links.map(function (l) {
       return '<a href="' + l.href + '"' + (l.href === current ? ' class="active"' : '') +
         '><span>' + l.icon + '</span><span>' + l.label + '</span></a>';
