@@ -123,13 +123,18 @@
   <form id="loginForm">
     <div class="form-group">
       <label for="email">דוא״ל:</label>
-      <input type="email" id="email" placeholder="user@example.com" required>
+      <input type="email" id="email" name="email" autocomplete="username" placeholder="user@example.com" required>
     </div>
 
     <div class="form-group">
       <label for="password">סיסמה:</label>
-      <input type="password" id="password" placeholder="••••••••" required>
+      <input type="password" id="password" name="password" autocomplete="current-password" placeholder="••••••••" required>
     </div>
+
+    <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#3D3228; margin:4px 0 4px; cursor:pointer;">
+      <input type="checkbox" id="remember" checked style="width:auto;">
+      זכור אותי במכשיר הזה
+    </label>
 
     <button type="submit" class="btn-login" id="loginBtn">כניסה</button>
   </form>
