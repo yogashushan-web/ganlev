@@ -131,7 +131,6 @@ function renderTable() {
   const rows = staff.map(s => `
     <tr>
       <td><span class="name-link" onclick="showProfile('${s.id}')">${esc(s.full_name_he)}</span></td>
-      <td>${esc(s.position_he) || '<span class="muted">-</span>'}</td>
       <td>${s.phone ? `<a class="wa" href="${waHref(s.phone)}" target="_blank">💬 ${esc(s.phone)}</a>` : '<span class="muted">-</span>'}</td>
       <td>${esc(s.job_scope) || '<span class="muted">-</span>'}</td>
       <td>${ageStr(s.birth_date)}</td>
@@ -141,7 +140,7 @@ function renderTable() {
       </td>
     </tr>`).join('');
   document.getElementById('table').innerHTML = `<div class="tbl-wrap"><table>
-    <thead><tr><th>שם</th><th>תפקיד</th><th>טלפון</th><th>היקף משרה</th><th>גיל</th><th>פעולות</th></tr></thead>
+    <thead><tr><th>שם</th><th>טלפון</th><th>היקף משרה</th><th>גיל</th><th>פעולות</th></tr></thead>
     <tbody>${rows}</tbody></table></div>`;
 }
 
