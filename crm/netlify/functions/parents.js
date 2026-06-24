@@ -4,7 +4,7 @@
 // PUT /parents/:id
 // DELETE /parents/:id
 
-const { supabase, validateGardenScope, auditLog } = require('./lib/db');
+const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
 
 const handler = withAuth(async (event) => {
@@ -121,6 +121,7 @@ const handler = withAuth(async (event) => {
 
       if (error) throw error;
 
+      await moveToTrash('parents', data, garden_id);
       await auditLog(garden_id, user.id, 'deleted', 'parents', parentId, {});
 
       return {

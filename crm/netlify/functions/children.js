@@ -4,7 +4,7 @@
 // PUT /children/:id { ... }
 // DELETE /children/:id
 
-const { supabase, validateGardenScope, auditLog } = require('./lib/db');
+const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
 
 const handler = withAuth(async (event) => {
@@ -107,10 +107,10 @@ const handler = withAuth(async (event) => {
     }
 
     if (event.httpMethod === 'DELETE') {
-      // Soft delete child
+      // Delete child (recoverable from the recycle bin)
       const { data, error } = await supabase
         .from('children')
-        .update({ status: 'archived' })
+        .delete()
         .eq('id', childId)
         .eq('garden_id', garden_id)
         .select()
@@ -118,6 +118,7 @@ const handler = withAuth(async (event) => {
 
       if (error) throw error;
 
+      await moveToTrash('children', data, garden_id);
       await auditLog(garden_id, user.id, 'deleted', 'children', childId, {});
 
       return {

@@ -45,9 +45,32 @@ function validateGardenScope(userGardenId, requestGardenId, role) {
   }
 }
 
+// Build a human-readable label for a deleted record (for the recycle bin)
+function trashLabel(rec) {
+  if (!rec) return '(רשומה)';
+  if (rec.first_name_he) return (rec.first_name_he + ' ' + (rec.last_name_he || '')).trim();
+  return rec.full_name_he || rec.title || rec.kind || rec.description_he || rec.source_he || '(רשומה)';
+}
+
+// Copy a deleted row into the `trash` table so it can be restored later.
+async function moveToTrash(table_name, record, garden_id) {
+  if (!record) return;
+  try {
+    await supabase.from('trash').insert({
+      garden_id,
+      table_name,
+      label: trashLabel(record),
+      record_json: record,
+    });
+  } catch (err) {
+    console.error('moveToTrash failed:', err);
+  }
+}
+
 module.exports = {
   supabase,
   scopeQuery,
   auditLog,
   validateGardenScope,
+  moveToTrash,
 };

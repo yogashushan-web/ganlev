@@ -3,7 +3,7 @@
 // POST { calendar, title, category, event_date, event_time, notes }
 // PUT /events/:id   DELETE /events/:id
 
-const { supabase, validateGardenScope, auditLog } = require('./lib/db');
+const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
 
 const handler = withAuth(async (event) => {
@@ -57,6 +57,7 @@ const handler = withAuth(async (event) => {
       const { data, error } = await supabase.from('events')
         .delete().eq('id', eventId).eq('garden_id', garden_id).select().single();
       if (error) throw error;
+      await moveToTrash('events', data, garden_id);
       return { statusCode: 200, body: JSON.stringify({ success: true, data }) };
     }
 

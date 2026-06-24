@@ -4,7 +4,7 @@
 // DELETE /documents/:id?garden_id=
 // Files are stored in the Supabase Storage bucket "documents" (public).
 
-const { supabase, validateGardenScope, auditLog } = require('./lib/db');
+const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
 
 const handler = withAuth(async (event) => {
@@ -53,12 +53,9 @@ const handler = withAuth(async (event) => {
     }
 
     if (event.httpMethod === 'DELETE') {
-      const { data: existing } = await supabase.from('documents').select('*').eq('id', docId).eq('garden_id', garden_id).single();
-      if (existing && existing.file_path) {
-        try { await supabase.storage.from('documents').remove([existing.file_path]); } catch (e) {}
-      }
       const { data, error } = await supabase.from('documents').delete().eq('id', docId).eq('garden_id', garden_id).select().single();
       if (error) throw error;
+      await moveToTrash('documents', data, garden_id); // keep the storage file so it can be restored
       return { statusCode: 200, body: JSON.stringify({ success: true, data }) };
     }
 

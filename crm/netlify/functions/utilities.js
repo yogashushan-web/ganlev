@@ -3,7 +3,7 @@
 // POST /utilities?garden_id= { kind, provider, account_number, contract, notes }
 // PUT /utilities/:id?garden_id=   DELETE /utilities/:id?garden_id=
 
-const { supabase, validateGardenScope, auditLog } = require('./lib/db');
+const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
 
 const handler = withAuth(async (event) => {
@@ -44,6 +44,7 @@ const handler = withAuth(async (event) => {
     if (event.httpMethod === 'DELETE') {
       const { data, error } = await supabase.from('utilities').delete().eq('id', id).eq('garden_id', garden_id).select().single();
       if (error) throw error;
+      await moveToTrash('utilities', data, garden_id);
       return { statusCode: 200, body: JSON.stringify({ success: true, data }) };
     }
 

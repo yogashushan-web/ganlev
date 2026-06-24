@@ -108,6 +108,76 @@ function initializePage() {
 
   // One login, multiple gardens: show the garden switcher on every page
   renderGardenSwitcher();
+
+  // Recycle bin (restore accidentally-deleted items)
+  renderTrashBin();
+}
+
+const TRASH_LABELS = { children:'ילד', parents:'הורה', staff:'עובד', events:'אירוע', utilities:'גוף', documents:'מסמך' };
+
+function renderTrashBin() {
+  if (!localStorage.getItem('crm_token') || document.getElementById('trashFab')) return;
+
+  if (!document.getElementById('trash-style')) {
+    const st = document.createElement('style');
+    st.id = 'trash-style';
+    st.textContent = [
+      "#trashFab{position:fixed;bottom:18px;left:18px;z-index:9500;background:#6f6457;color:#fff;border:none;",
+      "border-radius:999px;padding:11px 16px;font-family:'Heebo',sans-serif;font-weight:700;font-size:13px;cursor:pointer;",
+      "box-shadow:0 6px 18px rgba(0,0,0,.25);display:flex;align-items:center;gap:6px;}",
+      "#trashFab:hover{background:#564d42;}",
+      "#trashOv{position:fixed;inset:0;background:rgba(31,61,52,.45);display:none;align-items:center;justify-content:center;z-index:99999;}",
+      "#trashOv.show{display:flex;}",
+      "#trashOv .box{background:#fff;border-radius:18px;padding:24px;width:92%;max-width:480px;max-height:80vh;overflow:auto;font-family:'Heebo',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.3);}",
+      "#trashOv h3{color:#1F3D34;margin-bottom:6px;}",
+      "#trashOv .sub{color:#9B8E82;font-size:12px;margin-bottom:14px;}",
+      ".tr-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid #f0ece6;}",
+      ".tr-item .lbl{font-size:13px;font-weight:600;}",
+      ".tr-item .tag{font-size:11px;color:#9B8E82;font-weight:400;}",
+      ".tr-item button{border:none;border-radius:8px;padding:6px 11px;font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}",
+      ".tr-restore{background:#1F7a4f;color:#fff;}",
+      ".tr-purge{background:#e74c3c;color:#fff;}",
+      "#trashOv .close{margin-top:16px;width:100%;background:#f0ece6;border:none;border-radius:10px;padding:11px;font-family:'Heebo',sans-serif;font-weight:700;cursor:pointer;}",
+    ].join('');
+    document.head.appendChild(st);
+  }
+
+  const fab = document.createElement('button');
+  fab.id = 'trashFab';
+  fab.innerHTML = '🗑 פח מיחזור';
+  fab.addEventListener('click', openTrash);
+  document.body.appendChild(fab);
+
+  const ov = document.createElement('div');
+  ov.id = 'trashOv';
+  ov.innerHTML = '<div class="box"><h3>🗑 פח מיחזור</h3><div class="sub">פריטים שנמחקו - אפשר לשחזר אותם.</div><div id="trashList">טוען...</div>'
+    + '<button class="close" onclick="document.getElementById(\'trashOv\').classList.remove(\'show\')">סגור</button></div>';
+  document.body.appendChild(ov);
+}
+
+async function openTrash() {
+  document.getElementById('trashOv').classList.add('show');
+  const listEl = document.getElementById('trashList');
+  listEl.innerHTML = '<div style="color:#9B8E82;padding:10px;">טוען...</div>';
+  let items = [];
+  try { const r = await api.getTrash(); items = r.data || []; }
+  catch (e) { listEl.innerHTML = '<div style="color:#c94147;padding:10px;">שגיאה: ' + e.message + '</div>'; return; }
+  if (!items.length) { listEl.innerHTML = '<div style="color:#9B8E82;padding:14px;text-align:center;">הפח ריק 🎉</div>'; return; }
+  listEl.innerHTML = items.map(function (it) {
+    return '<div class="tr-item"><span class="lbl">' + (it.label || '(פריט)') +
+      ' <span class="tag">· ' + (TRASH_LABELS[it.table_name] || it.table_name) + '</span></span>' +
+      '<span style="display:flex;gap:6px;"><button class="tr-restore" onclick="restoreTrash(\'' + it.id + '\')">↩ שחזר</button>' +
+      '<button class="tr-purge" onclick="purgeTrash(\'' + it.id + '\')">מחק</button></span></div>';
+  }).join('');
+}
+async function restoreTrash(id) {
+  try { await api.restoreTrash(id); alert('שוחזר בהצלחה ✓'); location.reload(); }
+  catch (e) { alert('שגיאה בשחזור: ' + e.message); }
+}
+async function purgeTrash(id) {
+  if (!confirm('למחוק לצמיתות? לא ניתן יהיה לשחזר.')) return;
+  try { await api.purgeTrash(id); openTrash(); }
+  catch (e) { alert('שגיאה: ' + e.message); }
 }
 
 // Inject a persistent navigation sidebar (same on every page) so sections are

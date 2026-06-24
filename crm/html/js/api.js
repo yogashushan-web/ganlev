@@ -123,4 +123,9 @@ const api = {
   createUtility: (data) => apiCall(`/utilities?garden_id=${getGardenId()}`, 'POST', data),
   updateUtility: (id, data) => apiCall(`/utilities/${id}?garden_id=${getGardenId()}`, 'PUT', data),
   deleteUtility: (id) => apiCall(`/utilities/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+
+  // Recycle bin
+  getTrash: () => apiCall(`/trash?garden_id=${getGardenId()}`),
+  restoreTrash: (id) => apiCall(`/trash?garden_id=${getGardenId()}`, 'POST', { id }),
+  purgeTrash: (id) => apiCall(`/trash/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 };
