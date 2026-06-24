@@ -79,8 +79,8 @@
 
   <div id="table" class="loading">טוען...</div>
 
-<script src="js/common.js?v=4"></script>
-<script src="js/api.js?v=4"></script>
+<script src="js/common.js?v=5"></script>
+<script src="js/api.js?v=5"></script>
 <script>
 let parents = [];
 let editingId = null;
@@ -106,7 +106,7 @@ function renderTable() {
   const rows = list.map(p => `
     <tr>
       <td><b>${p.full_name_he || ''}</b></td>
-      <td class="ltr">${p.phone ? `<a class="tel" href="tel:${p.phone}">${p.phone}</a>` : '<span class="muted">-</span>'}</td>
+      <td class="ltr">${p.phone ? `<a class="tel" href="${waHref(p.phone)}" target="_blank">💬 ${p.phone}</a>` : '<span class="muted">-</span>'}</td>
       <td>${p.address || '<span class="muted">-</span>'}</td>
       <td>${p.occupation || '<span class="muted">-</span>'}</td>
       <td style="display:flex; gap:6px;">

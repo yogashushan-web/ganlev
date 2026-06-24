@@ -1,5 +1,14 @@
 // Common utilities for CRM frontend
 
+// WhatsApp link from an Israeli phone number (tap any phone -> opens WhatsApp)
+function waHref(phone) {
+  let d = (phone || '').replace(/\D/g, '');
+  if (!d) return '#';
+  if (d.startsWith('0')) d = '972' + d.slice(1);
+  else if (!d.startsWith('972')) d = '972' + d;
+  return 'https://wa.me/' + d;
+}
+
 function formatDate(dateStr) {
   if (!dateStr) return '';
   const date = new Date(dateStr);
