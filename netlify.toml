@@ -4,7 +4,9 @@
   functions = "crm/netlify/functions"
 
 [build.environment]
-  NODE_VERSION = "20"
+  # Node 22: supabase-js >=2.108 needs native WebSocket (Node 22+) at runtime,
+  # and it also satisfies supabase's node>=20 install requirement.
+  NODE_VERSION = "22"
   # SUPABASE_URL is a public endpoint that must appear in the CSP header below,
   # so exclude it from secrets scanning (real secrets stay scanned).
   SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL"
