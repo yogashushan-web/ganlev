@@ -38,6 +38,7 @@
     .kid { background:#FFF; border-radius:15px; padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05); border:2px solid transparent; transition:border-color .2s,box-shadow .2s; }
     .kid.done { border-color:#bfe6c8; background:#fbfffc; }
     .kid.flash { animation:flash 1.3s ease; }
+    .kid.over { border-color:#16a34a; background:#f0faf2; box-shadow:0 0 0 3px rgba(22,163,74,.15); }
     @keyframes flash { 0%,100%{box-shadow:0 2px 10px rgba(0,0,0,0.05);} 30%{box-shadow:0 0 0 4px rgba(196,132,108,.5);} }
     .kid-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; gap:8px; }
     .kid-name { font-size:16px; font-weight:700; color:#1F3D34; }
@@ -95,6 +96,10 @@ let children = [];           // active children, sorted by name
 let photosByChild = {};      // child_id -> [ {id, file_url} ]
 
 function showError(m) { const e = document.getElementById('error'); e.textContent = m; e.classList.add('show'); }
+
+// Safety net: never let the browser open/navigate to a file dropped anywhere
+// outside a child card (otherwise the drop "does nothing" / opens the image).
+['dragover', 'drop'].forEach(ev => window.addEventListener(ev, e => e.preventDefault()));
 
 async function load() {
   try {
@@ -192,16 +197,20 @@ function renderGrid() {
 // --- drag & drop wiring ---
 function attachDrops() {
   children.forEach(c => {
+    const card = document.getElementById('kid-' + c.id);
     const drop = document.getElementById('drop-' + c.id);
     const input = document.getElementById('file-' + c.id);
-    if (!drop || !input) return;
+    if (!card || !drop || !input) return;
     drop.addEventListener('click', () => input.click());
     input.addEventListener('change', () => { handleFiles(c.id, input.files); input.value = ''; });
-    drop.addEventListener('dragenter', e => { e.preventDefault(); drop.classList.add('over'); });
-    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
-    drop.addEventListener('dragleave', e => { if (e.target === drop) drop.classList.remove('over'); });
-    drop.addEventListener('drop', async e => {
-      e.preventDefault(); drop.classList.remove('over');
+    // The WHOLE card is a drop target, so a photo dropped anywhere on it works.
+    const on = () => card.classList.add('over');
+    const off = () => card.classList.remove('over');
+    card.addEventListener('dragenter', e => { e.preventDefault(); on(); });
+    card.addEventListener('dragover', e => { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; on(); });
+    card.addEventListener('dragleave', e => { if (!card.contains(e.relatedTarget)) off(); });
+    card.addEventListener('drop', async e => {
+      e.preventDefault(); off();
       const files = e.dataTransfer.files;
       if (files && files.length) { handleFiles(c.id, files); return; }
       // dragged an <img> from a web page (e.g. WhatsApp Web) — try a direct URL
@@ -209,10 +218,10 @@ function attachDrops() {
       if (uri && /^https?:\/\//i.test(uri)) {
         try {
           const r = await fetch(uri); const blob = await r.blob();
-          if (blob.type.startsWith('image/')) { handleFiles(c.id, [new File([blob], 'whatsapp.jpg', { type: blob.type })]); return; }
+          if (blob.type.startsWith('image/')) { handleFiles(c.id, [new File([blob], 'image.jpg', { type: blob.type })]); return; }
         } catch (err) { /* fall through to hint */ }
       }
-      alert('לא הצלחתי לקרוא את התמונה ישירות מהגרירה. הדרך הכי בטוחה: הורידי את התמונה מהוואטסאפ למחשב ואז גררי אותה לכאן, או לחצי על המסגרת ובחרי קובץ.');
+      alert('לא הצלחתי לקרוא את התמונה מהגרירה. אפשר ללחוץ על המסגרת של הילד/ה ולבחור קובץ מהמחשב.');
     });
   });
 }
