@@ -44,6 +44,10 @@
     .btn-edit { background:#C4846C; color:#FFF; }
     .btn-delete { background:#e74c3c; color:#FFF; }
     .loading { text-align:center; padding:40px; color:#9B8E82; }
+    .year-tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .year-tab { padding:9px 18px; border:none; background:#fff; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; color:#9B8E82; box-shadow:0 2px 8px rgba(0,0,0,.04); transition:all .15s; }
+    .year-tab:hover { background:#f1ece3; }
+    .year-tab.active { background:#1F3D34; color:#fff; }
   </style>
 </head>
 <body>
@@ -52,6 +56,8 @@
     <h1>👨‍👩‍👧 הורים</h1>
     <button class="btn-add" onclick="toggleForm()">+ הוסף הורה</button>
   </div>
+
+  <div class="year-tabs" id="yearTabs"></div>
 
   <div class="toolbar">
     <input type="text" id="search" placeholder="🔍 חיפוש לפי שם הורה / ילד / טלפון / עיסוק...">
@@ -89,8 +95,21 @@
 <script src="js/common.js?v=11"></script>
 <script src="js/api.js?v=11"></script>
 <script>
-let parents = [], children = [], childBd = {};
+let parents = [], children = [], childBd = {}, childById = {}, childByName = {};
 let editingId = null;
+
+// School-year cohorts — identical logic to the children page.
+function currentSchoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
+const CUR_YEAR = currentSchoolYear();
+const startY = parseInt(CUR_YEAR);
+const SCHOOL_YEARS = [startY - 2, startY - 1, startY, startY + 1].map(y => y + '-' + String(y + 1).slice(2));
+let selectedYear = CUR_YEAR;
+function renderYearTabs() {
+  document.getElementById('yearTabs').innerHTML = SCHOOL_YEARS.map(y =>
+    `<button class="year-tab ${y === selectedYear ? 'active' : ''}" onclick="selectYear('${y}')">${y}${y === CUR_YEAR ? ' (נוכחית)' : ''}</button>`).join('');
+}
+function selectYear(y) { selectedYear = y; renderYearTabs(); renderTable(); }
+
 const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
 const attr = s => (s == null ? '' : String(s)).replace(/"/g, '&quot;');
 const norm = s => (s || '').replace(/\s+/g, ' ').trim();
@@ -101,6 +120,19 @@ function parseParent(p) {
   return m ? { name: m[1].trim(), child: m[2].trim() } : { name: (p.full_name_he || '').trim(), child: '' };
 }
 function childFull(c) { return norm((c.first_name_he || '') + ' ' + (c.last_name_he || '')); }
+// Resolve a parent's child — by child_id first, then by the "(שם ילד)" convention.
+function parentChild(p) {
+  if (p.child_id && childById[p.child_id]) return childById[p.child_id];
+  const nm = norm(parseParent(p).child);
+  if (nm) {
+    if (childByName[nm]) return childByName[nm];
+    const nos = nm.replace(/\s+/g, '');
+    for (const k in childByName) if (k.replace(/\s+/g, '') === nos) return childByName[k];
+  }
+  return null;
+}
+// A parent's cohort = their child's school year (fallback: current year).
+function parentYear(p) { const c = parentChild(p); return (c && c.school_year) || CUR_YEAR; }
 function lookupBd(childName) {
   const key = norm(childName);
   if (childBd[key]) return childBd[key];
@@ -123,8 +155,8 @@ async function loadParents() {
     const [rp, rc] = await Promise.all([api.getParents(), api.getChildren().catch(() => ({ data: [] }))]);
     parents = (rp && rp.data) || [];
     children = (rc && rc.data) || [];
-    childBd = {};
-    children.forEach(c => { const f = childFull(c); if (f) childBd[f] = c.birth_date; });
+    childBd = {}; childById = {}; childByName = {};
+    children.forEach(c => { const f = childFull(c); childById[c.id] = c; if (f) { childBd[f] = c.birth_date; childByName[f] = c; } });
     // datalist of children + existing groups
     const names = new Set(children.map(childFull).filter(Boolean));
     parents.forEach(p => { const c = parseParent(p).child; if (c) names.add(c); });
@@ -138,10 +170,14 @@ function renderTable() {
   // group by child
   const groups = {}, noChild = [];
   parents.forEach(p => {
-    const pp = parseParent(p); p._name = pp.name; p._child = pp.child;
-    const hay = ((p.full_name_he || '') + ' ' + (p.phone || '') + ' ' + (p.occupation || '') + ' ' + (p.address || '')).toLowerCase();
+    if (parentYear(p) !== selectedYear) return;          // filter by the selected cohort
+    const pp = parseParent(p); p._name = pp.name;
+    const c = parentChild(p);
+    const childName = c ? childFull(c) : pp.child;        // prefer the child_id-linked name
+    p._child = childName;
+    const hay = ((p.full_name_he || '') + ' ' + (p.phone || '') + ' ' + (p.occupation || '') + ' ' + (p.address || '') + ' ' + childName).toLowerCase();
     if (q && !hay.includes(q.toLowerCase())) return;
-    if (pp.child) (groups[pp.child] = groups[pp.child] || []).push(p);
+    if (childName) (groups[childName] = groups[childName] || []).push(p);
     else noChild.push(p);
   });
   // sort children by age (oldest first), like the children list; unmatched go last
@@ -239,6 +275,7 @@ document.getElementById('parentForm').addEventListener('submit', async (e) => {
   } catch (err) { showError('שגיאה: ' + err.message); }
 });
 
+renderYearTabs();
 loadParents();
 </script>
 
