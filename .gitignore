@@ -5,3 +5,6 @@ deno.lock
 
 # extra safety
 .DS_Store
+
+# Personal forms (IDs, lease) — local only
+טפסים/
