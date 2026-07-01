@@ -54,6 +54,16 @@
     .drop .big { font-size:22px; display:block; margin-bottom:3px; }
     .drop.busy { opacity:.7; pointer-events:none; }
     .hide { display:none; }
+
+    /* export to gmail */
+    .toolbar { margin-bottom:18px; }
+    .send-all { background:#1F3D34; color:#fff; border:none; padding:12px 22px; border-radius:12px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:15px; box-shadow:0 2px 10px rgba(31,61,52,.25); transition:background .15s; }
+    .send-all:hover { background:#154428; }
+    .send-all:disabled { background:#9aa7a0; cursor:progress; }
+    .head-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+    .send-kid { background:#F0ECE6; color:#1F3D34; border:none; width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:14px; line-height:1; transition:background .15s; }
+    .send-kid:hover { background:#e2dccf; }
+    .send-kid:disabled { opacity:.35; cursor:not-allowed; }
   </style>
 </head>
 <body>
@@ -62,11 +72,16 @@
   <div class="lead">לכל ילד נאספות 10 תמונות מהשנה לאלבום סוף השנה. גררי תמונות מקבוצת הוואטסאפ (או מהמחשב) אל המסגרת שליד שם הילד, או לחצי על המסגרת כדי לבחור קבצים. אפשר לגרור כמה תמונות יחד.</div>
   <div id="error" class="error"></div>
 
+  <div class="toolbar">
+    <button class="send-all" id="sendAllBtn" onclick="exportAlbum('all', this)">📧 שלח את כל האלבום ל-Gmail</button>
+  </div>
+
   <div class="summary" id="summary"></div>
   <div class="miss-card" id="missCard"></div>
   <div class="grid" id="grid"></div>
 
 <script src="js/heic2any.min.js"></script>
+<script src="js/jszip.min.js"></script>
 <script src="js/common.js?v=11"></script>
 <script src="js/api.js?v=11"></script>
 <script>
@@ -159,7 +174,10 @@ function renderGrid() {
     return `<div class="kid ${full ? 'done' : ''}" id="kid-${c.id}">
       <div class="kid-head">
         <span class="kid-name">${esc(c.first_name_he)} ${esc(c.last_name_he || '')}</span>
-        <span class="kid-count ${full ? 'full' : ''}">${cnt} / ${TARGET}${full ? ' ✓' : ''}</span>
+        <span class="head-right">
+          <button class="send-kid" title="שלח את התמונות של ${esc(c.first_name_he)} ל-Gmail" onclick="exportAlbum('${c.id}', this)" ${cnt ? '' : 'disabled'}>📧</button>
+          <span class="kid-count ${full ? 'full' : ''}">${cnt} / ${TARGET}${full ? ' ✓' : ''}</span>
+        </span>
       </div>
       <div class="thumbs">${thumbs}</div>
       <div class="drop" id="drop-${c.id}" data-child="${c.id}">
@@ -282,6 +300,71 @@ async function delPhoto(id) {
   if (!confirm('למחוק את התמונה מהאלבום?')) return;
   try { await api.deleteDocument(id); await load(); }
   catch (e) { alert('שגיאה במחיקה: ' + e.message); }
+}
+
+// ---- Export album to Gmail (zip download + prefilled compose) ----
+const EXPORT_EMAIL = 'joelkarmeli@gmail.com';
+
+function safeName(s) { return (s || '').replace(/[\\/:*?"<>|]/g, '_').trim() || 'ללא_שם'; }
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
+}
+
+function openGmailCompose(subject, body) {
+  const url = 'https://mail.google.com/mail/?view=cm&fs=1'
+    + '&to=' + encodeURIComponent(EXPORT_EMAIL)
+    + '&su=' + encodeURIComponent(subject)
+    + '&body=' + encodeURIComponent(body);
+  window.open(url, '_blank');
+}
+
+// scope: 'all' or a childId
+async function exportAlbum(scope, btn) {
+  const targets = scope === 'all' ? children : children.filter(c => c.id === scope);
+  const items = [];
+  targets.forEach(c => {
+    const kid = safeName((c.first_name_he || '') + ' ' + (c.last_name_he || ''));
+    (photosByChild[c.id] || []).forEach((p, i) => { if (p.file_url) items.push({ kid, url: p.file_url, n: i + 1 }); });
+  });
+  if (!items.length) { alert('אין תמונות לייצוא.'); return; }
+
+  const label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; }
+  try {
+    const zip = new JSZip();
+    let done = 0;
+    for (const it of items) {
+      const res = await fetch(it.url);
+      if (!res.ok) throw new Error('הורדת תמונה נכשלה (' + res.status + ')');
+      const blob = await res.blob();
+      const ext = ((blob.type.split('/')[1]) || 'jpg').replace('jpeg', 'jpg');
+      const path = scope === 'all' ? `${it.kid}/${it.kid}_${it.n}.${ext}` : `${it.kid}_${it.n}.${ext}`;
+      zip.file(path, blob);
+      done++;
+      if (btn) btn.textContent = `אורז ${done}/${items.length}...`;
+    }
+    const outName = scope === 'all'
+      ? 'אלבום סוף שנה - גן לב.zip'
+      : safeName(targets[0].first_name_he + ' ' + (targets[0].last_name_he || '')) + '.zip';
+    const zipBlob = await zip.generateAsync({ type: 'blob' }, m => {
+      if (btn && m.percent) btn.textContent = `יוצר ZIP ${Math.round(m.percent)}%`;
+    });
+    downloadBlob(zipBlob, outName);
+
+    const who = scope === 'all' ? 'אלבום סוף השנה המלא' : ('התמונות של ' + esc(targets[0].first_name_he));
+    const subject = scope === 'all' ? 'אלבום סוף שנה - גן לב' : ('תמונות אלבום - ' + targets[0].first_name_he + ' ' + (targets[0].last_name_he || ''));
+    const body = `${who} (${items.length} תמונות).\n\nהקובץ "${outName}" הורד למחשב — גררו אותו לחלון המייל כדי לצרף, ושלחו.`;
+    openGmailCompose(subject, body);
+  } catch (e) {
+    alert('שגיאה בייצוא: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = label; }
+  }
 }
 
 function jumpTo(childId) {
