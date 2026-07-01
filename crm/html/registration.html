@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>כרטיס אישי — גן לב ♥️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:linear-gradient(135deg,#1F3D34 0%,#2D5A50 100%); color:#3D3228; direction:rtl; min-height:100vh; padding:24px; }
+    .card { background:#fff; border-radius:22px; max-width:620px; margin:20px auto; padding:36px 32px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .head { text-align:center; margin-bottom:24px; }
+    .head img { width:92px; height:92px; border-radius:50%; object-fit:cover; margin:0 auto 10px; display:block; }
+    .head h1 { font-size:25px; color:#1F3D34; margin-bottom:6px; }
+    .head p { font-size:14px; color:#9B8E82; line-height:1.6; }
+    .grp { margin-bottom:17px; }
+    label { display:block; font-size:14px; font-weight:700; color:#1F3D34; margin-bottom:6px; line-height:1.5; }
+    input, textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo',sans-serif; font-size:15px; outline:none; }
+    input:focus, textarea:focus { border-color:#1F3D34; }
+    textarea { resize:vertical; line-height:1.6; }
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:520px){ .two{grid-template-columns:1fr;} }
+    .note { background:#fbf4ef; border:1px solid #f0e2d8; border-radius:11px; padding:12px 14px; font-size:13px; color:#a05a3d; margin:6px 0 18px; line-height:1.6; }
+    .btn { width:100%; margin-top:8px; padding:15px; border:none; border-radius:12px; background:#1F3D34; color:#fff; font-family:'Heebo'; font-size:16px; font-weight:700; cursor:pointer; }
+    .btn:hover { background:#154428; }
+    .btn:disabled { background:#cfc8bd; cursor:not-allowed; }
+    .msg { display:none; text-align:center; padding:30px 10px; }
+    .msg .v { font-size:46px; }
+    .msg h2 { color:#1F3D34; margin:10px 0 6px; }
+    .msg p { color:#9B8E82; }
+    .err { background:#fdf0ef; color:#c0563f; padding:12px; border-radius:10px; font-size:14px; margin-bottom:14px; display:none; }
+    .sep { border:none; border-top:1px dashed #e3ddd2; margin:22px 0 18px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="form-wrap">
+      <div class="head">
+        <h1>כרטיס אישי ♥️</h1>
+      </div>
+      <div class="err" id="err"></div>
+      <form id="regForm">
+        <div class="two">
+          <div class="grp"><label>שם פרטי *</label><input type="text" id="childFirst" required></div>
+          <div class="grp"><label>שם משפחה *</label><input type="text" id="childLast" required></div>
+        </div>
+        <div class="grp"><label>תאריך לידה</label><input type="date" id="childBdate"></div>
+        <hr class="sep">
+        <div id="questions"></div>
+        <div class="note">★ מוזמנים לשלוח לנו בפרטי שיר שילדכם מאוד אוהב 🎵</div>
+        <button type="submit" class="btn" id="submitBtn">שליחה</button>
+      </form>
+    </div>
+    <div class="msg" id="thanks">
+      <div class="v">✅</div>
+      <h2>תודה רבה!</h2>
+      <p>קיבלנו את הכרטיס האישי של ילדכם. מחכים לפגוש אתכם 🌿</p>
+    </div>
+  </div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const GARDEN = params.get('garden') || '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
+
+// Page 1 — "כרטיס אישי" questions, kept as in the kindergarten's existing form
+const QUESTIONS = [
+  'מה חשוב שנדע על ילדכם?',
+  'מהו מזג הילד/ה ומצב רוחו בדרך כלל?',
+  'האם לילדכם יש אחים? מהו מיקומו במשפחה? האם יש משהו שתרצו לשתף על הקשר ביניהם?',
+  'במה לדעתכם ילדכם זקוק לחיזוק או לתמיכה נוספת?',
+  'האם יש פעילויות מסוימות שהילד/ה מתקשה בהן במיוחד?',
+  'מהן נקודות החוזק של ילדכם?',
+  'מה הילד/ה אוהב/ת במיוחד? (צעצועים, פעילויות, שירים וכו׳)',
+  'דברים שמשמחים את הילד/ה',
+  'האם יש דברים מסוימים שילדכם נרתע מהם או אינו אוהב? (צעצועים, סיטואציות, אנשים זרים, רעש, שירים, מגע פיזי)',
+  'מה מרגיע/מנחם את ילדכם?',
+  'האם יש טקסים או הרגלים שאתם נוקטים כדי לעזור לילד/ה להירגע?',
+  'כיצד מגיב/ה הילד/ה לפרידה מהאם/אב?',
+  'הרגלי שינה - האם הילד/ה זקוק/ה לבקבוק, מוצץ, סיפור, שיר, צעצוע ספציפי, טטרה?',
+  'הרגלי אכילה - אוכל/ת לאט/מהר, נמנע/ת או סקרן/ית ממזון חדש, רגישות למאכלים מסוימים?',
+  'האם ישנן מגבלות רפואיות או טיפולים שהילד/ה עובר/ת ושעלינו להיות מודעים אליהם?',
+  'האם היו אירועים משמעותיים בחיי ילדכם או משפחתכם שהייתם רוצים שנדע עליהם?',
+  'ספרו לנו קצת על סדר היום הנוכחי של ילדכם - האם הוא/היא מגיע/ה ממסגרת קודמת, ממטפלת, או שנמצא/ת בעיקר אתכם בבית?',
+  'האם יש עוד דברים שתרצו שנדע על ילדכם או על משפחתכם?',
+];
+
+document.getElementById('questions').innerHTML = QUESTIONS.map((q, i) =>
+  `<div class="grp"><label>${q}</label><textarea id="q${i}" rows="2"></textarea></div>`
+).join('');
+
+document.getElementById('regForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.style.display = 'none';
+  const first = document.getElementById('childFirst').value.trim();
+  const last = document.getElementById('childLast').value.trim();
+  if (!first || !last) { err.textContent = 'נא למלא שם פרטי ושם משפחה'; err.style.display = 'block'; return; }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'שולח...';
+  const answers = QUESTIONS.map((q, i) => ({ q, a: document.getElementById('q' + i).value.trim() }));
+  const body = {
+    garden_id: GARDEN,
+    first_name_he: first,
+    last_name_he: last,
+    child_name: first + ' ' + last,
+    birth_date: document.getElementById('childBdate').value || null,
+    answers,
+  };
+  try {
+    const res = await fetch('/.netlify/functions/child-intake', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאה');
+    document.getElementById('form-wrap').style.display = 'none';
+    document.getElementById('thanks').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (e2) {
+    err.textContent = 'שגיאה בשליחה: ' + e2.message;
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'שליחה';
+  }
+});
+</script>
+</body>
+</html>

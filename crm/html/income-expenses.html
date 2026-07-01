@@ -3,349 +3,570 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>הכנסות והוצאות — מערכת גנים</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <title>מאזן — מערכת גנים</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family:'Heebo',sans-serif;
-      background:#F4EFE6;
-      color:#3D3228;
-      direction:rtl;
-      min-height:100vh;
-      padding:30px 20px;
-    }
-    .container { max-width:1200px; margin:0 auto; }
-    .tabs { display:flex; gap:10px; margin-bottom:30px; border-bottom:2px solid #e8e4de; }
-    .tab { padding:12px 20px; background:none; border:none; cursor:pointer; font-family:'Heebo'; font-weight:600; color:#9B8E82; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    h1 { font-size:26px; color:#1F3D34; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+    .ctrl { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .ctrl label { font-size:12px; color:#9B8E82; font-weight:700; }
+    select, input[type=number] { padding:8px 10px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:13px; outline:none; background:#fff; }
+    select:focus, input:focus { border-color:#1F3D34; }
+    .tabs { display:flex; gap:8px; margin-bottom:22px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; }
+    .tab { padding:11px 20px; background:none; border:none; cursor:pointer; font-family:'Heebo'; font-weight:700; color:#9B8E82; font-size:15px; }
     .tab.active { color:#1F3D34; border-bottom:3px solid #C4846C; }
     .tab-content { display:none; }
     .tab-content.active { display:block; }
-    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
-    .header h2 { font-size:22px; color:#1F3D34; }
-    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:600; font-size:13px; }
-    .form-container { background:#FFF; border-radius:16px; padding:25px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:25px; display:none; }
-    .form-container.show { display:block; }
-    .form-group { margin-bottom:15px; }
-    label { display:block; font-size:12px; color:#3D3228; font-weight:600; margin-bottom:6px; }
-    input, textarea, select { width:100%; padding:10px 12px; border:1px solid #e8e4de; border-radius:8px; font-family:'Heebo'; font-size:13px; outline:none; direction:ltr; text-align:right; }
-    input:focus, textarea:focus, select:focus { border-color:#1F3D34; }
-    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
-    .btn-submit { background:#1F3D34; color:#FFF; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Heebo'; font-weight:600; }
-    table { width:100%; border-collapse:collapse; background:#FFF; border-radius:16px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
-    th { background:#1F3D34; color:#FFF; padding:12px; font-weight:600; font-size:12px; text-align:right; }
-    td { padding:12px; border-bottom:1px solid #f0ece6; font-size:12px; }
+    .kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:16px; }
+    @media(max-width:760px){ .kpis{grid-template-columns:1fr;} }
+    .kpi { background:#FFF; border-radius:16px; padding:18px; box-shadow:0 2px 12px rgba(0,0,0,0.05); border-top:4px solid #C4846C; }
+    .kpi.green { border-top-color:#27ae60; } .kpi.red { border-top-color:#e74c3c; } .kpi.main { border-top-color:#1F3D34; }
+    .kpi .lbl { font-size:13px; color:#9B8E82; margin-bottom:6px; }
+    .kpi .val { font-size:26px; font-weight:800; color:#1F3D34; }
+    .kpi .val.neg { color:#e74c3c; }
+    .kpi .sub { font-size:11px; color:#c4bcae; margin-top:4px; }
+    .minirow { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:22px; }
+    @media(max-width:760px){ .minirow{grid-template-columns:1fr 1fr;} }
+    .mini { background:#fff; border-radius:12px; padding:13px 15px; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+    .mini .lbl { font-size:11px; color:#9B8E82; margin-bottom:3px; }
+    .mini .val { font-size:17px; font-weight:700; color:#3D3228; }
+    .card { background:#FFF; border-radius:16px; padding:18px 18px 8px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:18px; }
+    .card h3 { font-size:15px; color:#1F3D34; margin-bottom:6px; }
+    .legend { display:flex; gap:16px; font-size:12px; color:#9B8E82; margin-bottom:6px; }
+    .legend i { display:inline-block; width:11px; height:11px; border-radius:3px; vertical-align:middle; margin-left:5px; }
+    .chart-wrap { direction:ltr; width:100%; overflow:hidden; }
+    .chart-wrap svg { width:100%; height:auto; display:block; }
+    .btn { background:#1F3D34; color:#fff; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn:hover { background:#154428; }
+    .btn.alt { background:#C4846C; } .btn.alt:hover { background:#a96b54; }
+    .btn.grey { background:#999; }
+    table { width:100%; border-collapse:collapse; background:#FFF; border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
+    th { background:#1F3D34; color:#FFF; padding:10px 12px; font-weight:600; font-size:12px; text-align:right; white-space:nowrap; }
+    td { padding:10px 12px; border-bottom:1px solid #f0ece6; font-size:13px; }
     tr:hover td { background:#FAF8F4; }
-    .badge { display:inline-block; padding:3px 10px; border-radius:15px; font-size:11px; font-weight:600; }
-    .badge-pending { background:#fff3cd; color:#856404; }
-    .badge-approved { background:#d4edda; color:#155724; }
-    .badge-paid { background:#d4edda; color:#155724; }
-    .actions { display:flex; gap:6px; }
-    .btn-delete { padding:5px 10px; border:none; border-radius:6px; cursor:pointer; font-size:11px; background:#e74c3c; color:#FFF; }
-    .error { background:#fdf0ef; color:#c94147; padding:10px; border-radius:10px; margin-bottom:15px; display:none; }
+    .del { background:#e74c3c; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-family:'Heebo'; }
+    .sec-h { font-size:17px; font-weight:800; color:#1F3D34; margin:6px 0 12px; display:flex; align-items:center; gap:6px; }
+    .form { background:#FFF; border-radius:14px; padding:18px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:18px; display:none; }
+    .form.show { display:block; }
+    .form-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    @media(max-width:760px){ .form-row{grid-template-columns:1fr 1fr;} }
+    .fg label { display:block; font-size:11px; color:#9B8E82; font-weight:700; margin-bottom:4px; }
+    .fg input, .fg select { width:100%; padding:9px 11px; border:1px solid #e8e4de; border-radius:8px; font-family:'Heebo'; font-size:13px; }
+    /* recurring grid */
+    .grid-scroll { overflow-x:auto; background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
+    table.grid { min-width:780px; box-shadow:none; }
+    table.grid th, table.grid td { text-align:center; padding:8px 9px; font-size:12px; white-space:nowrap; }
+    table.grid td.svc { text-align:center; font-weight:700; color:#3D3228; position:sticky; right:0; background:#fff; }
+    table.grid td.svc.f { border-right:4px solid #27ae60; }
+    table.grid td.svc.v { border-right:4px solid #C4846C; }
+    table.grid tr.grp td { text-align:right; font-weight:800; font-size:13px; padding:10px 14px; }
+    table.grid tr.grp.f td { background:#e3efe8; color:#1F3D34; }
+    table.grid tr.grp.v td { background:#f6e9e1; color:#a8623f; }
+    table.grid td.cell { cursor:pointer; }
+    table.grid td.cell:hover { background:#eef5f0; }
+    table.grid td.cell.empty { color:#d5cdbf; }
+    table.grid td.avg { font-weight:800; color:#1F3D34; background:#FAF8F4; }
+    table.grid td.ro { cursor:default; color:#6b6256; }
+    .pill { display:inline-block; font-size:10px; padding:1px 7px; border-radius:10px; font-weight:700; margin-right:5px; }
+    .pill.f { background:#e7eef0; color:#1F3D34; } .pill.v { background:#f6e9e1; color:#a8623f; }
+    /* grouped expense table (one table, category merged on the right) */
+    .exp-tbl { width:100%; border-collapse:collapse; background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
+    .exp-tbl th { background:#1F3D34; color:#fff; padding:10px 14px; font-size:12px; text-align:right; }
+    .exp-tbl td { padding:9px 14px; border-bottom:1px solid #f0ece6; font-size:13px; }
+    .exp-tbl td.cat-cell { background:#FAF8F4; border-left:2px solid #efe9df; vertical-align:middle; white-space:nowrap; }
+    .exp-tbl td.cat-cell .cc-name { font-weight:800; color:#1F3D34; font-size:15px; }
+    .exp-tbl td.cat-cell .cc-tot { font-size:12px; color:#9B8E82; font-weight:700; margin-top:2px; }
+    .exp-tbl td.amt { font-weight:700; color:#1F3D34; }
+    .ed { background:#C4846C; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-family:'Heebo'; }
+    .ed:hover { background:#a96b54; }
+    /* edit-expense modal */
+    .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center; justify-content:center; z-index:99999; }
+    .ov.show { display:flex; }
+    .ed-box { background:#fff; border-radius:18px; padding:24px; width:92%; max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .ed-box h3 { color:#1F3D34; margin-bottom:4px; }
+    .ed-box .ed-sub { color:#9B8E82; font-size:13px; margin-bottom:16px; }
+    .ed-box label { display:block; font-size:12px; color:#9B8E82; font-weight:700; margin:12px 0 5px; }
+    .ed-box input, .ed-box select { width:100%; padding:10px 12px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:14px; }
+    .ed-note { font-size:11px; color:#c4bcae; margin:12px 0 4px; }
+    .ed-actions { display:flex; gap:10px; margin-top:14px; }
+    .ed-actions .btn { flex:1; }
+    .error { background:#fdf0ef; color:#c94147; padding:11px; border-radius:10px; margin-bottom:14px; display:none; }
     .error.show { display:block; }
-    .success { background:#d4edda; color:#155724; padding:10px; border-radius:10px; margin-bottom:15px; display:none; }
+    .success { background:#d4edda; color:#155724; padding:11px; border-radius:10px; margin-bottom:14px; display:none; }
     .success.show { display:block; }
-    .stats { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:25px; }
-    .stat { background:#FFF; border-radius:12px; padding:15px; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
-    .stat-label { font-size:12px; color:#9B8E82; margin-bottom:5px; }
-    .stat-value { font-size:20px; font-weight:700; color:#1F3D34; }
-    .loading { text-align:center; padding:30px; color:#9B8E82; }
-    .back-link { display:inline-block; margin-bottom:20px; color:#1F3D34; text-decoration:none; font-weight:600; font-size:13px; }
-    .filters { display:flex; gap:15px; margin-bottom:20px; }
-    .filters input { max-width:150px; }
+    .muted { color:#9B8E82; font-size:13px; padding:18px; text-align:center; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <a href="dashboard.html" class="back-link">← חזור לעמוד הבית</a>
+  <div class="topbar">
+    <h1>💰 כספים</h1>
+    <div class="ctrl">
+      <label>שנה</label>
+      <select id="yearSel" onchange="onYear()"></select>
+      <label>מע״מ %</label>
+      <input type="number" id="vatRate" min="0" max="100" step="0.5" style="width:70px" onchange="onVat()">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="vatIncl" onchange="onVat()" style="width:auto"> ההכנסות כוללות מע״מ</label>
+    </div>
+  </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('income')">📈 הכנסות</button>
-    <button class="tab" onclick="switchTab('expenses')">📉 הוצאות</button>
+    <button class="tab active" data-tab="balance" onclick="switchTab('balance')">⚖️ מאזן</button>
+    <button class="tab" data-tab="income" onclick="switchTab('income')">📈 הכנסות</button>
+    <button class="tab" data-tab="expenses" onclick="switchTab('expenses')">📉 הוצאות</button>
   </div>
 
   <div id="error" class="error"></div>
   <div id="success" class="success"></div>
 
-  <!-- INCOME TAB -->
-  <div id="income" class="tab-content active">
-    <div class="header">
-      <h2>הכנסות</h2>
-      <button class="btn-add" onclick="toggleIncomeForm()">+ הוסף הכנסה</button>
+  <!-- BALANCE -->
+  <div id="balance" class="tab-content active">
+    <div class="kpis">
+      <div class="kpi green"><div class="lbl">ממוצע הכנסה חודשית (נטו, אחרי מע״מ)</div><div class="val" id="kAvgInc">₪0</div></div>
+      <div class="kpi red"><div class="lbl">ממוצע הוצאה חודשית</div><div class="val" id="kAvgExp">₪0</div></div>
+      <div class="kpi main"><div class="lbl">ממוצע רווח חודשי</div><div class="val" id="kAvgProfit">₪0</div><div class="sub" id="kActive"></div></div>
     </div>
-
-    <div id="incomeForm" class="form-container">
-      <h3 style="margin-bottom:15px;">הוסף הכנסה</h3>
-      <form id="incomeFormElement">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="incomeSource">מקור הכנסה *</label>
-            <select id="incomeSource" required>
-              <option value="">-- בחרו --</option>
-              <option value="tuition">דמי לימוד</option>
-              <option value="grant">מענק</option>
-              <option value="donation">תרומה</option>
-              <option value="other">אחר</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="incomeAmount">סכום *</label>
-            <input type="number" id="incomeAmount" step="0.01" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="incomeDate">תאריך קבלה *</label>
-          <input type="date" id="incomeDate" required>
-        </div>
-        <div class="form-group">
-          <label for="incomeNotes">הערות</label>
-          <textarea id="incomeNotes" style="resize:vertical; height:80px;"></textarea>
-        </div>
-        <button type="submit" class="btn-submit">שמור</button>
-        <button type="button" class="btn-submit" style="background:#999;" onclick="toggleIncomeForm()" style="margin-right:10px;">ביטול</button>
-      </form>
+    <div class="minirow">
+      <div class="mini"><div class="lbl">הכנסה שנתית (נטו)</div><div class="val" id="kTotInc">₪0</div></div>
+      <div class="mini"><div class="lbl">הוצאות שנתיות</div><div class="val" id="kTotExp">₪0</div></div>
+      <div class="mini"><div class="lbl">רווח שנתי</div><div class="val" id="kTotProfit">₪0</div></div>
+      <div class="mini"><div class="lbl">מע״מ שנגבה (שנתי)</div><div class="val" id="kTotVat">₪0</div></div>
     </div>
-
-    <div class="filters">
-      <input type="date" id="incomeFromDate" placeholder="מ:">
-      <input type="date" id="incomeToDate" placeholder="עד:">
-      <button class="btn-add" onclick="loadIncomeData()" style="background:#999;">סנן</button>
+    <div class="card">
+      <h3>הכנסה נטו מול הוצאות, לפי חודש</h3>
+      <div class="legend"><span><i style="background:#27ae60"></i>הכנסה נטו</span><span><i style="background:#e74c3c"></i>הוצאות</span><span style="color:#c4bcae">המספרים על העמודות = אלפי ₪</span></div>
+      <div class="chart-wrap" id="chart1"></div>
     </div>
-
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-label">סה״כ הכנסות בתקופה</div>
-        <div class="stat-value" id="totalIncome">₪0</div>
-      </div>
+    <div class="card">
+      <h3>רווח חודשי (הכנסה נטו פחות הוצאות)</h3>
+      <div class="chart-wrap" id="chart2"></div>
     </div>
-
-    <div id="incomeTable" class="loading">טוען...</div>
   </div>
 
-  <!-- EXPENSES TAB -->
+  <!-- INCOME -->
+  <div id="income" class="tab-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+      <div class="sec-h">📈 הכנסות <span style="font-weight:600;color:#9B8E82;font-size:13px" id="incTot"></span></div>
+      <button class="btn" onclick="document.getElementById('incForm').classList.toggle('show')">+ הוסף הכנסה</button>
+    </div>
+    <div id="incForm" class="form">
+      <form id="incFormEl"><div class="form-row">
+        <div class="fg"><label>מקור / משלם *</label><input type="text" id="iSource" required></div>
+        <div class="fg"><label>סכום (כולל מע״מ) *</label><input type="number" id="iAmount" step="0.01" required></div>
+        <div class="fg"><label>תאריך *</label><input type="date" id="iDate" required></div>
+        <div class="fg"><label>קטגוריה</label><input type="text" id="iCat" list="incCats" placeholder="דמי לימוד"></div>
+      </div>
+      <datalist id="incCats"><option value="דמי לימוד"><option value="רישום"><option value="מענק"><option value="אחר"></datalist>
+      <button type="submit" class="btn" style="margin-top:12px;">שמור</button></form>
+    </div>
+    <div id="incTable" class="muted">טוען...</div>
+  </div>
+
+  <!-- EXPENSES -->
   <div id="expenses" class="tab-content">
-    <div class="header">
-      <h2>הוצאות</h2>
-      <button class="btn-add" onclick="toggleExpenseForm()">+ הוסף הוצאה</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+      <div class="sec-h">📉 הוצאות</div>
+      <button class="btn" onclick="document.getElementById('expForm').classList.toggle('show')">+ הוסף הוצאה</button>
+    </div>
+    <div id="expForm" class="form">
+      <form id="expFormEl"><div class="form-row">
+        <div class="fg"><label>תיאור *</label><input type="text" id="eDesc" required></div>
+        <div class="fg"><label>קטגוריה / שירות *</label><input type="text" id="eCat" list="expCats" required></div>
+        <div class="fg"><label>סכום *</label><input type="number" id="eAmount" step="0.01" required></div>
+        <div class="fg"><label>תאריך *</label><input type="date" id="eDate" required></div>
+      </div>
+      <datalist id="expCats"></datalist>
+      <button type="submit" class="btn" style="margin-top:12px;">שמור</button></form>
     </div>
 
-    <div id="expenseForm" class="form-container">
-      <h3 style="margin-bottom:15px;">הוסף הוצאה</h3>
-      <form id="expenseFormElement">
-        <div class="form-group">
-          <label for="expenseDesc">תיאור *</label>
-          <input type="text" id="expenseDesc" required>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="expenseAmount">סכום *</label>
-            <input type="number" id="expenseAmount" step="0.01" required>
-          </div>
-          <div class="form-group">
-            <label for="expenseCategory">קטגוריה *</label>
-            <select id="expenseCategory" required>
-              <option value="">-- בחרו --</option>
-              <option value="supplies">ציוד וחומרים</option>
-              <option value="utilities">חשמל ומים</option>
-              <option value="maintenance">תיקון ותחזוקה</option>
-              <option value="staff">שכר צוות</option>
-              <option value="other">אחר</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="expenseDate">תאריך הוצאה *</label>
-            <input type="date" id="expenseDate" required>
-          </div>
-          <div class="form-group">
-            <label for="expenseMethod">אמצעי תשלום</label>
-            <select id="expenseMethod">
-              <option value="">-- בחרו --</option>
-              <option value="cash">מזומנים</option>
-              <option value="check">שיק</option>
-              <option value="transfer">העברה בנקאית</option>
-              <option value="other">אחר</option>
-            </select>
-          </div>
-        </div>
-        <button type="submit" class="btn-submit">שמור</button>
-        <button type="button" class="btn-submit" style="background:#999;" onclick="toggleExpenseForm()">ביטול</button>
-      </form>
+    <div class="card" style="padding-bottom:18px;">
+      <h3>📊 מעקב חודשי</h3>
+      <p style="font-size:12px;color:#9B8E82;margin-bottom:12px;">לחצי על תא כדי להזין/לעדכן את ההעברה החודשית. עמודת הממוצע מתחשבת אוטומטית. (משכורות מחושבות מתוך פירוט העובדים.)</p>
+      <div style="margin-bottom:12px;"><button class="btn alt" onclick="addService()">+ הוסף שירות</button></div>
+      <div class="grid-scroll" id="gridWrap"></div>
     </div>
 
-    <div class="filters">
-      <input type="date" id="expenseFromDate" placeholder="מ:">
-      <input type="date" id="expenseToDate" placeholder="עד:">
-      <button class="btn-add" onclick="loadExpenseData()" style="background:#999;">סנן</button>
+    <div class="ctrl" style="margin:4px 0 14px;">
+      <label>הצג חודש</label>
+      <select id="expMonthSel" onchange="onExpMonth()"></select>
     </div>
 
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-label">סה״כ הוצאות בתקופה</div>
-        <div class="stat-value" id="totalExpense">₪0</div>
+    <div class="sec-h" style="margin-top:6px;">🔒 הוצאות קבועות <span style="font-weight:600;color:#9B8E82;font-size:13px" id="fixTot"></span></div>
+    <div id="fixTable" class="muted" style="margin-bottom:22px;">טוען...</div>
+
+    <div class="sec-h">🔄 הוצאות משתנות <span style="font-weight:600;color:#9B8E82;font-size:13px" id="varTot"></span></div>
+    <div id="varTable" class="muted">טוען...</div>
+  </div>
+
+  <div id="edModal" class="ov">
+    <div class="ed-box">
+      <h3>עריכת הוצאה</h3>
+      <div class="ed-sub" id="edTitle"></div>
+      <label>סכום חדש (₪)</label>
+      <input type="number" id="edAmount" step="0.01">
+      <label>בתוקף מחודש</label>
+      <select id="edMonth"></select>
+      <p class="ed-note">השינוי יחול מהחודש שנבחר ועד סוף השנה, ומתעדכן אוטומטית במאזן.</p>
+      <div class="ed-actions">
+        <button class="btn" onclick="saveEditExp()">שמור</button>
+        <button class="btn grey" onclick="closeEdit()">ביטול</button>
       </div>
     </div>
-
-    <div id="expenseTable" class="loading">טוען...</div>
   </div>
-</div>
 
-<script src="js/common.js"></script>
-<script src="js/api.js"></script>
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
 <script>
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
-  document.getElementById(tab).classList.add('active');
-  if (tab === 'expenses') loadExpenseData();
+// ---------- state ----------
+const MONTH_NUMS = [9,10,11,12,1,2,3,4,5,6,7,8];
+const MONTH_LBL  = ['ספט','אוק','נוב','דצמ','ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג'];
+const FIXED_CATS = ['משכורות','שכר צוות','שכירות','ארנונה','רואה חשבון','חוגים','הדרכת צוות','מאימאי'];
+const SALARY_ALIASES = ['משכורות','שכר צוות'];
+const DEFAULT_SERVICES = [
+  { name:'משכורות', type:'fixed', salary:true },
+  { name:'שכירות', type:'fixed' }, { name:'ארנונה', type:'fixed' },
+  { name:'רואה חשבון', type:'fixed' }, { name:'חוגים', type:'fixed' },
+  { name:'צור', type:'variable' }, { name:'מים', type:'variable' },
+  { name:'חשמל', type:'variable' }, { name:'אוכל', type:'variable' },
+];
+let SY;                       // school-year start (e.g. 2025 = ספט 2025 .. אוג 2026)
+let VAT_RATE = parseFloat(localStorage.getItem('ge_vat_rate') || '18');
+let VAT_INCL = localStorage.getItem('ge_vat_incl') !== '0';
+let incomeData = [], expensesData = [], extraServices = [], D = null, expMonth = null, editTarget = null;
+
+const esc = s => (s==null?'':String(s)).replace(/</g,'&lt;');
+const attr = s => (s==null?'':String(s)).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const money = n => '₪' + Math.round(n || 0).toLocaleString('he-IL');
+const catType = c => FIXED_CATS.includes(c) ? 'fixed' : 'variable';
+const bucketOf = d => { const m = parseInt(String(d).slice(5,7),10); return m>=9 ? m-9 : m+3; };
+const bucketCalYear = b => MONTH_NUMS[b] >= 9 ? SY : SY+1;
+const cellDate = b => bucketCalYear(b) + '-' + String(MONTH_NUMS[b]).padStart(2,'0') + '-01';
+
+function curSchoolYear() { const t = new Date(); return (t.getMonth()+1) >= 9 ? t.getFullYear() : t.getFullYear()-1; }
+function syLabel(y) { return y + '-' + String((y+1)%100).padStart(2,'0'); }
+
+function buildYearOptions() {
+  const years = new Set([curSchoolYear()]);
+  incomeData.concat(expensesData).forEach(r => {
+    const d = r.receipt_date || r.expense_date; if (!d) return;
+    const m = parseInt(d.slice(5,7),10), y = parseInt(d.slice(0,4),10);
+    years.add(m>=9 ? y : y-1);
+  });
+  const arr = Array.from(years).sort((a,b)=>b-a);
+  const sel = document.getElementById('yearSel');
+  sel.innerHTML = arr.map(y => `<option value="${y}" ${y===SY?'selected':''}>${syLabel(y)}</option>`).join('');
 }
 
-function toggleIncomeForm() {
-  document.getElementById('incomeForm').classList.toggle('show');
-}
-
-function toggleExpenseForm() {
-  document.getElementById('expenseForm').classList.toggle('show');
-}
-
-async function loadIncomeData() {
-  const from = document.getElementById('incomeFromDate').value || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-  const to = document.getElementById('incomeToDate').value || new Date().toISOString().split('T')[0];
-
+// ---------- load ----------
+async function loadAll() {
+  const from = SY + '-09-01', to = (SY+1) + '-08-31';
   try {
-    const res = await api.getIncome(from, to);
-    if (res.success) {
-      const total = res.data?.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0) || 0;
-      document.getElementById('totalIncome').textContent = formatCurrency(total);
-
-      if (!res.data?.length) {
-        document.getElementById('incomeTable').innerHTML = '<p style="padding:20px; text-align:center; color:#9B8E82;">אין הכנסות</p>';
-        return;
-      }
-
-      const rows = res.data.map(i => `
-        <tr>
-          <td>${i.source_he}</td>
-          <td>${formatCurrency(i.amount)}</td>
-          <td>${formatDate(i.receipt_date)}</td>
-          <td>${i.notes_he || '-'}</td>
-        </tr>
-      `).join('');
-
-      document.getElementById('incomeTable').innerHTML = `
-        <table>
-          <thead><tr>
-            <th>מקור</th>
-            <th>סכום</th>
-            <th>תאריך</th>
-            <th>הערות</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
-    }
-  } catch (err) {
-    showError('שגיאה: ' + err.message);
-  }
+    const [ri, re] = await Promise.all([api.getIncome(from, to), api.getExpenses(from, to)]);
+    incomeData = (ri && ri.data) || [];
+    expensesData = (re && re.data) || [];
+  } catch (e) { showError('שגיאה בטעינה: ' + e.message); incomeData = []; expensesData = []; }
+  compute();
+  if (expMonth === null) expMonth = defaultExpMonth();
+  renderActive();
 }
 
-async function loadExpenseData() {
-  const from = document.getElementById('expenseFromDate').value || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-  const to = document.getElementById('expenseToDate').value || new Date().toISOString().split('T')[0];
+function compute() {
+  const incGross = Array(12).fill(0), exp = Array(12).fill(0);
+  incomeData.forEach(i => incGross[bucketOf(i.receipt_date)] += parseFloat(i.amount) || 0);
+  expensesData.forEach(e => exp[bucketOf(e.expense_date)] += parseFloat(e.amount) || 0);
+  const f = VAT_INCL ? (1 + VAT_RATE/100) : 1;
+  const incNet = incGross.map(v => v / f);
+  const vat = incGross.map((v,b) => v - incNet[b]);
+  const profit = incNet.map((v,b) => v - exp[b]);
+  const active = []; for (let b=0;b<12;b++) if (incGross[b]>0 || exp[b]>0) active.push(b);
+  const ac = active.length || 1, sum = a => a.reduce((s,x)=>s+x,0);
+  D = { incGross, incNet, exp, vat, profit, active, ac,
+    totIncNet:sum(incNet), totExp:sum(exp), totProfit:sum(profit), totVat:sum(vat),
+    avgIncNet:sum(incNet)/ac, avgExp:sum(exp)/ac, avgProfit:sum(profit)/ac };
+}
 
+// ---------- balance ----------
+function renderBalance() {
+  document.getElementById('kAvgInc').textContent = money(D.avgIncNet);
+  document.getElementById('kAvgExp').textContent = money(D.avgExp);
+  const p = document.getElementById('kAvgProfit'); p.textContent = money(D.avgProfit); p.className = 'val' + (D.avgProfit<0?' neg':'');
+  document.getElementById('kActive').textContent = 'ממוצע על ' + D.active.length + ' חודשים פעילים';
+  document.getElementById('kTotInc').textContent = money(D.totIncNet);
+  document.getElementById('kTotExp').textContent = money(D.totExp);
+  const tp = document.getElementById('kTotProfit'); tp.textContent = money(D.totProfit); tp.style.color = D.totProfit<0?'#e74c3c':'#1F3D34';
+  document.getElementById('kTotVat').textContent = money(D.totVat);
+  document.getElementById('chart1').innerHTML = svgGrouped(D.incNet, D.exp, '#27ae60', '#e74c3c');
+  document.getElementById('chart2').innerHTML = svgProfit(D.profit);
+}
+
+function svgGrouped(s1, s2, c1, c2) {
+  const W=760,H=240,pL=52,pR=8,pT=12,pB=26, iW=W-pL-pR, iH=H-pT-pB;
+  const max = Math.max(1, ...s1, ...s2), n=12, gw=iW/n, bw=gw*0.30;
+  let g = '';
+  for (let k=0;k<=2;k++){ const y=pT+iH-iH*k/2; const val=max*k/2;
+    g += `<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="#eee"/>`;
+    g += `<text x="${pL-6}" y="${y+3}" font-size="9" text-anchor="end" fill="#bbb">${shortK(val)}</text>`; }
+  for (let i=0;i<n;i++){ const cx=pL+i*gw+gw/2;
+    const h1=iH*(s1[i]/max), h2=iH*(s2[i]/max);
+    g += `<rect x="${cx-bw-1}" y="${pT+iH-h1}" width="${bw}" height="${h1}" rx="2" fill="${c1}"/>`;
+    g += `<rect x="${cx+1}" y="${pT+iH-h2}" width="${bw}" height="${h2}" rx="2" fill="${c2}"/>`;
+    if (s1[i]>0) g += `<text x="${cx-bw/2-1}" y="${pT+iH-h1-3}" font-size="8" font-weight="700" text-anchor="middle" fill="#1d7a44">${Math.round(s1[i]/1000)}</text>`;
+    if (s2[i]>0) g += `<text x="${cx+bw/2+1}" y="${pT+iH-h2-3}" font-size="8" font-weight="700" text-anchor="middle" fill="#b53f31">${Math.round(s2[i]/1000)}</text>`;
+    g += `<text x="${cx}" y="${H-8}" font-size="10" text-anchor="middle" fill="#9B8E82">${MONTH_LBL[i]}</text>`; }
+  return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+}
+function svgProfit(s) {
+  const W=760,H=220,pL=52,pR=8,pT=12,pB=26, iW=W-pL-pR, iH=H-pT-pB;
+  const max = Math.max(1, ...s.map(Math.abs)), n=12, gw=iW/n, bw=gw*0.5, zero=pT+iH/2;
+  let g = `<line x1="${pL}" y1="${zero}" x2="${W-pR}" y2="${zero}" stroke="#ccc"/>`;
+  g += `<text x="${pL-6}" y="${pT+8}" font-size="9" text-anchor="end" fill="#bbb">${shortK(max)}</text>`;
+  g += `<text x="${pL-6}" y="${H-pB}" font-size="9" text-anchor="end" fill="#bbb">-${shortK(max)}</text>`;
+  for (let i=0;i<n;i++){ const cx=pL+i*gw+gw/2; const h=(iH/2)*(Math.abs(s[i])/max);
+    const y = s[i]>=0 ? zero-h : zero; const col = s[i]>=0 ? '#27ae60' : '#e74c3c';
+    g += `<rect x="${cx-bw/2}" y="${y}" width="${bw}" height="${h}" rx="2" fill="${col}"/>`;
+    g += `<text x="${cx}" y="${H-8}" font-size="10" text-anchor="middle" fill="#9B8E82">${MONTH_LBL[i]}</text>`; }
+  return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+}
+function shortK(v){ v=Math.round(v); if (Math.abs(v)>=1000) return (v/1000).toFixed(Math.abs(v)<10000?1:0)+'k'; return v; }
+
+// ---------- income tab ----------
+function renderIncome() {
+  document.getElementById('incTot').textContent = '— נטו: ' + money(D.totIncNet) + ' (ברוטו ' + money(D.totIncNet+D.totVat) + ')';
+  const list = incomeData.slice().sort((a,b)=> (b.receipt_date>a.receipt_date?1:-1));
+  if (!list.length) { document.getElementById('incTable').innerHTML = '<div class="muted">אין הכנסות בשנה זו.</div>'; return; }
+  const rows = list.map(i => `<tr>
+    <td>${esc(i.source_he)}</td><td>${esc(i.category_he)||'-'}</td>
+    <td>${money(i.amount)}</td><td>${formatDate(i.receipt_date)}</td>
+    <td><button class="del" onclick="delInc('${i.id}')">מחק</button></td></tr>`).join('');
+  document.getElementById('incTable').innerHTML = `<table><thead><tr><th>מקור</th><th>קטגוריה</th><th>סכום</th><th>תאריך</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ---------- expenses tab ----------
+function serviceList() {
+  const names = new Set();
+  const out = DEFAULT_SERVICES.map(s => ({ ...s }));
+  DEFAULT_SERVICES.forEach(s => names.add(s.name));
+  expensesData.forEach(e => {
+    const c = e.category_he; if (!c || SALARY_ALIASES.includes(c) || names.has(c)) return;
+    names.add(c); out.push({ name:c, type:catType(c) });
+  });
+  extraServices.forEach(s => { if (!names.has(s.name)) { names.add(s.name); out.push(s); } });
+  return out;
+}
+function expRowsFor(svc, b) {
+  return expensesData.filter(e => {
+    if (bucketOf(e.expense_date) !== b) return false;
+    return svc.salary ? SALARY_ALIASES.includes(e.category_he) : e.category_he === svc.name;
+  });
+}
+function svcMonthSum(svc, b) { return expRowsFor(svc, b).reduce((s,e)=>s+(parseFloat(e.amount)||0),0); }
+
+function renderGrid() {
+  const svcs = serviceList();
+  const head = '<thead><tr><th>שירות</th><th>ממוצע</th>' + MONTH_LBL.map(m=>`<th>${m}</th>`).join('') + '</tr></thead>';
+  const rowFor = svc => {
+    let sum = 0, cnt = 0;
+    const cells = MONTH_LBL.map((_,b) => {
+      const v = svcMonthSum(svc, b);
+      if (v>0){ sum+=v; cnt++; }
+      const cls = svc.salary ? 'ro' : ('cell' + (v>0?'':' empty'));
+      const onclick = svc.salary ? '' : ` onclick="editCell('${attr(svc.name)}',${b})"`;
+      return `<td class="${cls}"${onclick}>${v>0?Math.round(v).toLocaleString('he-IL'):'·'}</td>`;
+    }).join('');
+    const avg = cnt? sum/cnt : 0;
+    const tc = svc.type==='fixed' ? 'f' : 'v';
+    return `<tr><td class="svc ${tc}">${esc(svc.name)}</td><td class="avg">${cnt?money(avg):'-'}</td>${cells}</tr>`;
+  };
+  const grp = (label, cls) => `<tr class="grp ${cls}"><td colspan="14">${label}</td></tr>`;
+  const fixed = svcs.filter(s => s.type==='fixed'), vari = svcs.filter(s => s.type!=='fixed');
+  let body = '';
+  if (fixed.length) body += grp('🔒 הוצאות קבועות', 'f') + fixed.map(rowFor).join('');
+  if (vari.length)  body += grp('🔄 הוצאות משתנות', 'v') + vari.map(rowFor).join('');
+  document.getElementById('gridWrap').innerHTML = `<table class="grid">${head}<tbody>${body}</tbody></table>`;
+  // datalist for the add-expense form
+  document.getElementById('expCats').innerHTML = svcs.map(s=>`<option value="${attr(s.name)}">`).join('');
+}
+
+function defaultExpMonth() {
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth()+1;
+  const inSY = (m>=9 && y===SY) || (m<=8 && y===SY+1);
+  if (inSY) return bucketOf(y + '-' + String(m).padStart(2,'0') + '-01');
+  let last = -1; expensesData.forEach(e => { const b = bucketOf(e.expense_date); if (b>last) last=b; });
+  return last>=0 ? last : 11;
+}
+function populateExpMonthSel() {
+  document.getElementById('expMonthSel').innerHTML =
+    MONTH_LBL.map((m,b) => `<option value="${b}" ${b===expMonth?'selected':''}>${m} ${bucketCalYear(b)}</option>`).join('');
+}
+function onExpMonth() { expMonth = parseInt(document.getElementById('expMonthSel').value,10); renderExpenseLists(); }
+
+function renderExpenseLists() {
+  const rows = expensesData.filter(e => bucketOf(e.expense_date) === expMonth);
+  const fixed = rows.filter(e => catType(e.category_he)==='fixed');
+  const vari  = rows.filter(e => catType(e.category_he)!=='fixed');
+  const sumOf = a => a.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const ml = MONTH_LBL[expMonth] + ' ' + bucketCalYear(expMonth);
+  document.getElementById('fixTot').textContent = '— ' + ml + ' · ' + money(sumOf(fixed));
+  document.getElementById('varTot').textContent = '— ' + ml + ' · ' + money(sumOf(vari));
+  document.getElementById('fixTable').innerHTML = expGrouped(fixed);
+  document.getElementById('varTable').innerHTML = expGrouped(vari);
+}
+
+// one table: category on the right (merged cell) containing its line items; sorted by amount desc
+function expGrouped(rows) {
+  if (!rows.length) return '<div class="muted">אין הוצאות.</div>';
+  const sum = a => a.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const byCat = {};
+  rows.forEach(e => { (byCat[e.category_he]=byCat[e.category_he]||[]).push(e); });
+  const cats = Object.keys(byCat).sort((a,b)=> sum(byCat[b]) - sum(byCat[a]));
+  let body = '';
+  cats.forEach(c => {
+    const items = byCat[c].slice().sort((x,y)=> (parseFloat(y.amount)||0)-(parseFloat(x.amount)||0));
+    items.forEach((e,j) => {
+      body += '<tr>';
+      if (j===0) body += `<td class="cat-cell" rowspan="${items.length}"><div class="cc-name">${esc(c)}</div><div class="cc-tot">${money(sum(byCat[c]))}</div></td>`;
+      body += `<td>${esc(e.description_he)}</td><td class="amt">${money(e.amount)}</td>` +
+              `<td><button class="ed" onclick="openEditExp('${e.id}')">ערוך</button> <button class="del" onclick="delExp('${e.id}')">מחק</button></td></tr>`;
+    });
+  });
+  return `<table class="exp-tbl"><thead><tr><th>קטגוריה</th><th>תיאור</th><th>סכום</th><th></th></tr></thead><tbody>${body}</tbody></table>`;
+}
+function expTable(list) {
+  if (!list.length) return '<div class="muted">אין הוצאות.</div>';
+  const rows = list.slice().sort((a,b)=> (b.expense_date>a.expense_date?1:-1)).map(e => `<tr>
+    <td>${esc(e.description_he)}</td><td>${esc(e.category_he)}</td>
+    <td>${money(e.amount)}</td><td>${formatDate(e.expense_date)}</td>
+    <td><button class="del" onclick="delExp('${e.id}')">מחק</button></td></tr>`).join('');
+  return `<table><thead><tr><th>תיאור</th><th>קטגוריה</th><th>סכום</th><th>תאריך</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderExpenses() { renderGrid(); populateExpMonthSel(); renderExpenseLists(); }
+
+// ---------- grid cell edit (update-or-create one row per service+month) ----------
+async function editCell(name, b) {
+  const svc = { name, salary:false };
+  const rows = expRowsFor(svc, b);
+  if (rows.length > 1) { alert('יש כמה רשומות לחודש הזה. ערכי אותן ברשימת ההוצאות למטה.'); return; }
+  const cur = rows[0] ? Math.round(rows[0].amount) : '';
+  const val = prompt(name + ' — ' + MONTH_LBL[b] + ' ' + bucketCalYear(b) + '\nסכום ההעברה (ריק = מחיקה):', cur);
+  if (val === null) return;
+  const t = val.trim();
   try {
-    const res = await api.getExpenses(from, to);
-    if (res.success) {
-      const total = res.data?.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0) || 0;
-      document.getElementById('totalExpense').textContent = formatCurrency(total);
-
-      if (!res.data?.length) {
-        document.getElementById('expenseTable').innerHTML = '<p style="padding:20px; text-align:center; color:#9B8E82;">אין הוצאות</p>';
-        return;
-      }
-
-      const rows = res.data.map(e => `
-        <tr>
-          <td>${e.description_he}</td>
-          <td>${e.category_he}</td>
-          <td>${formatCurrency(e.amount)}</td>
-          <td>${formatDate(e.expense_date)}</td>
-          <td><span class="badge badge-${e.status}">${e.status === 'pending' ? 'ממתין' : e.status === 'approved' ? 'אושר' : 'שולם'}</span></td>
-        </tr>
-      `).join('');
-
-      document.getElementById('expenseTable').innerHTML = `
-        <table>
-          <thead><tr>
-            <th>תיאור</th>
-            <th>קטגוריה</th>
-            <th>סכום</th>
-            <th>תאריך</th>
-            <th>סטטוס</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
+    if (t === '' || parseFloat(t) === 0) { if (rows[0]) await api.deleteExpense(rows[0].id); }
+    else {
+      const amount = parseFloat(t);
+      if (isNaN(amount) || amount < 0) { alert('סכום לא תקין'); return; }
+      if (rows[0]) await api.updateExpense(rows[0].id, { amount });
+      else await api.createExpense({ description_he:name, category_he:name, amount, expense_date:cellDate(b), payment_method_he:'transfer' });
     }
-  } catch (err) {
-    showError('שגיאה: ' + err.message);
-  }
+    await loadAll();
+  } catch (e) { showError('שגיאה: ' + e.message); }
+}
+function addService() {
+  const n = (prompt('שם השירות החדש (לדוגמה: ביטוח, ניקיון):') || '').trim();
+  if (!n) return;
+  let type = 'variable';
+  if (confirm('האם זו הוצאה קבועה? (אישור = קבועה, ביטול = משתנה)')) type = 'fixed';
+  if (!serviceList().some(s=>s.name===n)) extraServices.push({ name:n, type });
+  renderGrid();
 }
 
-document.getElementById('incomeFormElement').addEventListener('submit', async (e) => {
+// ---------- deletes ----------
+async function delInc(id){ if(!confirm('למחוק את ההכנסה? (ניתן לשחזר מהפח)')) return; try{ await api.deleteIncome(id); await loadAll(); }catch(e){ showError(e.message); } }
+async function delExp(id){ if(!confirm('למחוק את ההוצאה? (ניתן לשחזר מהפח)')) return; try{ await api.deleteExpense(id); await loadAll(); }catch(e){ showError(e.message); } }
+
+// ---------- edit a recurring expense from a chosen month onward ----------
+function openEditExp(id) {
+  const e = expensesData.find(x => x.id === id); if (!e) return;
+  editTarget = { desc: e.description_he, cat: e.category_he };
+  document.getElementById('edTitle').textContent = e.description_he + ' · ' + e.category_he;
+  document.getElementById('edAmount').value = Math.round(parseFloat(e.amount) || 0);
+  const b0 = bucketOf(e.expense_date);
+  document.getElementById('edMonth').innerHTML =
+    MONTH_LBL.map((m,b) => `<option value="${b}" ${b===b0?'selected':''}>${m} ${bucketCalYear(b)}</option>`).join('');
+  document.getElementById('edModal').classList.add('show');
+}
+function closeEdit() { document.getElementById('edModal').classList.remove('show'); editTarget = null; }
+async function saveEditExp() {
+  if (!editTarget) return;
+  const amount = parseFloat(document.getElementById('edAmount').value);
+  if (isNaN(amount) || amount < 0) { alert('סכום לא תקין'); return; }
+  const fromDate = cellDate(parseInt(document.getElementById('edMonth').value,10));
+  const targets = expensesData.filter(e =>
+    e.description_he === editTarget.desc && e.category_he === editTarget.cat && e.expense_date >= fromDate);
+  if (!targets.length) { alert('אין שורות לעדכן מהחודש שנבחר'); return; }
+  try {
+    for (const e of targets) await api.updateExpense(e.id, { amount });
+    closeEdit();
+    showSuccess('עודכן ב-' + targets.length + ' חודשים');
+    await loadAll();
+  } catch (err) { showError('שגיאה: ' + err.message); }
+}
+
+// ---------- tabs / controls ----------
+let activeTab = 'balance';
+function switchTab(t) {
+  activeTab = t;
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab===t));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id===t));
+  renderActive();
+}
+function renderActive() {
+  if (!D) return;
+  if (activeTab==='balance') renderBalance();
+  else if (activeTab==='income') renderIncome();
+  else renderExpenses();
+}
+function onYear(){ SY = parseInt(document.getElementById('yearSel').value,10); expMonth = null; loadAll(); }
+function onVat(){
+  VAT_RATE = parseFloat(document.getElementById('vatRate').value) || 0;
+  VAT_INCL = document.getElementById('vatIncl').checked;
+  localStorage.setItem('ge_vat_rate', VAT_RATE); localStorage.setItem('ge_vat_incl', VAT_INCL?'1':'0');
+  compute(); renderActive();
+}
+
+// ---------- add forms ----------
+document.getElementById('incFormEl').addEventListener('submit', async e => {
   e.preventDefault();
   try {
-    const data = {
-      source_he: document.getElementById('incomeSource').value,
-      amount: parseFloat(document.getElementById('incomeAmount').value),
-      receipt_date: document.getElementById('incomeDate').value,
-      notes_he: document.getElementById('incomeNotes').value || null,
-    };
-    await api.createIncome(data);
-    showSuccess('הכנסה נוספה בהצלחה');
-    toggleIncomeForm();
-    document.getElementById('incomeFormElement').reset();
-    loadIncomeData();
-  } catch (err) {
-    showError('שגיאה: ' + err.message);
-  }
+    await api.createIncome({
+      source_he: document.getElementById('iSource').value.trim(),
+      amount: parseFloat(document.getElementById('iAmount').value),
+      receipt_date: document.getElementById('iDate').value,
+      category_he: document.getElementById('iCat').value.trim() || null,
+    });
+    showSuccess('נוסף'); document.getElementById('incFormEl').reset();
+    document.getElementById('incForm').classList.remove('show'); await loadAll();
+  } catch (e2) { showError(e2.message); }
 });
-
-document.getElementById('expenseFormElement').addEventListener('submit', async (e) => {
+document.getElementById('expFormEl').addEventListener('submit', async e => {
   e.preventDefault();
   try {
-    const data = {
-      description_he: document.getElementById('expenseDesc').value,
-      amount: parseFloat(document.getElementById('expenseAmount').value),
-      expense_date: document.getElementById('expenseDate').value,
-      category_he: document.getElementById('expenseCategory').value,
-      payment_method_he: document.getElementById('expenseMethod').value || null,
-    };
-    await api.createExpense(data);
-    showSuccess('הוצאה נוספה בהצלחה');
-    toggleExpenseForm();
-    document.getElementById('expenseFormElement').reset();
-    loadExpenseData();
-  } catch (err) {
-    showError('שגיאה: ' + err.message);
-  }
+    await api.createExpense({
+      description_he: document.getElementById('eDesc').value.trim(),
+      category_he: document.getElementById('eCat').value.trim(),
+      amount: parseFloat(document.getElementById('eAmount').value),
+      expense_date: document.getElementById('eDate').value,
+    });
+    showSuccess('נוסף'); document.getElementById('expFormEl').reset();
+    document.getElementById('expForm').classList.remove('show'); await loadAll();
+  } catch (e2) { showError(e2.message); }
 });
 
-// Set default dates
-const today = new Date();
-const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-document.getElementById('incomeFromDate').value = monthStart.toISOString().split('T')[0];
-document.getElementById('incomeToDate').value = today.toISOString().split('T')[0];
-document.getElementById('expenseFromDate').value = monthStart.toISOString().split('T')[0];
-document.getElementById('expenseToDate').value = today.toISOString().split('T')[0];
-document.getElementById('incomeDate').valueAsDate = today;
-document.getElementById('expenseDate').valueAsDate = today;
-
-loadIncomeData();
+// ---------- init ----------
+(async function init(){
+  SY = curSchoolYear();
+  document.getElementById('vatRate').value = VAT_RATE;
+  document.getElementById('vatIncl').checked = VAT_INCL;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('iDate').value = today;
+  document.getElementById('eDate').value = today;
+  // first load to discover years, then set selector
+  await loadAll();
+  buildYearOptions();
+})();
 </script>
 
 </body>

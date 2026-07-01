@@ -122,7 +122,7 @@ function initializePage() {
   renderTrashBin();
 }
 
-const TRASH_LABELS = { children:'ילד', parents:'הורה', staff:'עובד', events:'אירוע', utilities:'גוף', documents:'מסמך' };
+const TRASH_LABELS = { children:'ילד', parents:'הורה', staff:'עובד', events:'אירוע', utilities:'גוף', documents:'מסמך', income:'הכנסה', expenses:'הוצאה' };
 
 function renderTrashBin() {
   if (!localStorage.getItem('crm_token') || document.getElementById('trashFab')) return;
@@ -198,9 +198,10 @@ function renderNavSidebar() {
     { href: 'dashboard.html',       icon: '🏠', label: 'עמוד הבית' },
     { href: 'children-manage.html', icon: '👶', label: 'ילדים' },
     { href: 'parents-tuition.html', icon: '👨‍👩‍👧', label: 'הורים' },
-    { href: 'staff-salaries.html',  icon: '👔', label: 'עובדים ומשכורות' },
+    { href: 'staff-salaries.html',  icon: '👥', label: 'צוות' },
+    { href: 'content.html',         icon: '📚', label: 'תוכן חינוכי' },
     { href: 'forms.html',           icon: '📋', label: 'טפסים' },
-    { href: 'authorities.html',     icon: '🏛️', label: 'משרד החינוך ועירייה' },
+    { href: 'authorities.html',     icon: '🏛️', label: 'רישוי' },
     { href: 'income-expenses.html', icon: '💰', label: 'הכנסות והוצאות' },
     { href: 'import.html',          icon: '📥', label: 'ייבוא מטבלה' },
   ];
@@ -210,20 +211,41 @@ function renderNavSidebar() {
     const st = document.createElement('style');
     st.id = 'crm-sidebar-style';
     st.textContent = [
-      "#crmSidebar{position:fixed;top:0;right:0;width:248px;height:100vh;background:#1F3D34;padding:26px 18px 80px;overflow-y:auto;z-index:9000;font-family:'Heebo',sans-serif;box-shadow:-2px 0 16px rgba(0,0,0,.12);}",
-      "#crmSidebar .cs-logo{color:#fff;font-size:17px;font-weight:800;text-align:center;padding-bottom:18px;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,.2);}",
-      "#crmSidebar a{display:flex;align-items:center;gap:11px;padding:12px 14px;color:rgba(255,255,255,.74);text-decoration:none;border-radius:10px;font-size:14px;margin-bottom:6px;transition:all .18s;}",
-      "#crmSidebar a:hover{background:rgba(255,255,255,.1);color:#fff;}",
-      "#crmSidebar a.active{background:#C4846C;color:#fff;font-weight:700;box-shadow:0 4px 12px rgba(196,132,108,.4);}",
-      "#crmSidebar .cs-logout{position:absolute;bottom:22px;right:18px;width:212px;padding:12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:10px;font-family:'Heebo';cursor:pointer;font-size:13px;}",
-      "#crmSidebar .cs-logout:hover{background:rgba(255,255,255,.2);}",
-      "body{padding:26px 274px 40px 26px !important;}",
+      // --- global polish (applies on every authenticated page) ---
+      "html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}",
+      "::selection{background:#C4846C;color:#fff;}",
+      "*:focus-visible{outline:2.5px solid #C4846C;outline-offset:2px;}",
+      "::-webkit-scrollbar{width:11px;height:11px;}",
+      "::-webkit-scrollbar-track{background:transparent;}",
+      "::-webkit-scrollbar-thumb{background:#d8cdba;border-radius:8px;border:3px solid #F4EFE6;}",
+      "::-webkit-scrollbar-thumb:hover{background:#c9bca4;}",
+      "button{transition:background .15s,box-shadow .15s,transform .1s,opacity .15s;}",
+      "button:active{transform:scale(.97);}",
+      // --- sidebar ---
+      "#crmSidebar{position:fixed;top:0;right:0;width:252px;height:100vh;background:linear-gradient(180deg,#244c40 0%,#1c3e34 55%,#173229 100%);padding:24px 15px 86px;overflow-y:auto;z-index:9000;font-family:'Heebo',sans-serif;box-shadow:-4px 0 26px rgba(0,0,0,.16);}",
+      "#crmSidebar::-webkit-scrollbar{width:6px;}",
+      "#crmSidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border:none;border-radius:6px;}",
+      "#crmSidebar .cs-logo{color:#fff;font-size:18px;font-weight:800;text-align:center;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.13);letter-spacing:.3px;}",
+      "#crmSidebar .cs-logo img{width:64px;height:64px;border-radius:50%;background:#fff;display:block;margin:0 auto 9px;object-fit:cover;box-shadow:0 5px 16px rgba(0,0,0,.28),0 0 0 4px rgba(255,255,255,.10);}",
+      "#crmSidebar .cs-logo .cs-sub{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.46);letter-spacing:2px;margin-top:3px;}",
+      "#crmSidebar a{display:flex;align-items:center;gap:11px;padding:11px 13px;color:rgba(255,255,255,.72);text-decoration:none;border-radius:11px;font-size:14px;font-weight:600;margin-bottom:4px;transition:background .16s,color .16s,transform .16s,box-shadow .16s;}",
+      "#crmSidebar a span:first-child{width:24px;text-align:center;font-size:16px;flex-shrink:0;}",
+      "#crmSidebar a:hover{background:rgba(255,255,255,.09);color:#fff;transform:translateX(-3px);}",
+      "#crmSidebar a.active{background:linear-gradient(135deg,#C4846C,#b06f55);color:#fff;font-weight:700;box-shadow:0 6px 16px rgba(196,132,108,.42);}",
+      "#crmSidebar .cs-logout{position:absolute;bottom:20px;right:15px;width:222px;padding:11px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.18);border-radius:11px;font-family:'Heebo';cursor:pointer;font-size:13px;font-weight:600;transition:background .16s,border-color .16s;}",
+      "#crmSidebar .cs-logout:hover{background:rgba(231,76,60,.88);border-color:transparent;color:#fff;}",
+      "body{padding:26px 286px 44px 30px !important;}",
+      // hamburger + backdrop: hidden on desktop, used as a slide-out drawer on mobile
+      "#crmMenuBtn{display:none;position:fixed;top:13px;right:13px;z-index:9002;width:46px;height:46px;border:none;border-radius:13px;background:#1F3D34;color:#fff;font-size:21px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.22);align-items:center;justify-content:center;}",
+      "#crmBackdrop{display:none;position:fixed;inset:0;background:rgba(23,40,33,.42);z-index:8999;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s;}",
       "@media(max-width:820px){",
-      "  #crmSidebar{position:static;width:100%;height:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:12px;box-shadow:0 2px 10px rgba(0,0,0,.12);}",
-      "  #crmSidebar .cs-logo{width:100%;margin-bottom:8px;padding-bottom:10px;}",
-      "  #crmSidebar a{margin-bottom:0;padding:9px 12px;font-size:13px;}",
-      "  #crmSidebar .cs-logout{position:static;width:auto;margin-right:auto;}",
-      "  body{padding:16px !important;}",
+      "  #crmSidebar{width:min(272px,84vw);transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:none;}",
+      "  #crmSidebar.open{transform:translateX(0);box-shadow:-4px 0 30px rgba(0,0,0,.3);}",
+      "  #crmMenuBtn{display:flex;}",
+      "  #crmBackdrop{display:block;}",
+      "  #crmBackdrop.open{opacity:1;visibility:visible;}",
+      "  #crmSidebar a:hover{transform:none;}",
+      "  body{padding:70px 16px 34px 16px !important;}",
       "}",
     ].join('');
     document.head.appendChild(st);
@@ -232,7 +254,7 @@ function renderNavSidebar() {
   const bar = document.createElement('div');
   bar.id = 'crmSidebar';
   bar.innerHTML =
-    '<div class="cs-logo"><img src="logo.png" alt="גן לב" style="width:66px;height:66px;border-radius:50%;background:#fff;display:block;margin:0 auto 7px;object-fit:cover;"><div>גן לב</div></div>' +
+    '<div class="cs-logo"><img src="logo.png" alt="גן לב"><div>גן לב</div><div class="cs-sub">מערכת ניהול</div></div>' +
     links.map(function (l) {
       return '<a href="' + l.href + '"' + (l.href === current ? ' class="active"' : '') +
         '><span>' + l.icon + '</span><span>' + l.label + '</span></a>';
@@ -242,6 +264,26 @@ function renderNavSidebar() {
   document.body.insertBefore(bar, document.body.firstChild);
   const lo = document.getElementById('crmLogout');
   if (lo) lo.addEventListener('click', logout);
+
+  // Mobile slide-out drawer: hamburger toggles the sidebar; backdrop tap / Esc close it.
+  if (!document.getElementById('crmMenuBtn')) {
+    const backdrop = document.createElement('div');
+    backdrop.id = 'crmBackdrop';
+    document.body.appendChild(backdrop);
+    const menuBtn = document.createElement('button');
+    menuBtn.id = 'crmMenuBtn';
+    menuBtn.setAttribute('aria-label', 'תפריט');
+    menuBtn.innerHTML = '☰';
+    document.body.appendChild(menuBtn);
+    const setDrawer = function (open) {
+      bar.classList.toggle('open', open);
+      backdrop.classList.toggle('open', open);
+      menuBtn.innerHTML = open ? '✕' : '☰';
+    };
+    menuBtn.addEventListener('click', function () { setDrawer(!bar.classList.contains('open')); });
+    backdrop.addEventListener('click', function () { setDrawer(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setDrawer(false); });
+  }
 }
 
 // Floating top-left switcher that lets an admin flip between gardens.
@@ -262,6 +304,14 @@ async function renderGardenSwitcher() {
     return;
   }
   if (gardens.length === 0) return;
+
+  // Keep גן לב first in the switcher, the rest by name
+  var FIRST_GARDEN = '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
+  gardens.sort(function (a, b) {
+    if (a.id === FIRST_GARDEN) return -1;
+    if (b.id === FIRST_GARDEN) return 1;
+    return (a.name || '').localeCompare(b.name || '', 'he');
+  });
 
   let active = localStorage.getItem('crm_garden_id');
   if (!active || !gardens.some(function (g) { return g.id === active; })) {

@@ -8,7 +8,7 @@
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
-    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:12px; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
     .header h1 { font-size:26px; color:#1F3D34; }
     .header .sub { font-size:13px; color:#9B8E82; }
     .btn-add { background:#1F3D34; color:#FFF; border:none; padding:12px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; }
@@ -52,6 +52,22 @@
     .btn-edit, .btn-delete { padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; }
     .btn-edit { background:#C4846C; color:#FFF; }
     .btn-delete { background:#e74c3c; color:#FFF; }
+    .name-link { color:#1F3D34; font-weight:700; cursor:pointer; text-decoration:underline; }
+    .name-link:hover { color:#C4846C; }
+    .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center; justify-content:center; z-index:99999; padding:18px; }
+    .ov.show { display:flex; }
+    .pf { background:#fff; border-radius:18px; padding:26px; width:100%; max-width:480px; max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .pf h2 { color:#1F3D34; margin-bottom:4px; font-size:21px; }
+    .pf .role { color:#9B8E82; font-size:13px; margin-bottom:10px; }
+    .docs-head { font-weight:800; color:#1F3D34; margin:14px 0 10px; font-size:15px; border-top:1px solid #f0ece6; padding-top:14px; }
+    .doc-file { display:flex; justify-content:space-between; align-items:center; gap:8px; background:#FAF8F4; border:1px solid #f0ece6; border-radius:9px; padding:9px 11px; font-size:13px; margin-bottom:7px; }
+    .doc-file a, .doc-file .open { color:#1F7a4f; text-decoration:none; font-weight:700; cursor:pointer; background:none; border:none; font-family:'Heebo'; font-size:13px; padding:0; }
+    .doc-file .open:hover { text-decoration:underline; }
+    .doc-file .del { background:none; border:none; color:#e74c3c; cursor:pointer; font-size:14px; }
+    .cp-add { background:#1F3D34; color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
+    .cp-close { margin-top:18px; width:100%; background:#f0ece6; border:none; border-radius:10px; padding:11px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
+    .card-q { font-weight:700; color:#1F3D34; font-size:13px; margin-top:13px; }
+    .card-a { font-size:14px; color:#3D3228; white-space:pre-wrap; line-height:1.55; }
     .loading { text-align:center; padding:40px; color:#9B8E82; }
   </style>
 </head>
@@ -103,8 +119,8 @@
 
   <div id="table" class="loading">טוען...</div>
 
-<script src="js/common.js?v=6"></script>
-<script src="js/api.js?v=6"></script>
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
 <script>
 let children = [];
 let editingId = null;
@@ -178,7 +194,7 @@ function renderTable() {
                  : '<span class="muted">-</span>';
     return `
     <tr>
-      <td><b>${c.first_name_he} ${c.last_name_he || ''}</b></td>
+      <td><b class="name-link" onclick="openChildProfile('${c.id}')">${c.first_name_he} ${c.last_name_he || ''}</b></td>
       <td class="en">${c.name_en || '<span class="muted">-</span>'}</td>
       <td>${gBadge}</td>
       <td>${c.national_id || '<span class="muted">-</span>'}</td>
@@ -271,9 +287,87 @@ document.getElementById('childForm').addEventListener('submit', async (e) => {
   } catch (err) { showError('שגיאה: ' + err.message); }
 });
 
+// ---- per-child profile: attached files + the registration "כרטיס אישי" ----
+const esc = s => (s || '').replace(/</g, '&lt;');
+function fileToB64(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',').pop()); r.onerror = rej; r.readAsDataURL(file); }); }
+const childDocScope = id => 'child:' + id;
+let pfChildId = null;
+
+function closeOv(ovId) { document.getElementById(ovId).classList.remove('show'); }
+
+async function openChildProfile(id) {
+  const c = children.find(x => x.id === id); if (!c) return;
+  pfChildId = id;
+  document.getElementById('cpBox').innerHTML =
+    `<h2>${esc(c.first_name_he)} ${esc(c.last_name_he || '')}</h2>` +
+    `<div class="role">${c.birth_date ? 'תאריך לידה: ' + formatDate(c.birth_date) + ' · גיל ' + ageStr(c.birth_date) : 'ילד/ה'} · שנה ${esc(c.school_year || selectedYear)}</div>` +
+    `<div class="docs-head">📎 קבצים מצורפים</div><div id="childFiles"><span class="muted">טוען...</span></div>` +
+    `<button class="cp-close" onclick="closeOv('cpOv')">סגור</button>`;
+  document.getElementById('cpOv').classList.add('show');
+  loadChildFiles(id);
+}
+
+async function loadChildFiles(id) {
+  const el = document.getElementById('childFiles'); if (!el) return;
+  let docs = [], card = null;
+  try {
+    const [dRes, eRes] = await Promise.all([
+      api.getDocuments(childDocScope(id)).catch(() => ({ data: [] })),
+      api.getEvents('child-card').catch(() => ({ data: [] })),
+    ]);
+    docs = dRes.data || [];
+    card = (eRes.data || []).find(e => e.category === id);
+  } catch (e) {}
+  let html = '';
+  if (card) html += `<div class="doc-file"><button class="open" onclick="openCardView('${id}')">📋 כרטיס אישי</button><span class="muted">מתוך טופס הרישום</span></div>`;
+  html += docs.map(d => `<div class="doc-file"><a href="${d.file_url || '#'}" target="_blank">🔗 ${esc(d.title || 'קובץ')}</a><button class="del" title="מחק" onclick="delChildDoc('${d.id}')">🗑</button></div>`).join('');
+  if (!card && !docs.length) html += '<span class="muted">אין קבצים עדיין.</span>';
+  html += `<div style="margin-top:12px;"><button class="cp-add" onclick="document.getElementById('childDocInput').click()">➕ צרף קובץ</button></div>`;
+  el.innerHTML = html;
+}
+
+async function handleChildDocFile(file) {
+  if (!file || !pfChildId) return;
+  if (file.size > 5 * 1024 * 1024) { alert('הקובץ גדול מדי (עד 5MB)'); return; }
+  const el = document.getElementById('childFiles');
+  if (el) el.insertAdjacentHTML('afterbegin', '<div class="muted" id="cdUpNote">⏳ מעלה...</div>');
+  try {
+    const b64 = await fileToB64(file);
+    await api.uploadDocument({ section: childDocScope(pfChildId), category: 'כללי', title: file.name, file_base64: b64, file_name: file.name, content_type: file.type || 'application/octet-stream' });
+    loadChildFiles(pfChildId);
+  } catch (e) { alert('שגיאה בהעלאה: ' + e.message); const n = document.getElementById('cdUpNote'); if (n) n.remove(); }
+  document.getElementById('childDocInput').value = '';
+}
+
+async function delChildDoc(id) {
+  if (!confirm('למחוק את הקובץ? (אפשר לשחזר מהפח)')) return;
+  try { await api.deleteDocument(id); loadChildFiles(pfChildId); }
+  catch (e) { alert('שגיאה: ' + e.message); }
+}
+
+async function openCardView(id) {
+  const box = document.getElementById('cardBox');
+  box.innerHTML = '<span class="muted">טוען...</span>';
+  document.getElementById('cardOv').classList.add('show');
+  let card = null;
+  try { const r = await api.getEvents('child-card'); card = (r.data || []).find(e => e.category === id); } catch (e) {}
+  if (!card) { box.innerHTML = '<div class="muted">לא נמצא כרטיס אישי.</div><button class="cp-close" onclick="closeOv(\'cardOv\')">סגור</button>'; return; }
+  let parsed = {}; try { parsed = JSON.parse(card.notes || '{}'); } catch (e) {}
+  const ans = (parsed.answers || []).filter(a => a && a.a);
+  const c = children.find(x => x.id === id);
+  box.innerHTML = `<h2>📋 כרטיס אישי</h2>` +
+    `<div class="role">${c ? esc(c.first_name_he) + ' ' + esc(c.last_name_he || '') : ''}${parsed.birth_date ? ' · נולד/ה ' + formatDate(parsed.birth_date) : ''}</div>` +
+    (ans.length ? ans.map(a => `<div class="card-q">${esc(a.q)}</div><div class="card-a">${esc(a.a)}</div>`).join('') : '<div class="muted">לא מולאו תשובות בטופס.</div>') +
+    `<button class="cp-close" onclick="closeOv('cardOv')">סגור</button>`;
+}
+
 renderYearTabs();
 loadChildren();
 </script>
+
+<div class="ov" id="cpOv"><div class="pf" id="cpBox"></div></div>
+<div class="ov" id="cardOv"><div class="pf" id="cardBox"></div></div>
+<input type="file" id="childDocInput" style="display:none" onchange="handleChildDocFile(this.files[0])">
 
 </body>
 </html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>הדרכות צוות — מאגר וציר שנה</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:10px; }
+    h1 { font-size:26px; color:#1F3D34; }
+    .back { color:#9B8E82; font-size:13px; text-decoration:none; font-weight:600; }
+    .back:hover { color:#1F3D34; }
+    .lead { color:#9B8E82; font-size:14px; margin-bottom:18px; max-width:720px; line-height:1.6; }
+    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .error.show { display:block; }
+    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn-add:hover { background:#154428; }
+
+    /* search */
+    .searchbar { background:#FFF; border-radius:14px; padding:12px 16px; box-shadow:0 2px 11px rgba(0,0,0,0.05); margin-bottom:20px; display:flex; align-items:center; gap:10px; }
+    .searchbar input { flex:1; border:none; outline:none; font-family:'Heebo'; font-size:15px; background:transparent; }
+    .searchbar .ic { font-size:18px; color:#9B8E82; }
+    .searchbar .clr { background:#efe9e0; border:none; border-radius:8px; padding:6px 12px; font-family:'Heebo'; font-size:12px; font-weight:600; color:#6f6457; cursor:pointer; display:none; }
+    .result-note { color:#9B8E82; font-size:13px; margin:-8px 0 16px; }
+
+    /* timeline */
+    .timeline { position:relative; padding-right:34px; }
+    .timeline::before { content:''; position:absolute; right:13px; top:6px; bottom:6px; width:3px; background:linear-gradient(#C4846C,#e3d4c8); border-radius:3px; }
+    .month { position:relative; margin-bottom:20px; }
+    .month::before { content:''; position:absolute; right:-27px; top:19px; width:17px; height:17px; border-radius:50%; background:#C4846C; border:3px solid #F4EFE6; box-shadow:0 0 0 2px #C4846C; }
+    .month.empty::before { background:#e3d4c8; box-shadow:0 0 0 2px #e3d4c8; }
+    .m-card { background:#FFF; border-radius:15px; padding:15px 17px; box-shadow:0 2px 11px rgba(0,0,0,0.05); }
+    .month.empty .m-card { background:#fbf9f5; box-shadow:none; }
+    .m-head { display:flex; align-items:center; gap:9px; margin-bottom:11px; }
+    .m-emoji { font-size:20px; }
+    .m-name { font-size:17px; font-weight:800; color:#1F3D34; }
+    .m-head .add-mini { margin-right:auto; background:none; border:1.5px dashed #d8cdba; color:#9B8E82; border-radius:8px; padding:5px 11px; font-family:'Heebo'; font-size:12px; font-weight:600; cursor:pointer; }
+    .m-head .add-mini:hover { border-color:#C4846C; color:#a05a3d; }
+    .m-empty { color:#b6ab9d; font-size:13px; }
+
+    .t-item { background:#FAF8F4; border:1px solid #f0ece6; border-radius:11px; padding:11px 13px; margin-bottom:9px; }
+    .t-item:last-child { margin-bottom:0; }
+    .t-top { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+    .t-title { font-size:15px; font-weight:700; color:#1F3D34; }
+    .t-topic { font-size:12px; font-weight:700; color:#a05a3d; background:#fae9e0; border-radius:999px; padding:3px 10px; }
+    .t-date { font-size:12px; color:#9B8E82; margin-right:auto; white-space:nowrap; }
+    .t-notes { font-size:13px; color:#6f6457; margin-top:6px; line-height:1.5; white-space:pre-wrap; }
+    .t-actions { display:flex; gap:7px; margin-top:9px; }
+    .t-actions button { border:none; border-radius:7px; padding:5px 12px; font-family:'Heebo'; font-size:12px; font-weight:600; cursor:pointer; }
+    .b-edit { background:#C4846C; color:#fff; } .b-del { background:#f3e4e2; color:#c0492a; }
+    mark { background:#fff1a8; padding:0 1px; border-radius:2px; }
+
+    /* modal */
+    .modal-ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center; justify-content:center; z-index:9500; padding:18px; }
+    .modal-ov.show { display:flex; }
+    .modal { background:#fff; border-radius:16px; padding:22px; width:100%; max-width:460px; box-shadow:0 18px 50px rgba(0,0,0,.25); max-height:88vh; overflow:auto; }
+    .modal h3 { font-size:18px; color:#1F3D34; margin-bottom:14px; }
+    .modal label { display:block; font-size:13px; font-weight:600; color:#6f6457; margin:10px 0 5px; }
+    .modal input, .modal textarea { width:100%; padding:10px 12px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .modal input:focus, .modal textarea:focus { border-color:#1F3D34; }
+    .modal textarea { resize:vertical; line-height:1.6; }
+    .modal-actions { display:flex; gap:10px; margin-top:18px; }
+    .b-save { flex:1; background:#1F3D34; color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
+    .b-cancel { flex:1; background:#efe9e0; color:#6f6457; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:600; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <a class='back' href='/crm/html/staff-salaries'>‹ חזרה לצוות</a>
+      <h1>📚 הדרכות צוות</h1>
+    </div>
+    <button class="btn-add" onclick="openAdd()">+ הדרכה חדשה</button>
+  </div>
+  <div class="lead">מאגר הדרכות הצוות לאורך השנה. אפשר לחפש הדרכה לפי הנושא או השם, ולראות אותן מסודרות על ציר הזמן השנתי.</div>
+  <div id="error" class="error"></div>
+
+  <div class="searchbar">
+    <span class="ic">🔍</span>
+    <input type="text" id="search" placeholder="חיפוש הדרכה לפי נושא או שם..." oninput="render()">
+    <button class="clr" id="clrBtn" onclick="clearSearch()">נקה</button>
+  </div>
+  <div class="result-note" id="resultNote"></div>
+
+  <div class="timeline" id="timeline"></div>
+
+  <!-- add / edit modal -->
+  <div class="modal-ov" id="modal">
+    <div class="modal">
+      <h3 id="modalTitle">הדרכה חדשה</h3>
+      <label>שם ההדרכה</label>
+      <input type="text" id="tTitle" placeholder="לדוגמה: עזרה ראשונה בגן">
+      <label>נושא</label>
+      <input type="text" id="tTopic" list="topicList" placeholder="לדוגמה: בטיחות / פדגוגיה / תקשורת עם הורים">
+      <datalist id="topicList"></datalist>
+      <label>תאריך</label>
+      <input type="date" id="tDate">
+      <label>סיכום / פרטים <span style="font-weight:400;color:#9B8E82;">(אופציונלי)</span></label>
+      <textarea id="tNotes" rows="4" placeholder="נקודות עיקריות, מנחה, חומרים..."></textarea>
+      <div class="modal-actions">
+        <button class="b-save" onclick="saveItem()">שמור</button>
+        <button class="b-cancel" onclick="closeModal()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
+<script>
+const CAL = 'staff-training';   // stored as events with calendar='staff-training' (isolated from other calendars)
+const ANCHOR = '2025';
+const MONTHS = [
+  { mm:'09', name:'ספטמבר', emoji:'🍎' }, { mm:'10', name:'אוקטובר', emoji:'🍂' },
+  { mm:'11', name:'נובמבר', emoji:'🌧️' }, { mm:'12', name:'דצמבר', emoji:'🕎' },
+  { mm:'01', name:'ינואר', emoji:'❄️' }, { mm:'02', name:'פברואר', emoji:'🌳' },
+  { mm:'03', name:'מרץ', emoji:'🎭' }, { mm:'04', name:'אפריל', emoji:'🌷' },
+  { mm:'05', name:'מאי', emoji:'🌻' }, { mm:'06', name:'יוני', emoji:'🌞' },
+  { mm:'07', name:'יולי', emoji:'☀️' }, { mm:'08', name:'אוגוסט', emoji:'🏖️' },
+];
+const esc = s => (s || '').replace(/</g, '&lt;');
+let items = [];   // {id, date, mm, topic, title, notes}
+let editingId = null;
+
+function showError(m) { const e = document.getElementById('error'); e.textContent = m; e.classList.add('show'); }
+
+async function load() {
+  try {
+    const r = await api.getEvents(CAL);
+    items = (r.data || []).map(e => ({
+      id: e.id, date: e.event_date || '', mm: (e.event_date || '').slice(5, 7),
+      topic: e.category || '', title: e.title || '', notes: e.notes || '',
+    }));
+    refreshTopicList();
+    render();
+  } catch (e) { showError('שגיאה בטעינה: ' + e.message); }
+}
+
+function refreshTopicList() {
+  const topics = [...new Set(items.map(i => i.topic).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he'));
+  document.getElementById('topicList').innerHTML = topics.map(t => `<option value="${esc(t)}"></option>`).join('');
+}
+
+function hl(text, q) {
+  const t = esc(text);
+  if (!q) return t;
+  const i = t.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0) return t;
+  return t.slice(0, i) + '<mark>' + t.slice(i, i + q.length) + '</mark>' + t.slice(i + q.length);
+}
+
+function render() {
+  const q = document.getElementById('search').value.trim();
+  document.getElementById('clrBtn').style.display = q ? 'inline-block' : 'none';
+  const match = i => !q || (i.title + ' ' + i.topic + ' ' + i.notes).toLowerCase().includes(q.toLowerCase());
+  const shown = items.filter(match);
+
+  const note = document.getElementById('resultNote');
+  note.textContent = q ? `נמצאו ${shown.length} הדרכות עבור "${q}"` : `${items.length} הדרכות במאגר`;
+
+  const tl = document.getElementById('timeline');
+  const monthsToShow = q ? MONTHS.filter(m => shown.some(i => i.mm === m.mm)) : MONTHS;
+  if (q && !monthsToShow.length) {
+    tl.innerHTML = '<div style="padding:24px;color:#9B8E82;text-align:center;">לא נמצאו הדרכות תואמות.</div>';
+    return;
+  }
+  tl.innerHTML = monthsToShow.map(m => {
+    const list = shown.filter(i => i.mm === m.mm)
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const empty = !list.length;
+    const body = empty
+      ? '<div class="m-empty">טרם נקבעו הדרכות בחודש זה</div>'
+      : list.map(i => `
+        <div class="t-item">
+          <div class="t-top">
+            <span class="t-title">${hl(i.title, q)}</span>
+            ${i.topic ? `<span class="t-topic">${hl(i.topic, q)}</span>` : ''}
+            <span class="t-date">📅 ${i.date ? formatDate(i.date) : ''}</span>
+          </div>
+          ${i.notes ? `<div class="t-notes">${hl(i.notes, q)}</div>` : ''}
+          <div class="t-actions">
+            <button class="b-edit" onclick="openEdit('${i.id}')">ערוך</button>
+            <button class="b-del" onclick="delItem('${i.id}')">מחק</button>
+          </div>
+        </div>`).join('');
+    return `<div class="month ${empty ? 'empty' : ''}">
+      <div class="m-card">
+        <div class="m-head"><span class="m-emoji">${m.emoji}</span><span class="m-name">${m.name}</span>
+          <button class="add-mini" onclick="openAdd('${m.mm}')">+ הדרכה</button></div>
+        ${body}
+      </div></div>`;
+  }).join('');
+}
+
+function clearSearch() { document.getElementById('search').value = ''; render(); }
+
+function openAdd(mm) {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'הדרכה חדשה';
+  document.getElementById('tTitle').value = '';
+  document.getElementById('tTopic').value = '';
+  document.getElementById('tNotes').value = '';
+  document.getElementById('tDate').value = mm ? `${ANCHOR}-${mm}-01` : '';
+  document.getElementById('modal').classList.add('show');
+  setTimeout(() => document.getElementById('tTitle').focus(), 50);
+}
+
+function openEdit(id) {
+  const it = items.find(x => x.id === id); if (!it) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'עריכת הדרכה';
+  document.getElementById('tTitle').value = it.title;
+  document.getElementById('tTopic').value = it.topic;
+  document.getElementById('tNotes').value = it.notes;
+  document.getElementById('tDate').value = it.date || '';
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+async function saveItem() {
+  const title = document.getElementById('tTitle').value.trim();
+  const topic = document.getElementById('tTopic').value.trim();
+  const notes = document.getElementById('tNotes').value.trim();
+  const date = document.getElementById('tDate').value;
+  if (!title) { alert('צריך שם להדרכה'); return; }
+  if (!date) { alert('צריך תאריך'); return; }
+  const payload = { calendar: CAL, title, category: topic || null, notes: notes || null, event_date: date };
+  try {
+    if (editingId) await api.updateEvent(editingId, payload);
+    else await api.createEvent(payload);
+    closeModal(); await load();
+  } catch (e) { alert('שגיאה בשמירה: ' + e.message); }
+}
+
+async function delItem(id) {
+  if (!confirm('למחוק את ההדרכה מהמאגר?')) return;
+  try { await api.deleteEvent(id); await load(); }
+  catch (e) { alert('שגיאה: ' + e.message); }
+}
+
+load();
+</script>
+</body>
+</html>

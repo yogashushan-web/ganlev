@@ -8,7 +8,7 @@
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
-    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
     .header h1 { font-size:26px; color:#1F3D34; }
     .btn-add { background:#1F3D34; color:#FFF; border:none; padding:12px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; }
     .btn-add:hover { background:#154428; }
@@ -33,11 +33,13 @@
     table { width:100%; border-collapse:collapse; background:#FFF; }
     th { background:#1F3D34; color:#FFF; padding:12px 14px; font-weight:600; font-size:12px; text-align:right; white-space:nowrap; }
     td { padding:11px 14px; border-bottom:1px solid #f0ece6; font-size:13px; }
-    tr:last-child td { border-bottom:none; }
     tr:hover td { background:#FAF8F4; }
     td.ltr { direction:ltr; text-align:right; }
     a.tel { color:#1F7a4f; text-decoration:none; font-weight:600; }
     .muted { color:#c4bcae; }
+    td.child-cell { background:#FAF8F4; border-left:2px solid #efe9df; vertical-align:middle; white-space:nowrap; }
+    td.child-cell .ch-name { font-weight:800; color:#1F3D34; font-size:15px; }
+    td.child-cell .ch-age { font-size:13.5px; color:#9B8E82; font-weight:700; margin-top:3px; }
     .btn-edit, .btn-delete { padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; }
     .btn-edit { background:#C4846C; color:#FFF; }
     .btn-delete { background:#e74c3c; color:#FFF; }
@@ -52,7 +54,7 @@
   </div>
 
   <div class="toolbar">
-    <input type="text" id="search" placeholder="🔍 חיפוש לפי שם / טלפון / עיסוק...">
+    <input type="text" id="search" placeholder="🔍 חיפוש לפי שם הורה / ילד / טלפון / עיסוק...">
     <span class="count-pill" id="countPill">—</span>
   </div>
 
@@ -63,13 +65,18 @@
     <h2 style="margin-bottom:18px; color:#1F3D34;">הוסף / ערוך הורה</h2>
     <form id="parentForm">
       <div class="form-row">
-        <div class="form-group"><label>שם *</label><input type="text" id="pName" required></div>
-        <div class="form-group"><label>מספר טלפון נייד</label><input type="tel" id="pPhone" dir="ltr"></div>
+        <div class="form-group"><label>שם ההורה *</label><input type="text" id="pName" required></div>
+        <div class="form-group"><label>ילד (שיוך)</label><input type="text" id="pChild" list="childList" placeholder="שם הילד"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>כתובת</label><input type="text" id="pAddress"></div>
-        <div class="form-group"><label>עיסוק</label><input type="text" id="pOccupation"></div>
+        <div class="form-group"><label>מספר טלפון נייד</label><input type="tel" id="pPhone" dir="ltr"></div>
+        <div class="form-group"><label>כתובת מגורים</label><input type="text" id="pAddress"></div>
       </div>
+      <div class="form-row">
+        <div class="form-group"><label>עיסוק</label><input type="text" id="pOccupation"></div>
+        <div class="form-group"></div>
+      </div>
+      <datalist id="childList"></datalist>
       <div style="display:flex; gap:10px; margin-top:8px;">
         <button type="submit" class="btn-submit">שמור</button>
         <button type="button" class="btn-cancel" onclick="toggleForm()">ביטול</button>
@@ -79,46 +86,109 @@
 
   <div id="table" class="loading">טוען...</div>
 
-<script src="js/common.js?v=6"></script>
-<script src="js/api.js?v=6"></script>
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
 <script>
-let parents = [];
+let parents = [], children = [], childBd = {};
 let editingId = null;
+const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
+const attr = s => (s == null ? '' : String(s)).replace(/"/g, '&quot;');
+const norm = s => (s || '').replace(/\s+/g, ' ').trim();
+
+// "ParentName (ChildName)" -> { name, child }
+function parseParent(p) {
+  const m = (p.full_name_he || '').match(/^(.*?)\s*\((.+)\)\s*$/);
+  return m ? { name: m[1].trim(), child: m[2].trim() } : { name: (p.full_name_he || '').trim(), child: '' };
+}
+function childFull(c) { return norm((c.first_name_he || '') + ' ' + (c.last_name_he || '')); }
+function lookupBd(childName) {
+  const key = norm(childName);
+  if (childBd[key]) return childBd[key];
+  const nos = key.replace(/\s+/g, '');
+  for (const k in childBd) if (k.replace(/\s+/g, '') === nos) return childBd[k];
+  return '';
+}
+// age as Y.M (years.months)
+function ageYM(bd) {
+  if (!bd) return '';
+  const b = new Date(bd), n = new Date();
+  let months = (n.getFullYear() - b.getFullYear()) * 12 + (n.getMonth() - b.getMonth());
+  if (n.getDate() < b.getDate()) months--;
+  if (months < 0) return '';
+  return Math.floor(months / 12) + '.' + (months % 12);
+}
 
 async function loadParents() {
   try {
-    const res = await api.getParents();
-    if (res.success) { parents = res.data || []; renderTable(); }
+    const [rp, rc] = await Promise.all([api.getParents(), api.getChildren().catch(() => ({ data: [] }))]);
+    parents = (rp && rp.data) || [];
+    children = (rc && rc.data) || [];
+    childBd = {};
+    children.forEach(c => { const f = childFull(c); if (f) childBd[f] = c.birth_date; });
+    // datalist of children + existing groups
+    const names = new Set(children.map(childFull).filter(Boolean));
+    parents.forEach(p => { const c = parseParent(p).child; if (c) names.add(c); });
+    document.getElementById('childList').innerHTML = Array.from(names).sort((a,b)=>a.localeCompare(b,'he')).map(n => `<option value="${attr(n)}">`).join('');
+    renderTable();
   } catch (err) { showError('שגיאה בטעינת ההורים: ' + err.message); }
 }
 
 function renderTable() {
-  const q = (document.getElementById('search').value || '').trim();
-  const list = q ? parents.filter(p =>
-    ((p.full_name_he || '') + ' ' + (p.phone || '') + ' ' + (p.occupation || '') + ' ' + (p.address || '')).includes(q)) : parents;
-  document.getElementById('countPill').textContent = list.length + ' הורים';
+  const q = norm(document.getElementById('search').value);
+  // group by child
+  const groups = {}, noChild = [];
+  parents.forEach(p => {
+    const pp = parseParent(p); p._name = pp.name; p._child = pp.child;
+    const hay = ((p.full_name_he || '') + ' ' + (p.phone || '') + ' ' + (p.occupation || '') + ' ' + (p.address || '')).toLowerCase();
+    if (q && !hay.includes(q.toLowerCase())) return;
+    if (pp.child) (groups[pp.child] = groups[pp.child] || []).push(p);
+    else noChild.push(p);
+  });
+  // sort children by age (oldest first), like the children list; unmatched go last
+  const childNames = Object.keys(groups).sort((a, b) => {
+    const ba = lookupBd(a), bb = lookupBd(b);
+    if (ba && bb) return ba.localeCompare(bb);
+    if (ba) return -1; if (bb) return 1;
+    return a.localeCompare(b, 'he');
+  });
+  const totalP = childNames.reduce((s, c) => s + groups[c].length, 0) + noChild.length;
+  document.getElementById('countPill').textContent = childNames.length + ' ילדים · ' + totalP + ' הורים';
 
-  if (!list.length) {
-    document.getElementById('table').innerHTML = '<p style="padding:24px; color:#9B8E82; text-align:center;">אין הורים עדיין. אפשר להוסיף.</p>';
+  if (!totalP) {
+    document.getElementById('table').innerHTML = '<p style="padding:24px; color:#9B8E82; text-align:center;">אין הורים להצגה.</p>';
     return;
   }
 
-  const rows = list.map(p => `
-    <tr>
-      <td><b>${p.full_name_he || ''}</b></td>
-      <td class="ltr">${p.phone ? `<a class="tel" href="${waHref(p.phone)}" target="_blank">💬 ${p.phone}</a>` : '<span class="muted">-</span>'}</td>
-      <td>${p.address || '<span class="muted">-</span>'}</td>
-      <td>${p.occupation || '<span class="muted">-</span>'}</td>
-      <td style="display:flex; gap:6px;">
-        <button class="btn-edit" onclick="editParent('${p.id}')">ערוך</button>
-        <button class="btn-delete" onclick="deleteParent('${p.id}')">מחק</button>
-      </td>
-    </tr>`).join('');
+  const parentRow = p =>
+    `<td><b>${esc(p._name)}</b></td>` +
+    `<td class="ltr">${p.phone ? `<a class="tel" href="${waHref(p.phone)}" target="_blank">💬 ${esc(p.phone)}</a>` : '<span class="muted">-</span>'}</td>` +
+    `<td>${p.address ? esc(p.address) : '<span class="muted">-</span>'}</td>` +
+    `<td>${p.occupation ? esc(p.occupation) : '<span class="muted">-</span>'}</td>` +
+    `<td style="display:flex; gap:6px;"><button class="btn-edit" onclick="editParent('${p.id}')">ערוך</button>` +
+    `<button class="btn-delete" onclick="deleteParent('${p.id}')">מחק</button></td>`;
+
+  let body = '';
+  childNames.forEach(child => {
+    const ps = groups[child];
+    const age = ageYM(lookupBd(child));
+    ps.forEach((p, j) => {
+      body += '<tr>';
+      if (j === 0) body += `<td class="child-cell" rowspan="${ps.length}"><div class="ch-name">${esc(child)}</div>${age ? `<div class="ch-age">${age}</div>` : ''}</td>`;
+      body += parentRow(p) + '</tr>';
+    });
+  });
+  if (noChild.length) {
+    noChild.forEach((p, j) => {
+      body += '<tr>';
+      if (j === 0) body += `<td class="child-cell" rowspan="${noChild.length}"><div class="ch-name">ללא שיוך</div></td>`;
+      body += parentRow(p) + '</tr>';
+    });
+  }
 
   document.getElementById('table').innerHTML = `
     <div class="tbl-wrap"><table>
-      <thead><tr><th>שם</th><th>מספר טלפון נייד</th><th>כתובת</th><th>עיסוק</th><th>פעולות</th></tr></thead>
-      <tbody>${rows}</tbody>
+      <thead><tr><th>ילד</th><th>הורה</th><th>מספר טלפון נייד</th><th>כתובת מגורים</th><th>עיסוק</th><th>פעולות</th></tr></thead>
+      <tbody>${body}</tbody>
     </table></div>`;
 }
 
@@ -135,7 +205,9 @@ function editParent(id) {
   const p = parents.find(x => x.id === id);
   if (!p) return;
   editingId = id;
-  document.getElementById('pName').value = p.full_name_he || '';
+  const pp = parseParent(p);
+  document.getElementById('pName').value = pp.name;
+  document.getElementById('pChild').value = pp.child;
   document.getElementById('pPhone').value = p.phone || '';
   document.getElementById('pAddress').value = p.address || '';
   document.getElementById('pOccupation').value = p.occupation || '';
@@ -153,8 +225,10 @@ async function deleteParent(id) {
 
 document.getElementById('parentForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const name = document.getElementById('pName').value.trim();
+  const child = document.getElementById('pChild').value.trim();
   const data = {
-    full_name_he: document.getElementById('pName').value,
+    full_name_he: child ? `${name} (${child})` : name,
     phone: document.getElementById('pPhone').value || null,
     address: document.getElementById('pAddress').value || null,
     occupation: document.getElementById('pOccupation').value || null,

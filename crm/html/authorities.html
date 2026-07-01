@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>משרד החינוך ועירייה — מערכת גנים</title>
+  <title>רישוי — מערכת גנים</title>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -50,10 +50,15 @@
 </head>
 <body>
 
-  <h1>🏛️ משרד החינוך ועירייה</h1>
-  <div class="lead">ספריית הגופים שהגן מתנהל מולם - מספר מנוי/חשבון, ולינקים מהירים להתקשרות, מייל ואתר.</div>
+  <h1>🏛️ רישוי</h1>
+  <div class="lead">רשימות רישוי - מסמכים ואישורים לכל גוף, וספריית אנשי הקשר למטה.</div>
   <div id="error" class="error"></div>
 
+  <div class="section-title">📋 רשימות רישוי</div>
+  <div style="margin-bottom:12px;"><button class="seed-btn" onclick="addLicenseList()">+ הוסף רשימה</button></div>
+  <div id="licLists"></div>
+
+  <div class="section-title">📞 גופים ואנשי קשר</div>
   <div class="toolbar">
     <button class="seed-btn" onclick="seedRecommended(this)">⚡ טען את כל הגופים המומלצים</button>
     <button class="seed-btn alt" onclick="addBlank()">+ הוסף גוף ריק</button>
@@ -74,8 +79,8 @@
     </div>
   </div>
 
-<script src="js/common.js?v=6"></script>
-<script src="js/api.js?v=6"></script>
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
 <script>
 const esc = s => (s || '').replace(/</g, '&lt;');
 const attr = s => (s || '').replace(/"/g, '&quot;');
@@ -204,8 +209,64 @@ async function uploadDoc(btn) {
 }
 async function delDoc(id) { if (!confirm('למחוק את המסמך?')) return; try { await api.deleteDocument(id); loadDocs(); } catch (e) { alert(e.message); } }
 
+/* ---------- רשימות רישוי (per-list document collections) ---------- */
+const DEFAULT_LIC_LISTS = ['משרד החינוך', 'עיריית תל אביב יפו'];
+const LIC_PREFIX = 'licensing:';
+let licDocs = [], extraLists = [], currentLicLists = [];
+const licScope = name => LIC_PREFIX + name;
+
+async function loadLic() {
+  try { const r = await api.getDocuments(); licDocs = (r.data || []).filter(d => (d.section || '').indexOf(LIC_PREFIX) === 0); }
+  catch (e) { licDocs = []; }
+  renderLic();
+}
+function renderLic() {
+  const byList = {};
+  licDocs.forEach(d => { const n = d.section.slice(LIC_PREFIX.length); (byList[n] = byList[n] || []).push(d); });
+  const found = licDocs.map(d => d.section.slice(LIC_PREFIX.length));
+  currentLicLists = Array.from(new Set([...DEFAULT_LIC_LISTS, ...found, ...extraLists]));
+  document.getElementById('licLists').innerHTML = currentLicLists.map((name, i) => {
+    const files = byList[name] || [];
+    const filesHtml = files.length ? files.map(f =>
+      `<div class="doc-row"><span style="font-weight:600;font-size:14px;">📄 ${esc(f.title)}</span>` +
+      `<span style="display:flex;gap:8px;">${f.file_url ? `<a class="dl" href="${f.file_url}" target="_blank">פתח / הורד</a>` : ''}` +
+      `<button class="del" onclick="delLicDoc('${f.id}')">מחק</button></span></div>`).join('')
+      : '<div style="color:#9B8E82;font-size:13px;padding:6px;">אין מסמכים ברשימה.</div>';
+    return `<div class="card" style="margin-bottom:14px;">
+      <div style="font-size:16px;font-weight:800;color:#1F3D34;margin-bottom:10px;">🗂️ ${esc(name)}</div>
+      <div>${filesHtml}</div>
+      <div class="upload-row">
+        <input type="text" id="lt-${i}" placeholder="שם המסמך (לדוגמה: רישיון, אישור)">
+        <input type="file" id="lf-${i}">
+        <button class="up-btn" onclick="uploadLic(${i})">⬆ העלה</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function addLicenseList() {
+  const n = (prompt('שם הרשימה החדשה:') || '').trim();
+  if (!n) return;
+  if (!currentLicLists.includes(n)) extraLists.push(n);
+  renderLic();
+}
+async function uploadLic(i) {
+  const name = currentLicLists[i];
+  const title = document.getElementById('lt-' + i).value.trim();
+  const file = document.getElementById('lf-' + i).files[0];
+  if (!title) { alert('צריך שם למסמך'); return; }
+  if (!file) { alert('בחרי קובץ'); return; }
+  if (file.size > 5 * 1024 * 1024) { alert('הקובץ גדול מדי (מקסימום 5MB)'); return; }
+  try {
+    const b64 = await fileToB64(file);
+    await api.uploadDocument({ section: licScope(name), category: 'רישוי', title, file_base64: b64, file_name: file.name, content_type: file.type });
+    loadLic();
+  } catch (e) { alert('שגיאה: ' + e.message); }
+}
+async function delLicDoc(id) { if (!confirm('למחוק את המסמך? (אפשר לשחזר מהפח)')) return; try { await api.deleteDocument(id); loadLic(); } catch (e) { alert(e.message); } }
+
 loadBodies();
 loadDocs();
+loadLic();
 </script>
 
 </body>
