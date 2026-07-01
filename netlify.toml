@@ -5,6 +5,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # SUPABASE_URL is a public endpoint that must appear in the CSP header below,
+  # so exclude it from secrets scanning (real secrets stay scanned).
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL"
 
 [functions]
   node_bundler = "esbuild"
