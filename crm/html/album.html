@@ -66,6 +66,7 @@
   <div class="miss-card" id="missCard"></div>
   <div class="grid" id="grid"></div>
 
+<script src="js/heic2any.min.js"></script>
 <script src="js/common.js?v=11"></script>
 <script src="js/api.js?v=11"></script>
 <script>
@@ -206,13 +207,14 @@ function setBusy(childId, busy, msg) {
 }
 
 async function handleFiles(childId, fileList) {
-  const files = [...fileList].filter(f => f.type && f.type.startsWith('image/'));
+  const files = [...fileList].filter(f => (f.type && f.type.startsWith('image/')) || isHeic(f));
   if (!files.length) { alert('לא נמצאו תמונות בגרירה (רק קבצי תמונה נתמכים).'); return; }
   let done = 0;
   setBusy(childId, true, `מעלה 0/${files.length}...`);
   for (const f of files) {
     try {
-      const b64 = await resizeImage(f);
+      const usable = await heicToJpeg(f);   // iPhone HEIC -> JPEG so the browser can read it
+      const b64 = await resizeImage(usable);
       await api.uploadDocument({
         section: SECTION, category: childId,
         title: f.name || 'תמונה', file_base64: b64,
@@ -226,6 +228,25 @@ async function handleFiles(childId, fileList) {
     }
   }
   await load();
+}
+
+// iPhone photos are often HEIC/HEIF, which browsers can't draw to a canvas.
+// Detect them (file.type can be empty on some systems, so also check the extension).
+function isHeic(file) {
+  const t = (file.type || '').toLowerCase();
+  const n = (file.name || '').toLowerCase();
+  return t.includes('heic') || t.includes('heif') || n.endsWith('.heic') || n.endsWith('.heif');
+}
+
+// Convert a HEIC/HEIF file to a JPEG File (via the self-hosted heic2any lib) so
+// the rest of the upload pipeline works. Non-HEIC files pass through untouched.
+async function heicToJpeg(file) {
+  if (!isHeic(file)) return file;
+  if (typeof heic2any !== 'function') throw new Error('ממיר ה-HEIC לא נטען — רענני את הדף ונסי שוב');
+  const out = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+  const blob = Array.isArray(out) ? out[0] : out;
+  const name = (file.name || 'photo').replace(/\.(heic|heif)$/i, '') + '.jpg';
+  return new File([blob], name, { type: 'image/jpeg' });
 }
 
 // Resize/compress client-side via canvas. Uses a data: URL (allowed by CSP) so

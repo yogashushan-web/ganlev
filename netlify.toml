@@ -25,6 +25,14 @@
     Permissions-Policy = "geolocation=(), camera=(), microphone=(), payment=()"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://zjawuhqldnqesnflmtoa.supabase.co; connect-src 'self' https://www.hebcal.com https://zjawuhqldnqesnflmtoa.supabase.co; frame-src https://calendar.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 
+# The album page bundles a HEIC->JPEG converter (libheif) that internally uses
+# `new Function`, which requires 'unsafe-eval'. Relax script-src for THIS page
+# only — every other page keeps the strict CSP defined in the /* block above.
+[[headers]]
+  for = "/crm/html/album.html"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://zjawuhqldnqesnflmtoa.supabase.co; connect-src 'self' https://www.hebcal.com https://zjawuhqldnqesnflmtoa.supabase.co; frame-src https://calendar.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+
 [[redirects]]
   from = "/"
   to = "/crm/html/login.html"
