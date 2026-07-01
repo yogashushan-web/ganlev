@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>תוכן חינוכי — ציר השנה</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    h1 { font-size:26px; color:#1F3D34; margin-bottom:6px; }
+    .lead { color:#9B8E82; font-size:14px; margin-bottom:24px; max-width:720px; line-height:1.6; }
+    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .error.show { display:block; }
+
+    /* timeline */
+    .timeline { position:relative; padding-right:34px; }
+    .timeline::before { content:''; position:absolute; right:13px; top:6px; bottom:6px; width:3px; background:linear-gradient(#C4846C,#e3d4c8); border-radius:3px; }
+    .month { position:relative; margin-bottom:22px; }
+    .month::before { content:''; position:absolute; right:-27px; top:20px; width:17px; height:17px; border-radius:50%; background:#C4846C; border:3px solid #F4EFE6; box-shadow:0 0 0 2px #C4846C; }
+    .m-card { background:#FFF; border-radius:15px; padding:16px 18px; box-shadow:0 2px 11px rgba(0,0,0,0.05); }
+    .m-head { display:flex; align-items:center; gap:9px; margin-bottom:12px; padding-bottom:11px; border-bottom:2px solid #f0ece6; }
+    .m-emoji { font-size:22px; }
+    .m-name { font-size:18px; font-weight:800; color:#1F3D34; }
+    .m-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:620px){ .m-cols { grid-template-columns:1fr; } }
+    .col h4 { font-size:13px; font-weight:700; color:#7a6f63; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+    .item { display:flex; align-items:center; justify-content:space-between; gap:6px; background:#FAF8F4; border-radius:9px; padding:7px 11px; margin-bottom:6px; font-size:14px; font-weight:500; }
+    .item.event { background:#fef6f1; }
+    .item.topic { background:#f1f7f4; }
+    .item .txt { cursor:pointer; flex:1; line-height:1.4; }
+    .item .txt:hover { text-decoration:underline; }
+    .item .del { background:none; border:none; color:#c9a99a; font-size:16px; cursor:pointer; line-height:1; padding:0 2px; flex-shrink:0; }
+    .item .del:hover { color:#c0492a; }
+    .empty { color:#b6ab9d; font-size:13px; padding:3px 2px 7px; }
+    .add-btn { background:none; border:1.5px dashed #d8cdba; color:#9B8E82; border-radius:9px; padding:7px 11px; width:100%; font-family:'Heebo'; font-size:13px; font-weight:600; cursor:pointer; transition:border-color .15s,color .15s; }
+    .add-btn:hover { border-color:#C4846C; color:#a05a3d; }
+
+    /* album card inside June */
+    .album-link { display:flex; align-items:center; gap:13px; margin-top:14px; padding:14px 16px; border-radius:12px; text-decoration:none;
+      background:linear-gradient(135deg,#C4846C,#b06f55); color:#fff; box-shadow:0 5px 16px rgba(196,132,108,.34); transition:transform .15s,box-shadow .15s; }
+    .album-link:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(196,132,108,.42); }
+    .album-link .ic { font-size:26px; }
+    .album-link .al-t { font-size:15px; font-weight:800; }
+    .album-link .al-s { font-size:12px; font-weight:500; opacity:.92; margin-top:2px; }
+    .album-link .arr { margin-right:auto; font-size:20px; }
+
+    /* modal */
+    .modal-ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center; justify-content:center; z-index:9500; padding:18px; }
+    .modal-ov.show { display:flex; }
+    .modal { background:#fff; border-radius:16px; padding:22px; width:100%; max-width:420px; box-shadow:0 18px 50px rgba(0,0,0,.25); }
+    .modal h3 { font-size:18px; color:#1F3D34; margin-bottom:16px; }
+    .modal label { display:block; font-size:13px; font-weight:600; color:#6f6457; margin:10px 0 5px; }
+    .modal select, .modal input { width:100%; padding:10px 12px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .modal select:focus, .modal input:focus { border-color:#1F3D34; }
+    .modal-actions { display:flex; gap:10px; margin-top:18px; }
+    .b-save { flex:1; background:#1F3D34; color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
+    .b-cancel { flex:1; background:#efe9e0; color:#6f6457; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:600; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+  <h1>📚 תוכן חינוכי — ציר השנה</h1>
+  <div class="lead">סקירה של השנה בגן: לכל חודש האירועים המרכזיים והנושאים החינוכיים שבהם נוגעים. לחצי על פריט כדי לערוך, על × כדי למחוק, או על "הוסף" כדי להוסיף חדש.</div>
+  <div id="error" class="error"></div>
+
+  <div class="timeline" id="timeline"></div>
+
+  <!-- add / edit modal -->
+  <div class="modal-ov" id="modal">
+    <div class="modal">
+      <h3 id="modalTitle">פריט חדש</h3>
+      <label>חודש</label>
+      <select id="mMonth"></select>
+      <label>סוג</label>
+      <select id="mType">
+        <option value="event">🎯 אירוע מרכזי</option>
+        <option value="topic">💡 נושא</option>
+      </select>
+      <label>תוכן</label>
+      <input type="text" id="mText" placeholder="לדוגמה: חג הסוכות / נושא המשפחה" onkeydown="if(event.key==='Enter')saveItem()">
+      <div class="modal-actions">
+        <button class="b-save" onclick="saveItem()">שמור</button>
+        <button class="b-cancel" onclick="closeModal()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
+<script>
+const CAL = 'curriculum';   // stored as events with calendar='curriculum' (isolated from the garden calendar)
+const ANCHOR = '2025';      // storage anchor year; only the month matters for the yearly plan
+// school-year order (ספטמבר -> אוגוסט)
+const MONTHS = [
+  { mm:'09', name:'ספטמבר', emoji:'🍎' },
+  { mm:'10', name:'אוקטובר', emoji:'🍂' },
+  { mm:'11', name:'נובמבר', emoji:'🌧️' },
+  { mm:'12', name:'דצמבר', emoji:'🕎' },
+  { mm:'01', name:'ינואר', emoji:'❄️' },
+  { mm:'02', name:'פברואר', emoji:'🌳' },
+  { mm:'03', name:'מרץ', emoji:'🎭' },
+  { mm:'04', name:'אפריל', emoji:'🌷' },
+  { mm:'05', name:'מאי', emoji:'🌻' },
+  { mm:'06', name:'יוני', emoji:'📸' },
+  { mm:'07', name:'יולי', emoji:'☀️' },
+  { mm:'08', name:'אוגוסט', emoji:'🏖️' },
+];
+const esc = s => (s || '').replace(/</g, '&lt;');
+let items = [];   // {id, mm, type, title}
+let editingId = null;
+
+function showError(m) { const e = document.getElementById('error'); e.textContent = m; e.classList.add('show'); }
+
+async function load() {
+  try {
+    const r = await api.getEvents(CAL);
+    items = (r.data || []).map(e => ({ id:e.id, mm:(e.event_date || '').slice(5,7), type:e.category || 'topic', title:e.title }));
+    render();
+  } catch (e) { showError('שגיאה בטעינה: ' + e.message); }
+}
+
+function itemsFor(mm, type) { return items.filter(i => i.mm === mm && i.type === type); }
+
+function listHtml(mm, type) {
+  const list = itemsFor(mm, type);
+  if (!list.length) return '<div class="empty">טרם נוספו</div>';
+  return list.map(i =>
+    `<div class="item ${type}">
+       <span class="txt" onclick="openEdit('${i.id}')">${esc(i.title)}</span>
+       <button class="del" title="מחק" onclick="delItem('${i.id}')">×</button>
+     </div>`).join('');
+}
+
+function render() {
+  document.getElementById('timeline').innerHTML = MONTHS.map(m => `
+    <div class="month">
+      <div class="m-card">
+        <div class="m-head"><span class="m-emoji">${m.emoji}</span><span class="m-name">${m.name}</span></div>
+        <div class="m-cols">
+          <div class="col">
+            <h4>🎯 אירועים מרכזיים</h4>
+            ${listHtml(m.mm, 'event')}
+            <button class="add-btn" onclick="openAdd('${m.mm}','event')">+ הוסף אירוע</button>
+          </div>
+          <div class="col">
+            <h4>💡 נושאים</h4>
+            ${listHtml(m.mm, 'topic')}
+            <button class="add-btn" onclick="openAdd('${m.mm}','topic')">+ הוסף נושא</button>
+          </div>
+        </div>
+        ${m.mm === '06' ? `
+        <a class="album-link" href="album.html">
+          <span class="ic">📸</span>
+          <span><span class="al-t">אלבום סוף שנה</span><span class="al-s">איסוף 10 תמונות לכל ילד לספר סוף השנה</span></span>
+          <span class="arr">‹</span>
+        </a>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// fill month <select> once
+function fillMonthSelect() {
+  document.getElementById('mMonth').innerHTML = MONTHS.map(m => `<option value="${m.mm}">${m.name}</option>`).join('');
+}
+
+function openAdd(mm, type) {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'פריט חדש';
+  document.getElementById('mMonth').value = mm;
+  document.getElementById('mType').value = type;
+  document.getElementById('mText').value = '';
+  document.getElementById('modal').classList.add('show');
+  setTimeout(() => document.getElementById('mText').focus(), 50);
+}
+
+function openEdit(id) {
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'עריכת פריט';
+  document.getElementById('mMonth').value = it.mm;
+  document.getElementById('mType').value = it.type;
+  document.getElementById('mText').value = it.title;
+  document.getElementById('modal').classList.add('show');
+  setTimeout(() => document.getElementById('mText').focus(), 50);
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+async function saveItem() {
+  const mm = document.getElementById('mMonth').value;
+  const type = document.getElementById('mType').value;
+  const text = document.getElementById('mText').value.trim();
+  if (!text) { alert('צריך תוכן'); return; }
+  try {
+    if (editingId) {
+      await api.updateEvent(editingId, { title: text, category: type, event_date: `${ANCHOR}-${mm}-01` });
+    } else {
+      await api.createEvent({ calendar: CAL, title: text, category: type, event_date: `${ANCHOR}-${mm}-01` });
+    }
+    closeModal(); await load();
+  } catch (e) { alert('שגיאה בשמירה: ' + e.message); }
+}
+
+async function delItem(id) {
+  if (!confirm('למחוק את הפריט?')) return;
+  try { await api.deleteEvent(id); await load(); }
+  catch (e) { alert('שגיאה: ' + e.message); }
+}
+
+fillMonthSelect();
+load();
+</script>
+
+</body>
+</html>

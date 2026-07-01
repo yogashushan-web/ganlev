@@ -16,11 +16,17 @@
     .user-name { font-weight:700; color:#1F3D34; font-size:13px; }
     .user-role { font-size:12px; color:#9B8E82; }
 
-    .chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
-    .chip-s { background:#FFF; border-radius:12px; padding:9px 15px; box-shadow:0 2px 8px rgba(0,0,0,.04); font-size:13px; }
-    .chip-s b { color:#1F3D34; font-size:15px; }
+    .chips { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px; }
+    @media(max-width:680px){ .chips{ grid-template-columns:1fr; } }
+    .chip-s { background:#FFF; border-radius:16px; padding:16px 18px; box-shadow:0 4px 16px rgba(31,61,52,.06); font-size:14px; font-weight:600; color:#6f6457; display:flex; align-items:center; justify-content:space-between; border-right:4px solid #C4846C; transition:transform .15s, box-shadow .18s; }
+    .chip-s:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(31,61,52,.10); }
+    .chip-s:nth-child(1){ border-right-color:#C4846C; }
+    .chip-s:nth-child(2){ border-right-color:#2D5A50; }
+    .chip-s:nth-child(3){ border-right-color:#d97706; }
+    .chip-s b { color:#1F3D34; font-size:24px; font-weight:800; }
 
-    .cal-section { font-size:18px; color:#1F3D34; margin:0 0 12px; cursor:pointer; user-select:none; display:flex; align-items:center; gap:8px; }
+    .cal-section { font-size:18px; font-weight:800; color:#1F3D34; margin:0 0 12px; cursor:pointer; user-select:none; display:flex; align-items:center; gap:8px; padding:6px 6px; border-radius:9px; transition:background .15s; }
+    .cal-section:hover { background:rgba(31,61,52,.045); }
     .cal-section .chev { font-size:13px; color:#9B8E82; transition:transform .2s; }
     .cal-section.collapsed { margin-bottom:18px; }
     .cal-section.collapsed .chev { transform:rotate(-90deg); }
@@ -41,7 +47,7 @@
     .cal-cell { min-height:84px; background:#FAF8F4; border-radius:10px; padding:6px; cursor:pointer; transition:background .15s; overflow:hidden; }
     .cal-cell:hover { background:#f1ece3; }
     .cal-cell.empty { background:transparent; cursor:default; }
-    .cal-cell.today { outline:2px solid #C4846C; }
+    .cal-cell.today { outline:2px solid #C4846C; background:#fdf3ee; }
     .cal-d { font-size:12px; font-weight:700; color:#6f6457; margin-bottom:4px; }
     .cal-d .he-d { font-weight:400; color:#b3a995; font-size:11px; }
     .ev-chip { font-size:10.5px; padding:2px 6px; border-radius:5px; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
@@ -77,6 +83,7 @@
   <div class="header">
     <div>
       <h1 id="dashTitle">לוח בקרה</h1>
+      <div class="sub">סקירה יומית · היומנים והאירועים שלך</div>
     </div>
     <div class="user-info">
       <div class="user-avatar">👤</div>
@@ -130,13 +137,23 @@
   <div class="modal-ov" id="evtModal">
     <div class="modal">
       <h3 id="evtModalTitle">אירוע חדש — לוח הגן</h3>
-      <label>תאריך</label><input type="date" id="evtDate">
-      <label>כותרת</label><input type="text" id="evtTitle" placeholder="לדוגמה: הדרכת בטיחות">
-      <label>קטגוריה</label><select id="evtCat"></select>
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1;"><label>תאריך התחלה</label><input type="date" id="evtDate"></div>
+        <div style="flex:1;"><label>תאריך סיום</label><input type="date" id="evtEndDate"></div>
+      </div>
+      <label>קטגוריה</label><select id="evtCat" onchange="onCatChange()"></select>
+      <label>כותרת</label><input type="text" id="evtTitle" list="evtTitleList" autocomplete="off" placeholder="בחרי מכותרות קודמות או הקלידי חדשה">
+      <datalist id="evtTitleList"></datalist>
       <div style="display:flex; gap:10px;">
         <div style="flex:1;"><label>שעת התחלה</label><input type="time" id="evtTime"></div>
         <div style="flex:1;"><label>שעת סיום</label><input type="time" id="evtEndTime"></div>
       </div>
+      <div id="evtNotesWrap" style="display:none;">
+        <label>תוכן ההודעה <span style="font-weight:400; color:#9B8E82;">(אופציונלי)</span></label>
+        <textarea id="evtNotes" rows="5" oninput="document.getElementById('evtCopyBtn').style.display = this.value.trim() ? 'inline-block' : 'none'" placeholder="הדביקי כאן את ההודעה המלאה לשליחה בקבוצת ההורים..." style="width:100%; box-sizing:border-box; font-family:'Heebo'; font-size:14px; padding:10px; border:1px solid #e0d8cf; border-radius:10px; resize:vertical; line-height:1.6;"></textarea>
+        <button id="evtCopyBtn" type="button" onclick="copyEvtNotes()" style="display:none; margin-top:6px; background:#0d9488; color:#fff; border:none; padding:8px 14px; border-radius:9px; font-family:'Heebo'; font-weight:600; font-size:13px; cursor:pointer;">📋 העתק את ההודעה</button>
+      </div>
+      <div style="font-size:11px; color:#9B8E82; margin-top:8px; line-height:1.5;">לאירוע מתמשך (כמו חופשה) בחרי תאריך סיום מאוחר יותר — ייווצר אוטומטית לכל יום בטווח. בחירת קטגוריה ממלאת שעות ברירת מחדל. בקטגוריית "הודעה בקבוצה" אפשר לשמור הודעה ארוכה ולהעתיק אותה בתאריך השליחה.</div>
       <div class="modal-actions">
         <button class="b-save" onclick="saveEvt()">שמור</button>
         <button class="b-cancel" onclick="closeEvt()">ביטול</button>
@@ -154,20 +171,36 @@
     </div>
   </div>
 
-<script src="js/common.js?v=6"></script>
-<script src="js/api.js?v=6"></script>
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
 <script>
 const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const GARDEN_CATS = [
-  { key:'חופשה',         color:'#dc2626' },
   { key:'סידור',         color:'#0891b2' },
   { key:'הדרכת צוות',     color:'#2D5A50' },
+  { key:'הדרכה פדגוגית',  color:'#ea580c' },
+  { key:'ערב הורים',      color:'#C4846C' },
+  { key:'אירוע קהילה',    color:'#8b5cf6' },
+  { key:'חופשה',         color:'#dc2626' },
   { key:'חוג',           color:'#3b82f6' },
-  { key:'יום הורים',      color:'#C4846C' },
-  { key:'אירוע מיוחד',    color:'#8b5cf6' },
   { key:'יום הולדת ילד',  color:'#ec4899' },
   { key:'יום הולדת צוות', color:'#16a34a' },
+  { key:'הודעה בקבוצה',   color:'#0d9488' },
 ];
+// default start/end times per category (חופשה = all day, no time)
+const CAT_DEFAULTS = {
+  'סידור':       { s:'07:45', e:'16:30' },
+  'הדרכת צוות':   { s:'13:30', e:'14:30' },
+  'הדרכה פדגוגית': { s:'08:00', e:'14:30' },
+  'ערב הורים':    { s:'20:30', e:'22:00' },
+  'חוג':         { s:'09:45', e:'10:45' },
+  'חופשה':       { allDay:true },
+  'הודעה בקבוצה':  { allDay:true },
+};
+// fixed title options offered for a category (shown alongside previously-used titles)
+const PRESET_TITLES = {
+  'חוג': ['מרסלו', 'אילאיל שרון', 'הדס מורג', 'אמיר'],
+};
 const pad = n => String(n).padStart(2, '0');
 const esc = s => (s || '').replace(/</g, '&lt;');
 let heDayFmt = null;
@@ -186,6 +219,39 @@ let view = { y: new Date().getFullYear(), m: new Date().getMonth() };
 let childrenCache = [];
 let gardenEvents = [];
 let editingEvtId = null;
+let titlesByCat = {}; // category -> [previously used titles], for the title suggestions
+
+// Build the per-category title history from ALL garden events (not just this month)
+async function loadTitleHistory() {
+  try {
+    const r = await api.getEvents('garden');
+    const map = {};
+    (r.data || []).forEach(e => {
+      const c = e.category || '', t = (e.title || '').trim();
+      if (!c || !t) return;
+      (map[c] = map[c] || new Set()).add(t);
+    });
+    titlesByCat = {};
+    Object.keys(map).forEach(c => { titlesByCat[c] = [...map[c]].sort((a, b) => a.localeCompare(b, 'he')); });
+  } catch (e) {}
+}
+// Populate the title datalist with ONLY the titles used before under the chosen category
+function fillTitleSuggestions(cat) {
+  const dl = document.getElementById('evtTitleList');
+  const list = [...new Set([...(PRESET_TITLES[cat] || []), ...(titlesByCat[cat] || [])])];
+  dl.innerHTML = list
+    .map(t => `<option value="${t.replace(/"/g, '&quot;')}"></option>`).join('');
+}
+// The message-content field is only relevant for the "הודעה בקבוצה" category
+function toggleNotesField(cat) {
+  document.getElementById('evtNotesWrap').style.display = (cat === 'הודעה בקבוצה') ? 'block' : 'none';
+}
+function onCatChange() {
+  const cat = document.getElementById('evtCat').value;
+  applyCatDefaults();
+  fillTitleSuggestions(cat);
+  toggleNotesField(cat);
+}
 
 // Israeli holidays + special dates from the Hebrew calendar (Hebcal, Israel schedule)
 const holidaysCache = {};
@@ -275,9 +341,11 @@ function openEvt(dateStr) {
   document.getElementById('evtDelBtn').style.display = 'none';
   fillCats();
   document.getElementById('evtDate').value = dateStr;
+  document.getElementById('evtEndDate').value = dateStr;
   document.getElementById('evtTitle').value = '';
-  document.getElementById('evtTime').value = '';
-  document.getElementById('evtEndTime').value = '';
+  document.getElementById('evtNotes').value = '';
+  document.getElementById('evtCopyBtn').style.display = 'none';
+  onCatChange();
   document.getElementById('evtModal').classList.add('show');
 }
 function editEvt(id) {
@@ -288,27 +356,66 @@ function editEvt(id) {
   document.getElementById('evtDelBtn').style.display = 'block';
   fillCats();
   document.getElementById('evtDate').value = e.event_date;
+  document.getElementById('evtEndDate').value = e.event_date;
   document.getElementById('evtTitle').value = e.title || '';
   document.getElementById('evtCat').value = e.category || '';
+  fillTitleSuggestions(e.category || '');
+  toggleNotesField(e.category || '');
   document.getElementById('evtTime').value = e.event_time ? e.event_time.slice(0, 5) : '';
   document.getElementById('evtEndTime').value = e.end_time ? e.end_time.slice(0, 5) : '';
+  document.getElementById('evtNotes').value = e.notes || '';
+  document.getElementById('evtCopyBtn').style.display = (e.notes || '').trim() ? 'inline-block' : 'none';
   document.getElementById('evtModal').classList.add('show');
 }
 function closeEvt() { document.getElementById('evtModal').classList.remove('show'); }
+function copyEvtNotes() {
+  const txt = document.getElementById('evtNotes').value;
+  if (!txt.trim()) return;
+  const btn = document.getElementById('evtCopyBtn');
+  const done = () => { btn.textContent = '✓ הועתק!'; setTimeout(() => btn.textContent = '📋 העתק את ההודעה', 1800); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(done).catch(() => { fallbackCopy(txt); done(); });
+  } else { fallbackCopy(txt); done(); }
+}
+function fallbackCopy(txt) {
+  const ta = document.getElementById('evtNotes');
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+}
+function applyCatDefaults() {
+  const def = CAT_DEFAULTS[document.getElementById('evtCat').value];
+  const t = document.getElementById('evtTime'), e = document.getElementById('evtEndTime');
+  if (!def) return;
+  if (def.allDay) { t.value = ''; e.value = ''; }
+  else { t.value = def.s; e.value = def.e; }
+}
+function dateRange(start, end) {
+  const out = [], d = new Date(start + 'T00:00:00'), last = new Date(end + 'T00:00:00');
+  let guard = 0;
+  while (d <= last && guard < 400) { out.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`); d.setDate(d.getDate() + 1); guard++; }
+  return out;
+}
 async function saveEvt() {
   const title = document.getElementById('evtTitle').value.trim();
-  const event_date = document.getElementById('evtDate').value;
-  if (!title || !event_date) { alert('צריך כותרת ותאריך'); return; }
-  const data = {
-    calendar: 'garden', title, event_date,
+  const start = document.getElementById('evtDate').value;
+  let end = document.getElementById('evtEndDate').value || start;
+  if (!title || !start) { alert('צריך כותרת ותאריך'); return; }
+  if (end < start) end = start;
+  const base = {
+    calendar: 'garden', title,
     category: document.getElementById('evtCat').value,
     event_time: document.getElementById('evtTime').value || null,
     end_time: document.getElementById('evtEndTime').value || null,
+    notes: document.getElementById('evtNotes').value.trim() || null,
   };
   try {
-    if (editingEvtId) await api.updateEvent(editingEvtId, data);
-    else await api.createEvent(data);
-    closeEvt(); renderGarden();
+    if (editingEvtId) {
+      await api.updateEvent(editingEvtId, { ...base, event_date: start });
+    } else {
+      const dates = dateRange(start, end);
+      for (const d of dates) await api.createEvent({ ...base, event_date: d });
+    }
+    closeEvt(); renderGarden(); loadTitleHistory();
   } catch (err) { alert('שגיאה בשמירה: ' + err.message); }
 }
 async function delCurrentEvt() {
@@ -369,6 +476,7 @@ async function init() {
   document.getElementById('chipTuition').textContent = (s.pending_tuition_count || (tuitionRes.data || []).length) || 0;
 
   renderGarden();
+  loadTitleHistory();
 }
 
 function togglePane(id, save = true) {

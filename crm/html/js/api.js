@@ -99,7 +99,10 @@ const api = {
   getExpenses: (dateFrom, dateTo) => apiCall(`/expenses?garden_id=${getGardenId()}&date_from=${dateFrom}&date_to=${dateTo}`),
   createIncome: (data) => apiCall(`/income?garden_id=${getGardenId()}`, 'POST', data),
   createExpense: (data) => apiCall(`/expenses?garden_id=${getGardenId()}`, 'POST', data),
+  updateIncome: (id, data) => apiCall(`/income/${id}?garden_id=${getGardenId()}`, 'PUT', data),
   updateExpense: (id, data) => apiCall(`/expenses/${id}?garden_id=${getGardenId()}`, 'PUT', data),
+  deleteIncome: (id) => apiCall(`/income/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+  deleteExpense: (id) => apiCall(`/expenses/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 
   // Dashboard
   getDashboardSummary: () => apiCall(`/dashboard-summary?garden_id=${getGardenId()}`),
@@ -123,6 +126,9 @@ const api = {
   createUtility: (data) => apiCall(`/utilities?garden_id=${getGardenId()}`, 'POST', data),
   updateUtility: (id, data) => apiCall(`/utilities/${id}?garden_id=${getGardenId()}`, 'PUT', data),
   deleteUtility: (id) => apiCall(`/utilities/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+
+  // Form 101 → auto-extract employee profile via AI
+  parse101: (file_base64) => apiCall('/parse-101', 'POST', { file_base64 }),
 
   // Recycle bin
   getTrash: () => apiCall(`/trash?garden_id=${getGardenId()}`),

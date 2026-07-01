@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>עובדים — מערכת גנים</title>
+  <title>צוות — מערכת גנים</title>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
-    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:10px; }
     .header h1 { font-size:26px; color:#1F3D34; }
     .acts { display:flex; gap:8px; flex-wrap:wrap; }
     .btn-add { background:#1F3D34; color:#FFF; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
@@ -40,6 +40,30 @@
     .btn-edit,.btn-delete { padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; }
     .btn-edit { background:#C4846C; color:#FFF; } .btn-delete { background:#e74c3c; color:#FFF; }
     .loading { text-align:center; padding:40px; color:#9B8E82; }
+    .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-left:7px; vertical-align:middle; }
+    .dot.green { background:#27ae60; box-shadow:0 0 0 3px rgba(39,174,96,.15); }
+    .dot.red { background:#e74c3c; box-shadow:0 0 0 3px rgba(231,76,60,.15); }
+    .dot-toggle { cursor:pointer; display:inline-block; padding:5px 8px; margin-left:2px; border-radius:8px; vertical-align:middle; transition:background .12s; }
+    .dot-toggle:hover { background:#efe9df; }
+    .sec-title { font-size:17px; font-weight:800; color:#1F3D34; margin:0 0 10px; display:flex; align-items:center; gap:5px; }
+    .sec-title .cnt { color:#9B8E82; font-weight:600; font-size:13px; }
+    .sec-title .chev { font-size:13px; color:#C4846C; width:15px; display:inline-block; }
+    .btn-toggle { background:#e8e4de; color:#3D3228; padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; }
+    .btn-toggle:hover { background:#dcd6cc; }
+    .empty-sec { padding:14px; color:#9B8E82; font-size:13px; }
+    /* per-employee documents in the profile modal */
+    .docs-wrap { margin-top:18px; border-top:1px solid #f0ece6; padding-top:14px; }
+    .docs-head { font-weight:800; color:#1F3D34; margin-bottom:11px; font-size:15px; }
+    .doc-card { background:#FAF8F4; border:1px solid #f0ece6; border-radius:12px; padding:11px 12px; margin-bottom:9px; }
+    .doc-card .dc-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .doc-card .dc-name { font-weight:700; font-size:13px; color:#3D3228; }
+    .doc-add { background:#1F3D34; color:#fff; border:none; border-radius:8px; padding:5px 12px; font-size:12px; font-family:'Heebo'; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .doc-add:hover { background:#154428; }
+    .doc-files { margin-top:9px; display:flex; flex-direction:column; gap:6px; }
+    .doc-file { display:flex; justify-content:space-between; align-items:center; gap:8px; background:#fff; border:1px solid #eee; border-radius:8px; padding:7px 10px; font-size:12px; }
+    .doc-file a { color:#1F7a4f; text-decoration:none; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .doc-file .del { background:none; border:none; color:#e74c3c; cursor:pointer; font-size:14px; padding:0 2px; }
+    .doc-empty { color:#c4bcae; font-size:12px; }
     /* profile modal */
     .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center; justify-content:center; z-index:99999; }
     .ov.show { display:flex; }
@@ -55,8 +79,9 @@
 <body>
 
   <div class="header">
-    <h1>👔 עובדים</h1>
+    <h1>👥 צוות</h1>
     <div class="acts">
+      <button class="btn-link" onclick="location.href='staff-trainings.html'">📚 הדרכות צוות</button>
       <button class="btn-link" onclick="copyIntakeLink(this)">📋 העתק לינק שאלון</button>
       <button class="btn-add" onclick="toggleForm()">+ הוסף עובד</button>
     </div>
@@ -67,6 +92,13 @@
 
   <div id="form" class="form-container">
     <h2 style="margin-bottom:16px; color:#1F3D34;">הוסף / ערוך עובד</h2>
+    <div id="dz101" style="border:2px dashed #C4846C; border-radius:12px; padding:18px; text-align:center; margin-bottom:18px; cursor:pointer; background:#fcf7f3; transition:.15s;">
+      <div style="font-size:30px;">📄</div>
+      <div style="font-weight:700; color:#1F3D34; margin-top:4px;">גררו לכאן טופס 101 (PDF) למילוי אוטומטי</div>
+      <div style="font-size:12px; color:#9B8E82; margin-top:3px;">או לחצו לבחירת קובץ — ה-AI יקרא את הטופס וימלא את הפרטים לבד</div>
+      <input type="file" id="file101" accept="application/pdf" style="display:none;">
+      <div id="st101" style="font-size:13px; margin-top:8px; font-weight:700;"></div>
+    </div>
     <form id="staffForm">
       <div class="form-row">
         <div class="fg"><label>שם מלא *</label><input type="text" id="sName" required></div>
@@ -103,8 +135,8 @@
 
   <div class="ov" id="pfOv"><div class="pf" id="pfBox"></div></div>
 
-<script src="js/common.js?v=6"></script>
-<script src="js/api.js?v=6"></script>
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
 <script>
 let staff = [];
 let editingId = null;
@@ -123,25 +155,64 @@ async function loadStaff() {
   catch (e) { showError('שגיאה בטעינה: ' + e.message); }
 }
 
+const isInactive = s => (s.status || 'active') === 'inactive';
+
+function staffTable(list) {
+  const rows = list.map(s => `
+    <tr>
+      <td><span class="dot-toggle" onclick="toggleStatus('${s.id}')" title="${isInactive(s) ? 'העברה לפעילים' : 'העברה ללא פעילים'}"><span class="dot ${isInactive(s) ? 'red' : 'green'}"></span></span><span class="name-link" onclick="showProfile('${s.id}')">${esc(s.full_name_he)}</span></td>
+      <td>${s.phone ? `<a class="wa" href="${waHref(s.phone)}" target="_blank">💬 ${esc(s.phone)}</a>` : '<span class="muted">-</span>'}</td>
+      <td>${esc(s.job_scope) || '<span class="muted">-</span>'}</td>
+      <td>${ageStr(s.birth_date)}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn-edit" onclick="editStaff('${s.id}')">ערוך</button>
+        <button class="btn-toggle" onclick="toggleStatus('${s.id}')">${isInactive(s) ? 'הפעל' : 'השבת'}</button>
+        <button class="btn-delete" onclick="deleteStaff('${s.id}')">מחק</button>
+      </td>
+    </tr>`).join('');
+  return `<div class="tbl-wrap"><table>
+    <thead><tr><th>שם</th><th>טלפון</th><th>היקף משרה</th><th>גיל</th><th>פעולות</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
 function renderTable() {
   if (!staff.length) {
     document.getElementById('table').innerHTML = '<p style="padding:24px;color:#9B8E82;text-align:center;">אין עובדים עדיין. אפשר להוסיף או לשלוח לינק שאלון.</p>';
     return;
   }
-  const rows = staff.map(s => `
-    <tr>
-      <td><span class="name-link" onclick="showProfile('${s.id}')">${esc(s.full_name_he)}</span></td>
-      <td>${s.phone ? `<a class="wa" href="${waHref(s.phone)}" target="_blank">💬 ${esc(s.phone)}</a>` : '<span class="muted">-</span>'}</td>
-      <td>${esc(s.job_scope) || '<span class="muted">-</span>'}</td>
-      <td>${ageStr(s.birth_date)}</td>
-      <td style="display:flex;gap:6px;">
-        <button class="btn-edit" onclick="editStaff('${s.id}')">ערוך</button>
-        <button class="btn-delete" onclick="deleteStaff('${s.id}')">מחק</button>
-      </td>
-    </tr>`).join('');
-  document.getElementById('table').innerHTML = `<div class="tbl-wrap"><table>
-    <thead><tr><th>שם</th><th>טלפון</th><th>היקף משרה</th><th>גיל</th><th>פעולות</th></tr></thead>
-    <tbody>${rows}</tbody></table></div>`;
+  const active = staff.filter(s => !isInactive(s));
+  const inactive = staff.filter(isInactive);
+  let html = `<div class="sec-title"><span class="dot green"></span> פעילים <span class="cnt">(${active.length})</span></div>`;
+  html += active.length ? staffTable(active) : '<p class="empty-sec">אין עובדים פעילים</p>';
+  // inactive section: collapsed by default, click the header (arrow) to expand
+  html += `<div class="sec-title" style="margin-top:28px; cursor:pointer; user-select:none;" onclick="toggleInactive()" title="לחצי כדי להציג / להסתיר">
+      <span class="chev" id="inactiveChev">▸</span><span class="dot red"></span> לא פעילים <span class="cnt">(${inactive.length})</span></div>`;
+  html += `<div id="inactiveWrap" style="display:none;">` +
+    (inactive.length ? staffTable(inactive) : '<p class="empty-sec">אין עובדים לא פעילים</p>') +
+    `</div>`;
+  document.getElementById('table').innerHTML = html;
+}
+
+function toggleInactive() {
+  const w = document.getElementById('inactiveWrap'), c = document.getElementById('inactiveChev');
+  if (!w) return;
+  const open = w.style.display !== 'none';
+  w.style.display = open ? 'none' : 'block';
+  if (c) c.textContent = open ? '▸' : '▾';
+}
+
+async function toggleStatus(id) {
+  const s = staff.find(x => x.id === id); if (!s) return;
+  const goingInactive = !isInactive(s);
+  const msg = goingInactive
+    ? 'להעביר את ' + s.full_name_he + ' ל"לא פעילים"?'
+    : 'להחזיר את ' + s.full_name_he + ' ל"פעילים"?';
+  if (!confirm(msg)) return;
+  const next = goingInactive ? 'inactive' : 'active';
+  try {
+    const r = await api.updateStaff(id, { status: next });
+    if (r.success) { showSuccess(goingInactive ? 'הועבר ללא פעילים' : 'הועבר לפעילים'); loadStaff(); }
+  } catch (e) { showError('שגיאה: ' + e.message); }
 }
 
 function row(k, v) { return v ? `<div class="row"><span class="k">${k}</span><span class="v">${esc(String(v))}</span></div>` : ''; }
@@ -157,15 +228,125 @@ function showProfile(id) {
     row('מגורים בשכונה', s.in_neighborhood) + row('היקף משרה', s.job_scope) +
     row('סוג שכר', s.salary_type) + row('תחילת עבודה', s.hire_date ? formatDate(s.hire_date) : '') +
     row('הערות', s.notes_he) +
+    `<div class="docs-wrap"><div class="docs-head">📎 מסמכים</div><div id="staffDocs" class="docs-list">טוען...</div></div>` +
+    `<input type="file" id="docFileInput" style="display:none" onchange="handleDocFile(this.files[0])">` +
     `<button class="close" onclick="document.getElementById('pfOv').classList.remove('show')">סגור</button>`;
+  pfStaffId = id;
   document.getElementById('pfOv').classList.add('show');
+  loadStaffDocs(id);
+}
+
+// ---- per-employee documents (stored in the documents table, section = staff:<id>) ----
+const DOC_TYPES = [
+  { key: 'פנסיה', icon: '🏦' },
+  { key: 'חוזה חתום', icon: '✍️' },
+  { key: 'מסמכים נוספים', icon: '📄' },
+];
+let pfStaffId = null, pendingDocType = null;
+const staffDocScope = id => 'staff:' + id;
+
+async function loadStaffDocs(id) {
+  const el = document.getElementById('staffDocs'); if (!el) return;
+  el.innerHTML = '<span class="doc-empty">טוען...</span>';
+  try { const r = await api.getDocuments(staffDocScope(id)); renderStaffDocs(r.data || []); }
+  catch (e) { el.innerHTML = '<span class="doc-empty">שגיאה בטעינת מסמכים</span>'; }
+}
+
+function renderStaffDocs(docs) {
+  const el = document.getElementById('staffDocs'); if (!el) return;
+  const byType = {};
+  docs.forEach(d => { (byType[d.category] = byType[d.category] || []).push(d); });
+  el.innerHTML = DOC_TYPES.map(t => {
+    const files = byType[t.key] || [];
+    const filesHtml = files.length ? files.map(f =>
+      `<div class="doc-file"><a href="${f.file_url || '#'}" target="_blank">🔗 ${esc(f.title || 'קובץ')}</a>` +
+      `<button class="del" title="מחק" onclick="delStaffDoc('${f.id}')">🗑</button></div>`).join('')
+      : '<span class="doc-empty">אין קובץ עדיין</span>';
+    return `<div class="doc-card"><div class="dc-top"><span class="dc-name">${t.icon} ${t.key}</span>` +
+      `<button class="doc-add" onclick="pickDoc('${t.key}')">➕ צרף</button></div>` +
+      `<div class="doc-files">${filesHtml}</div></div>`;
+  }).join('');
+}
+
+function pickDoc(type) {
+  pendingDocType = type;
+  const inp = document.getElementById('docFileInput');
+  inp.value = ''; inp.click();
+}
+
+async function handleDocFile(file) {
+  if (!file || !pfStaffId || !pendingDocType) return;
+  if (file.size > 5 * 1024 * 1024) { alert('הקובץ גדול מדי (עד 5MB). אפשר לדחוס או לפצל.'); return; }
+  const el = document.getElementById('staffDocs');
+  const note = document.createElement('div');
+  note.className = 'doc-empty'; note.style.padding = '6px 0'; note.textContent = '⏳ מעלה...';
+  if (el) el.prepend(note);
+  try {
+    const b64 = await fileToB64(file);
+    const r = await api.uploadDocument({
+      section: staffDocScope(pfStaffId), category: pendingDocType,
+      title: pendingDocType + ' - ' + file.name,
+      file_base64: b64, file_name: file.name,
+      content_type: file.type || 'application/octet-stream',
+    });
+    if (r.success) loadStaffDocs(pfStaffId);
+  } catch (e) { alert('שגיאה בהעלאה: ' + e.message); if (el) note.remove(); }
+  pendingDocType = null;
+}
+
+async function delStaffDoc(id) {
+  if (!confirm('למחוק את המסמך? (אפשר לשחזר מהפח)')) return;
+  try { await api.deleteDocument(id); loadStaffDocs(pfStaffId); }
+  catch (e) { alert('שגיאה: ' + e.message); }
 }
 
 function toggleForm() {
   const f = document.getElementById('form');
   f.classList.toggle('show');
-  if (!f.classList.contains('show')) { document.getElementById('staffForm').reset(); editingId = null; }
+  if (!f.classList.contains('show')) {
+    document.getElementById('staffForm').reset(); editingId = null;
+    pending101 = null; document.getElementById('st101').textContent = '';
+  }
 }
+
+// ---- Form 101 drag/drop → AI auto-fill ----
+let pending101 = null;
+function fileToB64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',').pop());
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+async function handle101(file) {
+  const st = document.getElementById('st101');
+  if (!file || file.type !== 'application/pdf') { st.style.color = '#c94147'; st.textContent = 'יש לצרף קובץ PDF'; return; }
+  st.style.color = '#C4846C'; st.textContent = '⏳ קורא את הטופס... (כמה שניות)';
+  try {
+    const b64 = await fileToB64(file);
+    pending101 = { file_base64: b64, file_name: file.name };
+    const r = await api.parse101(b64);
+    if (!r.success) throw new Error(r.error || 'שגיאה');
+    const p = r.profile || {};
+    const setIf = (k, v) => { if (v) document.getElementById(k).value = v; };
+    setIf('sName', p.full_name_he); setIf('sNid', p.national_id); setIf('sBirth', p.birth_date);
+    setIf('sPhone', p.phone); setIf('sEmail', p.email); setIf('sAddress', p.address);
+    st.style.color = '#1F7a4f';
+    st.textContent = '✓ הפרטים מולאו — בדקי, השלימי מה שחסר ולחצי "שמור". הטופס יישמר תחת טפסים › עובדים.';
+  } catch (e) {
+    st.style.color = '#c94147';
+    st.textContent = 'לא הצלחתי לקרוא את הטופס (' + e.message + '). אפשר למלא ידנית.';
+  }
+}
+(function () {
+  const dz = document.getElementById('dz101'), fi = document.getElementById('file101');
+  dz.addEventListener('click', () => fi.click());
+  ['dragover', 'dragenter'].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.style.background = '#f6e9e1'; }));
+  ['dragleave'].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.style.background = '#fcf7f3'; }));
+  dz.addEventListener('drop', (e) => { e.preventDefault(); dz.style.background = '#fcf7f3'; const f = e.dataTransfer.files[0]; if (f) handle101(f); });
+  fi.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) handle101(f); });
+})();
 function editStaff(id) {
   const s = staff.find(x => x.id === id); if (!s) return;
   editingId = id;
@@ -194,8 +375,22 @@ document.getElementById('staffForm').addEventListener('submit', async (e) => {
     salary_type: g('sSalary') || null, notes_he: g('sNotes') || null,
   };
   try {
+    const wasNew = !editingId, p101 = pending101;
     const r = editingId ? await api.updateStaff(editingId, data) : await api.createStaff(data);
-    if (r.success) { showSuccess(editingId ? 'עודכן' : 'נוסף'); toggleForm(); loadStaff(); }
+    if (r.success) {
+      // attach the uploaded 101 PDF to the file library (טפסים › עובדים)
+      if (wasNew && p101) {
+        try {
+          await api.uploadDocument({
+            section: 'עובדים', category: null,
+            title: 'טופס 101 - ' + data.full_name_he,
+            file_base64: p101.file_base64, file_name: p101.file_name,
+            content_type: 'application/pdf',
+          });
+        } catch (e3) { console.error('101 upload failed', e3); }
+      }
+      showSuccess(editingId ? 'עודכן' : 'נוסף'); toggleForm(); loadStaff();
+    }
   } catch (e2) { showError('שגיאה: ' + e2.message); }
 });
 

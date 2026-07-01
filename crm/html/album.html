@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>תוכן חינוכי — אלבום סוף שנה</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    h1 { font-size:26px; color:#1F3D34; margin-bottom:6px; }
+    .lead { color:#9B8E82; font-size:14px; margin-bottom:22px; max-width:720px; line-height:1.6; }
+    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .error.show { display:block; }
+
+    /* summary */
+    .summary { background:#FFF; border-radius:16px; padding:20px 22px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:18px; display:flex; gap:24px; align-items:center; flex-wrap:wrap; }
+    .donut { width:128px; height:128px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; position:relative; }
+    .donut .hole { width:92px; height:92px; background:#fff; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .donut .pct { font-size:26px; font-weight:800; color:#1F3D34; line-height:1; }
+    .donut .pct-sub { font-size:10px; color:#9B8E82; font-weight:600; margin-top:3px; }
+    .sum-info { flex:1; min-width:220px; }
+    .sum-info .big { font-size:19px; font-weight:700; color:#1F3D34; }
+    .sum-info .small { font-size:13px; color:#9B8E82; margin-top:4px; }
+    .sum-info .done-msg { margin-top:8px; font-size:14px; font-weight:700; color:#16a34a; }
+
+    /* missing strip */
+    .miss-card { background:#FFF; border-radius:16px; padding:16px 20px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:22px; }
+    .miss-card h3 { font-size:14px; color:#1F3D34; margin-bottom:11px; }
+    .miss-chips { display:flex; gap:8px; flex-wrap:wrap; }
+    .miss-chip { background:#FAF3EE; border:1.5px solid #ecd9cd; color:#a05a3d; border-radius:999px; padding:6px 13px; font-size:13px; font-weight:600; cursor:pointer; transition:background .15s,transform .1s; }
+    .miss-chip:hover { background:#f3e3da; transform:translateY(-1px); }
+    .miss-chip b { color:#c0492a; }
+    .miss-none { color:#16a34a; font-size:14px; font-weight:700; }
+
+    /* children grid */
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px; }
+    .kid { background:#FFF; border-radius:15px; padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05); border:2px solid transparent; transition:border-color .2s,box-shadow .2s; }
+    .kid.done { border-color:#bfe6c8; background:#fbfffc; }
+    .kid.flash { animation:flash 1.3s ease; }
+    @keyframes flash { 0%,100%{box-shadow:0 2px 10px rgba(0,0,0,0.05);} 30%{box-shadow:0 0 0 4px rgba(196,132,108,.5);} }
+    .kid-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; gap:8px; }
+    .kid-name { font-size:16px; font-weight:700; color:#1F3D34; }
+    .kid-count { font-size:13px; font-weight:700; color:#fff; background:#C4846C; border-radius:999px; padding:3px 11px; flex-shrink:0; white-space:nowrap; }
+    .kid-count.full { background:#16a34a; }
+    .thumbs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:11px; }
+    .thumb { position:relative; width:58px; height:58px; border-radius:9px; overflow:hidden; background:#f0ece6; }
+    .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .thumb .x { position:absolute; top:2px; left:2px; width:19px; height:19px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; font-size:12px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .15s; }
+    .thumb:hover .x { opacity:1; }
+    .drop { border:2px dashed #d8cdba; border-radius:11px; padding:16px 10px; text-align:center; color:#9B8E82; font-size:13px; cursor:pointer; transition:background .15s,border-color .15s; line-height:1.5; }
+    .drop:hover { border-color:#C4846C; background:#FAF8F4; }
+    .drop.over { border-color:#16a34a; background:#f0faf2; color:#16a34a; }
+    .drop .big { font-size:22px; display:block; margin-bottom:3px; }
+    .drop.busy { opacity:.7; pointer-events:none; }
+    .hide { display:none; }
+  </style>
+</head>
+<body>
+
+  <h1>📸 תוכן חינוכי — אלבום סוף שנה</h1>
+  <div class="lead">לכל ילד נאספות 10 תמונות מהשנה לאלבום סוף השנה. גררי תמונות מקבוצת הוואטסאפ (או מהמחשב) אל המסגרת שליד שם הילד, או לחצי על המסגרת כדי לבחור קבצים. אפשר לגרור כמה תמונות יחד.</div>
+  <div id="error" class="error"></div>
+
+  <div class="summary" id="summary"></div>
+  <div class="miss-card" id="missCard"></div>
+  <div class="grid" id="grid"></div>
+
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
+<script>
+const SECTION = 'album';
+const TARGET = 10;            // photos wanted per child
+const MAXDIM = 1600;          // resize cap (good for a printed book)
+const QUALITY = 0.85;
+const esc = s => (s || '').replace(/</g, '&lt;');
+
+let children = [];           // active children, sorted by name
+let photosByChild = {};      // child_id -> [ {id, file_url} ]
+
+function showError(m) { const e = document.getElementById('error'); e.textContent = m; e.classList.add('show'); }
+
+async function load() {
+  try {
+    const [ch, docs] = await Promise.all([
+      api.getChildren(),
+      api.getDocuments(SECTION),
+    ]);
+    children = (ch.data || [])
+      .filter(c => c.status === 'active')
+      // by age: oldest first (earliest birth date). Children without a birth date go last, then by name.
+      .sort((a, b) => {
+        if (a.birth_date && b.birth_date) return a.birth_date.localeCompare(b.birth_date);
+        if (a.birth_date) return -1;
+        if (b.birth_date) return 1;
+        return (a.first_name_he || '').localeCompare(b.first_name_he || '', 'he');
+      });
+    photosByChild = {};
+    (docs.data || []).forEach(d => {
+      (photosByChild[d.category] = photosByChild[d.category] || []).push(d);
+    });
+    render();
+  } catch (e) {
+    showError('שגיאה בטעינה: ' + e.message);
+  }
+}
+
+function countFor(id) { return (photosByChild[id] || []).length; }
+
+function render() {
+  renderSummary();
+  renderMissing();
+  renderGrid();
+  attachDrops();
+}
+
+function renderSummary() {
+  const n = children.length;
+  const totalTarget = n * TARGET;
+  const completed = children.reduce((s, c) => s + Math.min(countFor(c.id), TARGET), 0);
+  const totalPhotos = children.reduce((s, c) => s + countFor(c.id), 0);
+  const pct = totalTarget ? Math.round(completed / totalTarget * 100) : 0;
+  const ring = `conic-gradient(#C4846C 0% ${pct}%, #ece3d6 ${pct}% 100%)`;
+  const allDone = n > 0 && completed === totalTarget;
+  document.getElementById('summary').innerHTML = `
+    <div class="donut" style="background:${ring}">
+      <div class="hole"><div class="pct">${pct}%</div><div class="pct-sub">הושלם</div></div>
+    </div>
+    <div class="sum-info">
+      <div class="big">${completed} / ${totalTarget} תמונות נבחרו</div>
+      <div class="small">${n} ילדים פעילים · 10 תמונות לכל ילד · ${totalPhotos} תמונות הועלו בסך הכל</div>
+      ${allDone ? '<div class="done-msg">🎉 כל הילדים הושלמו! האלבום מוכן.</div>' : ''}
+    </div>`;
+}
+
+function renderMissing() {
+  const missing = children.filter(c => countFor(c.id) < TARGET)
+    .map(c => ({ c, need: TARGET - countFor(c.id) }));
+  const el = document.getElementById('missCard');
+  if (!missing.length) {
+    el.innerHTML = '<div class="miss-none">✓ אין ילדים עם תמונות חסרות — כולם הושלמו!</div>';
+    return;
+  }
+  el.innerHTML = `<h3>חסרות תמונות עבור ${missing.length} ילדים — לחצי על שם כדי לקפוץ אליו:</h3>
+    <div class="miss-chips">` +
+    missing.map(m => `<span class="miss-chip" onclick="jumpTo('${m.c.id}')">${esc(m.c.first_name_he)} ${esc(m.c.last_name_he || '')} <b>(חסר ${m.need})</b></span>`).join('') +
+    `</div>`;
+}
+
+function renderGrid() {
+  document.getElementById('grid').innerHTML = children.map(c => {
+    const photos = photosByChild[c.id] || [];
+    const cnt = photos.length;
+    const full = cnt >= TARGET;
+    const thumbs = photos.map(p =>
+      `<div class="thumb"><img loading="lazy" src="${p.file_url}" alt=""><button class="x" title="מחק תמונה" onclick="delPhoto('${p.id}')">×</button></div>`
+    ).join('');
+    return `<div class="kid ${full ? 'done' : ''}" id="kid-${c.id}">
+      <div class="kid-head">
+        <span class="kid-name">${esc(c.first_name_he)} ${esc(c.last_name_he || '')}</span>
+        <span class="kid-count ${full ? 'full' : ''}">${cnt} / ${TARGET}${full ? ' ✓' : ''}</span>
+      </div>
+      <div class="thumbs">${thumbs}</div>
+      <div class="drop" id="drop-${c.id}" data-child="${c.id}">
+        <span class="big">⬇️</span>
+        גררי לכאן תמונות, או לחצי לבחירה
+      </div>
+      <input type="file" class="hide" id="file-${c.id}" accept="image/*" multiple>
+    </div>`;
+  }).join('');
+}
+
+// --- drag & drop wiring ---
+function attachDrops() {
+  children.forEach(c => {
+    const drop = document.getElementById('drop-' + c.id);
+    const input = document.getElementById('file-' + c.id);
+    if (!drop || !input) return;
+    drop.addEventListener('click', () => input.click());
+    input.addEventListener('change', () => { handleFiles(c.id, input.files); input.value = ''; });
+    drop.addEventListener('dragenter', e => { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', e => { if (e.target === drop) drop.classList.remove('over'); });
+    drop.addEventListener('drop', async e => {
+      e.preventDefault(); drop.classList.remove('over');
+      const files = e.dataTransfer.files;
+      if (files && files.length) { handleFiles(c.id, files); return; }
+      // dragged an <img> from a web page (e.g. WhatsApp Web) — try a direct URL
+      const uri = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+      if (uri && /^https?:\/\//i.test(uri)) {
+        try {
+          const r = await fetch(uri); const blob = await r.blob();
+          if (blob.type.startsWith('image/')) { handleFiles(c.id, [new File([blob], 'whatsapp.jpg', { type: blob.type })]); return; }
+        } catch (err) { /* fall through to hint */ }
+      }
+      alert('לא הצלחתי לקרוא את התמונה ישירות מהגרירה. הדרך הכי בטוחה: הורידי את התמונה מהוואטסאפ למחשב ואז גררי אותה לכאן, או לחצי על המסגרת ובחרי קובץ.');
+    });
+  });
+}
+
+function setBusy(childId, busy, msg) {
+  const drop = document.getElementById('drop-' + childId);
+  if (!drop) return;
+  drop.classList.toggle('busy', busy);
+  if (busy) drop.innerHTML = '<span class="big">⏳</span>' + (msg || 'מעלה...');
+}
+
+async function handleFiles(childId, fileList) {
+  const files = [...fileList].filter(f => f.type && f.type.startsWith('image/'));
+  if (!files.length) { alert('לא נמצאו תמונות בגרירה (רק קבצי תמונה נתמכים).'); return; }
+  let done = 0;
+  setBusy(childId, true, `מעלה 0/${files.length}...`);
+  for (const f of files) {
+    try {
+      const b64 = await resizeImage(f);
+      await api.uploadDocument({
+        section: SECTION, category: childId,
+        title: f.name || 'תמונה', file_base64: b64,
+        file_name: (f.name || 'photo') + '.jpg', content_type: 'image/jpeg',
+      });
+      done++;
+      setBusy(childId, true, `מעלה ${done}/${files.length}...`);
+    } catch (e) {
+      console.error('upload failed', e);
+      alert('שגיאה בהעלאת תמונה אחת: ' + e.message);
+    }
+  }
+  await load();
+}
+
+// Resize/compress client-side via canvas. Uses a data: URL (allowed by CSP) so
+// no blob: source is needed. Returns base64 JPEG (without the data-url prefix).
+function resizeImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (w > MAXDIM || h > MAXDIM) {
+          if (w >= h) { h = Math.round(h * MAXDIM / w); w = MAXDIM; }
+          else { w = Math.round(w * MAXDIM / h); h = MAXDIM; }
+        }
+        try {
+          const cv = document.createElement('canvas');
+          cv.width = w; cv.height = h;
+          cv.getContext('2d').drawImage(img, 0, 0, w, h);
+          const dataUrl = cv.toDataURL('image/jpeg', QUALITY);
+          resolve(dataUrl.split(',')[1]);
+        } catch (e) { reject(e); }
+      };
+      img.onerror = () => reject(new Error('לא ניתן לטעון את התמונה (ייתכן פורמט לא נתמך כמו HEIC)'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('קריאת הקובץ נכשלה'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function delPhoto(id) {
+  if (!confirm('למחוק את התמונה מהאלבום?')) return;
+  try { await api.deleteDocument(id); await load(); }
+  catch (e) { alert('שגיאה במחיקה: ' + e.message); }
+}
+
+function jumpTo(childId) {
+  const el = document.getElementById('kid-' + childId);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+
+load();
+</script>
+
+</body>
+</html>

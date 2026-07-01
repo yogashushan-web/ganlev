@@ -2,7 +2,7 @@
 // GET /income?garden_id=X&date_from=2026-01-01&date_to=2026-06-30
 // POST /income { garden_id, source_he, amount, receipt_date, category_he, notes_he }
 
-const { supabase, validateGardenScope, auditLog } = require('./lib/db');
+const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
 
 const handler = withAuth(async (event) => {
@@ -102,6 +102,20 @@ const handler = withAuth(async (event) => {
         statusCode: 200,
         body: JSON.stringify({ success: true, data }),
       };
+    }
+
+    if (event.httpMethod === 'DELETE') {
+      const { data, error } = await supabase
+        .from('income')
+        .delete()
+        .eq('id', incomeId)
+        .eq('garden_id', garden_id)
+        .select()
+        .single();
+      if (error) throw error;
+      await moveToTrash('income', data, garden_id);
+      await auditLog(garden_id, user.id, 'deleted', 'income', incomeId, {});
+      return { statusCode: 200, body: JSON.stringify({ success: true, data }) };
     }
 
     return {
