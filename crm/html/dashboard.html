@@ -217,6 +217,7 @@ function catColor(c) { const f = GARDEN_CATS.find(x => x.key === c); return f ? 
 
 let view = { y: new Date().getFullYear(), m: new Date().getMonth() };
 let childrenCache = [];
+let staffCache = [];
 let gardenEvents = [];
 let editingEvtId = null;
 let titlesByCat = {}; // category -> [previously used titles], for the title suggestions
@@ -301,6 +302,9 @@ async function renderGarden() {
   const bdays = childrenCache
     .filter(c => c.birth_date && new Date(c.birth_date).getMonth() === m)
     .map(c => ({ day: new Date(c.birth_date).getDate(), name: c.first_name_he }));
+  const staffBdays = staffCache
+    .filter(m2 => m2.birth_date && new Date(m2.birth_date).getMonth() === m)
+    .map(m2 => ({ day: new Date(m2.birth_date).getDate(), name: (m2.full_name_he || '').split(' ')[0] || m2.full_name_he }));
 
   const firstDow = new Date(y, m, 1).getDay();
   const tStr = todayStr();
@@ -313,7 +317,9 @@ async function renderGarden() {
     holidays.filter(h => h.date === dateStr).forEach(h =>
       chips += `<div class="ev-chip" style="background:#fef3c7;color:#92580a;border-right:3px solid #d97706;" title="חג / מועד">🕎 ${esc(h.title)}</div>`);
     bdays.filter(b => b.day === d).forEach(b =>
-      chips += `<div class="ev-chip" style="background:#fce7f3;color:#9d2463;" title="יום הולדת">🎂 ${esc(b.name)}</div>`);
+      chips += `<div class="ev-chip" style="background:#fce7f3;color:#9d2463;" title="יום הולדת ילד">🎂 ${esc(b.name)}</div>`);
+    staffBdays.filter(b => b.day === d).forEach(b =>
+      chips += `<div class="ev-chip" style="background:#dcfce7;color:#166534;" title="יום הולדת צוות">🎂 ${esc(b.name)}</div>`);
     events.filter(e => e.event_date === dateStr).forEach(e => {
       const c = catColor(e.category);
       const tt = e.event_time ? (e.event_time.slice(0,5) + (e.end_time ? '-' + e.end_time.slice(0,5) : '') + ' ') : '';
@@ -447,6 +453,16 @@ async function showCategory(cat) {
       : '<div style="padding:14px;color:#9B8E82;">אין ימי הולדת.</div>';
     return;
   }
+  if (cat === 'יום הולדת צוות') {
+    const items = staffCache.filter(m => m.birth_date).map(m => ({
+      name: m.full_name_he || '',
+      mo: new Date(m.birth_date).getMonth(), day: new Date(m.birth_date).getDate(),
+    })).sort((a, b) => a.mo - b.mo || a.day - b.day);
+    listEl.innerHTML = items.length ? items.map(i =>
+      `<div class="cat-item"><span>🎂 ${esc(i.name)}</span><span class="d">${i.day}/${i.mo + 1}</span></div>`).join('')
+      : '<div style="padding:14px;color:#9B8E82;">אין ימי הולדת צוות (ודאו שלאנשי הצוות יש תאריך לידה).</div>';
+    return;
+  }
   let evs = [];
   try { const r = await api.getEvents('garden'); evs = (r.data || []).filter(e => e.category === cat); }
   catch (e) { listEl.innerHTML = '<div style="padding:14px;color:#c94147;">שגיאה בטעינה</div>'; return; }
@@ -464,13 +480,15 @@ async function init() {
     { admin:'מנהל', manager:'מנהל גן', staff:'עובד' }[user?.role] || 'משתמש';
   loadGardenName().then(n => { if (n) document.getElementById('dashTitle').textContent = 'לוח בקרה - ' + n; });
 
-  const [summary, tuitionRes, childrenRes] = await Promise.all([
+  const [summary, tuitionRes, childrenRes, staffRes] = await Promise.all([
     api.getDashboardSummary().catch(() => ({})),
     api.getTuition('pending').catch(() => ({ data: [] })),
     api.getChildren().catch(() => ({ data: [] })),
+    api.getStaff().catch(() => ({ data: [] })),
   ]);
   const s = summary.data || {};
   childrenCache = childrenRes.data || [];
+  staffCache = (staffRes.data || []).filter(m => m.status === 'active');
   document.getElementById('chipChildren').textContent = s.children_count != null ? s.children_count : childrenCache.length;
   document.getElementById('chipStaff').textContent = s.staff_count || 0;
   document.getElementById('chipTuition').textContent = (s.pending_tuition_count || (tuitionRes.data || []).length) || 0;

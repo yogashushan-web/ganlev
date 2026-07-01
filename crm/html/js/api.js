@@ -119,6 +119,9 @@ const api = {
   // Convert an iPhone HEIC image to JPEG (server-side)
   convertHeic: (file_base64) => apiCall('/convert-heic', 'POST', { file_base64 }),
 
+  // Parse a signed child enrollment contract → child + parents (AI)
+  parseChildContract: (file_base64, content_type) => apiCall('/parse-child-contract', 'POST', { file_base64, content_type }),
+
   // Documents (file library)
   getDocuments: (section) => apiCall(`/documents?garden_id=${getGardenId()}${section ? `&section=${section}` : ''}`),
   uploadDocument: (data) => apiCall(`/documents?garden_id=${getGardenId()}`, 'POST', data),

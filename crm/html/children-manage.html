@@ -69,6 +69,13 @@
     .card-q { font-weight:700; color:#1F3D34; font-size:13px; margin-top:13px; }
     .card-a { font-size:14px; color:#3D3228; white-space:pre-wrap; line-height:1.55; }
     .loading { text-align:center; padding:40px; color:#9B8E82; }
+    .contract-drop { border:2px dashed #C4846C; border-radius:12px; padding:18px 16px; text-align:center; color:#8a5a44; background:#FBF6F2; cursor:pointer; margin-bottom:20px; transition:background .15s,border-color .15s; line-height:1.5; }
+    .contract-drop:hover { background:#f6ebe3; }
+    .contract-drop.over { border-color:#16a34a; background:#f0faf2; color:#16a34a; }
+    .contract-drop.busy { opacity:.7; pointer-events:none; }
+    .contract-drop .cd-icon { font-size:26px; display:block; margin-bottom:6px; }
+    .contract-drop .cd-sub { font-size:12px; color:#9B8E82; }
+    .cd-status { margin-top:9px; font-size:13px; font-weight:700; }
   </style>
 </head>
 <body>
@@ -92,6 +99,13 @@
   <div id="success" class="success"></div>
 
   <div id="form" class="form-container">
+    <div id="contractDrop" class="contract-drop">
+      <span class="cd-icon">📄⬇️</span>
+      <div><b>גררו לכאן חוזה חתום של הילד/ה</b> (PDF או תמונה)</div>
+      <div class="cd-sub">המערכת תקרא את החוזה ותמלא את הפרטים אוטומטית — כולל שני ההורים</div>
+      <div class="cd-status" id="cdStatus"></div>
+    </div>
+    <input type="file" id="contractInput" accept="application/pdf,image/*" style="display:none">
     <h2 style="margin-bottom:18px; color:#1F3D34;">הוסף / ערוך ילד</h2>
     <form id="childForm">
       <div class="form-row">
@@ -120,10 +134,11 @@
   <div id="table" class="loading">טוען...</div>
 
 <script src="js/common.js?v=11"></script>
-<script src="js/api.js?v=11"></script>
+<script src="js/api.js?v=12"></script>
 <script>
 let children = [];
 let editingId = null;
+let pendingParents = [];
 
 function currentSchoolYear() {
   const d = new Date(), y = d.getFullYear();
@@ -240,12 +255,19 @@ function toggleForm() {
   if (!f.classList.contains('show')) { resetForm(); }
   else if (!editingId) { fillYearSelect(selectedYear); }
 }
-function resetForm() { document.getElementById('childForm').reset(); editingId = null; }
+function resetForm() {
+  document.getElementById('childForm').reset();
+  editingId = null;
+  pendingParents = [];
+  const st = document.getElementById('cdStatus'); if (st) st.textContent = '';
+}
 
 function editChild(id) {
   const c = children.find(x => x.id === id);
   if (!c) return;
   editingId = id;
+  pendingParents = [];
+  const st = document.getElementById('cdStatus'); if (st) st.textContent = '';
   document.getElementById('firstName').value = c.first_name_he || '';
   document.getElementById('lastName').value = c.last_name_he || '';
   document.getElementById('nameEn').value = c.name_en || '';
@@ -281,11 +303,97 @@ document.getElementById('childForm').addEventListener('submit', async (e) => {
   try {
     const res = editingId ? await api.updateChild(editingId, data) : await api.createChild(data);
     if (res.success) {
-      showSuccess(editingId ? 'הילד עודכן' : 'הילד נוסף');
+      // On a NEW child, also create the parents extracted from the contract.
+      const newId = res.data && res.data.id;
+      let addedParents = 0;
+      if (!editingId && newId && pendingParents.length) {
+        for (let i = 0; i < pendingParents.length; i++) {
+          const p = pendingParents[i];
+          try {
+            await api.createParent({
+              child_id: newId,
+              full_name_he: p.full_name_he,
+              phone: p.phone || null,
+              email: p.email || null,
+              relationship_type: p.relationship_type || null,
+              address: p.address || null,
+              is_primary: i === 0,
+            });
+            addedParents++;
+          } catch (pe) { console.error('parent create failed', pe); }
+        }
+      }
+      pendingParents = [];
+      showSuccess(editingId ? 'הילד עודכן' : ('הילד נוסף' + (addedParents ? ` + ${addedParents} הורים` : '')));
       toggleForm(); resetForm(); loadChildren();
     }
   } catch (err) { showError('שגיאה: ' + err.message); }
 });
+
+// ---- Fill the form from a dragged, signed child contract (AI) ----
+function isHeicFile(f) {
+  const t = (f.type || '').toLowerCase(), n = (f.name || '').toLowerCase();
+  return t.includes('heic') || t.includes('heif') || n.endsWith('.heic') || n.endsWith('.heif');
+}
+
+async function handleContract(file) {
+  if (!file) return;
+  const dz = document.getElementById('contractDrop');
+  const st = document.getElementById('cdStatus');
+  if (file.size > 15 * 1024 * 1024) { st.textContent = '❌ הקובץ גדול מדי (עד 15MB)'; return; }
+  dz.classList.add('busy');
+  try {
+    let base64, contentType = file.type || '';
+    if (isHeicFile(file)) {
+      st.textContent = '⏳ ממיר תמונה...';
+      const raw = await fileToB64(file);
+      const conv = await api.convertHeic(raw);
+      base64 = conv.jpeg_base64; contentType = 'image/jpeg';
+    } else {
+      base64 = await fileToB64(file);
+    }
+    if (contentType !== 'application/pdf' && !contentType.startsWith('image/')) {
+      contentType = (file.name || '').toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg';
+    }
+    st.textContent = '🔎 קורא את החוזה ומחלץ פרטים... (כמה שניות)';
+    const res = await api.parseChildContract(base64, contentType);
+    const d = (res && res.data) || {};
+
+    if (!document.getElementById('form').classList.contains('show')) document.getElementById('form').classList.add('show');
+    fillYearSelect(d.school_year || selectedYear);
+    document.getElementById('firstName').value = d.first_name_he || '';
+    document.getElementById('lastName').value = d.last_name_he || '';
+    document.getElementById('nameEn').value = d.name_en || '';
+    document.getElementById('gender').value = (d.gender_he === 'זכר' || d.gender_he === 'נקבה') ? d.gender_he : '';
+    document.getElementById('nationalId').value = d.national_id || '';
+    document.getElementById('birthDate').value = d.birth_date || '';
+    if (d.school_year) document.getElementById('schoolYear').value = d.school_year;
+
+    pendingParents = (d.parents || []).filter(p => p && p.full_name_he);
+    editingId = null; // ensure this saves as a NEW child (so parents attach)
+    const pTxt = pendingParents.length ? ` · ${pendingParents.length} הורים יתווספו עם השמירה (${pendingParents.map(p => p.full_name_he).join(', ')})` : '';
+    st.textContent = `✅ הפרטים מולאו${pTxt}. בדקו, השלימו חוסרים ולחצו "שמור".`;
+    document.getElementById('firstName').focus();
+  } catch (e) {
+    st.textContent = '❌ שגיאה בקריאת החוזה: ' + e.message;
+  } finally {
+    dz.classList.remove('busy');
+    document.getElementById('contractInput').value = '';
+  }
+}
+
+(function wireContractDrop() {
+  const dz = document.getElementById('contractDrop');
+  const inp = document.getElementById('contractInput');
+  if (!dz || !inp) return;
+  dz.addEventListener('click', () => inp.click());
+  inp.addEventListener('change', () => handleContract(inp.files[0]));
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', e => { if (e.target === dz) dz.classList.remove('over'); });
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); if (e.dataTransfer.files && e.dataTransfer.files[0]) handleContract(e.dataTransfer.files[0]); });
+  // don't let the browser open a file dropped elsewhere on the page
+  ['dragover', 'drop'].forEach(ev => window.addEventListener(ev, e => { if (e.target !== dz) e.preventDefault(); }));
+})();
 
 // ---- per-child profile: attached files + the registration "כרטיס אישי" ----
 const esc = s => (s || '').replace(/</g, '&lt;');
