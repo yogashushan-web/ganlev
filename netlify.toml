@@ -13,6 +13,9 @@
 
 [functions]
   node_bundler = "esbuild"
+  # heic-convert / libheif-js load a .wasm file from disk at runtime, so keep them
+  # unbundled (copied as-is with their assets) instead of letting esbuild inline them.
+  external_node_modules = ["heic-convert", "heic-decode", "libheif-js"]
 
 # Security headers applied to every response
 [[headers]]

@@ -2,6 +2,7 @@
   "name": "asanaguides",
   "private": true,
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0"
+    "@supabase/supabase-js": "^2.39.0",
+    "heic-convert": "^2.1.0"
   }
 }

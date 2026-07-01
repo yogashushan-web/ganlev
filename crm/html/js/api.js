@@ -116,6 +116,9 @@ const api = {
   updateEvent: (id, data) => apiCall(`/events/${id}?garden_id=${getGardenId()}`, 'PUT', data),
   deleteEvent: (id) => apiCall(`/events/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 
+  // Convert an iPhone HEIC image to JPEG (server-side)
+  convertHeic: (file_base64) => apiCall('/convert-heic', 'POST', { file_base64 }),
+
   // Documents (file library)
   getDocuments: (section) => apiCall(`/documents?garden_id=${getGardenId()}${section ? `&section=${section}` : ''}`),
   uploadDocument: (data) => apiCall(`/documents?garden_id=${getGardenId()}`, 'POST', data),
