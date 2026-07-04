@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>שיחה אישית — גן לב ❤️</title>
+  <title>זמן הורים — גן לב ❤️</title>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -23,33 +23,39 @@
     .slots { display:flex; flex-wrap:wrap; gap:9px; }
     .slot { border:1.5px solid #cfe3d8; background:#f4faf6; color:#1F3D34; border-radius:11px; padding:10px 14px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; text-align:center; transition:all .15s; }
     .slot:hover { background:#1F3D34; color:#fff; border-color:#1F3D34; transform:translateY(-1px); }
-    .slot .who { display:block; font-size:11px; font-weight:600; opacity:.75; margin-top:2px; }
-    .slot.taken { background:#f3f0eb; color:#bdb4a6; border-color:#e8e2d8; cursor:not-allowed; text-decoration:line-through; }
-    .slot.taken:hover { transform:none; }
+    .slot.taken { background:#f3f0eb; color:#9b8f7e; border-color:#e8e2d8; cursor:default; }
+    .slot.taken:hover { transform:none; background:#f3f0eb; color:#9b8f7e; border-color:#e8e2d8; }
+    .slot.taken .who { display:block; font-size:11px; font-weight:600; margin-top:2px; opacity:.85; }
+    .slot.mine { border-color:#C4846C; background:#fbf1ec; }
+    .cancel-mine { display:block; margin-top:5px; font-size:11px; color:#c0492a; background:none; border:none; cursor:pointer; font-family:'Heebo'; font-weight:700; text-decoration:underline; }
     .empty { text-align:center; color:#9B8E82; padding:36px 12px; font-size:15px; }
 
     .ov { position:fixed; inset:0; background:rgba(31,61,52,.5); display:none; align-items:center; justify-content:center; z-index:99; padding:18px; }
     .ov.show { display:flex; }
-    .modal { background:#fff; border-radius:18px; padding:24px; width:100%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .modal { background:#fff; border-radius:18px; padding:24px; width:100%; max-width:440px; max-height:90vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }
     .modal h2 { color:#1F3D34; font-size:19px; margin-bottom:4px; }
     .modal .when { color:#9B8E82; font-size:14px; margin-bottom:16px; }
-    .modal label { display:block; font-size:13px; font-weight:700; color:#3D3228; margin:12px 0 6px; }
-    .modal input, .modal textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo'; font-size:15px; outline:none; text-align:right; }
+    .modal label { display:block; font-size:13px; font-weight:700; color:#3D3228; margin:14px 0 6px; }
+    .modal input[type=text], .modal textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo'; font-size:15px; outline:none; text-align:right; }
     .modal input:focus, .modal textarea:focus { border-color:#1F3D34; }
+    .parents { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+    .pchk { display:flex; align-items:center; gap:9px; background:#FAF8F4; border:1.5px solid #eee6da; border-radius:10px; padding:10px 12px; cursor:pointer; font-size:15px; font-weight:600; }
+    .pchk input { width:18px; height:18px; accent-color:#1F3D34; }
+    .pnote { font-size:12px; color:#9B8E82; margin-top:6px; }
     .mErr { color:#c94147; font-size:13px; font-weight:600; margin-top:10px; min-height:16px; }
     .mBtns { display:flex; gap:10px; margin-top:18px; }
     .ok { flex:1; background:#1F3D34; color:#fff; border:none; padding:13px; border-radius:12px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:15px; }
     .ok:hover { background:#154428; }
     .ok:disabled { background:#9aa7a0; cursor:progress; }
-    .cancel { background:#f0ece6; color:#333; border:none; padding:13px 20px; border-radius:12px; cursor:pointer; font-family:'Heebo'; font-weight:600; }
+    .cancelb { background:#f0ece6; color:#333; border:none; padding:13px 20px; border-radius:12px; cursor:pointer; font-family:'Heebo'; font-weight:600; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="hero">
-      <h1>❤️ שיחה אישית — גן לב</h1>
-      <p>אנחנו רואים בשיחות האלה הזדמנות לעצור רגע, לסגור ולארוז יחד את השנה שעברה עלינו, להסתכל אחורה על הדרך שכל ילד ומשפחה עברו השנה, ואם יש רצון גם לדבר על השנה הבאה ועל המעבר שמתקרב.</p>
-      <p class="hint">בחרו זמן שנוח לכם מהשעות הפנויות למטה 👇 אם לא מצאתם זמן מתאים, כתבו לנו בפרטי ונמצא יחד.</p>
+      <h1>❤️ זמן הורים — גן לב</h1>
+      <p>אנחנו רואים בשיחות האלה הזדמנות לעצור רגע, לסגור ולארוז יחד את השנה שעברה עלינו, ולהסתכל אחורה על הדרך שכל ילד ומשפחה עברו — ואם יש רצון, גם לדבר על השנה הבאה ועל המעבר שמתקרב.</p>
+      <p class="hint">בחרו שעה פנויה מהרשימה 👇 אם לא מצאתם זמן שמתאים, כתבו לנו בפרטי ונמצא יחד.</p>
     </div>
 
     <div id="msg" class="msg"></div>
@@ -60,102 +66,141 @@
     <div class="modal">
       <h2>השתבצות לשיחה</h2>
       <div class="when" id="mWhen"></div>
+
       <label>שם הילד/ה</label>
-      <input id="child" list="kids" autocomplete="off" placeholder="התחילו להקליד את השם…">
+      <input type="text" id="child" list="kids" autocomplete="off" placeholder="התחילו להקליד את השם…">
       <datalist id="kids"></datalist>
+
+      <div id="parentsWrap" style="display:none;">
+        <label>מי מההורים מגיע/ים? <span style="font-weight:400;color:#9B8E82;">(סמנו)</span></label>
+        <div class="parents" id="parents"></div>
+      </div>
+
       <label>נושא השיחה <span style="font-weight:400;color:#9B8E82;">(לא חובה)</span></label>
       <textarea id="topic" rows="3" placeholder="משהו שתרצו שנתייחס אליו? אפשר גם להשאיר ריק"></textarea>
+
       <div class="mErr" id="mErr"></div>
       <div class="mBtns">
         <button class="ok" id="okBtn">אישור השתבצות</button>
-        <button class="cancel" onclick="closeOv()">ביטול</button>
+        <button class="cancelb" onclick="closeOv()">ביטול</button>
       </div>
     </div>
   </div>
 
 <script>
 const API = '/.netlify/functions/meetings';
+const LS = 'ganlev_meetings';
 const DOW = ['יום ראשון','יום שני','יום שלישי','יום רביעי','יום חמישי','יום שישי','שבת'];
 const MON = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-let slots = [], selected = null;
+let slots = [], children = [], selected = null;
 const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
 
-function fmtDay(d) {
-  const dt = new Date(d + 'T00:00:00');
-  return DOW[dt.getDay()] + ' · ' + dt.getDate() + ' ב' + MON[dt.getMonth()];
-}
-function showMsg(text, kind) {
-  const el = document.getElementById('msg');
-  el.textContent = text; el.className = 'msg show ' + kind;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+function mine() { try { return JSON.parse(localStorage.getItem(LS) || '[]'); } catch (e) { return []; } }
+function saveMine(a) { localStorage.setItem(LS, JSON.stringify(a)); }
+function tokenFor(id) { const m = mine().find(x => x.slot_id === id); return m ? m.cancel_token : null; }
+
+function fmtDay(d) { const dt = new Date(d + 'T00:00:00'); return DOW[dt.getDay()] + ' · ' + dt.getDate() + ' ב' + MON[dt.getMonth()]; }
+function showMsg(t, k) { const el = document.getElementById('msg'); el.textContent = t; el.className = 'msg show ' + k; window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 async function load() {
   try {
-    const r = await fetch(API);
-    const d = await r.json();
-    slots = d.slots || [];
-    document.getElementById('kids').innerHTML = (d.children || []).map(n => `<option value="${esc(n)}">`).join('');
+    const d = await (await fetch(API)).json();
+    slots = d.slots || []; children = d.children || [];
+    document.getElementById('kids').innerHTML = children.map(c => `<option value="${esc(c.name)}">`).join('');
     render();
   } catch (e) {
-    document.getElementById('days').innerHTML = '<div class="empty">שגיאה בטעינה. נסו לרענן את הדף 🙏</div>';
+    document.getElementById('days').innerHTML = '<div class="empty">שגיאה בטעינה. נסו לרענן 🙏</div>';
   }
 }
 
 function render() {
-  const open = slots.filter(s => !s.taken);
-  if (!open.length) {
-    document.getElementById('days').innerHTML = '<div class="empty">אין כרגע שעות פנויות. אם כולן נתפסו — כתבו לנו בפרטי ונמצא זמן 🙏</div>';
+  if (!slots.length) {
+    document.getElementById('days').innerHTML = '<div class="empty">אין כרגע שעות פנויות. אם כולן נתפסו — כתבו לנו בפרטי 🙏</div>';
     return;
   }
   const byDay = {};
   slots.forEach(s => { (byDay[s.date] = byDay[s.date] || []).push(s); });
-  const days = Object.keys(byDay).sort();
-  document.getElementById('days').innerHTML = days.map(date => {
-    const daySlots = byDay[date].filter(s => !s.taken);   // show only open slots
-    if (!daySlots.length) return '';
-    const chips = daySlots.map(s =>
-      `<div class="slot" onclick="openBook('${s.id}')">${s.time}${s.end ? '–' + s.end : ''}${s.with ? `<span class="who">עם ${esc(s.with)}</span>` : ''}</div>`
-    ).join('');
+  document.getElementById('days').innerHTML = Object.keys(byDay).sort().map(date => {
+    const chips = byDay[date].map(s => {
+      const t = s.time + (s.end ? '–' + s.end : '');
+      if (!s.taken) return `<div class="slot" onclick="openBook('${s.id}')">${t}</div>`;
+      const isMine = !!tokenFor(s.id);
+      return `<div class="slot taken ${isMine ? 'mine' : ''}">${t}<span class="who">${esc(s.child)}${isMine ? ' (שלכם)' : ''}</span>${isMine ? `<button class="cancel-mine" onclick="cancelMine('${s.id}')">בטל את הפגישה שלי</button>` : ''}</div>`;
+    }).join('');
     return `<div class="day"><h3>${fmtDay(date)}</h3><div class="slots">${chips}</div></div>`;
   }).join('');
 }
 
 function openBook(id) {
-  selected = slots.find(s => s.id === id);
-  if (!selected) return;
-  document.getElementById('mWhen').textContent =
-    fmtDay(selected.date) + ' · ' + selected.time + (selected.end ? '–' + selected.end : '') + (selected.with ? ' · עם ' + selected.with : '');
+  selected = slots.find(s => s.id === id); if (!selected) return;
+  document.getElementById('mWhen').textContent = fmtDay(selected.date) + ' · ' + selected.time + (selected.end ? '–' + selected.end : '');
   document.getElementById('child').value = '';
   document.getElementById('topic').value = '';
   document.getElementById('mErr').textContent = '';
+  document.getElementById('parentsWrap').style.display = 'none';
+  document.getElementById('parents').innerHTML = '';
   document.getElementById('ov').classList.add('show');
   setTimeout(() => document.getElementById('child').focus(), 100);
 }
 function closeOv() { document.getElementById('ov').classList.remove('show'); }
 
+// when a child is chosen, pull the child's parents for the "who's coming" checkboxes
+let parentReqSeq = 0;
+document.getElementById('child').addEventListener('input', async () => {
+  const val = document.getElementById('child').value.trim();
+  const kid = children.find(c => c.name === val);
+  const wrap = document.getElementById('parentsWrap'), box = document.getElementById('parents');
+  if (!kid) { wrap.style.display = 'none'; box.innerHTML = ''; return; }
+  const seq = ++parentReqSeq;
+  box.innerHTML = '<div class="pnote">טוען הורים…</div>'; wrap.style.display = 'block';
+  try {
+    const d = await (await fetch(API + '?parents_for=' + encodeURIComponent(kid.id))).json();
+    if (seq !== parentReqSeq) return;
+    const ps = d.parents || [];
+    if (!ps.length) { box.innerHTML = '<div class="pnote">לא נמצאו הורים רשומים — אפשר להמשיך בלי לסמן.</div>'; return; }
+    box.innerHTML = ps.map((p, i) => `<label class="pchk"><input type="checkbox" class="pcheck" value="${esc(p)}" checked> ${esc(p)}</label>`).join('');
+  } catch (e) { box.innerHTML = '<div class="pnote">לא הצלחנו לטעון הורים — אפשר להמשיך.</div>'; }
+});
+
 async function book() {
   const child = document.getElementById('child').value.trim();
   const topic = document.getElementById('topic').value.trim();
-  if (!child) { document.getElementById('mErr').textContent = 'בבקשה בחרו את שם הילד/ה'; return; }
-  const btn = document.getElementById('okBtn');
-  btn.disabled = true; btn.textContent = 'משבץ…';
+  const kid = children.find(c => c.name === child);
+  if (!child) { document.getElementById('mErr').textContent = 'בבקשה בחרו שם ילד/ה מהרשימה'; return; }
+  const parents = [...document.querySelectorAll('.pcheck:checked')].map(c => c.value);
+  const btn = document.getElementById('okBtn'); btn.disabled = true; btn.textContent = 'משבץ…';
   try {
-    const r = await fetch(API, {
+    const d = await (await fetch(API, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slot_id: selected.id, child_name: child, topic }),
-    });
-    const d = await r.json();
+      body: JSON.stringify({ action: 'book', slot_id: selected.id, child_id: kid ? kid.id : null, child_name: child, parents, topic }),
+    })).json();
     if (!d.success) throw new Error(d.error || 'שגיאה');
+    const arr = mine(); arr.push({ slot_id: selected.id, cancel_token: d.cancel_token, child }); saveMine(arr);
     closeOv();
-    showMsg('✅ נשמר! נתראה ב' + fmtDay(d.slot.date) + ' בשעה ' + d.slot.time + (d.slot.with ? ' עם ' + d.slot.with : '') + '. תודה ❤️', 'ok');
+    showMsg('✅ נשמר! נתראה ב' + fmtDay(d.slot.date) + ' בשעה ' + d.slot.time + '. תודה ❤️', 'ok');
     await load();
   } catch (e) {
     document.getElementById('mErr').textContent = e.message;
     btn.disabled = false; btn.textContent = 'אישור השתבצות';
+    if (String(e.message).includes('נתפסה')) { closeOv(); await load(); }
   }
 }
 document.getElementById('okBtn').addEventListener('click', book);
+
+async function cancelMine(id) {
+  if (!confirm('לבטל את הפגישה?')) return;
+  const token = tokenFor(id);
+  try {
+    const d = await (await fetch(API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'cancel', slot_id: id, cancel_token: token }),
+    })).json();
+    if (!d.success) throw new Error(d.error || 'שגיאה');
+    saveMine(mine().filter(x => x.slot_id !== id));
+    showMsg('הפגישה בוטלה. המשבצת שוב פנויה 🙏', 'ok');
+    await load();
+  } catch (e) { showMsg('שגיאה בביטול: ' + e.message, 'err'); }
+}
 
 load();
 </script>

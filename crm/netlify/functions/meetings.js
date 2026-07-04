@@ -1,56 +1,103 @@
-// PUBLIC parent meeting-booking endpoint (no auth). Slots are stored as rows in
-// the `events` table with calendar='meeting' (category 'open' | 'booked').
-// GET  /meetings?garden_id=      -> { success, slots:[{id,date,time,end,with,taken}], children:[names] }
-// POST /meetings { garden_id, slot_id, child_name, topic } -> books a slot atomically
+// PUBLIC parent meeting booking ("זמן הורים"). Slots are garden-calendar events
+// (calendar='garden', category='זמן הורים'). OPEN slot: title IS NULL.
+// BOOKED slot: title = child name, notes = JSON { child, child_id, parents[],
+// topic, cancel_token, booked_at }.
+//
+// GET  /meetings?garden_id=                 -> { slots, children:[{id,name}] }
+// GET  /meetings?garden_id=&parents_for=ID  -> { parents:[names] }
+// POST { action:'book',   garden_id, slot_id, child_id, child_name, parents[], topic }
+// POST { action:'cancel', garden_id, slot_id, cancel_token }
 
+const crypto = require('crypto');
 const { supabase } = require('./lib/db');
-const GARDEN_DEFAULT = '5120efca-8bb0-47a3-90d2-2c6a5a013e31'; // גן לב
 
-const json = (code, body) => ({ statusCode: code, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+const GARDEN_DEFAULT = '5120efca-8bb0-47a3-90d2-2c6a5a013e31'; // גן לב
+const CAT = 'זמן הורים';
+const json = (c, b) => ({ statusCode: c, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
 const hhmm = (t) => (t || '').slice(0, 5);
 
+async function emailGan(subject, message) {
+  const key = process.env.WEB3FORMS_KEY;
+  if (!key) return;
+  try {
+    await fetch('https://api.web3forms.com/submit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ access_key: key, subject, from_name: 'מערכת גן לב', message }),
+    });
+  } catch (e) { console.error('email failed', e); }
+}
+
 exports.handler = async (event) => {
-  const gid = (event.queryStringParameters && event.queryStringParameters.garden_id) || GARDEN_DEFAULT;
+  const q = event.queryStringParameters || {};
+  const gid = q.garden_id || GARDEN_DEFAULT;
   try {
     if (event.httpMethod === 'GET') {
+      // parents of a specific child (for the "who's coming" checkboxes) — names only
+      if (q.parents_for) {
+        const { data } = await supabase.from('parents').select('full_name_he')
+          .eq('garden_id', gid).eq('child_id', q.parents_for);
+        const parents = (data || []).map(p => (p.full_name_he || '').replace(/\s*\(.*\)\s*$/, '').trim()).filter(Boolean);
+        return json(200, { success: true, parents });
+      }
       const today = new Date().toISOString().slice(0, 10);
       const [slotsRes, kidsRes] = await Promise.all([
-        supabase.from('events').select('id,event_date,event_time,end_time,title,category')
-          .eq('garden_id', gid).eq('calendar', 'meeting').gte('event_date', today)
+        supabase.from('events').select('id,event_date,event_time,end_time,title')
+          .eq('garden_id', gid).eq('calendar', 'garden').eq('category', CAT).gte('event_date', today)
           .order('event_date', { ascending: true }).order('event_time', { ascending: true }),
-        supabase.from('children').select('first_name_he,last_name_he')
+        supabase.from('children').select('id,first_name_he,last_name_he')
           .eq('garden_id', gid).eq('status', 'active'),
       ]);
       const slots = (slotsRes.data || []).map(s => ({
         id: s.id, date: s.event_date, time: hhmm(s.event_time), end: hhmm(s.end_time),
-        with: s.title || '', taken: s.category === 'booked',
+        taken: !!s.title, child: s.title || null,
       }));
       const children = (kidsRes.data || [])
-        .map(c => ((c.first_name_he || '') + ' ' + (c.last_name_he || '')).trim())
-        .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b, 'he'));
+        .map(c => ({ id: c.id, name: ((c.first_name_he || '') + ' ' + (c.last_name_he || '')).trim() }))
+        .filter(c => c.name)
+        .sort((a, b) => a.name.localeCompare(b.name, 'he'));
       return json(200, { success: true, slots, children });
     }
 
     if (event.httpMethod === 'POST') {
       const b = JSON.parse(event.body || '{}');
-      if (!b.slot_id || !b.child_name) return json(400, { success: false, error: 'חסר שם ילד/ה או משבצת' });
-      const notes = JSON.stringify({
-        child: String(b.child_name).slice(0, 80),
-        topic: String(b.topic || '').slice(0, 800),
-        booked_at: new Date().toISOString(),
-      });
-      // Atomic booking: only succeeds if the slot is still 'open'.
-      const { data, error } = await supabase.from('events')
-        .update({ category: 'booked', notes })
-        .eq('id', b.slot_id).eq('garden_id', gid).eq('calendar', 'meeting').eq('category', 'open')
-        .select('id,event_date,event_time,title');
-      if (error) throw error;
-      if (!data || !data.length) {
-        return json(409, { success: false, error: 'אופס — המשבצת הזו נתפסה זה עתה. בחרו משבצת אחרת 🙏' });
+
+      if (b.action === 'cancel') {
+        const { data: row } = await supabase.from('events').select('id,title,notes,event_date,event_time')
+          .eq('id', b.slot_id).eq('garden_id', gid).maybeSingle();
+        if (!row || !row.title) return json(409, { success: false, error: 'הפגישה כבר אינה משובצת' });
+        let info = {}; try { info = JSON.parse(row.notes || '{}'); } catch (e) {}
+        if (!b.cancel_token || b.cancel_token !== info.cancel_token) {
+          return json(403, { success: false, error: 'אין הרשאה לבטל פגישה זו' });
+        }
+        await supabase.from('events').update({ title: null, notes: null }).eq('id', b.slot_id);
+        await emailGan('הורה ביטל פגישת "זמן הורים"',
+          `${info.child || row.title} ביטל/ה את הפגישה שהייתה ב-${row.event_date} בשעה ${hhmm(row.event_time)}.`);
+        return json(200, { success: true });
       }
-      const s = data[0];
-      return json(200, { success: true, slot: { date: s.event_date, time: hhmm(s.event_time), with: s.title } });
+
+      // book
+      if (!b.slot_id || !b.child_name) return json(400, { success: false, error: 'חסר שם ילד/ה' });
+      // one meeting per child
+      if (b.child_id) {
+        const { data: booked } = await supabase.from('events').select('notes')
+          .eq('garden_id', gid).eq('calendar', 'garden').eq('category', CAT).not('title', 'is', null);
+        const dup = (booked || []).some(e => { try { return JSON.parse(e.notes || '{}').child_id === b.child_id; } catch (_) { return false; } });
+        if (dup) return json(409, { success: false, error: 'כבר קבועה פגישה לילד/ה הזה. אפשר לבטל אותה ולשבץ מחדש.' });
+      }
+      const cancel_token = crypto.randomBytes(12).toString('hex');
+      const notes = JSON.stringify({
+        child: b.child_name, child_id: b.child_id || null,
+        parents: (b.parents || []).slice(0, 4), topic: String(b.topic || '').slice(0, 800),
+        cancel_token, booked_at: new Date().toISOString(),
+      });
+      // atomic: only books if the slot is still OPEN (title IS NULL)
+      const { data, error } = await supabase.from('events')
+        .update({ title: b.child_name, notes })
+        .eq('id', b.slot_id).eq('garden_id', gid).eq('category', CAT).is('title', null)
+        .select('id,event_date,event_time');
+      if (error) throw error;
+      if (!data || !data.length) return json(409, { success: false, error: 'אופס — המשבצת נתפסה זה עתה. בחרו משבצת אחרת 🙏' });
+      return json(200, { success: true, cancel_token, slot: { date: data[0].event_date, time: hhmm(data[0].event_time) } });
     }
 
     return json(405, { success: false, error: 'Method not allowed' });
