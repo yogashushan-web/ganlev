@@ -148,6 +148,11 @@
         <div style="flex:1;"><label>שעת התחלה</label><input type="time" id="evtTime"></div>
         <div style="flex:1;"><label>שעת סיום</label><input type="time" id="evtEndTime"></div>
       </div>
+      <div id="evtBatchWrap" style="display:none; margin-top:8px; background:#eff8fd; border:1px solid #cbe6f5; border-radius:10px; padding:10px 12px;">
+        <label style="margin:0;">🔁 צור משבצות רצופות של 50 דק' עד שעה <span style="font-weight:400; color:#9B8E82;">(לא חובה)</span></label>
+        <input type="time" id="evtBatchUntil" style="margin-top:5px;">
+        <div style="font-size:11px; color:#5b7c8d; margin-top:5px; line-height:1.5;">לדוגמה: התחלה 13:10 + "עד" 16:00 → ייווצרו 13:10, 14:00, 14:50 (כל אחת 50 דק'), וכל הורה תופס משבצת.</div>
+      </div>
       <div id="evtNotesWrap" style="display:none;">
         <label>תוכן ההודעה <span style="font-weight:400; color:#9B8E82;">(אופציונלי)</span></label>
         <textarea id="evtNotes" rows="5" oninput="document.getElementById('evtCopyBtn').style.display = this.value.trim() ? 'inline-block' : 'none'" placeholder="הדביקי כאן את ההודעה המלאה לשליחה בקבוצת ההורים..." style="width:100%; box-sizing:border-box; font-family:'Heebo'; font-size:14px; padding:10px; border:1px solid #e0d8cf; border-radius:10px; resize:vertical; line-height:1.6;"></textarea>
@@ -180,6 +185,7 @@ const GARDEN_CATS = [
   { key:'הדרכת צוות',     color:'#2D5A50' },
   { key:'הדרכה פדגוגית',  color:'#ea580c' },
   { key:'ערב הורים',      color:'#C4846C' },
+  { key:'זמן הורים',      color:'#0ea5e9' },
   { key:'אירוע קהילה',    color:'#8b5cf6' },
   { key:'חופשה',         color:'#dc2626' },
   { key:'חוג',           color:'#3b82f6' },
@@ -193,6 +199,7 @@ const CAT_DEFAULTS = {
   'הדרכת צוות':   { s:'13:30', e:'14:30' },
   'הדרכה פדגוגית': { s:'08:00', e:'14:30' },
   'ערב הורים':    { s:'20:30', e:'22:00' },
+  'זמן הורים':    { s:'13:10', e:'14:00' },
   'חוג':         { s:'09:45', e:'10:45' },
   'חופשה':       { allDay:true },
   'הודעה בקבוצה':  { allDay:true },
@@ -252,6 +259,8 @@ function onCatChange() {
   applyCatDefaults();
   fillTitleSuggestions(cat);
   toggleNotesField(cat);
+  document.getElementById('evtBatchWrap').style.display = cat === 'זמן הורים' ? 'block' : 'none';
+  if (cat === 'זמן הורים') document.getElementById('evtTitle').value = 'זמן הורים'; // slot marker; auto-set
 }
 
 // Israeli holidays + special dates from the Hebrew calendar (Hebcal, Israel schedule)
@@ -350,6 +359,7 @@ function openEvt(dateStr) {
   document.getElementById('evtEndDate').value = dateStr;
   document.getElementById('evtTitle').value = '';
   document.getElementById('evtNotes').value = '';
+  document.getElementById('evtBatchUntil').value = '';
   document.getElementById('evtCopyBtn').style.display = 'none';
   onCatChange();
   document.getElementById('evtModal').classList.add('show');
@@ -357,7 +367,11 @@ function openEvt(dateStr) {
 function editEvt(id) {
   const e = gardenEvents.find(x => x.id === id);
   if (!e) return;
+  // A BOOKED "זמן הורים" slot (title = child, not the marker) -> show booking + cancel.
+  if (e.category === 'זמן הורים' && e.title && e.title !== 'זמן הורים') { showBookedSlot(e); return; }
   editingEvtId = id;
+  document.getElementById('evtBatchWrap').style.display = 'none';
+  document.getElementById('evtBatchUntil').value = '';
   document.getElementById('evtModalTitle').textContent = 'עריכת אירוע';
   document.getElementById('evtDelBtn').style.display = 'block';
   fillCats();
@@ -401,15 +415,27 @@ function dateRange(start, end) {
   while (d <= last && guard < 400) { out.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`); d.setDate(d.getDate() + 1); guard++; }
   return out;
 }
+// Build consecutive time slots ("13:10","14:00","14:50"...) of `mins` minutes,
+// from `start` up to (and not past) `until`.
+function buildSlots(start, until, mins) {
+  const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const toHHMM = v => String(Math.floor(v / 60)).padStart(2, '0') + ':' + String(v % 60).padStart(2, '0');
+  const out = []; let s = toMin(start); const u = toMin(until);
+  while (s + mins <= u) { out.push({ s: toHHMM(s), e: toHHMM(s + mins) }); s += mins; }
+  return out;
+}
+
 async function saveEvt() {
-  const title = document.getElementById('evtTitle').value.trim();
+  const cat = document.getElementById('evtCat').value;
+  const isPT = cat === 'זמן הורים';
+  let title = document.getElementById('evtTitle').value.trim();
+  if (isPT) title = 'זמן הורים';                        // slot marker = open
   const start = document.getElementById('evtDate').value;
   let end = document.getElementById('evtEndDate').value || start;
   if (!title || !start) { alert('צריך כותרת ותאריך'); return; }
   if (end < start) end = start;
   const base = {
-    calendar: 'garden', title,
-    category: document.getElementById('evtCat').value,
+    calendar: 'garden', title, category: cat,
     event_time: document.getElementById('evtTime').value || null,
     end_time: document.getElementById('evtEndTime').value || null,
     notes: document.getElementById('evtNotes').value.trim() || null,
@@ -417,12 +443,39 @@ async function saveEvt() {
   try {
     if (editingEvtId) {
       await api.updateEvent(editingEvtId, { ...base, event_date: start });
+    } else if (isPT && document.getElementById('evtBatchUntil').value) {
+      // create a whole run of 50-min slots per day
+      const times = buildSlots(base.event_time || '13:10', document.getElementById('evtBatchUntil').value, 50);
+      if (!times.length) { alert('שעת ה"עד" צריכה להיות מאוחרת יותר משעת ההתחלה'); return; }
+      for (const d of dateRange(start, end)) {
+        for (const t of times) await api.createEvent({ ...base, event_date: d, event_time: t.s, end_time: t.e });
+      }
     } else {
-      const dates = dateRange(start, end);
-      for (const d of dates) await api.createEvent({ ...base, event_date: d });
+      for (const d of dateRange(start, end)) await api.createEvent({ ...base, event_date: d });
     }
     closeEvt(); renderGarden(); loadTitleHistory();
   } catch (err) { alert('שגיאה בשמירה: ' + err.message); }
+}
+
+// Gan-side view of a booked "זמן הורים" slot: show who + topic, offer to cancel.
+async function showBookedSlot(e) {
+  let info = {}; try { info = JSON.parse(e.notes || '{}'); } catch (_) {}
+  const msg = [
+    '👪 פגישת "זמן הורים"',
+    'ילד/ה: ' + (info.child || e.title),
+    'מגיעים: ' + ((info.parents || []).join(', ') || '—'),
+    'נושא: ' + (info.topic || '— (לא צוין)'),
+    '', 'לבטל את השיבוץ ולפתוח את המשבצת מחדש?',
+  ].join('\n');
+  if (!confirm(msg)) return;
+  try {
+    await api.updateEvent(e.id, {
+      calendar: 'garden', category: 'זמן הורים', title: 'זמן הורים',
+      event_date: e.event_date, event_time: e.event_time, end_time: e.end_time, notes: null,
+    });
+    renderGarden();
+    alert('הפגישה בוטלה והמשבצת שוב פנויה 🙏 (שליחת מייל להורה תופעל אחרי חיבור המייל.)');
+  } catch (err) { alert('שגיאה: ' + err.message); }
 }
 async function delCurrentEvt() {
   if (!editingEvtId) return;
