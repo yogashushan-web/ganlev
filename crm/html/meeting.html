@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שיחה אישית — גן לב ❤️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; padding:18px; }
+    .wrap { max-width:680px; margin:0 auto; }
+    .hero { background:#FFF; border-radius:18px; padding:24px 22px; box-shadow:0 2px 14px rgba(0,0,0,0.06); margin-bottom:18px; }
+    .hero h1 { font-size:24px; color:#1F3D34; margin-bottom:10px; }
+    .hero p { font-size:15px; line-height:1.7; color:#5c5347; }
+    .hero .hint { font-size:13px; color:#9B8E82; margin-top:12px; }
+    .msg { padding:13px 15px; border-radius:12px; margin-bottom:16px; font-weight:600; display:none; }
+    .msg.show { display:block; }
+    .msg.ok { background:#dcfce7; color:#166534; }
+    .msg.err { background:#fdf0ef; color:#c94147; }
+
+    .day { background:#FFF; border-radius:16px; padding:16px 18px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:14px; }
+    .day h3 { font-size:16px; color:#1F3D34; margin-bottom:12px; border-bottom:2px solid #f0ece6; padding-bottom:9px; }
+    .slots { display:flex; flex-wrap:wrap; gap:9px; }
+    .slot { border:1.5px solid #cfe3d8; background:#f4faf6; color:#1F3D34; border-radius:11px; padding:10px 14px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; text-align:center; transition:all .15s; }
+    .slot:hover { background:#1F3D34; color:#fff; border-color:#1F3D34; transform:translateY(-1px); }
+    .slot .who { display:block; font-size:11px; font-weight:600; opacity:.75; margin-top:2px; }
+    .slot.taken { background:#f3f0eb; color:#bdb4a6; border-color:#e8e2d8; cursor:not-allowed; text-decoration:line-through; }
+    .slot.taken:hover { transform:none; }
+    .empty { text-align:center; color:#9B8E82; padding:36px 12px; font-size:15px; }
+
+    .ov { position:fixed; inset:0; background:rgba(31,61,52,.5); display:none; align-items:center; justify-content:center; z-index:99; padding:18px; }
+    .ov.show { display:flex; }
+    .modal { background:#fff; border-radius:18px; padding:24px; width:100%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .modal h2 { color:#1F3D34; font-size:19px; margin-bottom:4px; }
+    .modal .when { color:#9B8E82; font-size:14px; margin-bottom:16px; }
+    .modal label { display:block; font-size:13px; font-weight:700; color:#3D3228; margin:12px 0 6px; }
+    .modal input, .modal textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo'; font-size:15px; outline:none; text-align:right; }
+    .modal input:focus, .modal textarea:focus { border-color:#1F3D34; }
+    .mErr { color:#c94147; font-size:13px; font-weight:600; margin-top:10px; min-height:16px; }
+    .mBtns { display:flex; gap:10px; margin-top:18px; }
+    .ok { flex:1; background:#1F3D34; color:#fff; border:none; padding:13px; border-radius:12px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:15px; }
+    .ok:hover { background:#154428; }
+    .ok:disabled { background:#9aa7a0; cursor:progress; }
+    .cancel { background:#f0ece6; color:#333; border:none; padding:13px 20px; border-radius:12px; cursor:pointer; font-family:'Heebo'; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>❤️ שיחה אישית — גן לב</h1>
+      <p>אנחנו רואים בשיחות האלה הזדמנות לעצור רגע, לסגור ולארוז יחד את השנה שעברה עלינו, להסתכל אחורה על הדרך שכל ילד ומשפחה עברו השנה, ואם יש רצון גם לדבר על השנה הבאה ועל המעבר שמתקרב.</p>
+      <p class="hint">בחרו זמן שנוח לכם מהשעות הפנויות למטה 👇 אם לא מצאתם זמן מתאים, כתבו לנו בפרטי ונמצא יחד.</p>
+    </div>
+
+    <div id="msg" class="msg"></div>
+    <div id="days"><div class="empty">טוען שעות פנויות…</div></div>
+  </div>
+
+  <div class="ov" id="ov">
+    <div class="modal">
+      <h2>השתבצות לשיחה</h2>
+      <div class="when" id="mWhen"></div>
+      <label>שם הילד/ה</label>
+      <input id="child" list="kids" autocomplete="off" placeholder="התחילו להקליד את השם…">
+      <datalist id="kids"></datalist>
+      <label>נושא השיחה <span style="font-weight:400;color:#9B8E82;">(לא חובה)</span></label>
+      <textarea id="topic" rows="3" placeholder="משהו שתרצו שנתייחס אליו? אפשר גם להשאיר ריק"></textarea>
+      <div class="mErr" id="mErr"></div>
+      <div class="mBtns">
+        <button class="ok" id="okBtn">אישור השתבצות</button>
+        <button class="cancel" onclick="closeOv()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API = '/.netlify/functions/meetings';
+const DOW = ['יום ראשון','יום שני','יום שלישי','יום רביעי','יום חמישי','יום שישי','שבת'];
+const MON = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+let slots = [], selected = null;
+const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
+
+function fmtDay(d) {
+  const dt = new Date(d + 'T00:00:00');
+  return DOW[dt.getDay()] + ' · ' + dt.getDate() + ' ב' + MON[dt.getMonth()];
+}
+function showMsg(text, kind) {
+  const el = document.getElementById('msg');
+  el.textContent = text; el.className = 'msg show ' + kind;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function load() {
+  try {
+    const r = await fetch(API);
+    const d = await r.json();
+    slots = d.slots || [];
+    document.getElementById('kids').innerHTML = (d.children || []).map(n => `<option value="${esc(n)}">`).join('');
+    render();
+  } catch (e) {
+    document.getElementById('days').innerHTML = '<div class="empty">שגיאה בטעינה. נסו לרענן את הדף 🙏</div>';
+  }
+}
+
+function render() {
+  const open = slots.filter(s => !s.taken);
+  if (!open.length) {
+    document.getElementById('days').innerHTML = '<div class="empty">אין כרגע שעות פנויות. אם כולן נתפסו — כתבו לנו בפרטי ונמצא זמן 🙏</div>';
+    return;
+  }
+  const byDay = {};
+  slots.forEach(s => { (byDay[s.date] = byDay[s.date] || []).push(s); });
+  const days = Object.keys(byDay).sort();
+  document.getElementById('days').innerHTML = days.map(date => {
+    const daySlots = byDay[date].filter(s => !s.taken);   // show only open slots
+    if (!daySlots.length) return '';
+    const chips = daySlots.map(s =>
+      `<div class="slot" onclick="openBook('${s.id}')">${s.time}${s.end ? '–' + s.end : ''}${s.with ? `<span class="who">עם ${esc(s.with)}</span>` : ''}</div>`
+    ).join('');
+    return `<div class="day"><h3>${fmtDay(date)}</h3><div class="slots">${chips}</div></div>`;
+  }).join('');
+}
+
+function openBook(id) {
+  selected = slots.find(s => s.id === id);
+  if (!selected) return;
+  document.getElementById('mWhen').textContent =
+    fmtDay(selected.date) + ' · ' + selected.time + (selected.end ? '–' + selected.end : '') + (selected.with ? ' · עם ' + selected.with : '');
+  document.getElementById('child').value = '';
+  document.getElementById('topic').value = '';
+  document.getElementById('mErr').textContent = '';
+  document.getElementById('ov').classList.add('show');
+  setTimeout(() => document.getElementById('child').focus(), 100);
+}
+function closeOv() { document.getElementById('ov').classList.remove('show'); }
+
+async function book() {
+  const child = document.getElementById('child').value.trim();
+  const topic = document.getElementById('topic').value.trim();
+  if (!child) { document.getElementById('mErr').textContent = 'בבקשה בחרו את שם הילד/ה'; return; }
+  const btn = document.getElementById('okBtn');
+  btn.disabled = true; btn.textContent = 'משבץ…';
+  try {
+    const r = await fetch(API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slot_id: selected.id, child_name: child, topic }),
+    });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.error || 'שגיאה');
+    closeOv();
+    showMsg('✅ נשמר! נתראה ב' + fmtDay(d.slot.date) + ' בשעה ' + d.slot.time + (d.slot.with ? ' עם ' + d.slot.with : '') + '. תודה ❤️', 'ok');
+    await load();
+  } catch (e) {
+    document.getElementById('mErr').textContent = e.message;
+    btn.disabled = false; btn.textContent = 'אישור השתבצות';
+  }
+}
+document.getElementById('okBtn').addEventListener('click', book);
+
+load();
+</script>
+</body>
+</html>
