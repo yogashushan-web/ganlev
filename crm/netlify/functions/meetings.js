@@ -39,13 +39,19 @@ exports.handler = async (event) => {
         const parents = (data || []).map(p => (p.full_name_he || '').replace(/\s*\(.*\)\s*$/, '').trim()).filter(Boolean);
         return json(200, { success: true, parents });
       }
-      const today = new Date().toISOString().slice(0, 10);
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
+      // current school year (Sep-Aug), e.g. '2025-26' — the booking list shows only
+      // this year's families (kids starting next September are excluded).
+      const startYr = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+      const curYear = startYr + '-' + String(startYr + 1).slice(2);
       const [slotsRes, kidsRes] = await Promise.all([
         supabase.from('events').select('id,event_date,event_time,end_time,title')
           .eq('garden_id', gid).eq('calendar', 'garden').eq('category', CAT).gte('event_date', today)
           .order('event_date', { ascending: true }).order('event_time', { ascending: true }),
         supabase.from('children').select('id,first_name_he,last_name_he')
-          .eq('garden_id', gid).eq('status', 'active'),
+          .eq('garden_id', gid).eq('status', 'active')
+          .or(`school_year.eq.${curYear},school_year.is.null`),
       ]);
       // OPEN slot has title === CAT ('זמן הורים'); BOOKED has title = child name.
       const slots = (slotsRes.data || []).map(s => {
