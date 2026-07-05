@@ -4,6 +4,7 @@
 // DELETE /documents/:id?garden_id=
 // Files are stored in the Supabase Storage bucket "documents" (public).
 
+const crypto = require('crypto');
 const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
 
@@ -34,7 +35,21 @@ const handler = withAuth(async (event) => {
       if (file_base64) {
         const buffer = Buffer.from(file_base64, 'base64');
         const safe = (file_name || 'file').replace(/[^\w.\-]/g, '_');
-        file_path = `${garden_id}/${Date.now()}_${safe}`;
+
+        // Album: dedup identical photos per child. The object is named by its
+        // content hash, so re-uploading the same image resolves to the same path.
+        if (sec === 'album') {
+          const hash = crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 40);
+          file_path = `${garden_id}/album/${category || 'x'}/${hash}.jpg`;
+          const { data: dupe } = await supabase.from('documents')
+            .select('id').eq('garden_id', garden_id).eq('file_path', file_path).limit(1);
+          if (dupe && dupe.length) {
+            return { statusCode: 200, body: JSON.stringify({ success: true, duplicate: true }) };
+          }
+        } else {
+          file_path = `${garden_id}/${Date.now()}_${safe}`;
+        }
+
         const { error: upErr } = await supabase.storage.from('documents').upload(file_path, buffer, {
           contentType: content_type || 'application/octet-stream',
           upsert: true,

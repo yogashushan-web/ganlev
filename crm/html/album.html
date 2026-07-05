@@ -235,26 +235,27 @@ function setBusy(childId, busy, msg) {
 async function handleFiles(childId, fileList) {
   const files = [...fileList].filter(f => (f.type && f.type.startsWith('image/')) || isHeic(f));
   if (!files.length) { alert('לא נמצאו תמונות בגרירה (רק קבצי תמונה נתמכים).'); return; }
-  let done = 0;
+  let done = 0, dups = 0;
   setBusy(childId, true, `מעלה 0/${files.length}...`);
   for (const f of files) {
     try {
-      if (isHeic(f)) setBusy(childId, true, `ממיר תמונה ${done + 1}/${files.length}...`);
+      if (isHeic(f)) setBusy(childId, true, `ממיר תמונה ${done + dups + 1}/${files.length}...`);
       const usable = await heicToJpeg(f);   // iPhone HEIC -> JPEG (server-side)
-      setBusy(childId, true, `מעלה ${done + 1}/${files.length}...`);
+      setBusy(childId, true, `מעלה ${done + dups + 1}/${files.length}...`);
       const b64 = await resizeImage(usable);
-      await api.uploadDocument({
+      const res = await api.uploadDocument({
         section: SECTION, category: childId,
         title: f.name || 'תמונה', file_base64: b64,
         file_name: (f.name || 'photo') + '.jpg', content_type: 'image/jpeg',
       });
-      done++;
-      setBusy(childId, true, `מעלה ${done}/${files.length}...`);
+      if (res && res.duplicate) dups++; else done++;   // identical photo -> skipped, not counted
+      setBusy(childId, true, `מעלה ${done + dups}/${files.length}...`);
     } catch (e) {
       console.error('upload failed', e);
       alert('שגיאה בהעלאת תמונה אחת: ' + e.message);
     }
   }
+  if (dups) alert(dups === 1 ? 'תמונה אחת כבר הייתה באלבום — דילגנו עליה.' : `${dups} תמונות כבר היו באלבום — דילגנו עליהן.`);
   await load();
 }
 
