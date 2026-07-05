@@ -38,6 +38,14 @@
     .modal label { display:block; font-size:13px; font-weight:700; color:#3D3228; margin:14px 0 6px; }
     .modal input[type=text], .modal textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo'; font-size:15px; outline:none; text-align:right; }
     .modal input:focus, .modal textarea:focus { border-color:#1F3D34; }
+    .ac { position:relative; }
+    .ac-list { position:absolute; top:100%; right:0; left:0; background:#fff; border:1.5px solid #e3ddd2; border-top:none; border-radius:0 0 12px 12px; max-height:230px; overflow:auto; z-index:5; display:none; box-shadow:0 10px 24px rgba(0,0,0,.13); }
+    .ac-list.show { display:block; }
+    .ac-item { padding:12px 14px; cursor:pointer; font-size:16px; border-bottom:1px solid #f4efe6; }
+    .ac-item:last-child { border-bottom:none; }
+    .ac-item:active, .ac-item:hover { background:#f4faf6; color:#1F3D34; }
+    .ac-item b { color:#1F3D34; }
+    .ac-empty { padding:12px 14px; color:#9B8E82; font-size:14px; }
     .parents { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
     .pchk { display:flex; align-items:center; gap:9px; background:#FAF8F4; border:1.5px solid #eee6da; border-radius:10px; padding:10px 12px; cursor:pointer; font-size:15px; font-weight:600; }
     .pchk input { width:18px; height:18px; accent-color:#1F3D34; }
@@ -67,8 +75,10 @@
       <div class="when" id="mWhen"></div>
 
       <label>שם הילד/ה</label>
-      <input type="text" id="child" list="kids" autocomplete="off" placeholder="התחילו להקליד את השם…">
-      <datalist id="kids"></datalist>
+      <div class="ac">
+        <input type="text" id="child" autocomplete="off" placeholder="התחילו להקליד את השם…">
+        <div class="ac-list" id="acList"></div>
+      </div>
 
       <div id="parentsWrap" style="display:none;">
         <label>מי מההורים מגיע/ים? <span style="font-weight:400;color:#9B8E82;">(סמנו)</span></label>
@@ -105,7 +115,6 @@ async function load() {
   try {
     const d = await (await fetch(API)).json();
     slots = d.slots || []; children = d.children || [];
-    document.getElementById('kids').innerHTML = children.map(c => `<option value="${esc(c.name)}">`).join('');
     render();
   } catch (e) {
     document.getElementById('days').innerHTML = '<div class="empty">שגיאה בטעינה. נסו לרענן 🙏</div>';
@@ -134,6 +143,7 @@ function openBook(id) {
   selected = slots.find(s => s.id === id); if (!selected) return;
   document.getElementById('mWhen').textContent = fmtDay(selected.date) + ' · ' + selected.time + (selected.end ? '–' + selected.end : '');
   document.getElementById('child').value = '';
+  document.getElementById('acList').className = 'ac-list';
   document.getElementById('topic').value = '';
   document.getElementById('mErr').textContent = '';
   document.getElementById('parentsWrap').style.display = 'none';
@@ -143,11 +153,29 @@ function openBook(id) {
 }
 function closeOv() { document.getElementById('ov').classList.remove('show'); }
 
-// when a child is chosen, pull the child's parents for the "who's coming" checkboxes
+// ---- custom child-name autocomplete + load that child's parents ----
+const childInput = document.getElementById('child');
+const acList = document.getElementById('acList');
 let parentReqSeq = 0;
-document.getElementById('child').addEventListener('input', async () => {
-  const val = document.getElementById('child').value.trim();
-  const kid = children.find(c => c.name === val);
+
+function highlight(name, q) {
+  const i = name.indexOf(q);
+  if (i < 0) return esc(name);
+  return esc(name.slice(0, i)) + '<b>' + esc(name.slice(i, i + q.length)) + '</b>' + esc(name.slice(i + q.length));
+}
+function renderAc() {
+  const q = childInput.value.trim();
+  if (!q) { acList.className = 'ac-list'; acList.innerHTML = ''; return; }
+  const m = children.filter(c => c.name.includes(q)).slice(0, 15);
+  acList.className = 'ac-list show';
+  acList.innerHTML = m.length
+    ? m.map(c => `<div class="ac-item" data-name="${esc(c.name)}">${highlight(c.name, q)}</div>`).join('')
+    : '<div class="ac-empty">לא נמצא ילד/ה בשם הזה</div>';
+}
+function pickChild(name) { childInput.value = name; acList.className = 'ac-list'; loadParentsFor(name); }
+
+async function loadParentsFor(name) {
+  const kid = children.find(c => c.name === (name || '').trim());
   const wrap = document.getElementById('parentsWrap'), box = document.getElementById('parents');
   if (!kid) { wrap.style.display = 'none'; box.innerHTML = ''; return; }
   const seq = ++parentReqSeq;
@@ -156,10 +184,20 @@ document.getElementById('child').addEventListener('input', async () => {
     const d = await (await fetch(API + '?parents_for=' + encodeURIComponent(kid.id))).json();
     if (seq !== parentReqSeq) return;
     const ps = d.parents || [];
-    if (!ps.length) { box.innerHTML = '<div class="pnote">לא נמצאו הורים רשומים — אפשר להמשיך בלי לסמן.</div>'; return; }
-    box.innerHTML = ps.map((p, i) => `<label class="pchk"><input type="checkbox" class="pcheck" value="${esc(p)}" checked> ${esc(p)}</label>`).join('');
+    box.innerHTML = ps.length
+      ? ps.map(p => `<label class="pchk"><input type="checkbox" class="pcheck" value="${esc(p)}" checked> ${esc(p)}</label>`).join('')
+      : '<div class="pnote">לא נמצאו הורים רשומים — אפשר להמשיך בלי לסמן.</div>';
   } catch (e) { box.innerHTML = '<div class="pnote">לא הצלחנו לטעון הורים — אפשר להמשיך.</div>'; }
+}
+
+childInput.addEventListener('input', () => { renderAc(); loadParentsFor(childInput.value); });
+childInput.addEventListener('focus', renderAc);
+childInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); const f = acList.querySelector('.ac-item'); if (f) pickChild(f.dataset.name); }
 });
+// mousedown (not click) so the pick registers before the input loses focus
+acList.addEventListener('mousedown', e => { const it = e.target.closest('.ac-item'); if (it) { e.preventDefault(); pickChild(it.dataset.name); } });
+document.addEventListener('click', e => { if (!e.target.closest('.ac')) acList.className = 'ac-list'; });
 
 async function book() {
   const child = document.getElementById('child').value.trim();
