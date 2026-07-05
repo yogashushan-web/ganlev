@@ -95,6 +95,10 @@ const MAXDIM = 1600;          // resize cap (good for a printed book)
 const QUALITY = 0.85;
 const esc = s => (s || '').replace(/</g, '&lt;');
 
+// Current school year (Sep-Aug), e.g. '2025-26' — the album is for this year's kids only.
+function curSchoolYear() { const d = new Date(); const s = d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1; return s + '-' + String(s + 1).slice(2); }
+const CUR_YEAR = curSchoolYear();
+
 let children = [];           // active children, sorted by name
 let photosByChild = {};      // child_id -> [ {id, file_url} ]
 
@@ -111,7 +115,7 @@ async function load() {
       api.getDocuments(SECTION),
     ]);
     children = (ch.data || [])
-      .filter(c => c.status === 'active')
+      .filter(c => c.status === 'active' && (c.school_year || CUR_YEAR) === CUR_YEAR)   // this year's kids only
       // by age: oldest first (earliest birth date). Children without a birth date go last, then by name.
       .sort((a, b) => {
         if (a.birth_date && b.birth_date) return a.birth_date.localeCompare(b.birth_date);
