@@ -27,6 +27,48 @@ async function emailGan(subject, message) {
   } catch (e) { console.error('email failed', e); }
 }
 
+const icsEsc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+const stampUTC = () => new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+const localDT = (date, time) => date.replace(/-/g, '') + 'T' + (time || '13:10').replace(':', '') + '00';
+
+function buildICS(method, uid, date, time, endTime, summary, description) {
+  return [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Gan Lev//Meetings//HE', `METHOD:${method}`, 'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `UID:zman-horim-${uid}@ganlev.netlify.app`,
+    `DTSTAMP:${stampUTC()}`,
+    `DTSTART:${localDT(date, time)}`,
+    `DTEND:${localDT(date, endTime || time)}`,
+    `SUMMARY:${icsEsc(summary)}`,
+    `DESCRIPTION:${icsEsc(description)}`,
+    `SEQUENCE:${method === 'CANCEL' ? 1 : 0}`,
+    `STATUS:${method === 'CANCEL' ? 'CANCELLED' : 'CONFIRMED'}`,
+    ...(method === 'CANCEL' ? [] : ['BEGIN:VALARM', 'TRIGGER:-PT15M', 'ACTION:DISPLAY', 'DESCRIPTION:תזכורת פגישה', 'END:VALARM']),
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+}
+
+// Send a calendar invite (or cancellation) to the owner's personal Google Calendar.
+async function sendCalendarInvite(method, slotId, date, time, endTime, child, topic, parents) {
+  const user = process.env.GMAIL_USER, pass = process.env.GMAIL_APP_PASSWORD;
+  if (!user || !pass) return;                 // not configured yet -> silently skip
+  const to = process.env.PERSONAL_CAL_EMAIL || user;
+  const summary = 'זמן הורים — ' + (child || '');
+  const desc = ['פגישת זמן הורים', child ? 'ילד/ה: ' + child : '', topic ? 'נושא: ' + topic : '', (parents && parents.length) ? 'מגיעים: ' + parents.join(', ') : '']
+    .filter(Boolean).join('\n');
+  const ics = buildICS(method, slotId, date, time, endTime, summary, desc);
+  try {
+    const nodemailer = require('nodemailer');
+    const t = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
+    await t.sendMail({
+      from: user, to,
+      subject: (method === 'CANCEL' ? '❌ בוטלה — ' : '📅 ') + summary + ` (${date} ${time || ''})`,
+      text: (method === 'CANCEL' ? 'הפגישה בוטלה ותוסר מהיומן.' : 'פגישת "זמן הורים" נקבעה ונוספה ליומן שלך.') + `\n${summary} · ${date} ${time || ''}`,
+      icalEvent: { method, content: ics },
+    });
+  } catch (e) { console.error('calendar invite failed', e); }
+}
+
 exports.handler = async (event) => {
   const q = event.queryStringParameters || {};
   const gid = q.garden_id || GARDEN_DEFAULT;
@@ -69,7 +111,7 @@ exports.handler = async (event) => {
       const b = JSON.parse(event.body || '{}');
 
       if (b.action === 'cancel') {
-        const { data: row } = await supabase.from('events').select('id,title,notes,event_date,event_time')
+        const { data: row } = await supabase.from('events').select('id,title,notes,event_date,event_time,end_time')
           .eq('id', b.slot_id).eq('garden_id', gid).maybeSingle();
         if (!row || !row.title || row.title === CAT) return json(409, { success: false, error: 'הפגישה כבר אינה משובצת' });
         let info = {}; try { info = JSON.parse(row.notes || '{}'); } catch (e) {}
@@ -79,6 +121,7 @@ exports.handler = async (event) => {
         await supabase.from('events').update({ title: CAT, notes: null }).eq('id', b.slot_id);
         await emailGan('הורה ביטל פגישת "זמן הורים"',
           `${info.child || row.title} ביטל/ה את הפגישה שהייתה ב-${row.event_date} בשעה ${hhmm(row.event_time)}.`);
+        await sendCalendarInvite('CANCEL', row.id, row.event_date, hhmm(row.event_time), hhmm(row.end_time), info.child || row.title);
         return json(200, { success: true });
       }
 
@@ -101,10 +144,12 @@ exports.handler = async (event) => {
       const { data, error } = await supabase.from('events')
         .update({ title: b.child_name, notes })
         .eq('id', b.slot_id).eq('garden_id', gid).eq('category', CAT).eq('title', CAT)
-        .select('id,event_date,event_time');
+        .select('id,event_date,event_time,end_time');
       if (error) throw error;
       if (!data || !data.length) return json(409, { success: false, error: 'אופס — המשבצת נתפסה זה עתה. בחרו משבצת אחרת 🙏' });
-      return json(200, { success: true, cancel_token, slot: { date: data[0].event_date, time: hhmm(data[0].event_time) } });
+      const s = data[0];
+      await sendCalendarInvite('REQUEST', s.id, s.event_date, hhmm(s.event_time), hhmm(s.end_time), b.child_name, b.topic, b.parents);
+      return json(200, { success: true, cancel_token, slot: { date: s.event_date, time: hhmm(s.event_time) } });
     }
 
     return json(405, { success: false, error: 'Method not allowed' });
