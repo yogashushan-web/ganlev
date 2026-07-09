@@ -127,10 +127,13 @@ exports.handler = async (event) => {
 
       // book
       if (!b.slot_id || !b.child_name) return json(400, { success: false, error: 'חסר שם ילד/ה' });
-      // one meeting per child
+      // one UPCOMING meeting per child — past (completed) meetings must not block a
+      // new booking in a later round, so mirror the slot list's future-only filter.
       if (b.child_id) {
+        const today = new Date().toISOString().slice(0, 10);
         const { data: booked } = await supabase.from('events').select('notes')
-          .eq('garden_id', gid).eq('calendar', 'garden').eq('category', CAT).neq('title', CAT);
+          .eq('garden_id', gid).eq('calendar', 'garden').eq('category', CAT).neq('title', CAT)
+          .gte('event_date', today);
         const dup = (booked || []).some(e => { try { return JSON.parse(e.notes || '{}').child_id === b.child_id; } catch (_) { return false; } });
         if (dup) return json(409, { success: false, error: 'כבר קבועה פגישה לילד/ה הזה. אפשר לבטל אותה ולשבץ מחדש.' });
       }
