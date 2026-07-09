@@ -329,7 +329,9 @@ async function renderGarden() {
       chips += `<div class="ev-chip" style="background:#fce7f3;color:#9d2463;" title="יום הולדת ילד">🎂 ${esc(b.name)}</div>`);
     staffBdays.filter(b => b.day === d).forEach(b =>
       chips += `<div class="ev-chip" style="background:#dcfce7;color:#166534;" title="יום הולדת צוות">🎂 ${esc(b.name)}</div>`);
-    events.filter(e => e.event_date === dateStr).forEach(e => {
+    events.filter(e => e.event_date === dateStr)
+      .sort((a, b) => (a.event_time || '99:99').localeCompare(b.event_time || '99:99'))
+      .forEach(e => {
       const c = catColor(e.category);
       const tt = e.event_time ? (e.event_time.slice(0,5) + (e.end_time ? '-' + e.end_time.slice(0,5) : '') + ' ') : '';
       chips += `<div class="ev-chip" style="background:${c}22;color:${c};border-right:3px solid ${c};" title="${esc(e.title)} — לחיצה לעריכה" onclick="event.stopPropagation(); editEvt('${e.id}')">${tt}${esc(e.title)}</div>`;
