@@ -152,8 +152,8 @@ exports.handler = async (event) => {
       if (error) throw error;
       if (!data || !data.length) return json(409, { success: false, error: 'אופס — המשבצת נתפסה זה עתה. בחרו משבצת אחרת 🙏' });
       const s = data[0];
-      const invite = await sendCalendarInvite('REQUEST', s.id, s.event_date, hhmm(s.event_time), hhmm(s.end_time), b.child_name, b.topic, b.parents);
-      return json(200, { success: true, cancel_token, slot: { date: s.event_date, time: hhmm(s.event_time) }, invite });
+      await sendCalendarInvite('REQUEST', s.id, s.event_date, hhmm(s.event_time), hhmm(s.end_time), b.child_name, b.topic, b.parents);
+      return json(200, { success: true, cancel_token, slot: { date: s.event_date, time: hhmm(s.event_time) } });
     }
 
     return json(405, { success: false, error: 'Method not allowed' });
