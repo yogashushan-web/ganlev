@@ -31,7 +31,7 @@ const icsEsc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;'
 const stampUTC = () => new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 const localDT = (date, time) => date.replace(/-/g, '') + 'T' + (time || '13:10').replace(':', '') + '00';
 
-function buildICS(method, uid, date, time, endTime, summary, description) {
+function buildICS(method, uid, date, time, endTime, summary, description, organizer, attendee) {
   return [
     'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Gan Lev//Meetings//HE', `METHOD:${method}`, 'CALSCALE:GREGORIAN',
     'BEGIN:VEVENT',
@@ -41,6 +41,8 @@ function buildICS(method, uid, date, time, endTime, summary, description) {
     `DTEND:${localDT(date, endTime || time)}`,
     `SUMMARY:${icsEsc(summary)}`,
     `DESCRIPTION:${icsEsc(description)}`,
+    `ORGANIZER;CN=גן לב:mailto:${organizer}`,
+    `ATTENDEE;CN=${attendee};ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:${attendee}`,
     `SEQUENCE:${method === 'CANCEL' ? 1 : 0}`,
     `STATUS:${method === 'CANCEL' ? 'CANCELLED' : 'CONFIRMED'}`,
     ...(method === 'CANCEL' ? [] : ['BEGIN:VALARM', 'TRIGGER:-PT15M', 'ACTION:DISPLAY', 'DESCRIPTION:תזכורת פגישה', 'END:VALARM']),
@@ -56,7 +58,7 @@ async function sendCalendarInvite(method, slotId, date, time, endTime, child, to
   const summary = 'זמן הורים — ' + (child || '');
   const desc = ['פגישת זמן הורים', child ? 'ילד/ה: ' + child : '', topic ? 'נושא: ' + topic : '', (parents && parents.length) ? 'מגיעים: ' + parents.join(', ') : '']
     .filter(Boolean).join('\n');
-  const ics = buildICS(method, slotId, date, time, endTime, summary, desc);
+  const ics = buildICS(method, slotId, date, time, endTime, summary, desc, user, to);
   try {
     const nodemailer = require('nodemailer');
     const t = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
