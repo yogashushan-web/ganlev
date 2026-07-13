@@ -51,7 +51,7 @@ function buildICS(method, uid, date, time, endTime, summary, description) {
 // Send a calendar invite (or cancellation) to the owner's personal Google Calendar.
 async function sendCalendarInvite(method, slotId, date, time, endTime, child, topic, parents) {
   const user = process.env.GMAIL_USER, pass = process.env.GMAIL_APP_PASSWORD;
-  if (!user || !pass) return;                 // not configured yet -> silently skip
+  if (!user || !pass) return { ok: false, reason: 'missing_env', has_user: !!user, has_pass: !!pass };
   const to = process.env.PERSONAL_CAL_EMAIL || user;
   const summary = 'זמן הורים — ' + (child || '');
   const desc = ['פגישת זמן הורים', child ? 'ילד/ה: ' + child : '', topic ? 'נושא: ' + topic : '', (parents && parents.length) ? 'מגיעים: ' + parents.join(', ') : '']
@@ -66,7 +66,8 @@ async function sendCalendarInvite(method, slotId, date, time, endTime, child, to
       text: (method === 'CANCEL' ? 'הפגישה בוטלה ותוסר מהיומן.' : 'פגישת "זמן הורים" נקבעה ונוספה ליומן שלך.') + `\n${summary} · ${date} ${time || ''}`,
       icalEvent: { method, content: ics },
     });
-  } catch (e) { console.error('calendar invite failed', e); }
+    return { ok: true };
+  } catch (e) { console.error('calendar invite failed', e); return { ok: false, reason: 'send_failed', error: String(e && e.message) }; }
 }
 
 exports.handler = async (event) => {
@@ -151,8 +152,8 @@ exports.handler = async (event) => {
       if (error) throw error;
       if (!data || !data.length) return json(409, { success: false, error: 'אופס — המשבצת נתפסה זה עתה. בחרו משבצת אחרת 🙏' });
       const s = data[0];
-      await sendCalendarInvite('REQUEST', s.id, s.event_date, hhmm(s.event_time), hhmm(s.end_time), b.child_name, b.topic, b.parents);
-      return json(200, { success: true, cancel_token, slot: { date: s.event_date, time: hhmm(s.event_time) } });
+      const invite = await sendCalendarInvite('REQUEST', s.id, s.event_date, hhmm(s.event_time), hhmm(s.end_time), b.child_name, b.topic, b.parents);
+      return json(200, { success: true, cancel_token, slot: { date: s.event_date, time: hhmm(s.event_time) }, invite });
     }
 
     return json(405, { success: false, error: 'Method not allowed' });
