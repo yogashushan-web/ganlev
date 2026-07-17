@@ -5,6 +5,7 @@
 
 const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
+const { syncEventToCalendar } = require('./lib/calendar');
 
 const handler = withAuth(async (event) => {
   try {
@@ -42,6 +43,7 @@ const handler = withAuth(async (event) => {
       }).select().single();
       if (error) throw error;
       await auditLog(garden_id, user.id, 'created', 'events', data.id, { title, event_date });
+      await syncEventToCalendar('REQUEST', data);
       return { statusCode: 201, body: JSON.stringify({ success: true, data }) };
     }
 
@@ -50,6 +52,7 @@ const handler = withAuth(async (event) => {
       const { data, error } = await supabase.from('events')
         .update(body).eq('id', eventId).eq('garden_id', garden_id).select().single();
       if (error) throw error;
+      await syncEventToCalendar('REQUEST', data);
       return { statusCode: 200, body: JSON.stringify({ success: true, data }) };
     }
 
@@ -58,6 +61,7 @@ const handler = withAuth(async (event) => {
         .delete().eq('id', eventId).eq('garden_id', garden_id).select().single();
       if (error) throw error;
       await moveToTrash('events', data, garden_id);
+      await syncEventToCalendar('CANCEL', data);
       return { statusCode: 200, body: JSON.stringify({ success: true, data }) };
     }
 
