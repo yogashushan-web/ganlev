@@ -107,4 +107,36 @@ async function syncBirthdayToCalendar(person) {
   } catch (e) { console.error('birthday sync failed', e); }
 }
 
-module.exports = { syncEventToCalendar, syncBirthdayToCalendar };
+// Remove a person's birthday from the calendar (e.g. staff turned inactive / deleted).
+async function cancelBirthdayFromCalendar(person) {
+  const user = process.env.GMAIL_USER, pass = process.env.GMAIL_APP_PASSWORD;
+  if (!user || !pass || !person || !person.id) return;
+  const to = process.env.PERSONAL_CAL_EMAIL || user;
+  const parts = String(person.birth_date || '').split('-').map(Number);
+  const m = parts[1] || 1, d = parts[2] || 1;
+  let startYr;
+  const sy = person.school_year;
+  if (person.type === 'child' && sy && /^\d{4}-\d{2}$/.test(sy)) startYr = parseInt(sy.slice(0, 4), 10);
+  else startYr = schoolYearStart(new Date());
+  const year = m >= 9 ? startYr : startYr + 1;
+  const start = '' + year + pad(m) + pad(d);
+  const dEnd = new Date(Date.UTC(year, m - 1, d + 1));
+  const end = '' + dEnd.getUTCFullYear() + pad(dEnd.getUTCMonth() + 1) + pad(dEnd.getUTCDate());
+  const summary = '🎂 יום הולדת — ' + (person.name || '');
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Gan Lev//Birthdays//HE', 'METHOD:CANCEL', 'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT', 'UID:bday-' + (person.type || 'x') + '-' + person.id + '@ganlev.netlify.app',
+    'DTSTAMP:' + stampUTC(), 'DTSTART;VALUE=DATE:' + start, 'DTEND;VALUE=DATE:' + end,
+    'SUMMARY:' + icsEsc(summary),
+    'ORGANIZER;CN=גן לב:mailto:' + user,
+    'ATTENDEE;CN=' + to + ';ROLE=REQ-PARTICIPANT:mailto:' + to,
+    'SEQUENCE:' + Math.floor(Date.now() / 1000), 'STATUS:CANCELLED', 'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+  try {
+    const nodemailer = require('nodemailer');
+    const t = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
+    await t.sendMail({ from: 'גן לב <' + user + '>', to, subject: '❌ ' + summary, text: 'בוטל', icalEvent: { method: 'CANCEL', content: ics } });
+  } catch (e) { console.error('birthday cancel failed', e); }
+}
+
+module.exports = { syncEventToCalendar, syncBirthdayToCalendar, cancelBirthdayFromCalendar };

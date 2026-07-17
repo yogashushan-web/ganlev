@@ -6,7 +6,7 @@
 
 const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
-const { syncBirthdayToCalendar } = require('./lib/calendar');
+const { syncBirthdayToCalendar, cancelBirthdayFromCalendar } = require('./lib/calendar');
 
 const handler = withAuth(async (event) => {
   try {
@@ -108,6 +108,11 @@ const handler = withAuth(async (event) => {
 
       await auditLog(garden_id, user.id, 'updated', 'staff', staffId, body);
 
+      // active staff -> birthday shows; inactive/archived -> remove it from the calendar
+      const person = { id: data.id, name: data.full_name_he, birth_date: data.birth_date, type: 'staff' };
+      if (data.status === 'active') await syncBirthdayToCalendar(person);
+      else await cancelBirthdayFromCalendar(person);
+
       return {
         statusCode: 200,
         body: JSON.stringify({ success: true, data }),
@@ -128,6 +133,7 @@ const handler = withAuth(async (event) => {
 
       await moveToTrash('staff', data, garden_id);
       await auditLog(garden_id, user.id, 'deleted', 'staff', staffId, {});
+      await cancelBirthdayFromCalendar({ id: data.id, name: data.full_name_he, birth_date: data.birth_date, type: 'staff' });
 
       return {
         statusCode: 200,
