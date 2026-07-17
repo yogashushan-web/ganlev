@@ -189,6 +189,7 @@ const GARDEN_CATS = [
   { key:'אירוע קהילה',    color:'#8b5cf6' },
   { key:'חופשה',         color:'#dc2626' },
   { key:'חוג',           color:'#3b82f6' },
+  { key:'יום הולדת',      color:'#f59e0b' },
   { key:'יום הולדת ילד',  color:'#ec4899' },
   { key:'יום הולדת צוות', color:'#16a34a' },
   { key:'הודעה בקבוצה',   color:'#0d9488' },
@@ -202,6 +203,7 @@ const CAT_DEFAULTS = {
   'זמן הורים':    { s:'13:10', e:'14:00' },
   'חוג':         { s:'09:45', e:'10:45' },
   'חופשה':       { allDay:true },
+  'יום הולדת':    { allDay:true },
   'הודעה בקבוצה':  { allDay:true },
 };
 // fixed title options offered for a category (shown alongside previously-used titles)
@@ -349,7 +351,7 @@ async function renderGarden() {
 // modal
 function fillCats() {
   document.getElementById('evtCat').innerHTML = GARDEN_CATS
-    .filter(c => !c.key.includes('יום הולדת'))
+    .filter(c => c.key !== 'יום הולדת ילד' && c.key !== 'יום הולדת צוות')  // hide only the auto-computed ones
     .map(c => `<option value="${c.key}">${c.key}</option>`).join('');
 }
 function openEvt(dateStr) {
