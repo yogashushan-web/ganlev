@@ -101,6 +101,44 @@
 </head>
 <body>
 
+  <style>
+    .fin-lock { position:fixed; inset:0; background:#F4EFE6; z-index:100000; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .fin-lock-card { background:#fff; border-radius:18px; padding:32px 28px; box-shadow:0 12px 40px rgba(0,0,0,.15); text-align:center; max-width:340px; width:100%; font-family:'Heebo',sans-serif; }
+    .fin-lock-card .ic { font-size:40px; margin-bottom:8px; }
+    .fin-lock-card h2 { color:#1F3D34; font-size:22px; margin-bottom:6px; }
+    .fin-lock-card p { color:#9B8E82; font-size:14px; margin-bottom:18px; }
+    .fin-lock-card input { width:100%; padding:13px 15px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo'; font-size:18px; text-align:center; outline:none; direction:ltr; letter-spacing:4px; }
+    .fin-lock-card input:focus { border-color:#1F3D34; }
+    .fin-lock-card button { width:100%; margin-top:14px; background:#1F3D34; color:#fff; border:none; padding:13px; border-radius:11px; font-family:'Heebo'; font-weight:700; font-size:15px; cursor:pointer; }
+    .fin-lock-card button:hover { background:#154428; }
+    .fin-err { color:#c94147; font-size:13px; font-weight:600; min-height:16px; margin-top:8px; }
+  </style>
+  <div id="finLock" class="fin-lock">
+    <div class="fin-lock-card">
+      <div class="ic">🔒</div>
+      <h2>אזור כספים</h2>
+      <p>הזינו סיסמה כדי להיכנס</p>
+      <input type="password" id="finPass" inputmode="numeric" autocomplete="off" placeholder="••••">
+      <div id="finErr" class="fin-err"></div>
+      <button type="button" onclick="finUnlock()">כניסה</button>
+    </div>
+  </div>
+  <script>
+    if (sessionStorage.getItem('fin_ok') === '1') { var _fl = document.getElementById('finLock'); if (_fl) _fl.style.display = 'none'; }
+    function finUnlock() {
+      var v = document.getElementById('finPass').value;
+      if (v === '12345') { sessionStorage.setItem('fin_ok', '1'); document.getElementById('finLock').style.display = 'none'; }
+      else { document.getElementById('finErr').textContent = 'סיסמה שגויה'; document.getElementById('finPass').value = ''; }
+    }
+    (function () {
+      var inp = document.getElementById('finPass');
+      if (inp) {
+        inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') finUnlock(); });
+        setTimeout(function () { if (document.getElementById('finLock').style.display !== 'none') inp.focus(); }, 50);
+      }
+    })();
+  </script>
+
   <div class="topbar">
     <h1>💰 כספים</h1>
     <div class="ctrl">
