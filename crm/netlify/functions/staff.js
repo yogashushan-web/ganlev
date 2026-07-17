@@ -6,6 +6,7 @@
 
 const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
+const { syncBirthdayToCalendar } = require('./lib/calendar');
 
 const handler = withAuth(async (event) => {
   try {
@@ -70,6 +71,7 @@ const handler = withAuth(async (event) => {
       if (error) throw error;
 
       await auditLog(garden_id, user.id, 'created', 'staff', data.id, { full_name_he: b.full_name_he });
+      await syncBirthdayToCalendar({ id: data.id, name: data.full_name_he, birth_date: data.birth_date, type: 'staff' });
 
       return {
         statusCode: 201,
