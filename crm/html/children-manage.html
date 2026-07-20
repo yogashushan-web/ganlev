@@ -343,17 +343,25 @@ async function handleContract(file) {
   if (file.size > 15 * 1024 * 1024) { st.textContent = '❌ הקובץ גדול מדי (עד 15MB)'; return; }
   dz.classList.add('busy');
   try {
-    let base64, contentType = file.type || '';
+    let base64, srcMime = file.type || '';
     if (isHeicFile(file)) {
       st.textContent = '⏳ ממיר תמונה...';
       const raw = await fileToB64(file);
       const conv = await api.convertHeic(raw);
-      base64 = conv.jpeg_base64; contentType = 'image/jpeg';
+      base64 = conv.jpeg_base64; srcMime = 'image/jpeg';
     } else {
       base64 = await fileToB64(file);
     }
-    if (contentType !== 'application/pdf' && !contentType.startsWith('image/')) {
-      contentType = (file.name || '').toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg';
+    const isPdf = srcMime === 'application/pdf' || (file.name || '').toLowerCase().endsWith('.pdf');
+    let contentType;
+    if (isPdf) {
+      contentType = 'application/pdf';
+    } else {
+      // Re-encode + shrink so the image is within the AI's limits (oversized iPhone photos
+      // otherwise fail with "Could not process image"). Also normalizes any odd format to JPEG.
+      st.textContent = '⏳ מכין את התמונה...';
+      base64 = await downscaleImage(base64, srcMime || 'image/jpeg');
+      contentType = 'image/jpeg';
     }
     st.textContent = '🔎 קורא את החוזה ומחלץ פרטים... (כמה שניות)';
     const res = await api.parseChildContract(base64, contentType);
@@ -398,6 +406,23 @@ async function handleContract(file) {
 // ---- per-child profile: attached files + the registration "כרטיס אישי" ----
 const esc = s => (s || '').replace(/</g, '&lt;');
 function fileToB64(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',').pop()); r.onerror = rej; r.readAsDataURL(file); }); }
+// Shrink + re-encode an image (base64 in -> JPEG base64 out) so it fits the AI's size limits.
+function downscaleImage(base64, mime, maxDim = 2000, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale)), h = Math.max(1, Math.round(img.height * scale));
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL('image/jpeg', quality).split(',').pop());
+      } catch (e) { reject(e); }
+    };
+    img.onerror = () => reject(new Error('לא ניתן לפענח את התמונה'));
+    img.src = 'data:' + (mime || 'image/jpeg') + ';base64,' + base64;
+  });
+}
 const childDocScope = id => 'child:' + id;
 let pfChildId = null;
 
