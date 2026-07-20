@@ -140,4 +140,10 @@ const api = {
   getTrash: () => apiCall(`/trash?garden_id=${getGardenId()}`),
   restoreTrash: (id) => apiCall(`/trash?garden_id=${getGardenId()}`, 'POST', { id }),
   purgeTrash: (id) => apiCall(`/trash/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+
+  // Event cards ("מעגל השנה") — anchor loop: prep -> ביצוע -> summary -> saved to file
+  getEventCards: (opts = {}) => apiCall(`/event-cards?garden_id=${getGardenId()}${opts.staff_id ? `&staff_id=${opts.staff_id}` : ''}${opts.child_id ? `&child_id=${opts.child_id}` : ''}${opts.event_id ? `&event_id=${opts.event_id}` : ''}`),
+  createEventCard: (data) => apiCall(`/event-cards?garden_id=${getGardenId()}`, 'POST', data),
+  updateEventCard: (id, data) => apiCall(`/event-cards/${id}?garden_id=${getGardenId()}`, 'PUT', data),
+  deleteEventCard: (id) => apiCall(`/event-cards/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 };

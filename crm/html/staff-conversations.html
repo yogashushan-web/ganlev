@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שיחות צוות · תיקי עובדים — מעגל השנה</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .wrap { max-width:860px; margin:0 auto; padding:22px 18px 60px; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:10px; }
+    h1 { font-size:25px; color:#1F3D34; }
+    .back { color:#9B8E82; font-size:13px; text-decoration:none; font-weight:600; }
+    .back:hover { color:#1F3D34; }
+    .lead { color:#9B8E82; font-size:14px; margin-bottom:20px; max-width:680px; line-height:1.6; }
+    .flow { display:inline-flex; gap:6px; align-items:center; background:#efe9e0; border-radius:999px; padding:5px 13px; font-size:12px; font-weight:600; color:#6f6457; margin-top:4px; }
+    .flow b { color:#1F3D34; }
+    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .error.show { display:block; }
+
+    /* staff chooser */
+    .sec-label { font-size:13px; font-weight:700; color:#9B8E82; margin:6px 0 10px; }
+    .staff-strip { display:flex; flex-wrap:wrap; gap:9px; margin-bottom:26px; }
+    .staff-chip { background:#fff; border:2px solid transparent; border-radius:13px; padding:11px 15px; cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,.05); display:flex; align-items:center; gap:9px; transition:.15s; }
+    .staff-chip:hover { transform:translateY(-1px); }
+    .staff-chip.on { border-color:#1F3D34; background:#f3f7f4; }
+    .staff-chip .av { width:34px; height:34px; border-radius:50%; background:#1F3D34; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+    .staff-chip .nm { font-weight:700; font-size:14px; color:#1F3D34; }
+    .staff-chip .ro { font-size:11px; color:#9B8E82; }
+
+    /* file */
+    .file { display:none; }
+    .file.show { display:block; }
+    .file-head { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+    .file-head .big-av { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,#1F3D34,#356152); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:19px; }
+    .file-head h2 { font-size:21px; color:#1F3D34; }
+    .file-head .sub { font-size:12px; color:#9B8E82; }
+    .btn-add { margin-right:auto; background:#1F3D34; color:#FFF; border:none; padding:11px 18px; border-radius:11px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn-add:hover { background:#154428; }
+
+    .group-title { font-size:12px; font-weight:800; color:#a05a3d; letter-spacing:.5px; margin:20px 0 10px; text-transform:none; }
+    .empty { color:#b6ab9d; font-size:14px; background:#fbf9f5; border:1px dashed #e3d9c8; border-radius:12px; padding:18px; text-align:center; }
+
+    .card { background:#fff; border-radius:14px; padding:14px 16px; box-shadow:0 2px 11px rgba(0,0,0,.05); margin-bottom:11px; border-right:4px solid #C4846C; }
+    .card.done { border-right-color:#8fae9b; opacity:.96; }
+    .card-top { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+    .c-emoji { font-size:18px; }
+    .c-title { font-weight:700; font-size:15px; color:#1F3D34; }
+    .c-date { font-size:12px; color:#9B8E82; margin-right:auto; white-space:nowrap; }
+    .badge { font-size:11px; font-weight:700; border-radius:999px; padding:3px 10px; }
+    .b-planned { background:#eef0f2; color:#5b6b7a; }
+    .b-prepared { background:#fdf0e6; color:#a05a3d; }
+    .b-done { background:#e4f0e8; color:#2f6b46; }
+    .urg { width:9px; height:9px; border-radius:50%; display:inline-block; }
+    .u-critical { background:#e0483f; } .u-important { background:#e8912f; } .u-calm { background:#5aa06e; }
+    .c-goal { font-size:13px; color:#6f6457; margin-top:7px; line-height:1.5; }
+    .c-actions { display:flex; gap:7px; margin-top:11px; flex-wrap:wrap; }
+    .c-actions button { border:none; border-radius:8px; padding:7px 14px; font-family:'Heebo'; font-size:12.5px; font-weight:700; cursor:pointer; }
+    .a-do { background:#1F3D34; color:#fff; } .a-do:hover{ background:#154428; }
+    .a-view { background:#efe9e0; color:#6f6457; }
+    .a-edit { background:#f5efe6; color:#8a7a63; } .a-del { background:#f7e7e4; color:#c0492a; }
+
+    /* modal */
+    .ov { position:fixed; inset:0; background:rgba(31,61,52,.5); display:none; align-items:flex-start; justify-content:center; z-index:9500; padding:18px; overflow:auto; }
+    .ov.show { display:flex; }
+    .modal { background:#fff; border-radius:18px; padding:22px; width:100%; max-width:520px; box-shadow:0 18px 50px rgba(0,0,0,.28); margin:24px 0; }
+    .modal h3 { font-size:19px; color:#1F3D34; margin-bottom:4px; }
+    .modal .mh-sub { font-size:13px; color:#9B8E82; margin-bottom:16px; }
+    .type-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+    .type-btn { text-align:right; background:#faf8f4; border:1.5px solid #eee6da; border-radius:12px; padding:12px; cursor:pointer; transition:.12s; }
+    .type-btn:hover { border-color:#C4846C; background:#fff; }
+    .type-btn .tb-t { font-weight:700; font-size:14px; color:#1F3D34; }
+    .type-btn .tb-g { font-size:11.5px; color:#9B8E82; margin-top:3px; line-height:1.4; }
+    label { display:block; font-size:13.5px; font-weight:700; color:#3D3228; margin:15px 0 6px; }
+    .q-field { position:relative; }
+    textarea, select, input[type=date] { width:100%; padding:11px 12px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo'; font-size:14px; outline:none; background:#fff; }
+    textarea:focus, select:focus, input:focus { border-color:#1F3D34; }
+    textarea { resize:vertical; line-height:1.6; min-height:64px; padding-left:44px; }
+    .mic { position:absolute; left:8px; bottom:8px; width:30px; height:30px; border-radius:50%; border:none; background:#efe9e0; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; }
+    .mic:hover { background:#e3d9c8; }
+    .mic.rec { background:#e0483f; color:#fff; animation:pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(224,72,63,.5);} 50%{ box-shadow:0 0 0 6px rgba(224,72,63,0);} }
+    .note-box { background:#fdf5ec; border:1px solid #f0dcc4; border-radius:11px; padding:11px 13px; font-size:12.5px; color:#9a6b3a; line-height:1.55; margin-top:14px; }
+    .row2 { display:flex; gap:10px; } .row2 > div { flex:1; }
+    .actions { display:flex; gap:10px; margin-top:20px; }
+    .b-save { flex:1; background:#1F3D34; color:#fff; border:none; padding:12px; border-radius:11px; font-family:'Heebo'; font-weight:700; font-size:14px; cursor:pointer; }
+    .b-save:hover { background:#154428; }
+    .b-cancel { background:#efe9e0; color:#6f6457; border:none; padding:12px 18px; border-radius:11px; font-family:'Heebo'; font-weight:600; cursor:pointer; }
+    .view-block { margin-bottom:14px; }
+    .view-block .vq { font-size:12.5px; font-weight:700; color:#a05a3d; margin-bottom:2px; }
+    .view-block .va { font-size:14px; color:#3D3228; line-height:1.6; white-space:pre-wrap; }
+    .view-block .va.empty { color:#c3b8a8; font-style:italic; }
+    .divider { height:1px; background:#efe6d8; margin:16px 0; }
+    .mic-hint { font-size:11.5px; color:#b6ab9d; margin-top:4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>🧭 שיחות צוות · תיקי עובדים</h1>
+      <a class="back" href="dashboard.html">‹ חזרה לדשבורד</a>
+    </div>
+    <div class="lead">
+      כל שיחה עם עובד/ת היא תהליך שלם — לא רק פגישה ביומן.
+      <span class="flow"><b>כוונה</b> ← <b>ביצוע</b> ← <b>סיכום</b> ← <b>נשמר בתיק</b></span><br>
+      בוחרים עובד/ת, מגדירים את מטרת השיחה בכרטיס הכנה, ואחרי השיחה כותבים סיכום שנשמר לתמיד בתיק האישי.
+    </div>
+    <div id="error" class="error"></div>
+
+    <div class="sec-label">בחר/י עובד/ת:</div>
+    <div id="staffStrip" class="staff-strip"></div>
+
+    <div id="file" class="file">
+      <div class="file-head">
+        <div class="big-av" id="fAv">—</div>
+        <div>
+          <h2 id="fName">—</h2>
+          <div class="sub" id="fSub">תיק עובד/ת</div>
+        </div>
+        <button class="btn-add" onclick="openNew()">+ שיחה חדשה</button>
+      </div>
+      <div id="openList"></div>
+      <div id="doneWrap"></div>
+    </div>
+  </div>
+
+  <!-- type + prep modal -->
+  <div id="prepOv" class="ov">
+    <div class="modal">
+      <h3 id="prepTitle">שיחה חדשה</h3>
+      <div class="mh-sub" id="prepSub">איזה סוג שיחה זו? הבחירה קובעת את השאלות המנחות.</div>
+      <div id="typeStep"><div class="type-grid" id="typeGrid"></div></div>
+      <div id="prepStep" style="display:none;">
+        <div id="prepFields"></div>
+        <div id="prepNote"></div>
+        <div class="row2" style="margin-top:15px;">
+          <div>
+            <label>דחיפות</label>
+            <select id="urg">
+              <option value="critical">🔴 קריטי · כל שעתיים</option>
+              <option value="important" selected>🟠 חשוב · פעם ביום</option>
+              <option value="calm">🟢 רגוע · פעם ב-3 ימים</option>
+            </select>
+          </div>
+          <div>
+            <label>מתי מתוכנן? (רשות)</label>
+            <input type="date" id="schedDate">
+          </div>
+        </div>
+        <div class="mic-hint">💡 בכל שדה יש כפתור 🎤 להכתבה קולית בעברית.</div>
+        <div class="actions">
+          <button class="b-save" onclick="saveNew()">שמור כרטיס הכנה</button>
+          <button class="b-cancel" onclick="closeOv('prepOv')">ביטול</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- summary modal -->
+  <div id="sumOv" class="ov">
+    <div class="modal">
+      <h3>סיכום השיחה</h3>
+      <div class="mh-sub" id="sumSub">אחרי השיחה — נעצור רגע לתעד. זה מה שנשמר בתיק.</div>
+      <div id="sumFields"></div>
+      <div class="mic-hint">💡 אפשר גם להכתיב בקול 🎤</div>
+      <div class="actions">
+        <button class="b-save" onclick="saveSummary()">שמור סיכום · סמן כבוצע ✓</button>
+        <button class="b-cancel" onclick="closeOv('sumOv')">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- view modal -->
+  <div id="viewOv" class="ov">
+    <div class="modal">
+      <h3 id="viewTitle">כרטיס שיחה</h3>
+      <div class="mh-sub" id="viewSub"></div>
+      <div id="viewBody"></div>
+      <div class="actions">
+        <button class="b-cancel" onclick="closeOv('viewOv')" style="flex:1;">סגירה</button>
+      </div>
+    </div>
+  </div>
+
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
+<script>
+  const CONV_TYPES = {
+    reflective:  { emoji:'🪞', label:'שיחה רפלקטיבית', goal:'עיבוד חוויות ומתן משמעות',
+      prep:['מה החוויה או המקרה שנעבד יחד?','מה הייתי רוצה שהעובד/ת ייקח/תיקח מהעיבוד?','אילו שאלות פתוחות אשאל כדי לעורר חשיבה?'] },
+    development: { emoji:'🌱', label:'שיחת פיתוח', goal:'קידום ההתפתחות המקצועית',
+      prep:['מהן החוזקות של העובד/ת שאשקף?','אילו תחומי צמיחה זיהיתי?','איזו מטרה אישית נציב יחד?','מה הצעד הראשון הקונקרטי?'] },
+    training:    { emoji:'📚', label:'שיחת הדרכה', goal:'הקניית ידע וכלים מקצועיים',
+      prep:['מה הנושא של ההדרכה?','למה הוא רלוונטי עכשיו (שלב בשנה / צורך שעלה)?','אילו דוגמאות מהשטח אביא?','האם יהיה תרגול, ואיזה?'] },
+    planning:    { emoji:'🗺️', label:'שיחת תכנון', goal:'הכנה מסודרת לתהליך, תקופה או אירוע',
+      prep:['לאיזה תהליך / אירוע מתכוננים?','מה המטרות?','איך מחלקים אחריות בין חברי הצוות?','אילו אתגרים צפויים ואיך נערכים?'] },
+    problem:     { emoji:'🧩', label:'שיחת פתרון בעיות', goal:'התמודדות משותפת עם אתגר מקצועי',
+      prep:['מה הקושי או המצב המורכב?','מה הגורמים לו?','אילו אפשרויות פעולה עולות?'] },
+    case:        { emoji:'🔍', label:'ניתוח מקרה', goal:'הפקת ידע מקצועי מאירוע שקרה בגן',
+      prep:['איזה מקרה אמיתי נבחן?','מה בדיוק קרה?','מה עבד ומה ניתן לשפר?','אילו תובנות וכלים נפיק להמשך?'] },
+  };
+  const SUMMARY_QS = [
+    { k:'happened',   q:'מה קרה בשיחה?' },
+    { k:'decisions',  q:'אילו החלטות התקבלו?' },
+    { k:'follow_ups', q:'משימות המשך' },
+    { k:'next_time',  q:'מה כדאי לעשות אחרת בפעם הבאה?' },
+  ];
+  const URG_LABEL = { critical:'קריטי', important:'חשוב', calm:'רגוע' };
+
+  let STAFF = [], curStaff = null, editCardId = null, pendingType = null, sumCard = null;
+  const $ = id => document.getElementById(id);
+  const initials = n => (n||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('');
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  async function init() {
+    try {
+      const r = await api.getStaff();
+      STAFF = (r.data||[]).filter(s => s.status !== 'archived');
+      $('staffStrip').innerHTML = STAFF.length ? STAFF.map(s =>
+        `<div class="staff-chip" data-id="${s.id}" onclick="selectStaff('${s.id}')">
+           <div class="av">${esc(initials(s.full_name_he))}</div>
+           <div><div class="nm">${esc(s.full_name_he)}</div>${s.position_he?`<div class="ro">${esc(s.position_he)}</div>`:''}</div>
+         </div>`).join('') : '<div class="empty">אין עדיין עובדים במערכת.</div>';
+    } catch(e) { showError('שגיאה בטעינת הצוות: ' + e.message); }
+  }
+
+  async function selectStaff(id) {
+    curStaff = STAFF.find(s => s.id === id);
+    document.querySelectorAll('.staff-chip').forEach(c => c.classList.toggle('on', c.dataset.id===id));
+    $('fAv').textContent = initials(curStaff.full_name_he);
+    $('fName').textContent = curStaff.full_name_he;
+    $('fSub').textContent = 'תיק עובד/ת' + (curStaff.position_he ? ' · '+curStaff.position_he : '');
+    $('file').classList.add('show');
+    $('file').scrollIntoView({ behavior:'smooth', block:'start' });
+    await loadCards();
+  }
+
+  async function loadCards() {
+    try {
+      const r = await api.getEventCards({ staff_id: curStaff.id });
+      const all = r.data || [];
+      const open = all.filter(c => c.status !== 'done');
+      const done = all.filter(c => c.status === 'done');
+      $('openList').innerHTML =
+        `<div class="group-title">🟠 שיחות פתוחות (${open.length})</div>` +
+        (open.length ? open.map(c => cardHtml(c,false)).join('')
+          : '<div class="empty">אין שיחות פתוחות. לחצו “+ שיחה חדשה”.</div>');
+      $('doneWrap').innerHTML = done.length
+        ? `<div class="group-title">✓ היסטוריה (${done.length})</div>` + done.map(c => cardHtml(c,true)).join('')
+        : '';
+    } catch(e) { showError('שגיאה בטעינת השיחות: ' + e.message); }
+  }
+
+  function cardHtml(c, isDone) {
+    const t = CONV_TYPES[c.conv_type] || { emoji:'💬', label:c.title||'שיחה', goal:'' };
+    const badge = c.status==='done' ? '<span class="badge b-done">בוצע ✓</span>'
+                : c.status==='prepared' ? '<span class="badge b-prepared">מוכן לביצוע</span>'
+                : '<span class="badge b-planned">מתוכנן</span>';
+    const d = c.done_at || c.scheduled_date || c.created_at;
+    const actions = isDone
+      ? `<button class="a-view" onclick='viewCard(${JSON.stringify(c)})'>צפייה בכרטיס</button>
+         <button class="a-del" onclick="delCard('${c.id}')">מחק</button>`
+      : `<button class="a-do" onclick='openSummary(${JSON.stringify(c)})'>ביצוע וסיכום ✓</button>
+         <button class="a-edit" onclick='openEdit(${JSON.stringify(c)})'>ערוך הכנה</button>
+         <button class="a-del" onclick="delCard('${c.id}')">מחק</button>`;
+    return `<div class="card ${isDone?'done':''}">
+      <div class="card-top">
+        <span class="c-emoji">${t.emoji}</span>
+        <span class="c-title">${esc(t.label)}</span>
+        <span class="urg u-${c.urgency||'important'}" title="דחיפות: ${URG_LABEL[c.urgency||'important']}"></span>
+        ${badge}
+        <span class="c-date">${fmt(d)}</span>
+      </div>
+      ${t.goal?`<div class="c-goal">${esc(t.goal)}</div>`:''}
+      <div class="c-actions">${actions}</div>
+    </div>`;
+  }
+
+  function fmt(s){ if(!s) return ''; try{ return new Date(s).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return '';} }
+
+  // ---- new / edit prep ----
+  function openNew() {
+    editCardId = null; pendingType = null;
+    $('prepTitle').textContent = 'שיחה חדשה עם ' + curStaff.full_name_he;
+    $('prepSub').textContent = 'איזה סוג שיחה זו? הבחירה קובעת את השאלות המנחות.';
+    $('typeStep').style.display=''; $('prepStep').style.display='none';
+    $('typeGrid').innerHTML = Object.entries(CONV_TYPES).map(([k,t]) =>
+      `<div class="type-btn" onclick="chooseType('${k}')">
+        <div class="tb-t">${t.emoji} ${esc(t.label)}</div>
+        <div class="tb-g">${esc(t.goal)}</div>
+      </div>`).join('');
+    openOv('prepOv');
+  }
+
+  function chooseType(k, existing) {
+    pendingType = k;
+    const t = CONV_TYPES[k];
+    $('prepSub').textContent = t.emoji + ' ' + t.label + ' — ' + t.goal;
+    $('typeStep').style.display='none'; $('prepStep').style.display='';
+    const answers = (existing && existing.prep) ? existing.prep.reduce((m,p)=>(m[p.q]=p.a,m),{}) : {};
+    $('prepFields').innerHTML = t.prep.map((q,i) =>
+      `<label>${esc(q)}</label>
+       <div class="q-field">
+         <textarea id="pq${i}" placeholder="כתוב/י או הכתב/י בקול…">${esc(answers[q]||'')}</textarea>
+         <button type="button" class="mic" onclick="dictate(this,'pq${i}')" title="הכתבה קולית">🎤</button>
+       </div>`).join('');
+    $('prepNote').innerHTML = t.note ? `<div class="note-box">⚠️ ${esc(t.note)}</div>` : '';
+    if (existing) {
+      $('urg').value = existing.urgency || 'important';
+      $('schedDate').value = existing.scheduled_date || '';
+    } else { $('urg').value='important'; $('schedDate').value=''; }
+  }
+
+  function openEdit(c) {
+    editCardId = c.id;
+    $('prepTitle').textContent = 'עריכת הכנה — ' + curStaff.full_name_he;
+    openOv('prepOv');
+    chooseType(c.conv_type, c);
+  }
+
+  async function saveNew() {
+    const t = CONV_TYPES[pendingType];
+    const prep = t.prep.map((q,i)=>({ q, a: ($('pq'+i).value||'').trim() }));
+    const filled = prep.some(p => p.a);
+    const payload = {
+      kind:'staff_conversation', conv_type:pendingType, staff_id:curStaff.id,
+      title:t.label, urgency:$('urg').value, scheduled_date:$('schedDate').value||null,
+      prep, status: filled ? 'prepared' : 'planned',
+    };
+    try {
+      if (editCardId) await api.updateEventCard(editCardId, payload);
+      else await api.createEventCard(payload);
+      closeOv('prepOv'); await loadCards();
+    } catch(e){ showError('שמירה נכשלה: ' + e.message); }
+  }
+
+  // ---- summary / ביצוע ----
+  function openSummary(c) {
+    sumCard = c;
+    const s = c.summary || {};
+    $('sumSub').textContent = (CONV_TYPES[c.conv_type]?CONV_TYPES[c.conv_type].label:'שיחה') + ' · ' + curStaff.full_name_he;
+    $('sumFields').innerHTML = SUMMARY_QS.map((it,i) =>
+      `<label>${esc(it.q)}</label>
+       <div class="q-field">
+         <textarea id="sq${i}" placeholder="כתוב/י או הכתב/י בקול…">${esc(s[it.k]||'')}</textarea>
+         <button type="button" class="mic" onclick="dictate(this,'sq${i}')" title="הכתבה קולית">🎤</button>
+       </div>`).join('');
+    openOv('sumOv');
+  }
+
+  async function saveSummary() {
+    const summary = {};
+    SUMMARY_QS.forEach((it,i)=> summary[it.k] = ($('sq'+i).value||'').trim());
+    try {
+      await api.updateEventCard(sumCard.id, { status:'done', summary });
+      closeOv('sumOv'); await loadCards();
+    } catch(e){ showError('שמירת הסיכום נכשלה: ' + e.message); }
+  }
+
+  // ---- view ----
+  function viewCard(c) {
+    const t = CONV_TYPES[c.conv_type] || {label:c.title||'שיחה',emoji:'💬'};
+    $('viewTitle').textContent = t.emoji + ' ' + t.label;
+    $('viewSub').textContent = curStaff.full_name_he + ' · ' + fmt(c.done_at||c.created_at);
+    let h = '<div class="group-title" style="margin-top:0">כרטיס הכנה</div>';
+    (c.prep||[]).forEach(p => {
+      h += `<div class="view-block"><div class="vq">${esc(p.q)}</div><div class="va ${p.a?'':'empty'}">${esc(p.a||'—')}</div></div>`;
+    });
+    if (c.summary) {
+      h += '<div class="divider"></div><div class="group-title" style="margin-top:0">סיכום</div>';
+      SUMMARY_QS.forEach(it => {
+        const v = c.summary[it.k];
+        h += `<div class="view-block"><div class="vq">${esc(it.q)}</div><div class="va ${v?'':'empty'}">${esc(v||'—')}</div></div>`;
+      });
+    }
+    $('viewBody').innerHTML = h;
+    openOv('viewOv');
+  }
+
+  async function delCard(id) {
+    if (!confirm('למחוק את השיחה? אפשר לשחזר מסל המיחזור.')) return;
+    try { await api.deleteEventCard(id); await loadCards(); }
+    catch(e){ showError('מחיקה נכשלה: ' + e.message); }
+  }
+
+  // ---- voice to text (Web Speech API) ----
+  let rec = null, recBtn = null;
+  function dictate(btn, targetId) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert('הכתבה קולית לא נתמכת בדפדפן הזה. נסו ב-Chrome.'); return; }
+    if (rec && recBtn === btn) { rec.stop(); return; }      // toggle off
+    if (rec) { rec.stop(); }
+    const ta = $(targetId);
+    rec = new SR(); rec.lang='he-IL'; rec.interimResults=true; rec.continuous=true;
+    recBtn = btn; btn.classList.add('rec');
+    let base = ta.value ? ta.value + ' ' : '';
+    rec.onresult = e => {
+      let txt='';
+      for (let i=e.resultIndex; i<e.results.length; i++) txt += e.results[i][0].transcript;
+      ta.value = base + txt;
+    };
+    rec.onend = () => { btn.classList.remove('rec'); if (recBtn===btn){ rec=null; recBtn=null; } };
+    rec.onerror = () => { btn.classList.remove('rec'); };
+    rec.start();
+  }
+
+  function openOv(id){ $(id).classList.add('show'); }
+  function closeOv(id){ $(id).classList.remove('show'); if(rec){rec.stop();} }
+  document.querySelectorAll('.ov').forEach(o => o.addEventListener('click', e => { if(e.target===o) closeOv(o.id); }));
+
+  init();
+</script>
+</body>
+</html>

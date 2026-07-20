@@ -142,8 +142,10 @@
         <div style="flex:1;"><label>תאריך סיום</label><input type="date" id="evtEndDate"></div>
       </div>
       <label>קטגוריה</label><select id="evtCat" onchange="onCatChange()"></select>
-      <label>כותרת</label><input type="text" id="evtTitle" list="evtTitleList" autocomplete="off" placeholder="בחרי מכותרות קודמות או הקלידי חדשה">
-      <datalist id="evtTitleList"></datalist>
+      <div id="evtTitleRow">
+        <label>כותרת</label><input type="text" id="evtTitle" list="evtTitleList" autocomplete="off" placeholder="בחרי מכותרות קודמות או הקלידי חדשה">
+        <datalist id="evtTitleList"></datalist>
+      </div>
       <div style="display:flex; gap:10px;">
         <div style="flex:1;"><label>שעת התחלה</label><input type="time" id="evtTime"></div>
         <div style="flex:1;"><label>שעת סיום</label><input type="time" id="evtEndTime"></div>
@@ -152,6 +154,23 @@
         <label style="margin:0;">🔁 צור משבצות רצופות של 50 דק' עד שעה <span style="font-weight:400; color:#9B8E82;">(לא חובה)</span></label>
         <input type="time" id="evtBatchUntil" style="margin-top:5px;">
         <div style="font-size:11px; color:#5b7c8d; margin-top:5px; line-height:1.5;">לדוגמה: התחלה 13:10 + "עד" 16:00 → ייווצרו 13:10, 14:00, 14:50 (כל אחת 50 דק'), וכל הורה תופס משבצת.</div>
+      </div>
+      <div id="smWrap" style="display:none; margin-top:8px; background:#f6f3fb; border:1px solid #e4dcf3; border-radius:12px; padding:12px 13px;">
+        <div style="display:flex; gap:10px;">
+          <div style="flex:1;"><label style="margin-top:0;">סוג השיחה</label>
+            <select id="smType" onchange="renderSmPrep()" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;"></select></div>
+          <div style="flex:1;"><label style="margin-top:0;">עובד/ת</label>
+            <select id="smStaff" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;"></select></div>
+        </div>
+        <label>דחיפות</label>
+        <select id="smUrg" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;">
+          <option value="critical">🔴 קריטי · תזכורת כל שעתיים</option>
+          <option value="important" selected>🟠 חשוב · פעם ביום</option>
+          <option value="calm">🟢 רגוע · פעם ב-3 ימים</option>
+        </select>
+        <div id="smGoal" style="font-size:12.5px; color:#6d5b8a; margin-top:8px;"></div>
+        <div id="smPrep" style="margin-top:2px;"></div>
+        <div style="font-size:11px; color:#9B8E82; margin-top:6px;">💡 בכל שדה יש 🎤 להכתבה קולית. אחרי השמירה — לחיצה על האירוע בלוח פותחת אותו לביצוע וסיכום.</div>
       </div>
       <div id="evtNotesWrap" style="display:none;">
         <label>תוכן ההודעה <span style="font-weight:400; color:#9B8E82;">(אופציונלי)</span></label>
@@ -164,6 +183,30 @@
         <button class="b-cancel" onclick="closeEvt()">ביטול</button>
       </div>
       <button id="evtDelBtn" onclick="delCurrentEvt()" style="display:none; width:100%; margin-top:10px; background:#e74c3c; color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer;">🗑 מחק אירוע</button>
+    </div>
+  </div>
+
+  <style>
+    #smPrep textarea, #convBody textarea { width:100%; box-sizing:border-box; font-family:'Heebo'; font-size:14px; padding:9px 10px 9px 40px; border:1px solid #e0d8cf; border-radius:9px; resize:vertical; line-height:1.55; min-height:52px; }
+    .sm-q { position:relative; margin-top:8px; }
+    .sm-q label, #convBody label { display:block; font-size:12.5px; font-weight:700; color:#5b5147; margin:8px 0 3px; }
+    .sm-mic { position:absolute; left:6px; bottom:6px; width:28px; height:28px; border-radius:50%; border:none; background:#efe9e0; cursor:pointer; font-size:14px; }
+    .sm-mic.rec { background:#e0483f; color:#fff; }
+    .conv-view .vq { font-size:12px; font-weight:700; color:#7c3aed; margin-top:10px; }
+    .conv-view .va { font-size:14px; color:#3D3228; line-height:1.55; white-space:pre-wrap; }
+    .conv-view .va.empty { color:#c3b8a8; font-style:italic; }
+  </style>
+  <!-- STAFF CONVERSATION MODAL (ביצוע + סיכום) -->
+  <div class="modal-ov" id="convModal">
+    <div class="modal">
+      <h3 id="convTitle">שיחת עובד</h3>
+      <div id="convSub" style="font-size:13px; color:#9B8E82; margin-bottom:8px;"></div>
+      <div id="convBody" style="max-height:62vh; overflow:auto;"></div>
+      <div class="modal-actions">
+        <button class="b-save" id="convSaveBtn" onclick="saveConv()">שמור סיכום · סמן כבוצע ✓</button>
+        <button class="b-cancel" onclick="closeConv()">סגור</button>
+      </div>
+      <button id="convDelBtn" onclick="delConv()" style="width:100%; margin-top:10px; background:#e74c3c; color:#fff; border:none; padding:10px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer;">🗑 מחק שיחה</button>
     </div>
   </div>
 
@@ -182,6 +225,7 @@
 const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const GARDEN_CATS = [
   { key:'סידור',         color:'#0891b2' },
+  { key:'מפגש עובד',      color:'#7c3aed' },
   { key:'הדרכת צוות',     color:'#2D5A50' },
   { key:'הדרכה פדגוגית',  color:'#ea580c' },
   { key:'ערב הורים',      color:'#C4846C' },
@@ -197,6 +241,7 @@ const GARDEN_CATS = [
 // default start/end times per category (חופשה = all day, no time)
 const CAT_DEFAULTS = {
   'סידור':       { s:'07:45', e:'16:30' },
+  'מפגש עובד':    { s:'13:30', e:'14:15' },
   'הדרכת צוות':   { s:'13:30', e:'14:30' },
   'הדרכה פדגוגית': { s:'08:00', e:'14:30' },
   'ערב הורים':    { s:'20:30', e:'22:00' },
@@ -263,6 +308,7 @@ function onCatChange() {
   toggleNotesField(cat);
   document.getElementById('evtBatchWrap').style.display = cat === 'זמן הורים' ? 'block' : 'none';
   if (cat === 'זמן הורים') document.getElementById('evtTitle').value = 'זמן הורים'; // slot marker; auto-set
+  toggleSmSection(cat);
 }
 
 // Israeli holidays + special dates from the Hebrew calendar (Hebcal, Israel schedule)
@@ -373,7 +419,9 @@ function editEvt(id) {
   if (!e) return;
   // A BOOKED "זמן הורים" slot (title = child, not the marker) -> show booking + cancel.
   if (e.category === 'זמן הורים' && e.title && e.title !== 'זמן הורים') { showBookedSlot(e); return; }
+  if (e.category === 'מפגש עובד') { openConv(e); return; }   // staff meeting -> conversation card
   editingEvtId = id;
+  toggleSmSection(e.category || '');
   document.getElementById('evtBatchWrap').style.display = 'none';
   document.getElementById('evtBatchUntil').value = '';
   document.getElementById('evtModalTitle').textContent = 'עריכת אירוע';
@@ -431,6 +479,7 @@ function buildSlots(start, until, mins) {
 
 async function saveEvt() {
   const cat = document.getElementById('evtCat').value;
+  if (cat === 'מפגש עובד') return saveStaffMeeting();
   const isPT = cat === 'זמן הורים';
   let title = document.getElementById('evtTitle').value.trim();
   if (isPT) title = 'זמן הורים';                        // slot marker = open
@@ -486,6 +535,145 @@ async function delCurrentEvt() {
   if (!confirm('למחוק את האירוע?')) return;
   try { await api.deleteEvent(editingEvtId); closeEvt(); renderGarden(); }
   catch (err) { alert('שגיאה: ' + err.message); }
+}
+
+// ---------- מפגש עובד — staff conversation anchor (intention -> ביצוע -> summary -> תיק עובד) ----------
+const SM_TYPES = {
+  reflective:  { emoji:'🪞', label:'שיחה רפלקטיבית', goal:'עיבוד חוויות ומתן משמעות',
+    prep:['מה החוויה או המקרה שנעבד יחד?','מה הייתי רוצה שהעובד/ת ייקח/תיקח מהעיבוד?','אילו שאלות פתוחות אשאל כדי לעורר חשיבה?'] },
+  development: { emoji:'🌱', label:'שיחת פיתוח', goal:'קידום ההתפתחות המקצועית',
+    prep:['מהן החוזקות של העובד/ת שאשקף?','אילו תחומי צמיחה זיהיתי?','איזו מטרה אישית נציב יחד?','מה הצעד הראשון הקונקרטי?'] },
+  training:    { emoji:'📚', label:'שיחת הדרכה', goal:'הקניית ידע וכלים מקצועיים',
+    prep:['מה הנושא של ההדרכה?','למה הוא רלוונטי עכשיו (שלב בשנה / צורך שעלה)?','אילו דוגמאות מהשטח אביא?','האם יהיה תרגול, ואיזה?'] },
+  planning:    { emoji:'🗺️', label:'שיחת תכנון', goal:'הכנה מסודרת לתהליך, תקופה או אירוע',
+    prep:['לאיזה תהליך / אירוע מתכוננים?','מה המטרות?','איך מחלקים אחריות בין חברי הצוות?','אילו אתגרים צפויים ואיך נערכים?'] },
+  problem:     { emoji:'🧩', label:'שיחת פתרון בעיות', goal:'התמודדות משותפת עם אתגר מקצועי',
+    prep:['מה הקושי או המצב המורכב?','מה הגורמים לו?','אילו אפשרויות פעולה עולות?'] },
+  case:        { emoji:'🔍', label:'ניתוח מקרה', goal:'הפקת ידע מקצועי מאירוע שקרה בגן',
+    prep:['איזה מקרה אמיתי נבחן?','מה בדיוק קרה?','מה עבד ומה ניתן לשפר?','אילו תובנות וכלים נפיק להמשך?'] },
+};
+const SM_SUMMARY_QS = [
+  { k:'happened',   q:'מה קרה בשיחה?' },
+  { k:'decisions',  q:'אילו החלטות התקבלו?' },
+  { k:'follow_ups', q:'משימות המשך' },
+  { k:'next_time',  q:'מה כדאי לעשות אחרת בפעם הבאה?' },
+];
+function fillSmType() {
+  document.getElementById('smType').innerHTML =
+    Object.entries(SM_TYPES).map(([k, t]) => `<option value="${k}">${t.emoji} ${t.label}</option>`).join('');
+}
+function fillSmStaff() {
+  const list = (staffCache || []).filter(s => s.status !== 'archived');
+  document.getElementById('smStaff').innerHTML = list.length
+    ? list.map(s => `<option value="${s.id}">${esc(s.full_name_he)}</option>`).join('')
+    : '<option value="">— אין עובדים פעילים —</option>';
+}
+function renderSmPrep() {
+  const t = SM_TYPES[document.getElementById('smType').value];
+  document.getElementById('smGoal').textContent = t ? '🎯 ' + t.goal : '';
+  document.getElementById('smPrep').innerHTML = t ? t.prep.map((q, i) =>
+    `<div class="sm-q"><label>${esc(q)}</label>
+       <textarea id="smq${i}" placeholder="כתוב/י או הכתב/י בקול…"></textarea>
+       <button type="button" class="sm-mic" onclick="dictate(this,'smq${i}')" title="הכתבה קולית">🎤</button></div>`).join('') : '';
+}
+function toggleSmSection(cat) {
+  const on = cat === 'מפגש עובד';
+  document.getElementById('smWrap').style.display = on ? 'block' : 'none';
+  document.getElementById('evtTitleRow').style.display = on ? 'none' : 'block';
+  if (on) { fillSmType(); fillSmStaff(); renderSmPrep(); }
+}
+async function saveStaffMeeting() {
+  const typeKey = document.getElementById('smType').value;
+  const t = SM_TYPES[typeKey];
+  const staffId = document.getElementById('smStaff').value;
+  const staff = (staffCache || []).find(s => s.id === staffId);
+  const start = document.getElementById('evtDate').value;
+  if (!staffId || !staff) { alert('צריך לבחור עובד/ת'); return; }
+  if (!start) { alert('צריך תאריך'); return; }
+  const prep = t.prep.map((q, i) => ({ q, a: (document.getElementById('smq' + i)?.value || '').trim() }));
+  const title = staff.full_name_he + ' · ' + t.label;
+  const time = document.getElementById('evtTime').value || null;
+  try {
+    const r = await api.createEvent({
+      calendar: 'garden', title, category: 'מפגש עובד', event_date: start,
+      event_time: time, end_time: document.getElementById('evtEndTime').value || null, notes: null,
+    });
+    const ev = r.data;
+    await api.createEventCard({
+      kind: 'staff_conversation', conv_type: typeKey, staff_id: staffId, event_id: ev.id,
+      title, scheduled_date: start, scheduled_time: time,
+      urgency: document.getElementById('smUrg').value,
+      prep, status: prep.some(p => p.a) ? 'prepared' : 'planned',
+    });
+    closeEvt(); renderGarden(); loadTitleHistory();
+  } catch (err) { alert('שגיאה בשמירה: ' + err.message); }
+}
+// Click a "מפגש עובד" event -> open its conversation card for ביצוע + סיכום
+let convCard = null, convEvent = null;
+async function openConv(e) {
+  convCard = null; convEvent = e;
+  document.getElementById('convTitle').textContent = '💬 ' + (e.title || 'שיחת עובד');
+  document.getElementById('convSub').textContent = formatDate(e.event_date) + (e.event_time ? ' · ' + e.event_time.slice(0, 5) : '');
+  document.getElementById('convBody').innerHTML = '<div style="padding:14px;color:#9B8E82;">טוען…</div>';
+  document.getElementById('convModal').classList.add('show');
+  try { const r = await api.getEventCards({ event_id: e.id }); convCard = (r.data || [])[0] || null; } catch (err) {}
+  renderConv();
+}
+function renderConv() {
+  const body = document.getElementById('convBody');
+  if (!convCard) {
+    body.innerHTML = '<div style="padding:14px;color:#c94147;">לא נמצא כרטיס שיחה מקושר לאירוע הזה.</div>';
+    document.getElementById('convSaveBtn').style.display = 'none';
+    return;
+  }
+  document.getElementById('convSaveBtn').style.display = '';
+  const tp = SM_TYPES[convCard.conv_type];
+  let h = '<div class="conv-view"><div style="font-size:12px;font-weight:800;color:#7c3aed;">כרטיס הכנה' + (tp ? ' · ' + tp.emoji + ' ' + tp.label : '') + '</div>';
+  (convCard.prep || []).forEach(p => { h += `<div class="vq">${esc(p.q)}</div><div class="va ${p.a ? '' : 'empty'}">${esc(p.a || '—')}</div>`; });
+  h += '</div><div style="height:1px;background:#efe6d8;margin:14px 0;"></div>';
+  h += '<div style="font-size:12px;font-weight:800;color:#2f6b46;">ביצוע וסיכום' + (convCard.status === 'done' ? ' ✓ (בוצע — אפשר לעדכן)' : '') + '</div>';
+  const s = convCard.summary || {};
+  SM_SUMMARY_QS.forEach((it, i) => {
+    h += `<div class="sm-q"><label>${esc(it.q)}</label>
+      <textarea id="csq${i}" placeholder="כתוב/י או הכתב/י בקול…">${esc(s[it.k] || '')}</textarea>
+      <button type="button" class="sm-mic" onclick="dictate(this,'csq${i}')" title="הכתבה קולית">🎤</button></div>`;
+  });
+  body.innerHTML = h;
+}
+async function saveConv() {
+  if (!convCard) return;
+  const summary = {};
+  SM_SUMMARY_QS.forEach((it, i) => summary[it.k] = (document.getElementById('csq' + i)?.value || '').trim());
+  try {
+    await api.updateEventCard(convCard.id, { status: 'done', summary });
+    closeConv(); renderGarden();
+    alert('הסיכום נשמר בתיק העובד ✓');
+  } catch (err) { alert('שגיאה: ' + err.message); }
+}
+async function delConv() {
+  if (!confirm('למחוק את השיחה ואת האירוע מהלוח?')) return;
+  try {
+    if (convCard) await api.deleteEventCard(convCard.id);
+    if (convEvent) await api.deleteEvent(convEvent.id);
+    closeConv(); renderGarden();
+  } catch (err) { alert('שגיאה: ' + err.message); }
+}
+function closeConv() { document.getElementById('convModal').classList.remove('show'); if (_rec) _rec.stop(); }
+// voice-to-text (Web Speech API, he-IL)
+let _rec = null, _recBtn = null;
+function dictate(btn, targetId) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('הכתבה קולית נתמכת בדפדפן Chrome.'); return; }
+  if (_rec && _recBtn === btn) { _rec.stop(); return; }
+  if (_rec) { _rec.stop(); }
+  const ta = document.getElementById(targetId);
+  _rec = new SR(); _rec.lang = 'he-IL'; _rec.interimResults = true; _rec.continuous = true;
+  _recBtn = btn; btn.classList.add('rec');
+  const base = ta.value ? ta.value + ' ' : '';
+  _rec.onresult = ev => { let tx = ''; for (let i = ev.resultIndex; i < ev.results.length; i++) tx += ev.results[i][0].transcript; ta.value = base + tx; };
+  _rec.onend = () => { btn.classList.remove('rec'); if (_recBtn === btn) { _rec = null; _recBtn = null; } };
+  _rec.onerror = () => { btn.classList.remove('rec'); };
+  _rec.start();
 }
 
 // category filter (click a category in the legend to see all its events)
