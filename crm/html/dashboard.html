@@ -113,6 +113,7 @@
           <button onclick="moveMonth(1)">›</button>
         </div>
         <button class="btn-add-evt" onclick="openEvt(todayStr())">+ אירוע חדש</button>
+        <button class="btn-add-evt" style="background:#d6336c;" onclick="genBirthdayReminders()" title="יצירת תזכורות שיחה לכל ילדי השנה">🎂 תזכורות ימי הולדת</button>
       </div>
       <div id="gardenGrid"></div>
       <div class="legend" id="gardenLegend"></div>
@@ -210,6 +211,29 @@
     </div>
   </div>
 
+  <style>
+    .bc-ctx { background:#fdeef4; color:#a03b64; border-radius:11px; padding:9px 13px; font-size:13px; font-weight:700; margin-bottom:12px; }
+    .bc-purpose { background:#faf8f4; border:1px solid #f0ece6; border-radius:11px; padding:11px 13px; font-size:13px; color:#6f6457; line-height:1.6; white-space:pre-wrap; margin-bottom:6px; }
+    .bc-sec { font-size:12.5px; font-weight:800; color:#d6336c; margin:14px 0 8px; }
+    .prow { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #f0ece6; border-radius:11px; padding:9px 12px; margin-bottom:8px; flex-wrap:wrap; }
+    .prow .pnm { font-weight:700; color:#3D3228; font-size:14px; margin-left:auto; }
+    .pbtn { text-decoration:none; border-radius:9px; padding:7px 13px; font-size:12.5px; font-weight:700; }
+    .pbtn.wa { background:#e4f5ea; color:#1c8a4b; } .pbtn.tel { background:#e8eef6; color:#2f5b93; }
+  </style>
+  <!-- BIRTHDAY-CALL MODAL -->
+  <div class="modal-ov" id="bcModal">
+    <div class="modal">
+      <h3 id="bcTitle">🎂 שיחת יום הולדת</h3>
+      <div id="bcBody" style="max-height:60vh; overflow:auto;"></div>
+      <div class="modal-actions">
+        <button class="b-save" onclick="saveBc()">💾 שמור בתיק</button>
+        <button class="b-cancel" onclick="closeBc()">סגור</button>
+      </div>
+      <button onclick="copyBcGroup()" style="width:100%; margin-top:10px; background:#0d9488; color:#fff; border:none; padding:10px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer;">📋 העתק לקבוצת הצוות</button>
+      <button onclick="delBc()" style="width:100%; margin-top:8px; background:#f3e4e2; color:#c0492a; border:none; padding:9px; border-radius:10px; font-family:'Heebo'; font-weight:600; cursor:pointer;">🗑 מחק תזכורת</button>
+    </div>
+  </div>
+
   <!-- CATEGORY EVENTS MODAL -->
   <div class="modal-ov" id="catModal">
     <div class="modal">
@@ -226,6 +250,7 @@ const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','
 const GARDEN_CATS = [
   { key:'סידור',         color:'#0891b2' },
   { key:'מפגש עובד',      color:'#7c3aed' },
+  { key:'שיחת יום הולדת', color:'#d6336c' },
   { key:'הדרכת צוות',     color:'#2D5A50' },
   { key:'הדרכה פדגוגית',  color:'#ea580c' },
   { key:'ערב הורים',      color:'#C4846C' },
@@ -242,6 +267,7 @@ const GARDEN_CATS = [
 const CAT_DEFAULTS = {
   'סידור':       { s:'07:45', e:'16:30' },
   'מפגש עובד':    { s:'13:30', e:'14:15' },
+  'שיחת יום הולדת': { s:'17:00', e:'17:30' },
   'הדרכת צוות':   { s:'13:30', e:'14:30' },
   'הדרכה פדגוגית': { s:'08:00', e:'14:30' },
   'ערב הורים':    { s:'20:30', e:'22:00' },
@@ -397,7 +423,7 @@ async function renderGarden() {
 // modal
 function fillCats() {
   document.getElementById('evtCat').innerHTML = GARDEN_CATS
-    .filter(c => c.key !== 'יום הולדת ילד' && c.key !== 'יום הולדת צוות')  // hide only the auto-computed ones
+    .filter(c => c.key !== 'יום הולדת ילד' && c.key !== 'יום הולדת צוות' && c.key !== 'שיחת יום הולדת')  // hide auto-computed ones
     .map(c => `<option value="${c.key}">${c.key}</option>`).join('');
 }
 function openEvt(dateStr) {
@@ -420,6 +446,7 @@ function editEvt(id) {
   // A BOOKED "זמן הורים" slot (title = child, not the marker) -> show booking + cancel.
   if (e.category === 'זמן הורים' && e.title && e.title !== 'זמן הורים') { showBookedSlot(e); return; }
   if (e.category === 'מפגש עובד') { openConv(e); return; }   // staff meeting -> conversation card
+  if (e.category === 'שיחת יום הולדת') { openBirthdayCall(e); return; }  // birthday call -> call card
   editingEvtId = id;
   toggleSmSection(e.category || '');
   document.getElementById('evtBatchWrap').style.display = 'none';
@@ -674,6 +701,79 @@ function dictate(btn, targetId) {
   _rec.onend = () => { btn.classList.remove('rec'); if (_recBtn === btn) { _rec = null; _recBtn = null; } };
   _rec.onerror = () => { btn.classList.remove('rec'); };
   _rec.start();
+}
+
+// ---------- שיחת יום הולדת — birthday-call reminder card ----------
+const PURPOSE_DEFAULT = 'מטרת השיחה: לתאם עם ההורים את חגיגת יום ההולדת בגן, לשמוע מה מיוחד לילד/ה השנה, ולתת להם להרגיש שותפים ברגע. (הטקסט המלא יעודכן.)';
+let bcCard = null, bcEvent = null;
+async function openBirthdayCall(e) {
+  bcCard = null; bcEvent = e;
+  document.getElementById('bcTitle').textContent = '🎂 ' + (e.title || 'שיחת יום הולדת');
+  document.getElementById('bcBody').innerHTML = '<div style="padding:14px;color:#9B8E82;">טוען…</div>';
+  document.getElementById('bcModal').classList.add('show');
+  try { const r = await api.getEventCards({ event_id: e.id }); bcCard = (r.data || [])[0] || null; } catch (_) {}
+  await renderBc();
+}
+async function renderBc() {
+  const body = document.getElementById('bcBody');
+  if (!bcCard) { body.innerHTML = '<div style="padding:14px;color:#c94147;">לא נמצא כרטיס מקושר לתזכורת.</div>'; return; }
+  const s = bcCard.summary || {};
+  let ctx = '';
+  if (s.birth_date) {
+    const [by, bm, bd] = s.birth_date.split('-').map(Number);
+    const occ = s.occYear || by;
+    const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+    const dow = new Date(Date.UTC(occ, bm - 1, bd)).getUTCDay();
+    ctx = `🎂 יום הולדת: ${bd}.${bm}.${occ} · יום ${days[dow]} · נעשה בן/בת ${occ - by}`;
+    if (s.batch) ctx += ' · (חוגגים ביולי—תחילת אוגוסט)';
+  }
+  let parents = [];
+  try { const pr = await api.getParents(bcCard.child_id); parents = pr.data || []; } catch (_) {}
+  const pHtml = parents.length ? parents.map(p => {
+    const wa = p.phone ? `<a class="pbtn wa" href="${waHref(p.phone)}" target="_blank" rel="noopener">📱 וואטסאפ</a>` : '';
+    const tel = p.phone ? `<a class="pbtn tel" href="tel:${esc(p.phone)}">☎️ חיוג</a>` : '<span style="color:#c0492a;font-size:12px;">אין טלפון</span>';
+    return `<div class="prow"><span class="pnm">${esc(p.full_name_he)}</span>${wa}${tel}</div>`;
+  }).join('') : '<div style="color:#9B8E82;font-size:13px;">אין הורים רשומים לילד/ה.</div>';
+  body.innerHTML =
+    (ctx ? `<div class="bc-ctx">${esc(ctx)}</div>` : '') +
+    `<div class="bc-purpose">${esc(PURPOSE_DEFAULT)}</div>` +
+    `<div class="bc-sec">📞 חיוג להורים</div>${pHtml}` +
+    `<div class="bc-sec">📝 תכנון החגיגה</div>` +
+    `<div class="sm-q"><textarea id="bcPlan" style="min-height:112px;">${esc(s.plan || '')}</textarea>` +
+    `<button type="button" class="sm-mic" onclick="dictate(this,'bcPlan')" title="הכתבה קולית">🎤</button></div>`;
+}
+async function saveBc() {
+  if (!bcCard) return;
+  const plan = document.getElementById('bcPlan').value;
+  const summary = Object.assign({}, bcCard.summary || {}, { plan });
+  try { await api.updateEventCard(bcCard.id, { summary }); bcCard.summary = summary; alert('התכנון נשמר בתיק הילד/ה ✓'); }
+  catch (e) { alert('שגיאה: ' + e.message); }
+}
+function copyBcGroup() {
+  const s = (bcCard && bcCard.summary) || {};
+  const name = (bcEvent.title || '').replace('שיחת יום הולדת · ', '');
+  let when = '';
+  if (s.birth_date) { const [by, bm, bd] = s.birth_date.split('-').map(Number); const occ = s.occYear || by; when = `📅 ${bd}.${bm}.${occ}`; }
+  const plan = document.getElementById('bcPlan') ? document.getElementById('bcPlan').value : (s.plan || '');
+  const msg = (`🎂 יום הולדת בגן — ${name}\n${when}\n\n${plan}`).trim();
+  const done = () => alert('ההודעה הועתקה — הדביקו בקבוצת הצוות 💛');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(msg).then(done).catch(() => { fallbackCopy(msg); done(); });
+  else { fallbackCopy(msg); done(); }
+}
+async function delBc() {
+  if (!confirm('למחוק את תזכורת שיחת יום ההולדת ואת האירוע מהלוח?')) return;
+  try { if (bcCard) await api.deleteEventCard(bcCard.id); if (bcEvent) await api.deleteEvent(bcEvent.id); closeBc(); renderGarden(); }
+  catch (e) { alert('שגיאה: ' + e.message); }
+}
+function closeBc() { document.getElementById('bcModal').classList.remove('show'); if (_rec) _rec.stop(); }
+async function genBirthdayReminders() {
+  if (!confirm('ליצור תזכורות שיחת יום הולדת לכל ילדי השנה?')) return;
+  try {
+    const r = await api.generateBirthdayReminders();
+    let msg = `נוצרו ${r.created} תזכורות (${r.existed} כבר היו קיימות).`;
+    if (r.past) msg += `\n\n${r.past} ילדים שהמועד כבר קרוב/עבר — כדאי לתכנן ידנית:\n${(r.pastKids || []).join(', ')}`;
+    alert(msg); renderGarden();
+  } catch (e) { alert('שגיאה: ' + e.message); }
 }
 
 // category filter (click a category in the legend to see all its events)

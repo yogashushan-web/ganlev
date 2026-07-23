@@ -325,6 +325,10 @@ document.getElementById('childForm').addEventListener('submit', async (e) => {
       }
       pendingParents = [];
       showSuccess(editingId ? 'הילד עודכן' : ('הילד נוסף' + (addedParents ? ` + ${addedParents} הורים` : '')));
+      const br = res.birthday_reminder;
+      if (br && br.reason === 'past') {
+        alert('🎂 שים לב: יום ההולדת של ' + (br.name || 'הילד/ה') + ' כבר קרוב/עבר — לא נוצרה תזכורת אוטומטית. כדאי לתכנן את החגיגה ידנית.');
+      }
       toggleForm(); resetForm(); loadChildren();
     }
   } catch (err) { showError('שגיאה: ' + err.message); }
