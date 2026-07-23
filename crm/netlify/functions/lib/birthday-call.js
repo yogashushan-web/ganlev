@@ -63,21 +63,24 @@ async function createBirthdayCallReminder(child, garden_id) {
   // window already passed -> caller notifies at creation
   if (calc.date < todayISO()) return { skipped: true, reason: 'past', date: calc.date, name };
 
+  // Create the CARD first (no event_id yet). If the event_cards table is missing,
+  // we fail here — before creating an orphan calendar event.
+  const { data: card, error: e0 } = await supabase.from('event_cards').insert({
+    garden_id, kind: 'birthday_call', child_id: child.id, event_id: null,
+    title: name, scheduled_date: calc.date, scheduled_time: '17:00',
+    urgency: 'important', status: 'planned',
+    summary: { plan: PLAN_DEFAULT, batch: calc.batch, birth_date: child.birth_date, occYear: calc.occYear },
+  }).select().single();
+  if (e0) throw e0;
+
   const { data: ev, error: e1 } = await supabase.from('events').insert({
     garden_id, calendar: 'garden', category: 'שיחת יום הולדת',
     title: 'שיחת יום הולדת · ' + name, event_date: calc.date,
     event_time: '17:00', end_time: '17:30', notes: null,
   }).select().single();
-  if (e1) throw e1;
+  if (e1) { await supabase.from('event_cards').delete().eq('id', card.id); throw e1; }
 
-  const { error: e2 } = await supabase.from('event_cards').insert({
-    garden_id, kind: 'birthday_call', child_id: child.id, event_id: ev.id,
-    title: name, scheduled_date: calc.date, scheduled_time: '17:00',
-    urgency: 'important', status: 'planned',
-    summary: { plan: PLAN_DEFAULT, batch: calc.batch, birth_date: child.birth_date, occYear: calc.occYear },
-  });
-  if (e2) throw e2;
-
+  await supabase.from('event_cards').update({ event_id: ev.id }).eq('id', card.id);
   try { await syncEventToCalendar('REQUEST', ev); } catch (e) { console.error('bday-call cal sync failed', e); }
   return { created: true, date: calc.date, batch: calc.batch, name };
 }
