@@ -35,10 +35,13 @@
     .cal-card { background:#FFF; border-radius:16px; padding:20px; box-shadow:0 4px 16px rgba(31,61,52,.06); }
     .cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
     .cal-head h2 { font-size:18px; color:#1F3D34; }
-    .cal-nav { display:flex; align-items:center; gap:10px; }
+    .cal-nav { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
     .cal-nav button { border:none; background:#F4EFE6; width:34px; height:34px; border-radius:9px; cursor:pointer; font-size:16px; color:#1F3D34; }
     .cal-nav button:hover { background:#e8e0d4; }
     .cal-nav .lbl { font-weight:700; color:#1F3D34; min-width:120px; text-align:center; }
+    .cal-nav select { font-family:'Heebo'; font-weight:700; color:#1F3D34; background:#F4EFE6; border:none; border-radius:9px; padding:0 8px; height:34px; font-size:14px; cursor:pointer; }
+    .cal-nav select:hover { background:#e8e0d4; }
+    .cal-nav .today-btn { width:auto; padding:0 13px; font-size:13px; font-weight:700; }
     .btn-add-evt { background:#C4846C; color:#fff; border:none; padding:9px 16px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
     .btn-add-evt:hover { background:#a96b54; }
 
@@ -108,9 +111,13 @@
     <div class="cal-card">
       <div class="cal-head">
         <div class="cal-nav">
-          <button onclick="moveMonth(-1)">‹</button>
-          <span class="lbl" id="gardenMonthLbl"></span>
-          <button onclick="moveMonth(1)">›</button>
+          <button onclick="moveYear(-1)" title="שנה אחורה">«</button>
+          <button onclick="moveMonth(-1)" title="חודש אחורה">‹</button>
+          <select id="gMonthSel" onchange="jumpMonth(this.value)" title="קפיצה לחודש"></select>
+          <select id="gYearSel" onchange="jumpYear(this.value)" title="קפיצה לשנה"></select>
+          <button onclick="moveMonth(1)" title="חודש קדימה">›</button>
+          <button onclick="moveYear(1)" title="שנה קדימה">»</button>
+          <button onclick="goToday()" class="today-btn" title="חזרה להיום">היום</button>
         </div>
         <button class="btn-add-evt" onclick="openEvt(todayStr())">+ אירוע חדש</button>
         <button class="btn-add-evt" style="background:#d6336c;" onclick="genBirthdayReminders()" title="יצירת תזכורות שיחה לכל ילדי השנה">🎂 תזכורות ימי הולדת</button>
@@ -370,6 +377,25 @@ function moveMonth(d) {
   if (view.m > 11) { view.m = 0; view.y++; }
   renderGarden();
 }
+function moveYear(d) { view.y += d; renderGarden(); }
+function jumpMonth(v) { view.m = +v; renderGarden(); }
+function jumpYear(v) { view.y = +v; renderGarden(); }
+function goToday() { const n = new Date(); view.y = n.getFullYear(); view.m = n.getMonth(); renderGarden(); }
+// keep the month/year dropdowns in sync with the current view
+function syncNav() {
+  const mSel = document.getElementById('gMonthSel');
+  if (mSel && !mSel.options.length) mSel.innerHTML = monthNames.map((n, i) => `<option value="${i}">${n}</option>`).join('');
+  if (mSel) mSel.value = view.m;
+  const ySel = document.getElementById('gYearSel');
+  if (ySel) {
+    const now = new Date().getFullYear();
+    const lo = Math.min(now - 3, view.y), hi = Math.max(now + 4, view.y);
+    let opts = '';
+    for (let y = lo; y <= hi; y++) opts += `<option value="${y}">${y}</option>`;
+    ySel.innerHTML = opts;
+    ySel.value = view.y;
+  }
+}
 
 // Which calendar year does a child's birthday fall in — based on the school year
 // they're REGISTERED under (so a child shows only in that year, never the next).
@@ -386,7 +412,7 @@ function childBdayYear(c) {
 
 async function renderGarden() {
   const { y, m } = view;
-  document.getElementById('gardenMonthLbl').textContent = monthNames[m] + ' ' + y;
+  syncNav();
   const lastDay = new Date(y, m + 1, 0).getDate();
   const from = `${y}-${pad(m+1)}-01`, to = `${y}-${pad(m+1)}-${pad(lastDay)}`;
 
