@@ -371,6 +371,19 @@ function moveMonth(d) {
   renderGarden();
 }
 
+// Which calendar year does a child's birthday fall in — based on the school year
+// they're REGISTERED under (so a child shows only in that year, never the next).
+function schoolYearStartOf(sy) {
+  if (sy && /^\d{4}-\d{2}$/.test(sy)) return parseInt(sy.slice(0, 4), 10);
+  const now = new Date();
+  return now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;  // fallback: current school year
+}
+function childBdayYear(c) {
+  const bmo = new Date(c.birth_date).getMonth();        // 0=Jan … 8=Sep
+  const startYr = schoolYearStartOf(c.school_year);
+  return bmo >= 8 ? startYr : startYr + 1;               // Sep-Dec -> start year; Jan-Aug -> next
+}
+
 async function renderGarden() {
   const { y, m } = view;
   document.getElementById('gardenMonthLbl').textContent = monthNames[m] + ' ' + y;
@@ -383,7 +396,7 @@ async function renderGarden() {
   const holidays = await fetchHolidays(y, m);
 
   const bdays = childrenCache
-    .filter(c => c.birth_date && new Date(c.birth_date).getMonth() === m)
+    .filter(c => c.birth_date && new Date(c.birth_date).getMonth() === m && childBdayYear(c) === y)
     .map(c => ({ day: new Date(c.birth_date).getDate(), name: c.first_name_he }));
   const staffBdays = staffCache
     .filter(m2 => m2.birth_date && new Date(m2.birth_date).getMonth() === m)
