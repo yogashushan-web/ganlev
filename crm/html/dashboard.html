@@ -42,8 +42,19 @@
     .cal-nav button:hover { background:#e8e0d4; }
     .cal-nav select { font-family:'Heebo'; font-weight:700; color:#1F3D34; background:#F4EFE6; border:none; border-radius:9px; padding:0 8px; height:32px; font-size:14px; cursor:pointer; min-width:112px; text-align:center; text-align-last:center; }
     .cal-nav select:hover { background:#e8e0d4; }
-    .cal-nav .today-btn { align-self:stretch; aspect-ratio:1; width:auto; height:auto; border-radius:11px; font-size:14px; font-weight:800; background:#C4846C; color:#fff; }
+    .cal-nav .today-btn { align-self:stretch; aspect-ratio:3; width:auto; height:auto; border-radius:11px; font-size:15px; font-weight:800; background:#C4846C; color:#fff; }
     .cal-nav .today-btn:hover { background:#a96b54; }
+
+    /* day detail view */
+    .day-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
+    .day-head h3 { font-size:19px; color:#1F3D34; }
+    .day-body { max-height:62vh; overflow:auto; display:flex; flex-direction:column; gap:10px; }
+    .day-item { display:flex; align-items:center; gap:13px; padding:14px 16px; border-radius:13px; background:#faf8f4; border-right:4px solid #C4846C; }
+    .day-item[onclick]:hover { background:#f1ebe1; }
+    .day-item .di-time { font-weight:800; color:#6f6457; font-size:14px; min-width:54px; text-align:center; }
+    .day-item .di-title { font-weight:700; color:#1F3D34; font-size:15.5px; line-height:1.4; }
+    .day-item .di-cat { font-size:12px; color:#9B8E82; margin-top:2px; }
+    .day-empty { color:#b6ab9d; text-align:center; padding:30px 10px; font-size:15px; }
     .btn-add-evt { background:#C4846C; color:#fff; border:none; padding:9px 16px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
     .btn-add-evt:hover { background:#a96b54; }
 
@@ -249,6 +260,18 @@
     </div>
   </div>
 
+  <!-- DAY DETAIL MODAL -->
+  <div class="modal-ov" id="dayModal">
+    <div class="modal">
+      <div class="day-head">
+        <h3 id="dayTitle"></h3>
+        <button class="btn-add-evt" onclick="dayAddEvent()">+ אירוע חדש</button>
+      </div>
+      <div id="dayBody" class="day-body"></div>
+      <div class="modal-actions"><button class="b-cancel" onclick="closeDay()" style="width:100%;">סגור</button></div>
+    </div>
+  </div>
+
   <!-- CATEGORY EVENTS MODAL -->
   <div class="modal-ov" id="catModal">
     <div class="modal">
@@ -389,6 +412,47 @@ function moveYear(d) { view.y += d; renderGarden(); }
 function jumpMonth(v) { view.m = +v; renderGarden(); }
 function jumpYear(v) { view.y = +v; renderGarden(); }
 function goToday() { const n = new Date(); view.y = n.getFullYear(); view.m = n.getMonth(); renderGarden(); }
+
+// Expanded day view — see all of a day's tasks; add a new event from the top.
+let dayCurrentDate = null;
+async function openDay(dateStr) {
+  dayCurrentDate = dateStr;
+  const [yy, mm, dd] = dateStr.split('-').map(Number);
+  const y = yy, m = mm - 1, d = dd;
+  const dayNames = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  document.getElementById('dayTitle').textContent = `יום ${dayNames[new Date(y, m, d).getDay()]} · ${d} ב${monthNames[m]} ${y}`;
+  document.getElementById('dayBody').innerHTML = '<div class="day-empty">טוען…</div>';
+  document.getElementById('dayModal').classList.add('show');
+
+  const items = [];
+  try {
+    const hol = await fetchHolidays(y, m);
+    hol.filter(h => h.date === dateStr).forEach(h => items.push({ icon: '🕎', title: h.title, cat: 'חג / מועד', color: '#d97706' }));
+  } catch (e) {}
+  childrenCache
+    .filter(c => c.birth_date && new Date(c.birth_date).getMonth() === m && new Date(c.birth_date).getDate() === d && childBdayYear(c) === y)
+    .forEach(c => items.push({ icon: '🎂', title: 'יום הולדת · ' + c.first_name_he, cat: 'יום הולדת ילד', color: '#ec4899' }));
+  staffCache
+    .filter(s => s.birth_date && new Date(s.birth_date).getMonth() === m && new Date(s.birth_date).getDate() === d)
+    .forEach(s => items.push({ icon: '🎂', title: 'יום הולדת · ' + ((s.full_name_he || '').split(' ')[0] || s.full_name_he), cat: 'יום הולדת צוות', color: '#16a34a' }));
+  gardenEvents
+    .filter(e => e.event_date === dateStr)
+    .sort((a, b) => (a.event_time || '99:99').localeCompare(b.event_time || '99:99'))
+    .forEach(e => items.push({ time: e.event_time ? e.event_time.slice(0, 5) : '', title: e.title, cat: e.category || '', color: catColor(e.category), id: e.id }));
+
+  document.getElementById('dayBody').innerHTML = items.length ? items.map(it => {
+    const lead = it.time || it.icon || '•';
+    const attrs = it.id
+      ? `onclick="closeDay(); editEvt('${it.id}')" style="cursor:pointer; border-right-color:${it.color};"`
+      : `style="border-right-color:${it.color};"`;
+    return `<div class="day-item" ${attrs}>
+      <div class="di-time">${esc(lead)}</div>
+      <div><div class="di-title">${esc(it.title)}</div>${it.cat ? `<div class="di-cat">${esc(it.cat)}</div>` : ''}</div>
+    </div>`;
+  }).join('') : '<div class="day-empty">אין משימות ליום הזה 🌿</div>';
+}
+function dayAddEvent() { closeDay(); openEvt(dayCurrentDate); }
+function closeDay() { document.getElementById('dayModal').classList.remove('show'); }
 // keep the month/year dropdowns in sync with the current view
 function syncNav() {
   const mSel = document.getElementById('gMonthSel');
@@ -457,7 +521,7 @@ async function renderGarden() {
       const tt = e.event_time ? (e.event_time.slice(0,5) + (e.end_time ? '-' + e.end_time.slice(0,5) : '') + ' ') : '';
       chips += `<div class="ev-chip" style="background:${c}22;color:${c};border-right:3px solid ${c};" title="${esc(e.title)} — לחיצה לעריכה" onclick="event.stopPropagation(); editEvt('${e.id}')">${tt}${esc(e.title)}</div>`;
     });
-    html += `<div class="cal-cell ${dateStr === tStr ? 'today' : ''}" onclick="openEvt('${dateStr}')"><div class="cal-d">${d} <span class="he-d">${heDay(y, m, d)}</span></div>${chips}</div>`;
+    html += `<div class="cal-cell ${dateStr === tStr ? 'today' : ''}" onclick="openDay('${dateStr}')"><div class="cal-d">${d} <span class="he-d">${heDay(y, m, d)}</span></div>${chips}</div>`;
   }
   html += '</div>';
   document.getElementById('gardenGrid').innerHTML = html;
