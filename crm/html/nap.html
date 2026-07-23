@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ככה אני נרדם/ת · גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Heebo',sans-serif; direction:rtl; color:#43413c; min-height:100vh;
+      background:linear-gradient(170deg,#FBF7EF 0%,#EEF5FB 55%,#E6F0F9 100%);
+      position:relative; overflow-x:hidden;
+    }
+    /* soft night-sky decorations */
+    .deco { position:fixed; pointer-events:none; user-select:none; opacity:.5; z-index:0; }
+    .deco.moon { top:24px; left:26px; font-size:46px; opacity:.85; }
+    .deco.s1 { top:70px; right:40px; font-size:20px; } .deco.s2 { top:150px; right:120px; font-size:13px; }
+    .deco.s3 { top:120px; left:120px; font-size:15px; } .deco.s4 { bottom:80px; left:40px; font-size:18px; }
+    .deco.c1 { top:210px; left:-10px; font-size:52px; opacity:.35; } .deco.c2 { bottom:40px; right:-8px; font-size:60px; opacity:.3; }
+
+    .wrap { position:relative; z-index:1; max-width:560px; margin:0 auto; padding:26px 16px 60px; }
+    .card { background:rgba(255,255,255,.86); backdrop-filter:blur(4px); border-radius:26px; padding:26px 22px;
+      box-shadow:0 14px 44px rgba(120,140,170,.18); margin-bottom:18px; }
+    .head { text-align:center; }
+    .head .m { font-size:44px; }
+    .head h1 { font-size:26px; color:#3a5b73; margin-top:4px; font-weight:800; }
+    .head p { font-size:14.5px; color:#7d7568; line-height:1.7; margin-top:12px; }
+
+    label.q { display:block; font-size:17px; font-weight:700; color:#3a5b73; margin-bottom:4px; }
+    .hint { font-size:13px; color:#a49b8c; line-height:1.6; margin-bottom:12px; }
+    .hint b { color:#8aa9bf; font-weight:600; }
+
+    /* child picker */
+    .ac { position:relative; }
+    .ac input { width:100%; padding:15px 16px; border:2px solid #e4e9ee; border-radius:16px; font-family:'Heebo';
+      font-size:16px; outline:none; background:#fff; transition:border-color .15s; }
+    .ac input:focus { border-color:#9cc3de; }
+    .ac-list { position:absolute; top:calc(100% + 6px); right:0; left:0; background:#fff; border-radius:14px;
+      box-shadow:0 10px 30px rgba(80,110,140,.18); max-height:240px; overflow:auto; z-index:20; display:none; padding:6px; }
+    .ac-list.show { display:block; }
+    .ac-item { padding:12px 14px; border-radius:10px; cursor:pointer; font-size:15px; }
+    .ac-item:hover, .ac-item.hl { background:#eef5fb; }
+    .ac-empty { padding:12px 14px; color:#a49b8c; font-size:14px; }
+    .picked { display:none; align-items:center; gap:10px; background:#eef5fb; border-radius:14px; padding:12px 15px; margin-top:2px; }
+    .picked.show { display:flex; }
+    .picked .nm { font-weight:700; color:#3a5b73; font-size:16px; }
+    .picked .x { margin-right:auto; background:none; border:none; color:#8aa9bf; font-size:20px; cursor:pointer; }
+
+    /* need cards */
+    .needs { display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:14px; }
+    .need { display:flex; align-items:center; gap:11px; background:#fff; border:2px solid #e9edf1; border-radius:16px;
+      padding:14px 15px; cursor:pointer; transition:.13s; user-select:none; }
+    .need:hover { border-color:#cfe0ec; }
+    .need.on { border-color:#9cc3de; background:#f2f8fc; box-shadow:0 4px 14px rgba(120,160,190,.16); }
+    .need .ic { font-size:26px; line-height:1; }
+    .need .lb { font-size:15.5px; font-weight:600; color:#4a4740; }
+    .need .ck { margin-right:auto; width:22px; height:22px; border-radius:50%; border:2px solid #d7dee4;
+      display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; transition:.13s; }
+    .need.on .ck { background:#7fb0d0; border-color:#7fb0d0; }
+
+    textarea { width:100%; padding:14px 15px; border:2px solid #e4e9ee; border-radius:16px; font-family:'Heebo';
+      font-size:15px; outline:none; resize:vertical; line-height:1.7; min-height:96px; background:#fff; }
+    textarea:focus { border-color:#9cc3de; }
+    input.other { width:100%; padding:13px 15px; border:2px dashed #dfe5ea; border-radius:14px; font-family:'Heebo';
+      font-size:15px; outline:none; background:#fff; }
+    input.other:focus { border-color:#9cc3de; }
+
+    .send { width:100%; margin-top:6px; background:linear-gradient(135deg,#7fb0d0,#5f93b8); color:#fff; border:none;
+      padding:17px; border-radius:18px; font-family:'Heebo'; font-weight:800; font-size:18px; cursor:pointer;
+      box-shadow:0 10px 26px rgba(95,147,184,.34); transition:.15s; }
+    .send:hover { transform:translateY(-1px); box-shadow:0 14px 30px rgba(95,147,184,.42); }
+    .send:disabled { opacity:.55; cursor:default; transform:none; }
+    .err { color:#c9776b; font-size:14px; text-align:center; margin-top:12px; min-height:18px; font-weight:600; }
+
+    /* thank you */
+    .thanks { display:none; text-align:center; padding:20px 10px; }
+    .thanks.show { display:block; }
+    .thanks .big { font-size:60px; }
+    .thanks h2 { font-size:24px; color:#3a5b73; margin:10px 0 8px; }
+    .thanks p { color:#7d7568; font-size:15.5px; line-height:1.7; }
+  </style>
+</head>
+<body>
+  <div class="deco moon">🌙</div>
+  <div class="deco s1">✨</div><div class="deco s2">⭐</div><div class="deco s3">✨</div><div class="deco s4">⭐</div>
+  <div class="deco c1">☁️</div><div class="deco c2">☁️</div>
+
+  <div class="wrap">
+    <div class="card head">
+      <div class="m">🌙</div>
+      <h1>ככה אני נרדם/ת</h1>
+      <p>בתחילת השנה חשוב לנו לתת לילדים תחושת ביטחון והמשכיות. כדי שנוכל ללוות את ילדכם להירדמות נעימה ומוכרת גם בגן —
+         ספרו לנו איך נראה טקס ההירדמות שלו בבית. כמה דקות שלכם = הרבה רוגע עבורו 💛</p>
+    </div>
+
+    <div id="formCard" class="card">
+      <label class="q">מי הילד/ה?</label>
+      <div class="hint">בחרו מהרשימה</div>
+      <div class="ac" id="ac">
+        <input type="text" id="acInput" placeholder="הקלידו שם…" autocomplete="off">
+        <div class="ac-list" id="acList"></div>
+      </div>
+      <div class="picked" id="picked">
+        <span class="nm" id="pickedName"></span>
+        <button type="button" class="x" onclick="clearChild()">×</button>
+      </div>
+
+      <div style="height:22px;"></div>
+      <label class="q">מה עוזר לי להירדם?</label>
+      <div class="hint">אפשר לבחור כמה שרוצים 🌟</div>
+      <div class="needs" id="needs"></div>
+      <input type="text" class="other" id="needsOther" placeholder="עוד משהו שעוזר לי להירדם…">
+
+      <div style="height:22px;"></div>
+      <label class="q">איך אני בדרך כלל נרדם/ת בבית?</label>
+      <div class="hint">
+        אפשר לספר בחופשיות. למשל: <b>שוכבים לידי?</b> <b>מלטפים?</b> <b>שרים שיר?</b> <b>צריך/ה יד?</b>
+        <b>נרדם/ת לבד?</b> <b>יש משפט קבוע שאומרים?</b>
+      </div>
+      <textarea id="ritual" placeholder="ספרו לנו…"></textarea>
+
+      <div style="height:22px;"></div>
+      <label class="q">משהו נוסף שחשוב שנדע?</label>
+      <div class="hint">כל דבר קטן שיכול לעזור לנו להקל עליו/ה בזמן ההירדמות</div>
+      <textarea id="notes" placeholder="(לא חובה)"></textarea>
+
+      <div style="height:20px;"></div>
+      <button class="send" id="sendBtn" onclick="submitForm()">שליחה 🌙</button>
+      <div class="err" id="err"></div>
+    </div>
+
+    <div class="card thanks" id="thanks">
+      <div class="big">🌙💛</div>
+      <h2>תודה!</h2>
+      <p id="thanksMsg">שמרנו את טקס ההירדמות. נעשה כמיטב יכולתנו לתת לילדכם/ה שינה רגועה ומוכרת גם בגן.</p>
+    </div>
+  </div>
+
+<script>
+  const API = '/.netlify/functions/nap-submit';
+  const NEEDS = [
+    { v:'בקבוק', ic:'🍼' }, { v:'מוצץ', ic:'👶' }, { v:'דובי / בובה', ic:'🧸' },
+    { v:'שמיכה', ic:'☁️' }, { v:'חיתול בד', ic:'🤍' }, { v:'הנקה', ic:'🤱' },
+  ];
+  const $ = id => document.getElementById(id);
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let children = [], chosen = null, picks = new Set(), hl = -1, filtered = [];
+
+  // render need cards
+  $('needs').innerHTML = NEEDS.map((n,i) =>
+    `<div class="need" data-v="${esc(n.v)}" onclick="toggleNeed(${i},this)">
+       <span class="ic">${n.ic}</span><span class="lb">${esc(n.v)}</span>
+       <span class="ck">✓</span></div>`).join('');
+  function toggleNeed(i, el) {
+    const v = NEEDS[i].v;
+    if (picks.has(v)) { picks.delete(v); el.classList.remove('on'); }
+    else { picks.add(v); el.classList.add('on'); }
+  }
+
+  async function loadChildren() {
+    try { const d = await (await fetch(API)).json(); children = d.children || []; }
+    catch (e) { children = []; }
+  }
+  function renderAc() {
+    const list = $('acList');
+    if (!filtered.length) { list.innerHTML = '<div class="ac-empty">לא נמצא שם כזה</div>'; list.classList.add('show'); return; }
+    list.innerHTML = filtered.map((c,i) => `<div class="ac-item ${i===hl?'hl':''}" onmousedown="pickChild('${c.id}')">${esc(c.name)}</div>`).join('');
+    list.classList.add('show');
+  }
+  $('acInput').addEventListener('input', function () {
+    const q = this.value.trim();
+    filtered = q ? children.filter(c => c.name.includes(q)) : children.slice(0, 30);
+    hl = -1; renderAc();
+  });
+  $('acInput').addEventListener('focus', function () {
+    filtered = this.value.trim() ? filtered : children.slice(0, 30); renderAc();
+  });
+  $('acInput').addEventListener('keydown', function (e) {
+    if (!filtered.length) return;
+    if (e.key === 'ArrowDown') { hl = Math.min(hl+1, filtered.length-1); renderAc(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { hl = Math.max(hl-1, 0); renderAc(); e.preventDefault(); }
+    else if (e.key === 'Enter' && hl >= 0) { pickChild(filtered[hl].id); e.preventDefault(); }
+  });
+  document.addEventListener('click', e => { if (!$('ac').contains(e.target)) $('acList').classList.remove('show'); });
+
+  function pickChild(id) {
+    chosen = children.find(c => c.id === id) || null;
+    if (!chosen) return;
+    $('acList').classList.remove('show');
+    $('acInput').style.display = 'none';
+    $('pickedName').textContent = chosen.name;
+    $('picked').classList.add('show');
+  }
+  function clearChild() {
+    chosen = null;
+    $('picked').classList.remove('show');
+    $('acInput').style.display = ''; $('acInput').value = ''; $('acInput').focus();
+  }
+
+  async function submitForm() {
+    $('err').textContent = '';
+    if (!chosen) { $('err').textContent = 'בחרו קודם את שם הילד/ה 🙏'; return; }
+    const btn = $('sendBtn'); btn.disabled = true; btn.textContent = 'שולח…';
+    try {
+      const r = await fetch(API, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          child_id: chosen.id, child_name: chosen.name,
+          needs: [...picks], needs_other: $('needsOther').value,
+          ritual: $('ritual').value, notes: $('notes').value,
+        }),
+      });
+      const d = await r.json();
+      if (!d.success) throw new Error(d.error || 'שגיאה');
+      $('formCard').style.display = 'none';
+      $('thanksMsg').textContent = 'שמרנו את טקס ההירדמות של ' + chosen.name + '. נעשה כמיטב יכולתנו לתת לו/ה שינה רגועה ומוכרת גם בגן 💛';
+      $('thanks').classList.add('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      $('err').textContent = 'לא הצלחנו לשמור: ' + e.message;
+      btn.disabled = false; btn.textContent = 'שליחה 🌙';
+    }
+  }
+
+  loadChildren();
+</script>
+</body>
+</html>

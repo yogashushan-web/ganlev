@@ -146,4 +146,7 @@ const api = {
   createEventCard: (data) => apiCall(`/event-cards?garden_id=${getGardenId()}`, 'POST', data),
   updateEventCard: (id, data) => apiCall(`/event-cards/${id}?garden_id=${getGardenId()}`, 'PUT', data),
   deleteEventCard: (id) => apiCall(`/event-cards/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+
+  // "שנת הצהריים" nap-ritual forms (staff view)
+  getNapForms: () => apiCall(`/nap-list?garden_id=${getGardenId()}`),
 };
