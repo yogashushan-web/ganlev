@@ -46,6 +46,7 @@
     .cal-nav .today-btn:hover { background:#a96b54; }
 
     /* day detail view */
+    #dayModal { z-index:99990; }   /* below the editors, so a task's editor opens on top */
     .day-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
     .day-head h3 { font-size:19px; color:#1F3D34; }
     .day-body { max-height:62vh; overflow:auto; display:flex; flex-direction:column; gap:10px; }
@@ -413,9 +414,10 @@ function jumpMonth(v) { view.m = +v; renderGarden(); }
 function jumpYear(v) { view.y = +v; renderGarden(); }
 function goToday() { const n = new Date(); view.y = n.getFullYear(); view.m = n.getMonth(); renderGarden(); }
 
-// Expanded day view — see all of a day's tasks; add a new event from the top.
+// Expanded day view — clicking any day (or any chip) opens THIS first; editing a
+// task opens its editor ON TOP, and closing it returns here (auto-refreshed).
 let dayCurrentDate = null;
-async function openDay(dateStr) {
+function openDay(dateStr) {
   dayCurrentDate = dateStr;
   const [yy, mm, dd] = dateStr.split('-').map(Number);
   const y = yy, m = mm - 1, d = dd;
@@ -423,7 +425,11 @@ async function openDay(dateStr) {
   document.getElementById('dayTitle').textContent = `יום ${dayNames[new Date(y, m, d).getDay()]} · ${d} ב${monthNames[m]} ${y}`;
   document.getElementById('dayBody').innerHTML = '<div class="day-empty">טוען…</div>';
   document.getElementById('dayModal').classList.add('show');
-
+  renderDayBody(dateStr);
+}
+async function renderDayBody(dateStr) {
+  const [yy, mm, dd] = dateStr.split('-').map(Number);
+  const y = yy, m = mm - 1, d = dd;
   const items = [];
   try {
     const hol = await fetchHolidays(y, m);
@@ -443,7 +449,7 @@ async function openDay(dateStr) {
   document.getElementById('dayBody').innerHTML = items.length ? items.map(it => {
     const lead = it.time || it.icon || '•';
     const attrs = it.id
-      ? `onclick="closeDay(); editEvt('${it.id}')" style="cursor:pointer; border-right-color:${it.color};"`
+      ? `onclick="editEvt('${it.id}')" style="cursor:pointer; border-right-color:${it.color};"`
       : `style="border-right-color:${it.color};"`;
     return `<div class="day-item" ${attrs}>
       <div class="di-time">${esc(lead)}</div>
@@ -451,8 +457,8 @@ async function openDay(dateStr) {
     </div>`;
   }).join('') : '<div class="day-empty">אין משימות ליום הזה 🌿</div>';
 }
-function dayAddEvent() { closeDay(); openEvt(dayCurrentDate); }
-function closeDay() { document.getElementById('dayModal').classList.remove('show'); }
+function dayAddEvent() { openEvt(dayCurrentDate); }   // opens on top of the day view
+function closeDay() { document.getElementById('dayModal').classList.remove('show'); dayCurrentDate = null; }
 // keep the month/year dropdowns in sync with the current view
 function syncNav() {
   const mSel = document.getElementById('gMonthSel');
@@ -519,7 +525,7 @@ async function renderGarden() {
       .forEach(e => {
       const c = catColor(e.category);
       const tt = e.event_time ? (e.event_time.slice(0,5) + (e.end_time ? '-' + e.end_time.slice(0,5) : '') + ' ') : '';
-      chips += `<div class="ev-chip" style="background:${c}22;color:${c};border-right:3px solid ${c};" title="${esc(e.title)} — לחיצה לעריכה" onclick="event.stopPropagation(); editEvt('${e.id}')">${tt}${esc(e.title)}</div>`;
+      chips += `<div class="ev-chip" style="background:${c}22;color:${c};border-right:3px solid ${c};" title="${esc(e.title)}">${tt}${esc(e.title)}</div>`;
     });
     html += `<div class="cal-cell ${dateStr === tStr ? 'today' : ''}" onclick="openDay('${dateStr}')"><div class="cal-d">${d} <span class="he-d">${heDay(y, m, d)}</span></div>${chips}</div>`;
   }
@@ -529,6 +535,9 @@ async function renderGarden() {
   document.getElementById('gardenLegend').innerHTML =
     `<span class="lg" onclick="showCategory('חגים ומועדים')"><i style="background:#d97706;"></i>חגים ומועדים</span>` +
     GARDEN_CATS.map(c => `<span class="lg" onclick="showCategory('${c.key}')"><i style="background:${c.color};"></i>${c.key}</span>`).join('');
+
+  // if the day view is open, refresh it with the fresh data (after any edit/add/delete)
+  if (dayCurrentDate && document.getElementById('dayModal').classList.contains('show')) renderDayBody(dayCurrentDate);
 }
 
 // modal
