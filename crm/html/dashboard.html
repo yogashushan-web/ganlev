@@ -188,7 +188,7 @@
         <div style="display:flex; gap:10px;">
           <div id="smTypeWrap" style="flex:1;"><label style="margin-top:0;">סוג ההדרכה</label>
             <select id="smType" onchange="renderSmPrep()" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;"></select></div>
-          <div style="flex:1;"><label style="margin-top:0;">עובד/ת</label>
+          <div id="smStaffWrap" style="flex:1;"><label style="margin-top:0;">עובד/ת</label>
             <select id="smStaff" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;"></select></div>
         </div>
         <div id="smFeedbackWrap" style="display:none; margin-top:9px;">
@@ -791,20 +791,23 @@ function toggleSmSection(cat) {
   document.getElementById('smWrap').style.display = on ? 'block' : 'none';
   document.getElementById('evtTitleRow').style.display = on ? 'none' : 'block';
   if (!on) return;
-  fillSmStaff();
   document.getElementById('smTypeWrap').style.display = isTraining ? '' : 'none';
+  document.getElementById('smStaffWrap').style.display = isMeeting ? '' : 'none';   // הדרכה = כל הצוות, בלי עובד יחיד
   document.getElementById('smFeedbackWrap').style.display = isMeeting ? 'block' : 'none';
-  if (isTraining) fillSmType();
+  if (isTraining) fillSmType(); else fillSmStaff();
   renderSmPrep();
 }
 async function saveStaffMeeting() {
   const cat = document.getElementById('evtCat').value;         // 'הדרכת צוות' | 'מפגש עובד'
   const isTraining = cat === 'הדרכת צוות';
-  const staffId = document.getElementById('smStaff').value;
-  const staff = (staffCache || []).find(s => s.id === staffId);
   const start = document.getElementById('evtDate').value;
-  if (!staffId || !staff) { alert('צריך לבחור עובד/ת'); return; }
   if (!start) { alert('צריך תאריך'); return; }
+  let staffId = null, staff = null;
+  if (!isTraining) {
+    staffId = document.getElementById('smStaff').value;
+    staff = (staffCache || []).find(s => s.id === staffId);
+    if (!staffId || !staff) { alert('צריך לבחור עובד/ת'); return; }
+  }
   let convType, typeLabel;
   if (isTraining) {
     convType = document.getElementById('smType').value;
@@ -815,7 +818,7 @@ async function saveStaffMeeting() {
   }
   const purpose = (document.getElementById('smq0')?.value || '').trim();
   const prep = [{ q: isTraining ? 'מה מטרת ההדרכה?' : 'מה מטרת המפגש?', a: purpose }];
-  const title = staff.full_name_he + ' · ' + typeLabel;
+  const title = isTraining ? ('הדרכת צוות · ' + typeLabel) : (staff.full_name_he + ' · ' + typeLabel);
   const time = document.getElementById('evtTime').value || null;
   try {
     const r = await api.createEvent({
