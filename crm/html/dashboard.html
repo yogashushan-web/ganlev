@@ -186,10 +186,13 @@
       </div>
       <div id="smWrap" style="display:none; margin-top:8px; background:#f6f3fb; border:1px solid #e4dcf3; border-radius:12px; padding:12px 13px;">
         <div style="display:flex; gap:10px;">
-          <div style="flex:1;"><label style="margin-top:0;">סוג השיחה</label>
+          <div id="smTypeWrap" style="flex:1;"><label style="margin-top:0;">סוג ההדרכה</label>
             <select id="smType" onchange="renderSmPrep()" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;"></select></div>
           <div style="flex:1;"><label style="margin-top:0;">עובד/ת</label>
             <select id="smStaff" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;"></select></div>
+        </div>
+        <div id="smFeedbackWrap" style="display:none; margin-top:9px;">
+          <label style="display:flex; align-items:center; gap:7px; font-weight:600; color:#5b5147; cursor:pointer; margin:0;"><input type="checkbox" id="smFeedback" style="width:16px; height:16px;"> זו שיחת משוב</label>
         </div>
         <label>דחיפות</label>
         <select id="smUrg" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;">
@@ -621,7 +624,7 @@ function editEvt(id) {
   if (!e) return;
   // A BOOKED "זמן הורים" slot (title = child, not the marker) -> show booking + cancel.
   if (e.category === 'זמן הורים' && e.title && e.title !== 'זמן הורים') { showBookedSlot(e); return; }
-  if (e.category === 'מפגש עובד') { openConv(e); return; }   // staff meeting -> conversation card
+  if (e.category === 'מפגש עובד' || e.category === 'הדרכת צוות') { openConv(e); return; }   // staff meeting / training -> card
   if (e.category === 'שיחת יום הולדת') { openBirthdayCall(e); return; }  // birthday call -> call card
   editingEvtId = id;
   toggleSmSection(e.category || '');
@@ -682,7 +685,7 @@ function buildSlots(start, until, mins) {
 
 async function saveEvt() {
   const cat = document.getElementById('evtCat').value;
-  if (cat === 'מפגש עובד') return saveStaffMeeting();
+  if (cat === 'מפגש עובד' || cat === 'הדרכת צוות') return saveStaffMeeting();
   const isPT = cat === 'זמן הורים';
   let title = document.getElementById('evtTitle').value.trim();
   if (isPT) title = 'זמן הורים';                        // slot marker = open
@@ -741,20 +744,21 @@ async function delCurrentEvt() {
 }
 
 // ---------- מפגש עובד — staff conversation anchor (intention -> ביצוע -> summary -> תיק עובד) ----------
-const SM_TYPES = {
-  reflective:  { emoji:'🪞', label:'שיחה רפלקטיבית', goal:'עיבוד חוויות ומתן משמעות',
-    prep:['מה החוויה או המקרה שנעבד יחד?','מה הייתי רוצה שהעובד/ת ייקח/תיקח מהעיבוד?','אילו שאלות פתוחות אשאל כדי לעורר חשיבה?'] },
-  development: { emoji:'🌱', label:'שיחת פיתוח', goal:'קידום ההתפתחות המקצועית',
-    prep:['מהן החוזקות של העובד/ת שאשקף?','אילו תחומי צמיחה זיהיתי?','איזו מטרה אישית נציב יחד?','מה הצעד הראשון הקונקרטי?'] },
-  training:    { emoji:'📚', label:'שיחת הדרכה', goal:'הקניית ידע וכלים מקצועיים',
-    prep:['מה הנושא של ההדרכה?','למה הוא רלוונטי עכשיו (שלב בשנה / צורך שעלה)?','אילו דוגמאות מהשטח אביא?','האם יהיה תרגול, ואיזה?'] },
-  planning:    { emoji:'🗺️', label:'שיחת תכנון', goal:'הכנה מסודרת לתהליך, תקופה או אירוע',
-    prep:['לאיזה תהליך / אירוע מתכוננים?','מה המטרות?','איך מחלקים אחריות בין חברי הצוות?','אילו אתגרים צפויים ואיך נערכים?'] },
-  problem:     { emoji:'🧩', label:'שיחת פתרון בעיות', goal:'התמודדות משותפת עם אתגר מקצועי',
-    prep:['מה הקושי או המצב המורכב?','מה הגורמים לו?','אילו אפשרויות פעולה עולות?'] },
-  case:        { emoji:'🔍', label:'ניתוח מקרה', goal:'הפקת ידע מקצועי מאירוע שקרה בגן',
-    prep:['איזה מקרה אמיתי נבחן?','מה בדיוק קרה?','מה עבד ומה ניתן לשפר?','אילו תובנות וכלים נפיק להמשך?'] },
+// הדרכת צוות — 6 training types (prep is a single "מטרת ההדרכה" for now)
+const TRAINING_TYPES = {
+  reflective: { emoji:'🪞', label:'שיחה רפלקטיבית', goal:'עיבוד חוויות ומתן משמעות' },
+  case:       { emoji:'🔍', label:'למידת מקרה', goal:'הפקת ידע ממקרה אמיתי' },
+  observe:    { emoji:'👁️', label:'צפייה וניתוח', goal:'צפייה בשטח וניתוח משותף' },
+  theory:     { emoji:'📖', label:'למידה תאורטית', goal:'הקניית ידע וכלים מקצועיים' },
+  simulation: { emoji:'🎭', label:'סימולציה', goal:'תרגול דרך משחק תפקידים' },
+  planning:   { emoji:'🗺️', label:'תכנון משותף', goal:'תכנון תהליך/אירוע יחד' },
 };
+// מפגש עובד — simple (general or feedback)
+const MEETING_TYPES = {
+  general:  { emoji:'💬', label:'מפגש עובד' },
+  feedback: { emoji:'🔁', label:'שיחת משוב' },
+};
+function convTypeInfo(k) { return TRAINING_TYPES[k] || MEETING_TYPES[k] || { emoji:'💬', label:'שיחה' }; }
 const SM_SUMMARY_QS = [
   { k:'happened',   q:'מה קרה בשיחה?' },
   { k:'decisions',  q:'אילו החלטות התקבלו?' },
@@ -763,7 +767,7 @@ const SM_SUMMARY_QS = [
 ];
 function fillSmType() {
   document.getElementById('smType').innerHTML =
-    Object.entries(SM_TYPES).map(([k, t]) => `<option value="${k}">${t.emoji} ${t.label}</option>`).join('');
+    Object.entries(TRAINING_TYPES).map(([k, t]) => `<option value="${k}">${t.emoji} ${t.label}</option>`).join('');
 }
 function fillSmStaff() {
   const list = (staffCache || []).filter(s => s.status !== 'archived');
@@ -772,41 +776,58 @@ function fillSmStaff() {
     : '<option value="">— אין עובדים פעילים —</option>';
 }
 function renderSmPrep() {
-  const t = SM_TYPES[document.getElementById('smType').value];
-  document.getElementById('smGoal').textContent = t ? '🎯 ' + t.goal : '';
-  document.getElementById('smPrep').innerHTML = t ? t.prep.map((q, i) =>
-    `<div class="sm-q"><label>${esc(q)}</label>
-       <textarea id="smq${i}" placeholder="כתוב/י או הכתב/י בקול…"></textarea>
-       <button type="button" class="sm-mic" onclick="dictate(this,'smq${i}')" title="הכתבה קולית">🎤</button></div>`).join('') : '';
+  const isTraining = document.getElementById('evtCat').value === 'הדרכת צוות';
+  let goal = '';
+  if (isTraining) { const t = TRAINING_TYPES[document.getElementById('smType').value]; goal = t ? '🎯 ' + t.goal : ''; }
+  document.getElementById('smGoal').textContent = goal;
+  const q = isTraining ? 'מה מטרת ההדרכה?' : 'מה מטרת המפגש?';
+  document.getElementById('smPrep').innerHTML =
+    `<div class="sm-q"><label>${q}</label>
+       <textarea id="smq0" placeholder="כתוב/י או הכתב/י בקול…"></textarea>
+       <button type="button" class="sm-mic" onclick="dictate(this,'smq0')" title="הכתבה קולית">🎤</button></div>`;
 }
 function toggleSmSection(cat) {
-  const on = cat === 'מפגש עובד';
+  const isTraining = cat === 'הדרכת צוות', isMeeting = cat === 'מפגש עובד', on = isTraining || isMeeting;
   document.getElementById('smWrap').style.display = on ? 'block' : 'none';
   document.getElementById('evtTitleRow').style.display = on ? 'none' : 'block';
-  if (on) { fillSmType(); fillSmStaff(); renderSmPrep(); }
+  if (!on) return;
+  fillSmStaff();
+  document.getElementById('smTypeWrap').style.display = isTraining ? '' : 'none';
+  document.getElementById('smFeedbackWrap').style.display = isMeeting ? 'block' : 'none';
+  if (isTraining) fillSmType();
+  renderSmPrep();
 }
 async function saveStaffMeeting() {
-  const typeKey = document.getElementById('smType').value;
-  const t = SM_TYPES[typeKey];
+  const cat = document.getElementById('evtCat').value;         // 'הדרכת צוות' | 'מפגש עובד'
+  const isTraining = cat === 'הדרכת צוות';
   const staffId = document.getElementById('smStaff').value;
   const staff = (staffCache || []).find(s => s.id === staffId);
   const start = document.getElementById('evtDate').value;
   if (!staffId || !staff) { alert('צריך לבחור עובד/ת'); return; }
   if (!start) { alert('צריך תאריך'); return; }
-  const prep = t.prep.map((q, i) => ({ q, a: (document.getElementById('smq' + i)?.value || '').trim() }));
-  const title = staff.full_name_he + ' · ' + t.label;
+  let convType, typeLabel;
+  if (isTraining) {
+    convType = document.getElementById('smType').value;
+    typeLabel = (TRAINING_TYPES[convType] || {}).label || 'הדרכה';
+  } else {
+    convType = document.getElementById('smFeedback').checked ? 'feedback' : 'general';
+    typeLabel = MEETING_TYPES[convType].label;
+  }
+  const purpose = (document.getElementById('smq0')?.value || '').trim();
+  const prep = [{ q: isTraining ? 'מה מטרת ההדרכה?' : 'מה מטרת המפגש?', a: purpose }];
+  const title = staff.full_name_he + ' · ' + typeLabel;
   const time = document.getElementById('evtTime').value || null;
   try {
     const r = await api.createEvent({
-      calendar: 'garden', title, category: 'מפגש עובד', event_date: start,
+      calendar: 'garden', title, category: cat, event_date: start,
       event_time: time, end_time: document.getElementById('evtEndTime').value || null, notes: null,
     });
     const ev = r.data;
     await api.createEventCard({
-      kind: 'staff_conversation', conv_type: typeKey, staff_id: staffId, event_id: ev.id,
+      kind: isTraining ? 'training' : 'staff_meeting', conv_type: convType, staff_id: staffId, event_id: ev.id,
       title, scheduled_date: start, scheduled_time: time,
       urgency: document.getElementById('smUrg').value,
-      prep, status: prep.some(p => p.a) ? 'prepared' : 'planned',
+      prep, status: purpose ? 'prepared' : 'planned',
     });
     closeEvt(); renderGarden(); loadTitleHistory();
   } catch (err) { alert('שגיאה בשמירה: ' + err.message); }
@@ -830,7 +851,7 @@ function renderConv() {
     return;
   }
   document.getElementById('convSaveBtn').style.display = '';
-  const tp = SM_TYPES[convCard.conv_type];
+  const tp = convTypeInfo(convCard.conv_type);
   let h = '<div class="conv-view"><div style="font-size:12px;font-weight:800;color:#7c3aed;">כרטיס הכנה' + (tp ? ' · ' + tp.emoji + ' ' + tp.label : '') + '</div>';
   (convCard.prep || []).forEach(p => { h += `<div class="vq">${esc(p.q)}</div><div class="va ${p.a ? '' : 'empty'}">${esc(p.a || '—')}</div>`; });
   h += '</div><div style="height:1px;background:#efe6d8;margin:14px 0;"></div>';
