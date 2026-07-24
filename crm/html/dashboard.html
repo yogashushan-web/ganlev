@@ -169,7 +169,8 @@
         <div style="flex:1;"><label>תאריך התחלה</label><input type="date" id="evtDate"></div>
         <div style="flex:1;"><label>תאריך סיום</label><input type="date" id="evtEndDate"></div>
       </div>
-      <label>קטגוריה</label><select id="evtCat" onchange="onCatChange()"></select>
+      <label>קבוצה</label><select id="evtGroup" onchange="onGroupChange()"></select>
+      <label>סוג</label><select id="evtCat" onchange="onCatChange()"></select>
       <div id="evtTitleRow">
         <label>כותרת</label><input type="text" id="evtTitle" list="evtTitleList" autocomplete="off" placeholder="בחרי מכותרות קודמות או הקלידי חדשה">
         <datalist id="evtTitleList"></datalist>
@@ -287,20 +288,48 @@
 <script>
 const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const GARDEN_CATS = [
-  { key:'סידור',         color:'#0891b2' },
-  { key:'מפגש עובד',      color:'#7c3aed' },
-  { key:'שיחת יום הולדת', color:'#d6336c' },
+  // 👥 צוות
   { key:'הדרכת צוות',     color:'#2D5A50' },
+  { key:'מפגש עובד',      color:'#7c3aed' },
   { key:'הדרכה פדגוגית',  color:'#ea580c' },
-  { key:'ערב הורים',      color:'#C4846C' },
+  { key:'שינוי בסידור',   color:'#0891b2' },
+  { key:'ראיון עבודה',    color:'#1d4ed8' },
+  { key:'יום גיבוש צוות', color:'#15803d' },
+  { key:'הודעה לצוות',    color:'#0d9488' },
+  // 👨‍👩‍👧 הורים
   { key:'זמן הורים',      color:'#0ea5e9' },
+  { key:'פגישת הורים',    color:'#b45309' },
+  { key:'ערב הורים',      color:'#C4846C' },
+  { key:'סיור היכרות',    color:'#a16207' },
+  { key:'הודעה להורים',   color:'#0d9488' },
+  // 🌿 קהילה
   { key:'אירוע קהילה',    color:'#8b5cf6' },
-  { key:'חופשה',         color:'#dc2626' },
-  { key:'חוג',           color:'#3b82f6' },
-  { key:'יום הולדת',      color:'#f59e0b' },
+  { key:'הודעה לקהילה',   color:'#0d9488' },
+  // 👶 ילדים
+  { key:'תהליך אישי',     color:'#7e22ce' },
+  { key:'תצפית',          color:'#4f46e5' },
+  { key:'אירוע חריג',     color:'#b91c1c' },
+  // 📊 ניהול
+  { key:'פגישת יואל ומאימאי', color:'#334155' },
+  { key:'פגישה עם רואה חשבון', color:'#475569' },
+  { key:'פגישה אישית',    color:'#64748b' },
+  { key:'משימה אישית',    color:'#0f766e' },
+  // auto-computed / legacy (kept for rendering existing events; not in the picker)
+  { key:'שיחת יום הולדת', color:'#d6336c' },
   { key:'יום הולדת ילד',  color:'#ec4899' },
   { key:'יום הולדת צוות', color:'#16a34a' },
+  { key:'סידור',         color:'#0891b2' },
+  { key:'חופשה',         color:'#dc2626' },
+  { key:'חוג',           color:'#3b82f6' },
   { key:'הודעה בקבוצה',   color:'#0d9488' },
+];
+// Two-step "אירוע חדש" menu: group -> types (each type = the event's category)
+const EVENT_GROUPS = [
+  { key:'staff',     label:'👥 צוות',    types:['הדרכת צוות','מפגש עובד','הדרכה פדגוגית','שינוי בסידור','ראיון עבודה','יום גיבוש צוות','הודעה לצוות'] },
+  { key:'parents',   label:'👨‍👩‍👧 הורים',  types:['זמן הורים','פגישת הורים','ערב הורים','סיור היכרות','הודעה להורים'] },
+  { key:'community', label:'🌿 קהילה',   types:['אירוע קהילה','הודעה לקהילה'] },
+  { key:'children',  label:'👶 ילדים',   types:['תהליך אישי','תצפית','אירוע חריג'] },
+  { key:'mgmt',      label:'📊 ניהול',   types:['פגישת יואל ומאימאי','פגישה עם רואה חשבון','פגישה אישית','משימה אישית'] },
 ];
 // default start/end times per category (חופשה = all day, no time)
 const CAT_DEFAULTS = {
@@ -311,10 +340,13 @@ const CAT_DEFAULTS = {
   'הדרכה פדגוגית': { s:'08:00', e:'14:30' },
   'ערב הורים':    { s:'20:30', e:'22:00' },
   'זמן הורים':    { s:'13:10', e:'14:00' },
+  'פגישת יואל ומאימאי': { s:'16:10', e:'17:00' },
   'חוג':         { s:'09:45', e:'10:45' },
   'חופשה':       { allDay:true },
-  'יום הולדת':    { allDay:true },
   'הודעה בקבוצה':  { allDay:true },
+  'הודעה לצוות':   { allDay:true },
+  'הודעה להורים':  { allDay:true },
+  'הודעה לקהילה':  { allDay:true },
 };
 // fixed title options offered for a category (shown alongside previously-used titles)
 const PRESET_TITLES = {
@@ -364,7 +396,9 @@ function fillTitleSuggestions(cat) {
 }
 // The message-content field is only relevant for the "הודעה בקבוצה" category
 function toggleNotesField(cat) {
-  document.getElementById('evtNotesWrap').style.display = (cat === 'הודעה בקבוצה') ? 'block' : 'none';
+  // any "הודעה ל..." (staff / parents / community) opens the message-content field
+  const isMsg = !!cat && (cat.indexOf('הודעה') === 0);
+  document.getElementById('evtNotesWrap').style.display = isMsg ? 'block' : 'none';
 }
 function onCatChange() {
   const cat = document.getElementById('evtCat').value;
@@ -534,17 +568,39 @@ async function renderGarden() {
 
   document.getElementById('gardenLegend').innerHTML =
     `<span class="lg" onclick="showCategory('חגים ומועדים')"><i style="background:#d97706;"></i>חגים ומועדים</span>` +
-    GARDEN_CATS.map(c => `<span class="lg" onclick="showCategory('${c.key}')"><i style="background:${c.color};"></i>${c.key}</span>`).join('');
+    EVENT_GROUPS.flatMap(g => g.types).map(t => `<span class="lg" onclick="showCategory('${t}')"><i style="background:${catColor(t)};"></i>${t}</span>`).join('');
 
   // if the day view is open, refresh it with the fresh data (after any edit/add/delete)
   if (dayCurrentDate && document.getElementById('dayModal').classList.contains('show')) renderDayBody(dayCurrentDate);
 }
 
 // modal
-function fillCats() {
-  document.getElementById('evtCat').innerHTML = GARDEN_CATS
-    .filter(c => c.key !== 'יום הולדת ילד' && c.key !== 'יום הולדת צוות' && c.key !== 'שיחת יום הולדת')  // hide auto-computed ones
-    .map(c => `<option value="${c.key}">${c.key}</option>`).join('');
+function fillGroupSelect() {
+  document.getElementById('evtGroup').innerHTML = EVENT_GROUPS.map(g => `<option value="${g.key}">${g.label}</option>`).join('');
+}
+function fillTypesForGroup(groupKey) {
+  const g = EVENT_GROUPS.find(x => x.key === groupKey) || EVENT_GROUPS[0];
+  document.getElementById('evtCat').innerHTML = g.types.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+function fillCats() { fillGroupSelect(); fillTypesForGroup(EVENT_GROUPS[0].key); }
+function onGroupChange() { fillTypesForGroup(document.getElementById('evtGroup').value); onCatChange(); }
+// editing an existing event -> jump to the group+type that own its category
+function selectCategory(cat) {
+  const g = EVENT_GROUPS.find(x => x.types.includes(cat));
+  if (g) {
+    document.getElementById('evtGroup').value = g.key;
+    fillTypesForGroup(g.key);
+    document.getElementById('evtCat').value = cat;
+  } else {
+    // legacy category not in the menu — keep it selectable so editing never loses it
+    document.getElementById('evtGroup').value = EVENT_GROUPS[0].key;
+    fillTypesForGroup(EVENT_GROUPS[0].key);
+    const sel = document.getElementById('evtCat');
+    if (cat && !Array.from(sel.options).some(o => o.value === cat)) {
+      const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat + ' (קיים)'; sel.appendChild(opt);
+    }
+    sel.value = cat;
+  }
 }
 function openEvt(dateStr) {
   editingEvtId = null;
@@ -577,7 +633,7 @@ function editEvt(id) {
   document.getElementById('evtDate').value = e.event_date;
   document.getElementById('evtEndDate').value = e.event_date;
   document.getElementById('evtTitle').value = e.title || '';
-  document.getElementById('evtCat').value = e.category || '';
+  selectCategory(e.category || '');
   fillTitleSuggestions(e.category || '');
   toggleNotesField(e.category || '');
   document.getElementById('evtTime').value = e.event_time ? e.event_time.slice(0, 5) : '';
