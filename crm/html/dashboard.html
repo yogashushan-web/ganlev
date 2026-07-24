@@ -194,6 +194,8 @@
         <div id="smFeedbackWrap" style="display:none; margin-top:9px;">
           <label style="display:flex; align-items:center; gap:7px; font-weight:600; color:#5b5147; cursor:pointer; margin:0;"><input type="checkbox" id="smFeedback" style="width:16px; height:16px;"> זו שיחת משוב</label>
         </div>
+        <label>כותרת למפגש <span style="font-weight:400; color:#9B8E82;">(לא חובה)</span></label>
+        <input type="text" id="smTitle" placeholder="למשל: הדרכה על מעברים בגן" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;">
         <label>דחיפות</label>
         <select id="smUrg" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;">
           <option value="critical">🔴 קריטי · תזכורת כל שעתיים</option>
@@ -791,6 +793,7 @@ function toggleSmSection(cat) {
   document.getElementById('smWrap').style.display = on ? 'block' : 'none';
   document.getElementById('evtTitleRow').style.display = on ? 'none' : 'block';
   if (!on) return;
+  document.getElementById('smTitle').value = '';
   document.getElementById('smTypeWrap').style.display = isTraining ? '' : 'none';
   document.getElementById('smStaffWrap').style.display = isMeeting ? '' : 'none';   // הדרכה = כל הצוות, בלי עובד יחיד
   document.getElementById('smFeedbackWrap').style.display = isMeeting ? 'block' : 'none';
@@ -818,7 +821,8 @@ async function saveStaffMeeting() {
   }
   const purpose = (document.getElementById('smq0')?.value || '').trim();
   const prep = [{ q: isTraining ? 'מה מטרת ההדרכה?' : 'מה מטרת המפגש?', a: purpose }];
-  const title = isTraining ? ('הדרכת צוות · ' + typeLabel) : (staff.full_name_he + ' · ' + typeLabel);
+  const custom = (document.getElementById('smTitle').value || '').trim();
+  const title = custom || (isTraining ? ('הדרכת צוות · ' + typeLabel) : (staff.full_name_he + ' · ' + typeLabel));
   const time = document.getElementById('evtTime').value || null;
   try {
     const r = await api.createEvent({
