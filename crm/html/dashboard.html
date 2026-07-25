@@ -825,17 +825,13 @@ async function saveStaffMeeting() {
   const custom = (document.getElementById('smTitle').value || '').trim();
   const title = custom || (isTraining ? ('הדרכת צוות · ' + typeLabel) : (staff.full_name_he + ' · ' + typeLabel));
   const time = document.getElementById('evtTime').value || null;
+  // store the card INSIDE the event's notes (JSON) — no separate table needed
+  const card = { _card: true, kind: isTraining ? 'training' : 'staff_meeting', conv_type: convType, staff_id: staffId, prep, summary: {}, urgency: document.getElementById('smUrg').value, status: purpose ? 'prepared' : 'planned' };
   try {
-    const r = await api.createEvent({
+    await api.createEvent({
       calendar: 'garden', title, category: cat, event_date: start,
-      event_time: time, end_time: document.getElementById('evtEndTime').value || null, notes: null,
-    });
-    const ev = r.data;
-    await api.createEventCard({
-      kind: isTraining ? 'training' : 'staff_meeting', conv_type: convType, staff_id: staffId, event_id: ev.id,
-      title, scheduled_date: start, scheduled_time: time,
-      urgency: document.getElementById('smUrg').value,
-      prep, status: purpose ? 'prepared' : 'planned',
+      event_time: time, end_time: document.getElementById('evtEndTime').value || null,
+      notes: JSON.stringify(card),
     });
     closeEvt(); renderGarden(); loadTitleHistory();
   } catch (err) { alert('שגיאה בשמירה: ' + err.message); }
@@ -848,7 +844,7 @@ async function openConv(e) {
   document.getElementById('convSub').textContent = formatDate(e.event_date) + (e.event_time ? ' · ' + e.event_time.slice(0, 5) : '');
   document.getElementById('convBody').innerHTML = '<div style="padding:14px;color:#9B8E82;">טוען…</div>';
   document.getElementById('convModal').classList.add('show');
-  try { const r = await api.getEventCards({ event_id: e.id }); convCard = (r.data || [])[0] || null; } catch (err) {}
+  try { const c = JSON.parse(e.notes || '{}'); if (c && c._card) convCard = c; } catch (err) {}
   renderConv();
 }
 function renderConv() {
@@ -873,19 +869,20 @@ function renderConv() {
   body.innerHTML = h;
 }
 async function saveConv() {
-  if (!convCard) return;
+  if (!convCard || !convEvent) return;
   const summary = {};
   SM_SUMMARY_QS.forEach((it, i) => summary[it.k] = (document.getElementById('csq' + i)?.value || '').trim());
+  const updated = Object.assign({}, convCard, { summary, status: 'done' });
   try {
-    await api.updateEventCard(convCard.id, { status: 'done', summary });
+    await api.updateEvent(convEvent.id, { notes: JSON.stringify(updated) });
+    convCard = updated; convEvent.notes = JSON.stringify(updated);
     closeConv(); renderGarden();
-    alert('הסיכום נשמר בתיק העובד ✓');
+    alert('הסיכום נשמר ✓');
   } catch (err) { alert('שגיאה: ' + err.message); }
 }
 async function delConv() {
   if (!confirm('למחוק את השיחה ואת האירוע מהלוח?')) return;
   try {
-    if (convCard) await api.deleteEventCard(convCard.id);
     if (convEvent) await api.deleteEvent(convEvent.id);
     closeConv(); renderGarden();
   } catch (err) { alert('שגיאה: ' + err.message); }
