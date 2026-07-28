@@ -150,6 +150,9 @@ const api = {
   // "שנת הצהריים" nap-ritual forms (staff view)
   getNapForms: () => apiCall(`/nap-list?garden_id=${getGardenId()}`),
 
+  // August "ימי היכרות" visit bookings (staff view)
+  getVisitBookings: () => apiCall(`/visit-list?garden_id=${getGardenId()}`),
+
   // Birthday-call reminders — backfill for all current-year children
   generateBirthdayReminders: () => apiCall(`/birthday-reminders?garden_id=${getGardenId()}`, 'POST'),
 };

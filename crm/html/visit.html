@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ימי היכרות · גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; direction:rtl; color:#3D3228; min-height:100vh; background:linear-gradient(170deg,#F6F1E7 0%,#EAF2EC 100%); }
+    .wrap { max-width:600px; margin:0 auto; padding:26px 16px 60px; }
+    .card { background:#fff; border-radius:22px; padding:26px 22px; box-shadow:0 12px 40px rgba(90,120,100,.14); margin-bottom:16px; }
+    .head h1 { font-size:26px; color:#1F3D34; text-align:center; }
+    .head p { font-size:14.5px; color:#7d7568; line-height:1.7; margin-top:12px; text-align:center; }
+    label.q { display:block; font-size:16px; font-weight:700; color:#1F3D34; margin-bottom:8px; }
+    .ac { position:relative; }
+    .ac input { width:100%; padding:14px 15px; border:2px solid #e4e9e4; border-radius:15px; font-family:'Heebo'; font-size:16px; outline:none; }
+    .ac input:focus { border-color:#7fae90; }
+    .ac-list { position:absolute; top:calc(100% + 5px); right:0; left:0; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15); max-height:230px; overflow:auto; z-index:20; display:none; padding:5px; }
+    .ac-list.show { display:block; }
+    .ac-item { padding:11px 13px; border-radius:9px; cursor:pointer; font-size:15px; }
+    .ac-item:hover, .ac-item.hl { background:#eef5ef; }
+    .ac-empty { padding:11px 13px; color:#9B8E82; font-size:14px; }
+    .picked { display:none; align-items:center; gap:10px; background:#eef5ef; border-radius:13px; padding:12px 15px; margin-top:2px; }
+    .picked.show { display:flex; }
+    .picked .nm { font-weight:700; color:#1F3D34; font-size:16px; }
+    .picked .x { margin-right:auto; background:none; border:none; color:#7d7568; font-size:22px; cursor:pointer; line-height:1; }
+
+    .days { display:none; }
+    .days.show { display:block; }
+    .day { margin-bottom:14px; }
+    .day-h { font-size:16px; font-weight:800; color:#1F3D34; margin-bottom:8px; }
+    .caps { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    @media(max-width:460px){ .caps{grid-template-columns:1fr;} }
+    .cap { border:2px solid #e4e9e4; border-radius:14px; padding:13px; text-align:center; background:#fbfaf7; }
+    .cap .t { font-weight:800; font-size:16px; color:#1F3D34; direction:ltr; }
+    .cap .left { font-size:12.5px; color:#7d7568; margin:4px 0 9px; }
+    .cap button { width:100%; border:none; border-radius:10px; padding:9px; font-family:'Heebo'; font-weight:700; font-size:13.5px; cursor:pointer; }
+    .b-book { background:#1F3D34; color:#fff; } .b-book:hover{ background:#154428; }
+    .b-cancel { background:#f3e4e2; color:#c0492a; }
+    .cap.full { opacity:.65; } .cap.full button, .cap .disabled { background:#e9e4da; color:#9B8E82; cursor:default; }
+    .cap.mine { border-color:#7fae90; background:#eef7f0; }
+    .cap.mine .tag { font-size:11.5px; font-weight:700; color:#2f6b46; margin-bottom:6px; }
+    .cap.otherday .note { font-size:11.5px; color:#b6875a; }
+    .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#1F3D34; color:#fff; padding:11px 20px; border-radius:12px; font-weight:600; font-size:14px; opacity:0; transition:.2s; pointer-events:none; }
+    .toast.show { opacity:1; }
+    .hint { color:#9B8E82; font-size:13.5px; text-align:center; margin-top:4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card head">
+      <h1>🌿 ימי היכרות · אוגוסט</h1>
+      <p>לפני תחילת השנה אנחנו פותחים ימי ביקור קצרים בגן — הזדמנות להכיר את הצוות, את המרחב ואת הפינות, כדי שילדכם יגיע ל-1 בספטמבר עם תחושת ביטחון והיכרות מוקדמת. בחרו יום ושעה שנוחים לכם 💛
+        <br><span style="font-size:13px;">(כל ביקור כ-50 דקות, בקבוצה קטנה של עד 7 משפחות.)</span></p>
+    </div>
+
+    <div class="card">
+      <label class="q">שם הילד/ה</label>
+      <div class="hint" style="text-align:right;margin:0 0 8px;">בחרו מהרשימה</div>
+      <div class="ac" id="ac">
+        <input type="text" id="acInput" placeholder="הקלידו שם ובחרו מהרשימה…" autocomplete="off">
+        <div class="ac-list" id="acList"></div>
+      </div>
+      <div class="picked" id="picked">
+        <span class="nm" id="pickedName"></span>
+        <button type="button" class="x" onclick="clearChild()">×</button>
+      </div>
+    </div>
+
+    <div id="days" class="days"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+  const API = '/.netlify/functions/visit-book';
+  const DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  const $ = id => document.getElementById(id);
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let cfg = { dates:[], slots:[], capacity:7, counts:{} };
+  let children = [], chosen = null, filtered = [], hl = -1, myDays = {};
+
+  function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+  function fmtDate(d){ const [y,m,dd]=d.split('-').map(Number); const dow=new Date(y,m-1,dd).getDay(); return `יום ${DAY_NAMES[dow]} · ${dd} ב${MONTHS[m-1]}`; }
+
+  async function loadCfg(childId) {
+    const url = API + '?garden_id=5120efca-8bb0-47a3-90d2-2c6a5a013e31' + (childId ? '&child_id=' + encodeURIComponent(childId) : '');
+    const d = await (await fetch(url)).json();
+    cfg = d;
+    if (childId) { myDays = {}; (d.childBookings||[]).forEach(b => myDays[b.date] = b.time); }
+    if (!childId) children = d.children || [];
+  }
+
+  // ---- child picker ----
+  function renderAc() {
+    if (!filtered.length) { $('acList').innerHTML = '<div class="ac-empty">לא נמצא שם כזה</div>'; $('acList').classList.add('show'); return; }
+    $('acList').innerHTML = filtered.map((c,i) => `<div class="ac-item ${i===hl?'hl':''}" onmousedown="pickChild('${c.id}')">${esc(c.name)}</div>`).join('');
+    $('acList').classList.add('show');
+  }
+  $('acInput').addEventListener('input', function(){ const q=this.value.trim(); filtered=q?children.filter(c=>c.name.includes(q)):children.slice(0,40); hl=-1; renderAc(); });
+  $('acInput').addEventListener('focus', function(){ filtered=this.value.trim()?filtered:children.slice(0,40); renderAc(); });
+  $('acInput').addEventListener('keydown', function(e){ if(!filtered.length)return; if(e.key==='ArrowDown'){hl=Math.min(hl+1,filtered.length-1);renderAc();e.preventDefault();} else if(e.key==='ArrowUp'){hl=Math.max(hl-1,0);renderAc();e.preventDefault();} else if(e.key==='Enter'&&hl>=0){pickChild(filtered[hl].id);e.preventDefault();} });
+  document.addEventListener('click', e => { if(!$('ac').contains(e.target)) $('acList').classList.remove('show'); });
+
+  async function pickChild(id) {
+    chosen = children.find(c => c.id === id) || null;
+    if (!chosen) return;
+    $('acList').classList.remove('show'); $('acInput').style.display='none';
+    $('pickedName').textContent = chosen.name; $('picked').classList.add('show');
+    await loadCfg(chosen.id);
+    renderDays();
+  }
+  function clearChild() {
+    chosen = null; myDays = {};
+    $('picked').classList.remove('show'); $('acInput').style.display=''; $('acInput').value=''; $('acInput').focus();
+    $('days').classList.remove('show');
+  }
+
+  function renderDays() {
+    $('days').innerHTML = cfg.dates.map(date => {
+      const myTime = myDays[date];
+      const caps = cfg.slots.map(sl => {
+        const key = date + '|' + sl.s;
+        const taken = cfg.counts[key] || 0;
+        const left = cfg.capacity - taken;
+        const mine = myTime === sl.s;
+        const otherDayBooked = myTime && !mine;
+        let cls = 'cap', inner = '';
+        if (mine) {
+          cls += ' mine';
+          inner = `<div class="tag">✓ נרשמתם</div><div class="t">${sl.s}–${sl.e}</div>
+            <button class="b-cancel" onclick="cancel('${date}','${sl.s}')">ביטול</button>`;
+        } else if (otherDayBooked) {
+          cls += ' otherday';
+          inner = `<div class="t">${sl.s}–${sl.e}</div><div class="left">${left} מקומות</div>
+            <div class="note">כבר בחרתם ${myTime} ביום זה</div>`;
+        } else if (left <= 0) {
+          cls += ' full';
+          inner = `<div class="t">${sl.s}–${sl.e}</div><div class="left">מלא</div><div class="disabled" style="border-radius:10px;padding:9px;">מלא</div>`;
+        } else {
+          inner = `<div class="t">${sl.s}–${sl.e}</div><div class="left">${left} מקומות פנויים</div>
+            <button class="b-book" onclick="book('${date}','${sl.s}')">הרשמה</button>`;
+        }
+        return `<div class="${cls}">${inner}</div>`;
+      }).join('');
+      return `<div class="day"><div class="day-h">${fmtDate(date)}</div><div class="caps">${caps}</div></div>`;
+    }).join('');
+    $('days').classList.add('show');
+  }
+
+  async function book(date, time) {
+    try {
+      const r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'book', child_id:chosen.id, child_name:chosen.name, date, time_start:time }) });
+      const d = await r.json();
+      if (!d.success) { toast(d.error || 'לא ניתן להירשם'); await refresh(); return; }
+      toast('נרשמתם בהצלחה 🌿'); await refresh();
+    } catch(e){ toast('שגיאה: ' + e.message); }
+  }
+  async function cancel(date, time) {
+    try {
+      await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'cancel', child_id:chosen.id, date, time_start:time }) });
+      toast('הביקור בוטל'); await refresh();
+    } catch(e){ toast('שגיאה: ' + e.message); }
+  }
+  async function refresh() { await loadCfg(chosen.id); renderDays(); }
+
+  (async function init(){ await loadCfg(null); })();
+</script>
+</body>
+</html>
