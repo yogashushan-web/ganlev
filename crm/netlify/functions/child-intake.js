@@ -31,7 +31,34 @@ async function notifyByEmail(childName, birthDate, answers, gardenName) {
   });
 }
 
+const GARDEN_DEFAULT = '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
+
+// The upcoming/adaptation cohort's school year (July boundary -> summer shows next year).
+function currentSchoolYear() {
+  const d = new Date(), y = d.getFullYear();
+  const s = d.getMonth() >= 6 ? y : y - 1;
+  return s + '-' + String(s + 1).slice(2);
+}
+
 exports.handler = async (event) => {
+  // GET -> list of this-year children for the card's dropdown
+  if (event.httpMethod === 'GET') {
+    try {
+      const gid = (event.queryStringParameters || {}).garden_id || GARDEN_DEFAULT;
+      const curYear = currentSchoolYear();
+      const { data, error } = await supabase.from('children')
+        .select('id,first_name_he,last_name_he')
+        .eq('garden_id', gid).eq('status', 'active')
+        .or(`school_year.eq.${curYear},school_year.is.null`);
+      if (error) throw error;
+      const children = (data || [])
+        .map(c => ({ id: c.id, name: (c.first_name_he + ' ' + (c.last_name_he || '')).trim() }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'he'));
+      return { statusCode: 200, body: JSON.stringify({ success: true, children }) };
+    } catch (err) {
+      return { statusCode: 500, body: JSON.stringify({ success: false, error: err.message }) };
+    }
+  }
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ success: false, error: 'Method not allowed' }) };
   }
@@ -43,20 +70,27 @@ exports.handler = async (event) => {
     }
     const today = new Date().toISOString().slice(0, 10);
 
-    // 1) Add the child to next year's roster (2026-27), so the list builds itself.
-    let childId = null;
-    try {
-      const { data: child, error: cErr } = await supabase.from('children').insert({
-        garden_id: b.garden_id,
-        first_name_he: b.first_name_he || childName,
-        last_name_he: b.last_name_he || '-',
-        birth_date: b.birth_date || null,
-        school_year: nextSchoolYear(),
-        status: 'active',
-      }).select().single();
-      if (cErr) throw cErr;
-      childId = child.id;
-    } catch (e) { console.error('child create failed', e); }
+    // The card now attaches to an EXISTING child chosen from the dropdown (registered
+    // via the signed contract). Only fall back to creating one if no child was picked.
+    let childId = b.child_id || null;
+    if (!childId) {
+      try {
+        const { data: child, error: cErr } = await supabase.from('children').insert({
+          garden_id: b.garden_id,
+          first_name_he: b.first_name_he || childName,
+          last_name_he: b.last_name_he || '-',
+          birth_date: b.birth_date || null,
+          school_year: nextSchoolYear(),
+          status: 'active',
+        }).select().single();
+        if (cErr) throw cErr;
+        childId = child.id;
+      } catch (e) { console.error('child create failed', e); }
+    }
+    // if the same child already submitted a card, replace it (one card per child)
+    if (childId) {
+      try { await supabase.from('events').delete().eq('garden_id', b.garden_id).eq('calendar', 'child-card').eq('category', childId); } catch (e) {}
+    }
 
     // 2) Store the full "כרטיס אישי" answers, linked to the child (category = child id).
     const { data, error } = await supabase.from('events').insert({

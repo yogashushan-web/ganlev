@@ -37,6 +37,16 @@
     .photo-drop.has img { display:block; }
     .photo-drop.has #photoPrompt { display:none; }
     .photo-status { font-size:13px; color:#1F3D34; font-weight:600; margin-top:9px; }
+    .ac { position:relative; }
+    .ac-list { position:absolute; top:calc(100% + 5px); right:0; left:0; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15); max-height:230px; overflow:auto; z-index:20; display:none; padding:5px; }
+    .ac-list.show { display:block; }
+    .ac-item { padding:11px 13px; border-radius:9px; cursor:pointer; font-size:15px; }
+    .ac-item:hover, .ac-item.hl { background:#f1f5f2; }
+    .ac-empty { padding:11px 13px; color:#9B8E82; font-size:14px; }
+    .picked { display:none; align-items:center; gap:10px; background:#f1f5f2; border-radius:11px; padding:11px 14px; margin-top:8px; }
+    .picked.show { display:flex; }
+    .picked .nm { font-weight:700; color:#1F3D34; font-size:16px; }
+    .picked .x { margin-right:auto; background:none; border:none; color:#9B8E82; font-size:22px; cursor:pointer; line-height:1; }
   </style>
 </head>
 <body>
@@ -47,11 +57,17 @@
       </div>
       <div class="err" id="err"></div>
       <form id="regForm">
-        <div class="two">
-          <div class="grp"><label>שם פרטי *</label><input type="text" id="childFirst" required></div>
-          <div class="grp"><label>שם משפחה *</label><input type="text" id="childLast" required></div>
+        <div class="grp">
+          <label>שם הילד/ה *</label>
+          <div class="ac" id="ac">
+            <input type="text" id="acInput" placeholder="הקלידו שם ובחרו מהרשימה…" autocomplete="off">
+            <div class="ac-list" id="acList"></div>
+          </div>
+          <div class="picked" id="picked">
+            <span class="nm" id="pickedName"></span>
+            <button type="button" class="x" onclick="clearChild()">×</button>
+          </div>
         </div>
-        <div class="grp"><label>תאריך לידה</label><input type="date" id="childBdate"></div>
         <hr class="sep">
         <div id="questions"></div>
         <hr class="sep">
@@ -108,6 +124,46 @@ document.getElementById('questions').innerHTML = QUESTIONS.map((q, i) =>
   `<div class="grp"><label>${q}</label><textarea id="q${i}" rows="2"></textarea></div>`
 ).join('');
 
+// ---- child picker (dropdown of this year's children) ----
+const escH = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let children = [], chosen = null, filtered = [], hl = -1;
+const acInput = document.getElementById('acInput'), acList = document.getElementById('acList');
+(async function loadChildren() {
+  try { const d = await (await fetch('/.netlify/functions/child-intake?garden_id=' + GARDEN)).json(); children = d.children || []; }
+  catch (e) { children = []; }
+})();
+function renderAc() {
+  if (!filtered.length) { acList.innerHTML = '<div class="ac-empty">לא נמצא שם כזה</div>'; acList.classList.add('show'); return; }
+  acList.innerHTML = filtered.map((c, i) => `<div class="ac-item ${i === hl ? 'hl' : ''}" onmousedown="pickChild('${c.id}')">${escH(c.name)}</div>`).join('');
+  acList.classList.add('show');
+}
+acInput.addEventListener('input', function () {
+  const q = this.value.trim();
+  filtered = q ? children.filter(c => c.name.includes(q)) : children.slice(0, 40);
+  hl = -1; renderAc();
+});
+acInput.addEventListener('focus', function () { filtered = this.value.trim() ? filtered : children.slice(0, 40); renderAc(); });
+acInput.addEventListener('keydown', function (e) {
+  if (!filtered.length) return;
+  if (e.key === 'ArrowDown') { hl = Math.min(hl + 1, filtered.length - 1); renderAc(); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { hl = Math.max(hl - 1, 0); renderAc(); e.preventDefault(); }
+  else if (e.key === 'Enter' && hl >= 0) { pickChild(filtered[hl].id); e.preventDefault(); }
+});
+document.addEventListener('click', e => { if (!document.getElementById('ac').contains(e.target)) acList.classList.remove('show'); });
+function pickChild(id) {
+  chosen = children.find(c => c.id === id) || null;
+  if (!chosen) return;
+  acList.classList.remove('show');
+  acInput.style.display = 'none';
+  document.getElementById('pickedName').textContent = chosen.name;
+  document.getElementById('picked').classList.add('show');
+}
+function clearChild() {
+  chosen = null;
+  document.getElementById('picked').classList.remove('show');
+  acInput.style.display = ''; acInput.value = ''; acInput.focus();
+}
+
 // ---- photo upload (works on phone camera/gallery + desktop) ----
 let photoDataUrl = null;
 const photoDrop = document.getElementById('photoDrop');
@@ -150,18 +206,14 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const err = document.getElementById('err');
   err.style.display = 'none';
-  const first = document.getElementById('childFirst').value.trim();
-  const last = document.getElementById('childLast').value.trim();
-  if (!first || !last) { err.textContent = 'נא למלא שם פרטי ושם משפחה'; err.style.display = 'block'; return; }
+  if (!chosen) { err.textContent = 'נא לבחור את שם הילד/ה מהרשימה'; err.style.display = 'block'; return; }
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'שולח...';
   const answers = QUESTIONS.map((q, i) => ({ q, a: document.getElementById('q' + i).value.trim() }));
   const body = {
     garden_id: GARDEN,
-    first_name_he: first,
-    last_name_he: last,
-    child_name: first + ' ' + last,
-    birth_date: document.getElementById('childBdate').value || null,
+    child_id: chosen.id,
+    child_name: chosen.name,
     answers,
     favorite_song: document.getElementById('favSong').value.trim() || null,
     photo: photoDataUrl || null,

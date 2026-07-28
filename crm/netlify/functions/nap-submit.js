@@ -14,8 +14,10 @@ exports.handler = async (event) => {
     const gid = q.garden_id || GARDEN_DEFAULT;
 
     if (event.httpMethod === 'GET') {
+      // From July onward, point at the UPCOMING cohort (adaptation is in September),
+      // so summer forms already show next year's children. Rolls forward on its own.
       const now = new Date();
-      const startYr = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+      const startYr = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
       const curYear = startYr + '-' + String(startYr + 1).slice(2);
       const { data, error } = await supabase.from('children')
         .select('id,first_name_he,last_name_he')
