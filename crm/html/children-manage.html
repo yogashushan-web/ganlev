@@ -492,8 +492,11 @@ async function openCardView(id) {
   let parsed = {}; try { parsed = JSON.parse(card.notes || '{}'); } catch (e) {}
   const ans = (parsed.answers || []).filter(a => a && a.a);
   const c = children.find(x => x.id === id);
+  const photo = parsed.photo ? `<img src="${parsed.photo}" alt="" style="width:100%;max-width:260px;border-radius:14px;display:block;margin:10px auto 4px;">` : '';
+  const song = parsed.favorite_song ? `<div class="card-q">🎵 שיר אהוב</div><div class="card-a">${esc(parsed.favorite_song)}</div>` : '';
   box.innerHTML = `<h2>📋 כרטיס אישי</h2>` +
     `<div class="role">${c ? esc(c.first_name_he) + ' ' + esc(c.last_name_he || '') : ''}${parsed.birth_date ? ' · נולד/ה ' + formatDate(parsed.birth_date) : ''}</div>` +
+    photo + song +
     (ans.length ? ans.map(a => `<div class="card-q">${esc(a.q)}</div><div class="card-a">${esc(a.a)}</div>`).join('') : '<div class="muted">לא מולאו תשובות בטופס.</div>') +
     `<button class="cp-close" onclick="closeOv('cardOv')">סגור</button>`;
 }

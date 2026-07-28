@@ -65,7 +65,7 @@ exports.handler = async (event) => {
       category: childId || 'registration',
       title: childName,
       event_date: b.birth_date || today,
-      notes: JSON.stringify({ child_id: childId, child_name: childName, birth_date: b.birth_date || null, submitted_at: today, answers: b.answers || [] }),
+      notes: JSON.stringify({ child_id: childId, child_name: childName, birth_date: b.birth_date || null, submitted_at: today, answers: b.answers || [], favorite_song: b.favorite_song || null, photo: b.photo || null }),
     }).select().single();
     if (error) throw error;
 

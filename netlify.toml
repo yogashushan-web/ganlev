@@ -69,6 +69,12 @@
   to = "/crm/html/nap.html"
   status = 200
 
+# Short link for the public "כרטיס אישי" registration form (share with parents).
+[[redirects]]
+  from = "/card"
+  to = "/crm/html/registration.html"
+  status = 200
+
 # NOTE: SUPABASE_URL and SUPABASE_ANON_KEY are provided via Netlify dashboard
 # env vars (all-context). They are intentionally NOT hardcoded here so the
 # secrets scanner does not flag netlify.toml and fail the build.
