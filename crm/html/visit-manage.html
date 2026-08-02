@@ -35,7 +35,7 @@
       <h1>🏠 ימי היכרות — רישומים</h1>
       <a class="back" href="children-manage.html">‹ חזרה לילדים</a>
     </div>
-    <div class="lead">מי נרשם לכל קפסולת ביקור באוגוסט (23–27, 30–31). כל קפסולה עד 7 משפחות.</div>
+    <div class="lead">מי נרשם לכל קפסולת ביקור באוגוסט (23–27, 30–31). כל קפסולה עד 6 משפחות.</div>
     <div class="bar">
       <button class="btn" onclick="copyLink()">🔗 העתק קישור להורים</button>
       <button class="btn ghost" onclick="load()">↻ רענון</button>
@@ -51,7 +51,7 @@
   const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
   const DATES = ['2026-08-23','2026-08-24','2026-08-25','2026-08-26','2026-08-27','2026-08-30','2026-08-31'];
   const SLOTS = [{s:'09:00',e:'09:50'},{s:'10:00',e:'10:50'}];
-  const CAP = 7;
+  const CAP = 6;
   const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const $ = id => document.getElementById(id);
   function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }

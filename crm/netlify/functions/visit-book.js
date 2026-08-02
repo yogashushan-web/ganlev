@@ -12,7 +12,7 @@ const { supabase } = require('./lib/db');
 
 const GARDEN_DEFAULT = '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
 const CAT = 'ביקור היכרות';
-const CAP = 7;
+const CAP = 6;
 const SLOTS = [{ s: '09:00', e: '09:50' }, { s: '10:00', e: '10:50' }];
 const DATES = ['2026-08-23', '2026-08-24', '2026-08-25', '2026-08-26', '2026-08-27', '2026-08-30', '2026-08-31'];
 const json = (c, b) => ({ statusCode: c, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
