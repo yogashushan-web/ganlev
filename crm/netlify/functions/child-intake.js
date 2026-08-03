@@ -92,6 +92,26 @@ exports.handler = async (event) => {
       try { await supabase.from('events').delete().eq('garden_id', b.garden_id).eq('calendar', 'child-card').eq('category', childId); } catch (e) {}
     }
 
+    // Optional: attach parents (used when importing a signed contract). Skips ones
+    // that already exist for this child (by name), so re-imports don't duplicate.
+    if (childId && Array.isArray(b.parents) && b.parents.length) {
+      try {
+        const { data: existing } = await supabase.from('parents').select('full_name_he').eq('child_id', childId);
+        const have = new Set((existing || []).map(p => p.full_name_he));
+        for (let i = 0; i < b.parents.length; i++) {
+          const p = b.parents[i];
+          if (!p || !p.full_name_he || have.has(p.full_name_he)) continue;
+          await supabase.from('parents').insert({
+            garden_id: b.garden_id, child_id: childId, full_name_he: p.full_name_he,
+            phone: p.phone || null, email: p.email || null, address: p.address || null,
+            occupation: p.occupation || null,
+            relationship_type: ['mother', 'father', 'guardian'].includes(p.relationship_type) ? p.relationship_type : null,
+            is_primary: i === 0,
+          });
+        }
+      } catch (e) { console.error('parent create failed', e); }
+    }
+
     // 2) Store the full "כרטיס אישי" answers, linked to the child (category = child id).
     const { data, error } = await supabase.from('events').insert({
       garden_id: b.garden_id,
