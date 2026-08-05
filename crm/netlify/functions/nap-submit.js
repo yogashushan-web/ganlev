@@ -33,8 +33,7 @@ exports.handler = async (event) => {
     if (event.httpMethod === 'POST') {
       const b = JSON.parse(event.body || '{}');
       if (!b.child_id) return json(400, { success: false, error: 'לא נבחר ילד' });
-      const row = {
-        garden_id: gid,
+      const payload = {
         child_id: b.child_id,
         child_name: b.child_name || null,
         needs: Array.isArray(b.needs) ? b.needs : [],
@@ -43,7 +42,15 @@ exports.handler = async (event) => {
         notes: (b.notes || '').trim() || null,
         updated_at: new Date().toISOString(),
       };
-      const { error } = await supabase.from('nap_forms').upsert(row, { onConflict: 'garden_id,child_id' });
+      // Store inside an event (calendar='child-nap', category=child_id) — no dedicated
+      // table needed. One per child: replace any existing submission.
+      const today = new Date().toISOString().slice(0, 10);
+      await supabase.from('events').delete().eq('garden_id', gid).eq('calendar', 'child-nap').eq('category', b.child_id);
+      const { error } = await supabase.from('events').insert({
+        garden_id: gid, calendar: 'child-nap', category: b.child_id,
+        title: payload.child_name || 'שנת צהריים', event_date: today,
+        notes: JSON.stringify(payload),
+      });
       if (error) throw error;
       return json(200, { success: true });
     }
