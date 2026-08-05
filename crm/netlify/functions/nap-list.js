@@ -9,11 +9,11 @@ exports.handler = withAuth(async (event) => {
     validateGardenScope(user.garden_id, garden_id, user.role);
     // Submissions are stored as events (calendar='child-nap'); unwrap the JSON payload.
     const { data, error } = await supabase.from('events')
-      .select('notes,created_at').eq('garden_id', garden_id).eq('calendar', 'child-nap');
+      .select('id,notes,created_at').eq('garden_id', garden_id).eq('calendar', 'child-nap');
     if (error) throw error;
     const rows = (data || []).map(e => {
       let p = {}; try { p = JSON.parse(e.notes || '{}'); } catch (_) {}
-      return { child_name: p.child_name, needs: p.needs || [], needs_other: p.needs_other, ritual: p.ritual, notes: p.notes, updated_at: p.updated_at || e.created_at };
+      return { id: e.id, child_name: p.child_name, needs: p.needs || [], needs_other: p.needs_other, ritual: p.ritual, notes: p.notes, updated_at: p.updated_at || e.created_at };
     }).sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
     return { statusCode: 200, body: JSON.stringify({ success: true, data: rows }) };
   } catch (e) {

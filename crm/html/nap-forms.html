@@ -78,12 +78,17 @@
     const d = r.updated_at ? new Date(r.updated_at).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
     const block = (t,v) => v ? `<div class="block"><div class="bt">${t}</div><div class="bv">${esc(v)}</div></div>` : '';
     return `<div class="card">
-      <div class="cname">${esc(r.child_name || '—')}</div>
+      <div class="cname">${esc(r.child_name || '—')}${r.id ? ` <button onclick="delNap('${r.id}')" title="מחיקה" style="float:left;background:none;border:none;color:#c48;cursor:pointer;font-size:15px;">🗑</button>` : ''}</div>
       <div class="cdate">מולא ב-${d}</div>
       ${(needs||other) ? `<div class="chips">${needs}${other}</div>` : ''}
       ${block('טקס ההירדמות', r.ritual)}
       ${block('חשוב לדעת', r.notes)}
     </div>`;
+  }
+  async function delNap(id) {
+    if (!confirm('למחוק את הכרטיס הזה?')) return;
+    try { await api.deleteEvent(id); toast('נמחק'); load(); }
+    catch (e) { toast('שגיאה: ' + e.message); }
   }
   load();
 </script>
