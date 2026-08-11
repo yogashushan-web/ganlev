@@ -38,7 +38,7 @@ function fmtDate(d) { const [y, m, dd] = d.split('-').map(Number); const dow = n
 
 // Rebuild the single "garden" summary event for one capsule from its bookings,
 // and push the change to the personal calendar.
-async function syncCapsule(gid, date, timeStart) {
+async function syncCapsule(gid, date, timeStart, doSync = true) {
   const slot = SLOTS.find(s => s.s === timeStart); if (!slot) return;
   const { data: bookings } = await supabase.from('events')
     .select('notes').eq('garden_id', gid).eq('calendar', 'visit').eq('category', CAT)
@@ -63,9 +63,9 @@ async function syncCapsule(gid, date, timeStart) {
       }).select('id').single();
       id = ins && ins.id;
     }
-    try { await syncEventToCalendar('REQUEST', { id, calendar: 'garden', category: CAT, title, event_date: date, event_time: timeStart, end_time: slot.e, notes }); } catch (e) { console.error('cal sync', e); }
+    if (doSync) try { await syncEventToCalendar('REQUEST', { id, calendar: 'garden', category: CAT, title, event_date: date, event_time: timeStart, end_time: slot.e, notes }); } catch (e) { console.error('cal sync', e); }
   } else if (summary) {
-    try { await syncEventToCalendar('CANCEL', { id: summary.id, calendar: 'garden', category: CAT, title: 'ביקור היכרות', event_date: date, event_time: timeStart, end_time: slot.e }); } catch (e) {}
+    if (doSync) try { await syncEventToCalendar('CANCEL', { id: summary.id, calendar: 'garden', category: CAT, title: 'ביקור היכרות', event_date: date, event_time: timeStart, end_time: slot.e }); } catch (e) {}
     await supabase.from('events').delete().eq('id', summary.id);
   }
 }
@@ -141,8 +141,16 @@ exports.handler = async (event) => {
         catch (e) { return json(500, { success: false, error: e.message }); }
       }
       if (b.action === 'rebuild') {
+        // DB-only refresh of all summary events (fast, no calendar emails)
         if (!ADMIN || b.admin !== ADMIN) return json(403, { success: false, error: 'אין הרשאה' });
-        for (const d of DATES) for (const s of SLOTS) await syncCapsule(gid, d, s.s);
+        for (const d of DATES) for (const s of SLOTS) await syncCapsule(gid, d, s.s, false);
+        return json(200, { success: true });
+      }
+      if (b.action === 'sync_cal') {
+        // push ONE day's capsules to the personal calendar (2 emails; call per day)
+        if (!ADMIN || b.admin !== ADMIN) return json(403, { success: false, error: 'אין הרשאה' });
+        if (!DATES.includes(b.date)) return json(400, { success: false, error: 'תאריך לא תקין' });
+        for (const s of SLOTS) await syncCapsule(gid, b.date, s.s, true);
         return json(200, { success: true });
       }
 
