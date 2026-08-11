@@ -38,6 +38,7 @@
     <div class="lead">מי נרשם לכל קפסולת ביקור באוגוסט (23–27, 30–31). כל קפסולה עד 6 משפחות.</div>
     <div class="bar">
       <button class="btn" onclick="copyLink()">🔗 העתק קישור להורים</button>
+      <button class="btn" id="fullBoardBtn" style="background:#2D5A50; display:none;" onclick="openFullBoard()">🖨️ לוח ביקורים מלא</button>
       <button class="btn ghost" onclick="load()">↻ רענון</button>
     </div>
     <div id="list"><div class="empty">טוען…</div></div>
@@ -58,9 +59,16 @@
   function copyLink(){ const u=location.origin+'/visit'; navigator.clipboard.writeText(u).then(()=>toast('הקישור הועתק: '+u)).catch(()=>toast(u)); }
   function fmtDate(d){ const [y,m,dd]=d.split('-').map(Number); const dow=new Date(y,m-1,dd).getDay(); return `יום ${DAY_NAMES[dow]} · ${dd} ב${MONTHS[m-1]}`; }
 
+  let ADMIN_KEY = '';
+  function openFullBoard() {
+    if (!ADMIN_KEY) { toast('אין הרשאה'); return; }
+    window.open('visit-board.html?admin=' + encodeURIComponent(ADMIN_KEY), '_blank');
+  }
   async function load() {
     try {
       const r = await api.getVisitBookings();
+      ADMIN_KEY = r.admin_key || '';
+      if (ADMIN_KEY) $('fullBoardBtn').style.display = '';
       const rows = r.data || [];
       const by = {};
       rows.forEach(e => { const t=(e.event_time||'').slice(0,5); (by[e.event_date+'|'+t] = by[e.event_date+'|'+t] || []).push(e.title); });

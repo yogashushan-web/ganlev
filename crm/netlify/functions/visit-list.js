@@ -9,10 +9,11 @@ exports.handler = withAuth(async (event) => {
     validateGardenScope(user.garden_id, garden_id, user.role);
     const { data, error } = await supabase.from('events')
       .select('id,event_date,event_time,end_time,title,notes')
-      .eq('garden_id', garden_id).eq('category', 'ביקור היכרות')
+      .eq('garden_id', garden_id).eq('calendar', 'visit').eq('category', 'ביקור היכרות')
       .order('event_date').order('event_time');
     if (error) throw error;
-    return { statusCode: 200, body: JSON.stringify({ success: true, data }) };
+    // hand the logged-in manager the secret key so they can open the printable board
+    return { statusCode: 200, body: JSON.stringify({ success: true, data, admin_key: process.env.VISIT_ADMIN_KEY || '' }) };
   } catch (e) {
     console.error('visit-list error:', e);
     return { statusCode: 500, body: JSON.stringify({ success: false, error: e.message }) };

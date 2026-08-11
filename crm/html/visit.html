@@ -50,7 +50,7 @@
 <body>
   <div class="wrap">
     <div id="adminBar" style="display:none; margin-bottom:14px; text-align:center;">
-      <a id="boardLink" href="#" style="display:inline-block; background:#1F3D34; color:#fff; text-decoration:none; padding:11px 18px; border-radius:12px; font-weight:700; font-size:14px;">🖨️ לוח ביקורים להדפסה</a>
+      <a id="boardLink" href="#" style="display:inline-block; background:#1F3D34; color:#fff; text-decoration:none; padding:11px 18px; border-radius:12px; font-weight:700; font-size:14px;">🖨️ לוח ביקורים מלא</a>
     </div>
     <div class="card head">
       <h1>🏠 ימי היכרות · אוגוסט</h1>
@@ -176,7 +176,7 @@
   (function () {
     const key = new URLSearchParams(location.search).get('admin');
     if (key) {
-      $('boardLink').href = 'visit-board.html?admin=' + encodeURIComponent(key);
+      $('boardLink').href = '/crm/html/visit-board.html?admin=' + encodeURIComponent(key);
       $('adminBar').style.display = 'block';
     }
   })();
