@@ -44,6 +44,7 @@
     <div class="lead">טקסי ההירדמות שההורים מילאו — כדי שנלווה כל ילד/ה לשינה קרובה ככל האפשר לבית. (ספטמבר · הסתגלות)</div>
     <div class="bar">
       <button class="btn" onclick="copyLink()">🔗 העתק קישור להורים</button>
+      <button class="btn" id="fullBtn" style="background:#3a5b73; display:none;" onclick="openFull()">🖨️ לוח שינה מלא</button>
       <button class="btn ghost" onclick="load()">↻ רענון</button>
     </div>
     <div id="grid" class="grid"><div class="empty">טוען…</div></div>
@@ -63,6 +64,10 @@
       .catch(() => toast(url));
   }
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2600); }
+
+  let OWNER_KEY = '';
+  (async function () { try { const r = await api.getOwnerKey(); OWNER_KEY = r.admin_key || ''; if (OWNER_KEY) $('fullBtn').style.display = ''; } catch (e) {} })();
+  function openFull() { if (OWNER_KEY) window.open('nap-board.html?admin=' + encodeURIComponent(OWNER_KEY), '_blank'); }
 
   async function load() {
     try {

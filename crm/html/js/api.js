@@ -153,6 +153,9 @@ const api = {
   // August "ימי היכרות" visit bookings (staff view)
   getVisitBookings: () => apiCall(`/visit-list?garden_id=${getGardenId()}`),
 
+  // owner-board secret key (for the "full board" buttons)
+  getOwnerKey: () => apiCall(`/owner-key?garden_id=${getGardenId()}`),
+
   // Birthday-call reminders — backfill for all current-year children
   generateBirthdayReminders: () => apiCall(`/birthday-reminders?garden_id=${getGardenId()}`, 'POST'),
 };

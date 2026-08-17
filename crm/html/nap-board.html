@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>לוח שינה מלא — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#2b2b2b; direction:rtl; }
+    .wrap { max-width:820px; margin:0 auto; padding:24px 18px 60px; }
+    .bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+    .btn { border:none; padding:11px 18px; border-radius:11px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; }
+    .btn.print { background:#3a5b73; color:#fff; } .btn.mail { background:#5f93b8; color:#fff; } .btn.ghost { background:#efe9e0; color:#6f6457; }
+    h1 { font-size:24px; color:#3a5b73; text-align:center; margin-bottom:4px; }
+    .sub { text-align:center; color:#9B8E82; font-size:13px; margin-bottom:20px; }
+    .kid { background:#fff; border-radius:14px; padding:15px 18px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:12px; break-inside:avoid; border-top:4px solid #9cc3de; }
+    .kh { display:flex; align-items:baseline; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+    .kh .nm { font-size:18px; font-weight:800; color:#3a5b73; }
+    .kh .age { font-size:12.5px; color:#9B8E82; }
+    .chips { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+    .chip { background:#eef5fb; color:#3a5b73; border-radius:999px; padding:4px 11px; font-size:13px; font-weight:600; }
+    .chip.other { background:#f5efe6; color:#8a7a63; }
+    .blk { margin-top:8px; } .blk .t { font-size:12px; font-weight:700; color:#7fb0d0; } .blk .v { font-size:14.5px; line-height:1.6; white-space:pre-wrap; }
+    .todo { color:#c48a3a; font-weight:700; font-size:14px; }
+    @media print { body{background:#fff;} .bar{display:none;} .kid{box-shadow:none;border:1px solid #ddd;} }
+    .msg { text-align:center; color:#c0492a; padding:30px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar">
+      <button class="btn print" onclick="window.print()">🖨️ הדפסה</button>
+      <button class="btn mail" onclick="emailBoard()">✉️ שלח למייל</button>
+      <button class="btn ghost" onclick="location.reload()">↻ רענון</button>
+    </div>
+    <h1>🌙 שנת הצהריים · לוח שינה מלא</h1>
+    <div class="sub">גן לב · מהמבוגר/ת לצעיר/ה</div>
+    <div id="board"><div class="msg">טוען…</div></div>
+  </div>
+<script>
+  const API = '/.netlify/functions/child-boards';
+  const GID = '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
+  const KEY = new URLSearchParams(location.search).get('admin') || '';
+  const NEED_IC = { 'בקבוק':'🍼','מוצץ':'👶','דובי / בובה':'🧸','שמיכה':'☁️','חיתול':'🤍','הנקה':'🤱' };
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function age(bd){ if(!bd) return ''; const [y,m,d]=bd.split('-').map(Number); const n=new Date(); let mo=(n.getFullYear()-y)*12+(n.getMonth()+1-m); if(n.getDate()<d) mo--; const yy=Math.floor(mo/12), mm=mo%12; return (yy?yy+' ש׳ ':'')+(mm?mm+' ח׳':'') || 'פחות מחודש'; }
+  function fmtBd(bd){ if(!bd) return ''; const [y,m,d]=bd.split('-'); return `${d}.${m}.${y}`; }
+  function filled(d){ return !!(d && ((d.needs&&d.needs.length)||d.needs_other||d.ritual||d.notes)); }
+
+  async function load() {
+    if (!KEY) { document.getElementById('board').innerHTML='<div class="msg">קישור לא תקין — חסר קוד גישה.</div>'; return; }
+    try {
+      const d = await (await fetch(`${API}?garden_id=${GID}&type=nap&admin=${encodeURIComponent(KEY)}`)).json();
+      if (!d.success) { document.getElementById('board').innerHTML='<div class="msg">אין הרשאה.</div>'; return; }
+      document.getElementById('board').innerHTML = (d.rows||[]).map(cardHtml).join('');
+    } catch(e){ document.getElementById('board').innerHTML='<div class="msg">שגיאה: '+esc(e.message)+'</div>'; }
+  }
+  function cardHtml(r) {
+    const head = `<div class="kh"><span class="nm">${esc(r.name)}</span>${r.birth_date?`<span class="age">${fmtBd(r.birth_date)} · ${age(r.birth_date)}</span>`:''}</div>`;
+    const d = r.data;
+    if (!filled(d)) return `<div class="kid">${head}<div class="todo">טרם מולא</div></div>`;
+    const needs = (d.needs||[]).map(n=>`<span class="chip">${NEED_IC[n]||'•'} ${esc(n)}</span>`).join('') + (d.needs_other?`<span class="chip other">➕ ${esc(d.needs_other)}</span>`:'');
+    const blk = (t,v)=> v?`<div class="blk"><div class="t">${t}</div><div class="v">${esc(v)}</div></div>`:'';
+    return `<div class="kid">${head}${needs?`<div class="chips">${needs}</div>`:''}${blk('טקס ההירדמות',d.ritual)}${blk('חשוב לדעת',d.notes)}</div>`;
+  }
+  async function emailBoard() {
+    try { const r = await (await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'email',type:'nap',garden_id:GID,admin:KEY})})).json();
+      alert(r.success?'הלוח נשלח למייל 📩':('שגיאה: '+(r.error||''))); } catch(e){ alert('שגיאה: '+e.message); }
+  }
+  load();
+</script>
+</body>
+</html>
