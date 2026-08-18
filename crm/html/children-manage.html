@@ -496,7 +496,7 @@ async function openCardView(id) {
   let parsed = {}; try { parsed = JSON.parse(card.notes || '{}'); } catch (e) {}
   const ans = (parsed.answers || []).filter(a => a && a.a);
   const c = children.find(x => x.id === id);
-  const photo = parsed.photo ? `<img src="${parsed.photo}" alt="" style="width:100%;max-width:260px;border-radius:14px;display:block;margin:10px auto 4px;">` : '';
+  const photo = parsed.photo ? `<img src="${parsed.photo}" alt="" onclick="zoomPhoto(this.src)" title="לחצו להגדלה" style="width:100%;max-width:260px;border-radius:14px;display:block;margin:10px auto 4px;cursor:zoom-in;">` : '';
   const song = parsed.favorite_song ? `<div class="card-q">🎵 שיר אהוב</div><div class="card-a">${esc(parsed.favorite_song)}</div>` : '';
   box.innerHTML = `<h2>📋 כרטיס אישי</h2>` +
     `<div class="role">${c ? esc(c.first_name_he) + ' ' + esc(c.last_name_he || '') : ''}${parsed.birth_date ? ' · נולד/ה ' + formatDate(parsed.birth_date) : ''}</div>` +
@@ -515,6 +515,8 @@ loadChildren();
 
 <div class="ov" id="cpOv"><div class="pf" id="cpBox"></div></div>
 <div class="ov" id="cardOv"><div class="pf" id="cardBox"></div></div>
+<div id="lightbox" onclick="this.style.display='none'" style="position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100001;cursor:zoom-out;padding:20px;"><img id="lightboxImg" alt="" style="max-width:96vw;max-height:92vh;border-radius:12px;box-shadow:0 10px 50px rgba(0,0,0,.5);"></div>
+<script>function zoomPhoto(src){ const lb=document.getElementById('lightbox'); document.getElementById('lightboxImg').src=src; lb.style.display='flex'; }</script>
 <input type="file" id="childDocInput" style="display:none" onchange="handleChildDocFile(this.files[0])">
 
 </body>

@@ -16,7 +16,11 @@
     .sub { text-align:center; color:#9B8E82; font-size:13px; margin-bottom:20px; }
     .kid { background:#fff; border-radius:14px; padding:16px 18px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:16px; break-inside:avoid; border-top:4px solid #C4846C; }
     .kh { display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap; }
-    .kh img { width:66px; height:66px; border-radius:50%; object-fit:cover; border:2px solid #eee; }
+    .kh img { width:66px; height:66px; border-radius:50%; object-fit:cover; border:2px solid #eee; cursor:zoom-in; }
+    .lightbox { position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:99999; cursor:zoom-out; padding:20px; }
+    .lightbox.show { display:flex; }
+    .lightbox img { max-width:96vw; max-height:92vh; border-radius:12px; box-shadow:0 10px 50px rgba(0,0,0,.5); }
+    @media print { .lightbox { display:none !important; } }
     .kh .noimg { width:66px; height:66px; border-radius:50%; background:#f1ece3; display:flex; align-items:center; justify-content:center; font-size:26px; color:#c3b8a8; }
     .kh .nm { font-size:19px; font-weight:800; color:#1F3D34; }
     .kh .age { font-size:12.5px; color:#9B8E82; display:block; margin-top:2px; }
@@ -38,7 +42,9 @@
     <div class="sub">גן לב · מהמבוגר/ת לצעיר/ה</div>
     <div id="board"><div class="msg">טוען…</div></div>
   </div>
+  <div class="lightbox" id="lightbox" onclick="this.classList.remove('show')"><img id="lightboxImg" alt=""></div>
 <script>
+  function zoomPhoto(src) { const lb = document.getElementById('lightbox'); document.getElementById('lightboxImg').src = src; lb.classList.add('show'); }
   const API = '/.netlify/functions/child-boards';
   const GID = '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
   const KEY = new URLSearchParams(location.search).get('admin') || '';
@@ -57,7 +63,7 @@
   }
   function cardHtml(r) {
     const d = r.data;
-    const img = (d && d.photo) ? `<img src="${d.photo}" alt="">` : `<div class="noimg">🧒</div>`;
+    const img = (d && d.photo) ? `<img src="${d.photo}" alt="" onclick="zoomPhoto(this.src)" title="לחצו להגדלה">` : `<div class="noimg">🧒</div>`;
     const head = `<div class="kh">${img}<div><span class="nm">${esc(r.name)}</span>${r.birth_date?`<span class="age">${fmtBd(r.birth_date)} · ${age(r.birth_date)}</span>`:''}</div></div>`;
     if (!filled(d)) return `<div class="kid">${head}<div class="todo">טרם מולא</div></div>`;
     const song = d.favorite_song ? `<div class="song">🎵 שיר אהוב: ${esc(d.favorite_song)}</div>` : '';
