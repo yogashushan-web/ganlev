@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>בהישג יד — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .wrap { max-width:900px; margin:0 auto; padding:22px 18px 70px; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:10px; }
+    h1 { font-size:25px; color:#1F3D34; }
+    .back { color:#9B8E82; font-size:13px; text-decoration:none; font-weight:600; }
+    .lead { color:#9B8E82; font-size:14px; margin-bottom:20px; line-height:1.6; }
+    .grp { margin-bottom:26px; }
+    .grp-h { font-size:17px; font-weight:800; color:#2D5A50; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+    .grp-h .add { margin-right:auto; background:none; border:1.5px dashed #cdbfae; color:#9B8E82; border-radius:9px; padding:5px 12px; font-family:'Heebo'; font-size:12px; font-weight:700; cursor:pointer; }
+    .grp-h .add:hover { border-color:#2D5A50; color:#2D5A50; }
+    .item { background:#fff; border-radius:14px; box-shadow:0 2px 11px rgba(0,0,0,.05); margin-bottom:11px; overflow:hidden; }
+    .it-head { display:flex; align-items:center; gap:10px; padding:13px 15px; cursor:pointer; }
+    .it-head .nm { font-weight:800; color:#1F3D34; font-size:15.5px; }
+    .it-head .meta { font-size:12px; color:#9B8E82; margin-right:auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:50%; }
+    .it-head .chev { color:#c3b8a8; transition:transform .15s; }
+    .item.open .chev { transform:rotate(180deg); }
+    .it-body { display:none; padding:0 15px 15px; border-top:1px solid #f0ece6; }
+    .item.open .it-body { display:block; }
+    .flds { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:13px; }
+    @media(max-width:560px){ .flds{grid-template-columns:1fr;} }
+    .fld label { display:block; font-size:11.5px; color:#9B8E82; font-weight:700; margin-bottom:3px; }
+    .fld input, .fld textarea { width:100%; padding:9px 11px; border:1.5px solid #e3ddd2; border-radius:9px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .fld input:focus, .fld textarea:focus { border-color:#1F3D34; }
+    .fld.full { grid-column:1/-1; }
+    .pw-wrap { position:relative; }
+    .pw-wrap .eye { position:absolute; left:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:15px; }
+    .row-btns { display:flex; gap:8px; margin-top:13px; flex-wrap:wrap; }
+    .b-save { background:#1F3D34; color:#fff; border:none; padding:9px 18px; border-radius:9px; font-family:'Heebo'; font-weight:700; font-size:13px; cursor:pointer; }
+    .b-del { background:#f3e4e2; color:#c0492a; border:none; padding:9px 14px; border-radius:9px; font-family:'Heebo'; font-weight:600; font-size:13px; cursor:pointer; }
+    /* docs */
+    .docs { margin-top:14px; border-top:1px dashed #e3ddd2; padding-top:12px; }
+    .docs .dt { font-size:12.5px; font-weight:700; color:#6f6457; margin-bottom:8px; }
+    .doc { display:flex; align-items:center; gap:8px; background:#faf8f4; border:1px solid #f0ece6; border-radius:8px; padding:7px 11px; margin-bottom:6px; font-size:13.5px; }
+    .doc a { color:#1F3D34; text-decoration:none; font-weight:600; margin-left:auto; }
+    .doc .dx { background:none; border:none; color:#c0492a; cursor:pointer; font-size:14px; }
+    .up { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px; }
+    .up input[type=file] { font-size:12px; }
+    .up-btn { background:#C4846C; color:#fff; border:none; padding:7px 13px; border-radius:8px; font-family:'Heebo'; font-weight:600; font-size:12px; cursor:pointer; }
+    /* lock */
+    .lock { position:fixed; inset:0; background:#F4EFE6; z-index:100000; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .lock-card { background:#fff; border-radius:18px; padding:32px 28px; box-shadow:0 12px 40px rgba(0,0,0,.15); text-align:center; max-width:340px; width:100%; }
+    .lock-card .ic { font-size:40px; } .lock-card h2 { color:#1F3D34; font-size:22px; margin:6px 0; }
+    .lock-card p { color:#9B8E82; font-size:14px; margin-bottom:16px; }
+    .lock-card input { width:100%; padding:13px; border:1.5px solid #e3ddd2; border-radius:11px; font-size:18px; text-align:center; letter-spacing:4px; direction:ltr; outline:none; }
+    .lock-card button { width:100%; margin-top:12px; background:#1F3D34; color:#fff; border:none; padding:13px; border-radius:11px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
+    .lock-err { color:#c94147; font-size:13px; min-height:16px; margin-top:8px; font-weight:600; }
+    .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#1F3D34; color:#fff; padding:11px 20px; border-radius:12px; font-weight:600; font-size:14px; opacity:0; transition:.2s; pointer-events:none; z-index:100002; }
+    .toast.show { opacity:1; }
+  </style>
+</head>
+<body>
+  <div id="lock" class="lock">
+    <div class="lock-card">
+      <div class="ic">🔒</div><h2>בהישג יד</h2><p>הזינו סיסמה כדי להיכנס</p>
+      <input type="password" id="lockPass" inputmode="numeric" placeholder="••••">
+      <div id="lockErr" class="lock-err"></div>
+      <button type="button" onclick="unlock()">כניסה</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="header">
+      <h1>🗂️ בהישג יד</h1>
+      <a class="back" href="forms.html">‹ חזרה לטפסים</a>
+    </div>
+    <div class="lead">כל החשבונות, החוזים והספקים במקום אחד — מספרי לקוח, אנשי קשר, אתרים והתחברויות, ומסמכים מצורפים. 🔒 מוגן בסיסמה.</div>
+    <div id="groups"><div style="color:#9B8E82;">טוען…</div></div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script src="js/common.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
+<script>
+  // ---- password gate ----
+  if (sessionStorage.getItem('athand_ok') === '1') { const l = document.getElementById('lock'); if (l) l.style.display = 'none'; }
+  function unlock() {
+    if (document.getElementById('lockPass').value === '12345') { sessionStorage.setItem('athand_ok', '1'); document.getElementById('lock').style.display = 'none'; }
+    else { document.getElementById('lockErr').textContent = 'סיסמה שגויה'; document.getElementById('lockPass').value = ''; }
+  }
+  document.getElementById('lockPass').addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+
+  const $ = id => document.getElementById(id);
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const attr = s => (s==null?'':String(s)).replace(/"/g,'&quot;');
+  function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+  // ---- the preset list (seeded on first load) ----
+  const GROUPS = [
+    { key:'חשבונות ותשתיות', icon:'💡', items:[
+      { name:'מי אביבים (מים)', phone:'1-800-071202', website:'https://www.mei-avivim.co.il', notes:'מספר צרכן / חשבון מים' },
+      { name:'חברת החשמל', phone:'103', website:'https://www.iec.co.il', notes:'מספר חוזה (בראש חשבון החשמל)' },
+      { name:'ארנונה (עיריית ת״א)', phone:'03-5238888', website:'https://www.tel-aviv.gov.il', notes:'מספר נכס / משלם' },
+      { name:'גז' }, { name:'אינטרנט / טלפון' }, { name:'אשפה / ביוב' },
+    ]},
+    { key:'נכס והשכרה', icon:'🏠', items:[
+      { name:'שכירות (הו״ק לבעל הבית)' }, { name:'חוזה שכירות' }, { name:'בעל הבית (פרטי קשר)' }, { name:'ועד בית' },
+    ]},
+    { key:'ביטוח ובטיחות', icon:'🛡️', items:[
+      { name:'ביטוח (הדר / צד ג׳)' }, { name:'אישור כיבוי אש', phone:'102' }, { name:'יועץ בטיחות' },
+      { name:'ביטוח לאומי', phone:'*6050', website:'https://www.btl.gov.il', notes:'מספר תיק ניכויים' },
+    ]},
+    { key:'רישוי', icon:'🏛️', items:[
+      { name:'רישיון עסק (עיריית ת״א)', phone:'03-5238888' },
+      { name:'סמל מוסד (משרד החינוך)', phone:'073-3983960', website:'https://www.gov.il/he/departments/ministry_of_education' },
+      { name:'מס הכנסה', phone:'*4954', website:'https://www.gov.il/he/departments/israel_tax_authority', notes:'מספר תיק / עוסק' },
+      { name:'מכון התקנים / תו תקן', phone:'03-6465154', website:'https://www.sii.org.il' },
+    ]},
+    { key:'פיננסי ומנהלי', icon:'📊', items:[
+      { name:'רואה חשבון' }, { name:'חשבון בנק הגן' }, { name:'Morning (חשבוניות)', website:'https://app.greeninvoice.co.il' }, { name:'מסלקת הוראות קבע' },
+    ]},
+    { key:'ספקים', icon:'🧰', items:[
+      { name:'ניקיון' }, { name:'הדברה' }, { name:'קייטרינג / מזון' }, { name:'חוגים (מרסלו / אילאיל)' }, { name:'תחזוקה' },
+    ]},
+  ];
+
+  let items = [], docsBySection = {};
+  const GROUP_KEYS = GROUPS.map(g => g.key);
+
+  async function load() {
+    try {
+      const r = await api.getAtHand();
+      items = r.data || [];
+      if (!items.length) { await seed(); const r2 = await api.getAtHand(); items = r2.data || []; }
+      try { const dr = await api.getDocuments('athand'); (dr.data || []).forEach(d => { (docsBySection[d.category] = docsBySection[d.category] || []).push(d); }); } catch (e) {}
+      render();
+    } catch (e) { $('groups').innerHTML = '<div style="color:#c0492a;">שגיאה בטעינה: ' + esc(e.message) + '</div>'; }
+  }
+  async function seed() {
+    for (const g of GROUPS) for (const it of g.items) {
+      await api.createAtHand({ group:g.key, name:it.name, phone:it.phone||'', website:it.website||'', notes:it.notes||'' });
+    }
+  }
+
+  function render() {
+    $('groups').innerHTML = GROUPS.map(g => {
+      const list = items.filter(i => (i.group || GROUP_KEYS[0]) === g.key);
+      // keep any items whose group is not one of the known groups under the first group
+      const cards = list.map(itemHtml).join('') || '<div style="color:#b6ab9d;font-size:13px;">אין פריטים.</div>';
+      return `<div class="grp"><div class="grp-h">${g.icon} ${esc(g.key)}
+        <button class="add" onclick="addItem('${attr(g.key)}')">+ פריט</button></div>${cards}</div>`;
+    }).join('');
+  }
+
+  function itemHtml(i) {
+    const metaBits = [i.account_number, i.phone].filter(Boolean).join(' · ');
+    const F = (k,label,type) => `<div class="fld"><label>${label}</label><input id="f-${i.id}-${k}" type="${type||'text'}" value="${attr(i[k])}" ${type==='email'||k==='website'||k==='username'?'dir="ltr"':''}></div>`;
+    const docs = (docsBySection[i.id] || []);
+    const docList = docs.map(d => `<div class="doc">📄 ${esc(d.title||d.file_name||'קובץ')}<a href="${attr(d.file_url)}" target="_blank" rel="noopener">פתח</a><button class="dx" onclick="delDoc('${d.id}','${i.id}')">✕</button></div>`).join('');
+    return `<div class="item" id="item-${i.id}">
+      <div class="it-head" onclick="toggleItem('${i.id}')">
+        <span class="nm">${esc(i.name||'ללא שם')}</span>
+        ${metaBits?`<span class="meta">${esc(metaBits)}</span>`:'<span class="meta"></span>'}
+        <span class="chev">▾</span>
+      </div>
+      <div class="it-body">
+        <div class="flds">
+          <div class="fld full"><label>שם הפריט</label><input id="f-${i.id}-name" value="${attr(i.name)}"></div>
+          ${F('provider','ספק / רשות')}
+          ${F('account_number','מספר לקוח / חשבון')}
+          ${F('phone','טלפון')}
+          ${F('email','מייל','email')}
+          ${F('website','אתר')}
+          ${F('username','שם משתמש')}
+          <div class="fld"><label>סיסמה</label><div class="pw-wrap">
+            <input id="f-${i.id}-password" type="password" value="${attr(i.password)}" dir="ltr">
+            <button type="button" class="eye" onclick="togglePw('${i.id}')">👁️</button></div></div>
+          ${F('amount','סכום (₪)')}
+          ${F('pay_day','יום תשלום בחודש')}
+          <div class="fld full"><label>הערות</label><textarea id="f-${i.id}-notes" rows="2">${esc(i.notes)}</textarea></div>
+        </div>
+        <div class="row-btns">
+          <button class="b-save" onclick="saveItem('${i.id}')">💾 שמור</button>
+          <button class="b-del" onclick="delItem('${i.id}')">🗑 מחק פריט</button>
+        </div>
+        <div class="docs">
+          <div class="dt">📎 מסמכים מצורפים</div>
+          ${docList || '<div style="color:#b6ab9d;font-size:12.5px;margin-bottom:6px;">אין עדיין מסמכים.</div>'}
+          <div class="up">
+            <input type="file" id="file-${i.id}">
+            <button class="up-btn" onclick="uploadDoc('${i.id}')">⬆ העלה מסמך</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function toggleItem(id){ document.getElementById('item-'+id).classList.toggle('open'); }
+  function togglePw(id){ const el=$('f-'+id+'-password'); el.type = el.type==='password' ? 'text' : 'password'; }
+
+  const FIELDS = ['name','provider','account_number','phone','email','website','username','password','amount','pay_day','notes'];
+  async function saveItem(id) {
+    const data = {}; FIELDS.forEach(k => { const el=$('f-'+id+'-'+k); if(el) data[k]=el.value; });
+    try { await api.updateAtHand(id, data); const it=items.find(x=>x.id===id); Object.assign(it,data);
+      const head=document.querySelector('#item-'+id+' .nm'); if(head) head.textContent=data.name||'ללא שם';
+      const meta=document.querySelector('#item-'+id+' .meta'); if(meta) meta.textContent=[data.account_number,data.phone].filter(Boolean).join(' · ');
+      toast('נשמר ✓'); } catch(e){ toast('שגיאה: '+e.message); }
+  }
+  async function addItem(group) {
+    try { const r = await api.createAtHand({ group, name:'פריט חדש' }); items.push(r.data); render();
+      setTimeout(()=>{ const el=document.getElementById('item-'+r.data.id); if(el){el.classList.add('open'); el.scrollIntoView({behavior:'smooth',block:'center'});} }, 50);
+    } catch(e){ toast('שגיאה: '+e.message); }
+  }
+  async function delItem(id) {
+    if(!confirm('למחוק את הפריט ואת המסמכים שלו?')) return;
+    try { await api.deleteAtHand(id); items=items.filter(x=>x.id!==id); delete docsBySection[id]; render(); }
+    catch(e){ toast('שגיאה: '+e.message); }
+  }
+
+  function fileToB64(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',').pop()); r.onerror=rej; r.readAsDataURL(file); }); }
+  async function uploadDoc(id) {
+    const file = $('file-'+id).files[0]; if(!file){ toast('בחרו קובץ'); return; }
+    try {
+      const b64 = await fileToB64(file);
+      const r = await api.uploadDocument({ section:'athand', category:id, title:file.name, file_base64:b64, file_name:file.name, content_type:file.type||'application/octet-stream' });
+      (docsBySection[id] = docsBySection[id] || []).push(r.data || { id:'?', title:file.name, file_url:'#' });
+      // reload that doc list cleanly
+      try { const dr = await api.getDocuments('athand'); docsBySection={}; (dr.data||[]).forEach(d=>{(docsBySection[d.category]=docsBySection[d.category]||[]).push(d);}); } catch(e){}
+      render(); document.getElementById('item-'+id).classList.add('open');
+      toast('המסמך הועלה ✓');
+    } catch(e){ toast('שגיאה בהעלאה: '+e.message); }
+  }
+  async function delDoc(docId, itemId) {
+    if(!confirm('למחוק את המסמך?')) return;
+    try { await api.deleteDocument(docId); docsBySection[itemId]=(docsBySection[itemId]||[]).filter(d=>d.id!==docId); render(); document.getElementById('item-'+itemId).classList.add('open'); }
+    catch(e){ toast('שגיאה: '+e.message); }
+  }
+
+  load();
+</script>
+</body>
+</html>

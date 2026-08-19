@@ -156,6 +156,12 @@ const api = {
   // owner-board secret key (for the "full board" buttons)
   getOwnerKey: () => apiCall(`/owner-key?garden_id=${getGardenId()}`),
 
+  // "בהישג יד" — key accounts / contracts / vendors
+  getAtHand: () => apiCall(`/athand?garden_id=${getGardenId()}`),
+  createAtHand: (data) => apiCall(`/athand?garden_id=${getGardenId()}`, 'POST', data),
+  updateAtHand: (id, data) => apiCall(`/athand/${id}?garden_id=${getGardenId()}`, 'PUT', data),
+  deleteAtHand: (id) => apiCall(`/athand/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+
   // Birthday-call reminders — backfill for all current-year children
   generateBirthdayReminders: () => apiCall(`/birthday-reminders?garden_id=${getGardenId()}`, 'POST'),
 };
