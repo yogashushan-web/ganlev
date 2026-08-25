@@ -66,6 +66,8 @@
     .doc-file a, .doc-file .open { color:#1F7a4f; text-decoration:none; font-weight:700; cursor:pointer; background:none; border:none; font-family:'Heebo'; font-size:13px; padding:0; }
     .doc-file .open:hover { text-decoration:underline; }
     .doc-file .del { background:none; border:none; color:#e74c3c; cursor:pointer; font-size:14px; }
+    .doc-file.contract { background:#f4f9f6; border-color:#d8ebe1; }
+    .doc-file.contract.missing { background:#FAF8F4; border-style:dashed; border-color:#e2dcd2; }
     .cp-add { background:#1F3D34; color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
     .cp-close { margin-top:18px; width:100%; background:#f0ece6; border:none; border-radius:10px; padding:11px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
     .card-q { font-weight:700; color:#1F3D34; font-size:13px; margin-top:13px; }
@@ -149,6 +151,8 @@
 let children = [];
 let editingId = null;
 let pendingParents = [];
+// החוזה שנקרא ב-AI, ממתין להישמר כקובץ מצורף ברגע שהילד נוצר.
+let pendingContract = null;
 
 function currentSchoolYear() {
   const d = new Date(), y = d.getFullYear();
@@ -280,6 +284,7 @@ function resetForm() {
   document.getElementById('childForm').reset();
   editingId = null;
   pendingParents = [];
+  pendingContract = null;
   const st = document.getElementById('cdStatus'); if (st) st.textContent = '';
 }
 
@@ -288,6 +293,7 @@ function editChild(id) {
   if (!c) return;
   editingId = id;
   pendingParents = [];
+  pendingContract = null;
   const st = document.getElementById('cdStatus'); if (st) st.textContent = '';
   document.getElementById('firstName').value = c.first_name_he || '';
   document.getElementById('lastName').value = c.last_name_he || '';
@@ -354,7 +360,18 @@ document.getElementById('childForm').addEventListener('submit', async (e) => {
         }
       }
       pendingParents = [];
-      showSuccess(editingId ? 'הילד עודכן' : ('הילד נוסף' + (addedParents ? ` + ${addedParents} הורים` : '')));
+
+      // ...וגם את החוזה החתום עצמו, כקובץ מצורף בכרטיס הילד.
+      let contractSaved = false;
+      if (!editingId && newId && pendingContract) {
+        try { await uploadContractDoc(newId, data, pendingContract); contractSaved = true; }
+        catch (ce) { console.error('contract upload failed', ce); }
+      }
+      const savedContract = !!pendingContract;
+      pendingContract = null;
+
+      showSuccess(editingId ? 'הילד עודכן' : ('הילד נוסף' + (addedParents ? ` + ${addedParents} הורים` : '') + (contractSaved ? ' + החוזה החתום' : '')));
+      if (savedContract && !contractSaved) showError('הילד נשמר, אבל צירוף החוזה נכשל — אפשר לצרף אותו מכרטיס הילד');
       const br = res.birthday_reminder;
       if (br && br.reason === 'past') {
         alert('🎂 שים לב: יום ההולדת של ' + (br.name || 'הילד/ה') + ' כבר קרוב/עבר — לא נוצרה תזכורת אוטומטית. כדאי לתכנן את החגיגה ידנית.');
@@ -412,9 +429,14 @@ async function handleContract(file) {
     if (d.school_year) document.getElementById('schoolYear').value = d.school_year;
 
     pendingParents = (d.parents || []).filter(p => p && p.full_name_he);
+    // שומרים את החוזה עצמו כדי לצרף אותו לילד אחרי השמירה (PDF כמו שהוא, תמונה בגרסה המוקטנת).
+    pendingContract = (base64.length * 3 / 4) > CONTRACT_MAX_BYTES
+      ? null
+      : { base64, contentType, fileName: file.name || 'contract.pdf' };
     editingId = null; // ensure this saves as a NEW child (so parents attach)
     const pTxt = pendingParents.length ? ` · ${pendingParents.length} הורים יתווספו עם השמירה (${pendingParents.map(p => p.full_name_he).join(', ')})` : '';
-    st.textContent = `✅ הפרטים מולאו${pTxt}. בדקו, השלימו חוסרים ולחצו "שמור".`;
+    const cTxt = pendingContract ? ' · החוזה יישמר כקובץ מצורף' : ' · ⚠️ החוזה גדול מדי לשמירה כקובץ מצורף — אפשר לצרף אותו ידנית מכרטיס הילד';
+    st.textContent = `✅ הפרטים מולאו${pTxt}${cTxt}. בדקו, השלימו חוסרים ולחצו "שמור".`;
     document.getElementById('firstName').focus();
   } catch (e) {
     st.textContent = '❌ שגיאה בקריאת החוזה: ' + e.message;
@@ -460,6 +482,24 @@ function downscaleImage(base64, mime, maxDim = 2000, quality = 0.85) {
 const childDocScope = id => 'child:' + id;
 let pfChildId = null;
 
+// ---- חוזה חתום ----
+// גבול העלאה: Netlify חוסם בקשה מעל ~6MB, ו-base64 מנפח ב-33%.
+const CONTRACT_MAX_BYTES = 4 * 1024 * 1024;
+const CONTRACT_CATEGORY = 'חוזה';
+const contractTitle = c => 'חוזה חתום - ' + ((c.first_name_he || '') + ' ' + (c.last_name_he || '')).trim();
+
+// מעלה את החוזה כקובץ מצורף של הילד, תחת הכותרת האחידה.
+async function uploadContractDoc(childId, child, { base64, contentType, fileName }) {
+  return api.uploadDocument({
+    section: childDocScope(childId),
+    category: CONTRACT_CATEGORY,
+    title: contractTitle(child),
+    file_base64: base64,
+    file_name: fileName || 'contract.pdf',
+    content_type: contentType || 'application/pdf',
+  });
+}
+
 function closeOv(ovId) { document.getElementById(ovId).classList.remove('show'); }
 
 async function openChildProfile(id) {
@@ -485,12 +525,44 @@ async function loadChildFiles(id) {
     docs = dRes.data || [];
     card = (eRes.data || []).find(e => e.category === id);
   } catch (e) {}
+  // החוזה החתום נעוץ בראש הרשימה — הוא המסמך שמחפשים הכי הרבה.
+  const contracts = docs.filter(d => d.category === CONTRACT_CATEGORY);
+  const rest = docs.filter(d => d.category !== CONTRACT_CATEGORY);
+
   let html = '';
+  html += contracts.map(d => `<div class="doc-file contract"><a href="${d.file_url || '#'}" target="_blank">📄 ${esc(d.title || 'חוזה חתום')}</a><button class="del" title="מחק" onclick="delChildDoc('${d.id}')">🗑</button></div>`).join('');
+  if (!contracts.length) html += `<div class="doc-file contract missing"><span class="muted">📄 אין חוזה חתום</span><button class="open" onclick="document.getElementById('childContractInput').click()">צרף חוזה</button></div>`;
   if (card) html += `<div class="doc-file"><button class="open" onclick="openCardView('${id}')">📋 כרטיס אישי</button><span class="muted">מתוך טופס הרישום</span></div>`;
-  html += docs.map(d => `<div class="doc-file"><a href="${d.file_url || '#'}" target="_blank">🔗 ${esc(d.title || 'קובץ')}</a><button class="del" title="מחק" onclick="delChildDoc('${d.id}')">🗑</button></div>`).join('');
-  if (!card && !docs.length) html += '<span class="muted">אין קבצים עדיין.</span>';
+  html += rest.map(d => `<div class="doc-file"><a href="${d.file_url || '#'}" target="_blank">🔗 ${esc(d.title || 'קובץ')}</a><button class="del" title="מחק" onclick="delChildDoc('${d.id}')">🗑</button></div>`).join('');
   html += `<div style="margin-top:12px;"><button class="cp-add" onclick="document.getElementById('childDocInput').click()">➕ צרף קובץ</button></div>`;
   el.innerHTML = html;
+}
+
+// צירוף חוזה חתום לילד קיים — נשמר תמיד תחת אותה כותרת, לא לפי שם הקובץ.
+async function handleChildContractFile(file) {
+  const input = document.getElementById('childContractInput');
+  if (!file || !pfChildId) { input.value = ''; return; }
+  const child = children.find(x => x.id === pfChildId);
+  if (!child) { input.value = ''; return; }
+  if (file.size > CONTRACT_MAX_BYTES) {
+    alert('הקובץ גדול מדי (עד 4MB). אפשר לסרוק אותו שוב באיכות נמוכה יותר.');
+    input.value = ''; return;
+  }
+  const el = document.getElementById('childFiles');
+  if (el) el.insertAdjacentHTML('afterbegin', '<div class="muted" id="cdUpNote">⏳ מעלה את החוזה...</div>');
+  try {
+    const b64 = await fileToB64(file);
+    await uploadContractDoc(pfChildId, child, {
+      base64: b64,
+      contentType: file.type || 'application/pdf',
+      fileName: file.name,
+    });
+    loadChildFiles(pfChildId);
+  } catch (e) {
+    alert('שגיאה בהעלאת החוזה: ' + e.message);
+    const n = document.getElementById('cdUpNote'); if (n) n.remove();
+  }
+  input.value = '';
 }
 
 async function handleChildDocFile(file) {
@@ -544,6 +616,7 @@ loadChildren();
 <div id="lightbox" onclick="this.style.display='none'" style="position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100001;cursor:zoom-out;padding:20px;"><img id="lightboxImg" alt="" style="max-width:96vw;max-height:92vh;border-radius:12px;box-shadow:0 10px 50px rgba(0,0,0,.5);"></div>
 <script>function zoomPhoto(src){ const lb=document.getElementById('lightbox'); document.getElementById('lightboxImg').src=src; lb.style.display='flex'; }</script>
 <input type="file" id="childDocInput" style="display:none" onchange="handleChildDocFile(this.files[0])">
+<input type="file" id="childContractInput" accept="application/pdf,image/*" style="display:none" onchange="handleChildContractFile(this.files[0])">
 
 </body>
 </html>
