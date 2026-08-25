@@ -37,7 +37,7 @@ const handler = withAuth(async (event) => {
 
     if (event.httpMethod === 'POST') {
       // Create child
-      const { first_name_he, last_name_he, birth_date, name_en, gender_he, national_id, prev_framework, school_year } = JSON.parse(event.body || '{}');
+      const { first_name_he, last_name_he, birth_date, name_en, gender_he, national_id, prev_framework, school_year, monthly_fee, fee_note } = JSON.parse(event.body || '{}');
 
       if (!first_name_he || !last_name_he) {
         return {
@@ -58,6 +58,9 @@ const handler = withAuth(async (event) => {
           national_id: national_id || null,
           prev_framework: prev_framework || null,
           school_year: school_year || null,
+          // ריק/לא נשלח = שכר לימוד רגיל. 0 = פטור מלא.
+          monthly_fee: (monthly_fee === 0 || monthly_fee) ? Number(monthly_fee) : null,
+          fee_note: fee_note || null,
           status: 'active',
         })
         .select()

@@ -48,6 +48,8 @@
     .g-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
     .g-m { background:#dbeafe; color:#1e4e8c; }
     .g-f { background:#fce7f3; color:#9d2463; }
+    .fee-badge { display:inline-block; margin-right:8px; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; background:#f3ede3; color:#6f6457; vertical-align:middle; cursor:help; }
+    .fee-free { background:#dcf5e7; color:#1F3D34; }
     .muted { color:#c4bcae; }
     .btn-edit, .btn-delete { padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; }
     .btn-edit { background:#C4846C; color:#FFF; }
@@ -128,6 +130,10 @@
         <div class="form-group"><label>מסגרת קודמת</label><input type="text" id="prevFramework"></div>
         <div class="form-group"><label>שנת לימוד</label><select id="schoolYear"></select></div>
       </div>
+      <div class="form-row">
+        <div class="form-group"><label>שכר לימוד חודשי (₪)</label><input type="number" id="monthlyFee" min="0" step="1" placeholder="ריק = כרגיל"></div>
+        <div class="form-group" style="flex:2;"><label>הערת תשלום</label><input type="text" id="feeNote" placeholder="למשל: פטור מלא — נמצא בגן בחינם השנה"></div>
+      </div>
       <div style="display:flex; gap:10px; margin-top:8px;">
         <button type="submit" class="btn-submit">שמור</button>
         <button type="button" class="btn-cancel" onclick="toggleForm()">ביטול</button>
@@ -177,6 +183,17 @@ function ageStr(bd) {
 }
 function birthMonthNum(bd) { return bd ? (new Date(bd).getMonth() + 1) : '-'; }
 
+// שכר לימוד חריג בלבד — ילד ששכר הלימוד שלו רגיל (monthly_fee ריק) לא מקבל תגית.
+const attrEsc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+function feeBadge(c) {
+  if (c.monthly_fee == null || c.monthly_fee === '') return '';
+  const fee = Number(c.monthly_fee);
+  if (!isFinite(fee)) return '';
+  const note = c.fee_note ? ' — ' + c.fee_note : '';
+  if (fee === 0) return `<span class="fee-badge fee-free" title="${attrEsc('פטור מלא' + note)}">חינם · ₪0 לחודש</span>`;
+  return `<span class="fee-badge" title="${attrEsc('שכר לימוד חריג' + note)}">₪${fee.toLocaleString('he-IL')} לחודש</span>`;
+}
+
 async function loadChildren() {
   try {
     const res = await api.getChildren();
@@ -213,7 +230,7 @@ function renderTable() {
                  : '<span class="muted">-</span>';
     return `
     <tr>
-      <td><b class="name-link" onclick="openChildProfile('${c.id}')">${c.first_name_he} ${c.last_name_he || ''}</b></td>
+      <td><b class="name-link" onclick="openChildProfile('${c.id}')">${c.first_name_he} ${c.last_name_he || ''}</b>${feeBadge(c)}</td>
       <td class="en">${c.name_en || '<span class="muted">-</span>'}</td>
       <td>${gBadge}</td>
       <td>${c.national_id || '<span class="muted">-</span>'}</td>
@@ -279,6 +296,8 @@ function editChild(id) {
   document.getElementById('nationalId').value = c.national_id || '';
   document.getElementById('birthDate').value = c.birth_date || '';
   document.getElementById('prevFramework').value = c.prev_framework || '';
+  document.getElementById('monthlyFee').value = (c.monthly_fee == null ? '' : c.monthly_fee);
+  document.getElementById('feeNote').value = c.fee_note || '';
   fillYearSelect(c.school_year || CUR_YEAR);
   document.getElementById('form').classList.add('show');
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -303,7 +322,14 @@ document.getElementById('childForm').addEventListener('submit', async (e) => {
     birth_date: document.getElementById('birthDate').value || null,
     prev_framework: document.getElementById('prevFramework').value || null,
     school_year: document.getElementById('schoolYear').value || selectedYear,
+    // ריק = שכר לימוד רגיל. 0 = פטור מלא (ואז חובה לנמק בהערת התשלום).
+    monthly_fee: document.getElementById('monthlyFee').value === '' ? null : Number(document.getElementById('monthlyFee').value),
+    fee_note: document.getElementById('feeNote').value.trim() || null,
   };
+  if (data.monthly_fee === 0 && !data.fee_note) {
+    showError('שכר לימוד 0 — צריך לכתוב בהערת התשלום למה הילד פטור');
+    return;
+  }
   try {
     const res = editingId ? await api.updateChild(editingId, data) : await api.createChild(data);
     if (res.success) {
