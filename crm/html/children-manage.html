@@ -428,11 +428,28 @@ async function handleContract(file) {
     document.getElementById('birthDate').value = d.birth_date || '';
     if (d.school_year) document.getElementById('schoolYear').value = d.school_year;
 
-    pendingParents = (d.parents || []).filter(p => p && p.full_name_he);
-    // שומרים את החוזה עצמו כדי לצרף אותו לילד אחרי השמירה (PDF כמו שהוא, תמונה בגרסה המוקטנת).
-    pendingContract = (base64.length * 3 / 4) > CONTRACT_MAX_BYTES
+    // החוזה עצמו, כדי לצרף אותו לילד (PDF כמו שהוא, תמונה בגרסה המוקטנת).
+    const contractFile = (base64.length * 3 / 4) > CONTRACT_MAX_BYTES
       ? null
       : { base64, contentType, fileName: file.name || 'contract.pdf' };
+
+    // הילד כבר קיים? מצרפים אליו את החוזה במקום ליצור כפילות.
+    const existing = findExistingChild(d);
+    if (existing) {
+      const nm = ((existing.first_name_he || '') + ' ' + (existing.last_name_he || '')).trim();
+      if (confirm(`${nm} כבר קיים במערכת (שנה ${existing.school_year || '—'}).\n\nלצרף אליו את החוזה במקום ליצור ילד חדש?`)) {
+        if (!contractFile) { st.textContent = '❌ החוזה גדול מדי לשמירה (עד 4MB)'; return; }
+        st.textContent = '⏳ מצרף את החוזה...';
+        await replaceContractDoc(existing, contractFile);
+        st.textContent = `✅ החוזה צורף ל${nm}.`;
+        pendingContract = null;
+        loadChildren();
+        return;
+      }
+    }
+
+    pendingParents = (d.parents || []).filter(p => p && p.full_name_he);
+    pendingContract = contractFile;
     editingId = null; // ensure this saves as a NEW child (so parents attach)
     const pTxt = pendingParents.length ? ` · ${pendingParents.length} הורים יתווספו עם השמירה (${pendingParents.map(p => p.full_name_he).join(', ')})` : '';
     const cTxt = pendingContract ? ' · החוזה יישמר כקובץ מצורף' : ' · ⚠️ החוזה גדול מדי לשמירה כקובץ מצורף — אפשר לצרף אותו ידנית מכרטיס הילד';
@@ -487,6 +504,35 @@ let pfChildId = null;
 const CONTRACT_MAX_BYTES = 4 * 1024 * 1024;
 const CONTRACT_CATEGORY = 'חוזה';
 const contractTitle = c => 'חוזה חתום - ' + ((c.first_name_he || '') + ' ' + (c.last_name_he || '')).trim();
+
+// זיהוי ילד קיים מתוך מה שה-AI חילץ מהחוזה: ת"ז קודמת לשם, כי היא חד-משמעית.
+const normName = s => (s || '').replace(/\s+/g, ' ').trim();
+const normId = s => (s || '').replace(/\D/g, '');
+function findExistingChild(d) {
+  const id = normId(d.national_id);
+  if (id) {
+    const byId = children.find(c => normId(c.national_id) === id);
+    if (byId) return byId;
+  }
+  const full = normName((d.first_name_he || '') + ' ' + (d.last_name_he || ''));
+  if (!full) return null;
+  // שם זהה — נחשב אותו ילד רק אם גם תאריך הלידה מסכים (או שחסר באחד הצדדים).
+  return children.find(c => {
+    if (normName((c.first_name_he || '') + ' ' + (c.last_name_he || '')) !== full) return false;
+    if (d.birth_date && c.birth_date) return d.birth_date === c.birth_date;
+    return true;
+  }) || null;
+}
+
+// חוזה אחד לילד: הישן עובר לפח (ניתן לשחזור) והחדש נכנס במקומו.
+async function replaceContractDoc(child, payload) {
+  try {
+    const r = await api.getDocuments(childDocScope(child.id));
+    const old = (r.data || []).filter(x => x.category === CONTRACT_CATEGORY);
+    for (const o of old) { try { await api.deleteDocument(o.id); } catch (e) {} }
+  } catch (e) {}
+  return uploadContractDoc(child.id, child, payload);
+}
 
 // מעלה את החוזה כקובץ מצורף של הילד, תחת הכותרת האחידה.
 async function uploadContractDoc(childId, child, { base64, contentType, fileName }) {
@@ -552,7 +598,7 @@ async function handleChildContractFile(file) {
   if (el) el.insertAdjacentHTML('afterbegin', '<div class="muted" id="cdUpNote">⏳ מעלה את החוזה...</div>');
   try {
     const b64 = await fileToB64(file);
-    await uploadContractDoc(pfChildId, child, {
+    await replaceContractDoc(child, {
       base64: b64,
       contentType: file.type || 'application/pdf',
       fileName: file.name,
