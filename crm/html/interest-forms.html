@@ -52,12 +52,17 @@
     .tour-slot-row:last-child { border-bottom:none; }
     .tour-slot-info { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .tour-slot-cap { font-size:12px; color:#9B8E82; font-weight:600; }
-    .add-slot-form { display:none; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px; padding-top:10px; border-top:1px dashed #e3ddd2; }
+    .tour-help { font-size:13px; color:#9B8E82; line-height:1.6; margin-bottom:12px; }
+    .add-slot-form { display:none; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-top:12px; padding-top:14px; border-top:1px dashed #e3ddd2; }
     .add-slot-form.show { display:flex; }
-    .add-slot-form input { padding:8px 10px; border:1.5px solid #e3ddd2; border-radius:8px; font-family:'Heebo'; font-size:13px; outline:none; }
+    .slot-field { display:flex; flex-direction:column; gap:5px; }
+    .slot-field label { font-size:11.5px; color:#9B8E82; font-weight:700; }
+    .add-slot-form input { padding:9px 11px; border:1.5px solid #e3ddd2; border-radius:9px; font-family:'Heebo'; font-size:13.5px; outline:none; }
+    .add-slot-form input:focus { border-color:#1F3D34; }
     .add-slot-form input[type="date"] { width:150px; }
-    .add-slot-form input[type="text"] { width:90px; }
-    .add-slot-form input[type="number"] { width:80px; }
+    .add-slot-form input[type="time"] { width:110px; }
+    .add-slot-form input[type="number"] { width:190px; }
+    .slot-field.cap label { max-width:190px; }
   </style>
 </head>
 <body>
@@ -76,16 +81,31 @@
 
   <div class="tour-box">
     <div class="tour-head">
-      <h2>🗓️ תאריכי סיור</h2>
-      <button class="btn-link" onclick="toggleAddSlot()">+ הוסף תאריך</button>
+      <h2>🗓️ תאריכי סיור מקדים</h2>
+      <button class="btn-link" onclick="toggleAddSlot()">+ הוסף תאריך סיור</button>
     </div>
+    <p class="tour-help">
+      כאן קובעים את התאריכים שבהם אפשר יהיה לתאם סיור היכרות בגן. כל תאריך שתוסיפו יופיע אוטומטית בקישור האישי שנשלח למשפחה (כפתור "📤 שלח הזמנה לסיור" בכרטיס הפנייה למטה), וההורים יבחרו מתוכו את התאריך הנוח להם.
+    </p>
     <div id="slotsList" style="color:#9B8E82; font-size:13px;">טוען...</div>
     <div class="add-slot-form" id="addSlotForm">
-      <input type="date" id="slotDate">
-      <input type="text" id="slotTimeStart" placeholder="משעה (לא חובה)">
-      <input type="text" id="slotTimeEnd" placeholder="עד שעה (לא חובה)">
-      <input type="number" id="slotCapacity" placeholder="קיבולת" value="10" min="1">
-      <button class="btn-link" onclick="addSlot()">שמור</button>
+      <div class="slot-field">
+        <label>תאריך הסיור</label>
+        <input type="date" id="slotDate">
+      </div>
+      <div class="slot-field">
+        <label>משעה (לא חובה)</label>
+        <input type="time" id="slotTimeStart">
+      </div>
+      <div class="slot-field">
+        <label>עד שעה (לא חובה)</label>
+        <input type="time" id="slotTimeEnd">
+      </div>
+      <div class="slot-field cap">
+        <label>כמה משפחות יכולות להירשם לתאריך הזה</label>
+        <input type="number" id="slotCapacity" value="10" min="1">
+      </div>
+      <button class="btn-link" onclick="addSlot()">שמור תאריך</button>
     </div>
   </div>
 
@@ -131,7 +151,7 @@ function renderSlots() {
     const timeStr = s.time_start ? (s.time_start + (s.time_end ? '–' + s.time_end : '')) : '';
     return `<div class="tour-slot-row">
       <div class="tour-slot-info"><b>${fmtSlotDate(s.date)}</b>${timeStr ? ' · ' + esc(timeStr) : ''}
-        <span class="tour-slot-cap">${s.booked}/${s.capacity} משפחות</span>
+        <span class="tour-slot-cap">${s.booked} מתוך ${s.capacity} מקומות נרשמו</span>
       </div>
       <button class="btn-delete" onclick="deleteSlot('${s.id}')">מחק</button>
     </div>`;
