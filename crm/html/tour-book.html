@@ -9,22 +9,33 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Heebo',sans-serif; background:linear-gradient(135deg,#1F3D34 0%,#2D5A50 100%); color:#3D3228; direction:rtl; min-height:100vh; padding:24px; }
     .card { background:#fff; border-radius:22px; max-width:520px; margin:20px auto; padding:36px 32px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
-    .head { text-align:center; margin-bottom:22px; }
+    .head { text-align:center; margin-bottom:20px; }
     .head img { width:80px; height:80px; border-radius:50%; object-fit:cover; margin:0 auto 10px; display:block; }
     .head h1 { font-size:22px; color:#1F3D34; margin-bottom:8px; line-height:1.4; }
     .head p { font-size:14px; color:#9B8E82; line-height:1.6; }
-    .slots { display:flex; flex-direction:column; gap:10px; margin:22px 0; }
+    .guidelines { background:#f6f1e9; border:1px solid #ece3d4; border-radius:14px; padding:16px 18px; font-size:14px; color:#5b5142; line-height:1.75; margin-bottom:22px; }
+    .guidelines p { margin-bottom:10px; }
+    .guidelines p:last-child { margin-bottom:0; }
+    .section-lbl { font-size:14px; font-weight:700; color:#1F3D34; margin:18px 0 10px; }
+    .slots { display:flex; flex-direction:column; gap:10px; }
     .slot { border:1.5px solid #e3ddd2; border-radius:13px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:.15s; }
     .slot:hover { border-color:#1F3D34; background:#f6f1e9; }
     .slot.chosen { border-color:#1F3D34; background:#f1f5f2; }
     .slot.full { opacity:.5; cursor:not-allowed; }
     .slot .d { font-weight:700; color:#1F3D34; font-size:15.5px; }
     .slot .t { font-size:13px; color:#9B8E82; margin-top:2px; }
-    .slot .rem { font-size:12.5px; font-weight:700; color:#1F7a4f; }
-    .slot.full .rem { color:#c0563f; }
-    .btn { width:100%; margin-top:6px; padding:15px; border:none; border-radius:12px; background:#1F3D34; color:#fff; font-family:'Heebo'; font-size:16px; font-weight:700; cursor:pointer; }
+    .slot .rem { font-size:12.5px; font-weight:700; color:#c0563f; }
+    .attendees { display:flex; gap:10px; }
+    .att-btn { flex:1; padding:12px; border:1.5px solid #e3ddd2; border-radius:12px; background:#fff; font-family:'Heebo'; font-size:14.5px; font-weight:700; cursor:pointer; color:#3D3228; }
+    .att-btn.chosen { border-color:#1F3D34; background:#f1f5f2; color:#1F3D34; }
+    .confirm-row { display:flex; align-items:flex-start; gap:10px; margin-top:18px; }
+    .confirm-row input { margin-top:3px; width:18px; height:18px; flex-shrink:0; }
+    .confirm-row label { font-size:13.5px; line-height:1.6; color:#3D3228; }
+    .btn { width:100%; margin-top:18px; padding:15px; border:none; border-radius:12px; background:#1F3D34; color:#fff; font-family:'Heebo'; font-size:16px; font-weight:700; cursor:pointer; }
     .btn:hover { background:#154428; }
     .btn:disabled { background:#cfc8bd; cursor:not-allowed; }
+    .btn-cal { width:100%; margin-top:12px; padding:14px; border:1.5px solid #1F3D34; border-radius:12px; background:#fff; color:#1F3D34; font-family:'Heebo'; font-size:15px; font-weight:700; cursor:pointer; text-decoration:none; display:block; text-align:center; }
+    .btn-cal:hover { background:#f1f5f2; }
     .msg { display:none; text-align:center; padding:30px 10px; }
     .msg .v { font-size:46px; }
     .msg h2 { color:#1F3D34; margin:10px 0 6px; }
@@ -39,24 +50,46 @@
       <div class="head">
         <img src="logo.png" alt="גן לב">
         <h1 id="titleLine">תיאום סיור מקדים בגן</h1>
-        <p>בחרו תאריך נוח לביקור — ניצור איתכם קשר לאישור סופי 💛</p>
+        <p>בחרו תאריך נוח לביקור 💛</p>
+      </div>
+      <div class="guidelines">
+        <p>הורים יקרים ❤️</p>
+        <p>הסיור הזה נועד לתת לכם הצצה ראשונית לרגע בתוך היום שלנו בגן.</p>
+        <p>הביקור הוא בזמן שילדים נמצאים בגן אז בבקשה מכם השארו בהתבוננות ונסו להיות קצת זבוב על הקיר.</p>
+        <p>זה הזמן שלכם לנשום את האוויר של הגן, להסתכל על מה שקורה סביבכם ולהתרשם ממה שמתרחש.</p>
+        <p>את השאלות והפרטים הטכניים כמובן שנשמח להשלים בהמשך, ובביקור הזה, פשוט תנו לעצמכם להיות.</p>
       </div>
       <div class="err" id="err"></div>
       <div id="loading" style="text-align:center; color:#9B8E82; padding:20px;">טוען תאריכים...</div>
-      <div class="slots" id="slots" style="display:none;"></div>
-      <button class="btn" id="submitBtn" style="display:none;" disabled>אישור תאריך</button>
+      <div id="slotsBlock" style="display:none;">
+        <div class="slots" id="slots"></div>
+        <div id="attBlock" style="display:none;">
+          <div class="section-lbl">כמה הורים מגיעים לסיור?</div>
+          <div class="attendees">
+            <button type="button" class="att-btn" onclick="pickAttendees(1, this)">הורה אחד</button>
+            <button type="button" class="att-btn" onclick="pickAttendees(2, this)">שני הורים</button>
+          </div>
+        </div>
+        <div class="confirm-row">
+          <input type="checkbox" id="confirmRead">
+          <label for="confirmRead">קראתי את הדגשים לביקור ואני מאשר/ת</label>
+        </div>
+        <button class="btn" id="submitBtn" disabled>אישור תאריך</button>
+      </div>
     </div>
     <div class="msg" id="thanks">
       <div class="v">✅</div>
       <h2>הסיור נקבע!</h2>
       <p>נשמח לפגוש אתכם 🌿</p>
+      <a class="btn-cal" id="calBtn" href="#">📅 הוסף ליומן</a>
     </div>
   </div>
 
 <script>
 const params = new URLSearchParams(location.search);
 const LEAD = params.get('lead');
-let chosen = null;
+let chosen = null, attendees = null;
+let slotsData = [];
 
 const DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -79,29 +112,29 @@ async function load() {
       document.getElementById('titleLine').textContent = 'תיאום סיור מקדים — ' + data.lead.child_name;
     }
     if (!data.slots.length) {
-      document.getElementById('slots').style.display = 'block';
+      document.getElementById('slotsBlock').style.display = 'block';
       document.getElementById('slots').innerHTML = '<div class="empty">עדיין לא נפתחו תאריכים לסיור — ניצור איתכם קשר בקרוב 💛</div>';
       return;
     }
+    slotsData = data.slots;
     chosen = data.chosen_slot_id || null;
-    renderSlots(data.slots);
-    document.getElementById('slots').style.display = 'flex';
-    const btn = document.getElementById('submitBtn');
-    btn.style.display = 'block';
-    btn.disabled = !chosen;
+    renderSlots();
+    document.getElementById('slotsBlock').style.display = 'block';
+    if (chosen) { document.getElementById('attBlock').style.display = 'block'; }
+    updateSubmitState();
   } catch (e) {
     document.getElementById('loading').style.display = 'none';
     showErr(e.message);
   }
 }
 
-function renderSlots(slots) {
-  document.getElementById('slots').innerHTML = slots.map(s => {
+function renderSlots() {
+  document.getElementById('slots').innerHTML = slotsData.map(s => {
     const full = s.remaining <= 0 && chosen !== s.id;
     const timeStr = s.time_start ? (s.time_start + (s.time_end ? '–' + s.time_end : '')) : '';
     return `<div class="slot ${chosen === s.id ? 'chosen' : ''} ${full ? 'full' : ''}" onclick="${full ? '' : `pick('${s.id}', this)`}">
       <div><div class="d">${fmtDate(s.date)}</div>${timeStr ? `<div class="t">${timeStr}</div>` : ''}</div>
-      <div class="rem">${full ? 'מלא' : s.remaining + ' מקומות פנויים'}</div>
+      ${full ? '<div class="rem">מלא</div>' : ''}
     </div>`;
   }).join('');
 }
@@ -110,22 +143,58 @@ function pick(id, el) {
   chosen = id;
   document.querySelectorAll('.slot').forEach(e => e.classList.remove('chosen'));
   el.classList.add('chosen');
-  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('attBlock').style.display = 'block';
+  updateSubmitState();
+}
+
+function pickAttendees(n, el) {
+  attendees = n;
+  document.querySelectorAll('.att-btn').forEach(e => e.classList.remove('chosen'));
+  el.classList.add('chosen');
+  updateSubmitState();
+}
+
+function updateSubmitState() {
+  const ok = chosen && attendees && document.getElementById('confirmRead').checked;
+  document.getElementById('submitBtn').disabled = !ok;
+}
+document.getElementById('confirmRead').addEventListener('change', updateSubmitState);
+
+function toIcsDate(dateStr, timeStr) {
+  const [y, m, d] = dateStr.split('-');
+  if (!timeStr) return `${y}${m}${d}`;
+  const [hh, mm] = timeStr.split(':');
+  return `${y}${m}${d}T${hh}${mm}00`;
+}
+function buildIcs(date, timeStart, timeEnd) {
+  const allDay = !timeStart;
+  const dtStart = toIcsDate(date, timeStart);
+  const dtEnd = allDay ? toIcsDate(date, null) : toIcsDate(date, timeEnd || (parseInt(timeStart) + 1) + timeStart.slice(2));
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Gan Lev//Tour//HE', 'BEGIN:VEVENT',
+    'UID:' + Date.now() + '@ganlev', 'SUMMARY:סיור מקדים - גן לב', 'LOCATION:גן לב',
+    (allDay ? 'DTSTART;VALUE=DATE:' + dtStart : 'DTSTART:' + dtStart),
+    (allDay ? 'DTEND;VALUE=DATE:' + dtStart : 'DTEND:' + dtEnd),
+    'DESCRIPTION:סיור מקדים בגן לב', 'END:VEVENT', 'END:VCALENDAR'];
+  return lines.join('\r\n');
 }
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
-  if (!chosen) return;
+  if (!chosen || !attendees) return;
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'שולח...';
   try {
     const res = await fetch('/.netlify/functions/tour-book', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lead_id: LEAD, slot_id: chosen }),
+      body: JSON.stringify({ lead_id: LEAD, slot_id: chosen, attendees }),
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'שגיאה');
     document.getElementById('wrap').style.display = 'none';
     document.getElementById('thanks').style.display = 'block';
+    const ics = buildIcs(data.date, data.time_start, data.time_end);
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    document.getElementById('calBtn').href = URL.createObjectURL(blob);
+    document.getElementById('calBtn').setAttribute('download', 'סיור-גן-לב.ics');
   } catch (e) {
     showErr(e.message);
     btn.disabled = false; btn.textContent = 'אישור תאריך';

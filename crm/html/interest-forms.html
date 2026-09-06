@@ -161,13 +161,14 @@ function renderSlots() {
   el.innerHTML = tourSlots.map(s => {
     const timeStr = s.time_start ? (s.time_start + (s.time_end ? '–' + s.time_end : '')) : '';
     const bookings = slotBookings(s.id);
+    const totalAttendees = bookings.reduce((sum, b) => sum + (b.tour_attendees || 1), 0);
     const namesHtml = bookings.length
-      ? bookings.map(b => `<div class="tour-name-row">${esc(b.child_name)}${b.parent1_name ? ' · הורה: ' + esc(b.parent1_name) : ''}${b.parent1_phone ? ` · <a class="tel" href="${waHref(b.parent1_phone)}" target="_blank">💬 ${esc(b.parent1_phone)}</a>` : ''}</div>`).join('')
+      ? bookings.map(b => `<div class="tour-name-row">${esc(b.child_name)}${b.parent1_name ? ' · הורה: ' + esc(b.parent1_name) : ''}${b.parent1_phone ? ` · <a class="tel" href="${waHref(b.parent1_phone)}" target="_blank">💬 ${esc(b.parent1_phone)}</a>` : ''} · ${b.tour_attendees || 1} ${b.tour_attendees === 2 ? 'הורים מגיעים' : 'הורה מגיע/ה'}</div>`).join('')
       : '<div class="tour-name-row muted">עדיין אין רשומים לתאריך הזה</div>';
     return `<div>
       <div class="tour-slot-row" onclick="toggleSlotNames('${s.id}')">
         <div class="tour-slot-info"><b>${fmtSlotDate(s.date)}</b>${timeStr ? ' · ' + esc(timeStr) : ''}
-          <span class="tour-slot-cap">${s.booked} מתוך ${s.capacity} מקומות נרשמו · לחצו לפרטים ⌄</span>
+          <span class="tour-slot-cap">${s.booked} מתוך ${s.capacity} משפחות נרשמו${bookings.length ? ' · ' + totalAttendees + ' הורים בסך הכל' : ''} · לחצו לפרטים ⌄</span>
         </div>
         <button class="btn-delete" onclick="event.stopPropagation(); deleteSlot('${s.id}')">מחק</button>
       </div>
@@ -291,7 +292,7 @@ function render() {
         <div class="lead-field"><div class="lbl">הורה 1</div><div class="val">${esc(it.parent1_name) || '<span class=\"muted\">-</span>'}${it.parent1_phone ? ` · <a class="tel" href="${waHref(it.parent1_phone)}" target="_blank">💬 ${esc(it.parent1_phone)}</a>` : ''}</div></div>
         <div class="lead-field"><div class="lbl">הורה 2</div><div class="val">${esc(it.parent2_name) || '<span class=\"muted\">-</span>'}${it.parent2_phone ? ` · <a class="tel" href="${waHref(it.parent2_phone)}" target="_blank">💬 ${esc(it.parent2_phone)}</a>` : ''}</div></div>
       </div>
-      ${it.tour_slot_id ? `<div class="lead-tour">🗓️ נקבע סיור: ${esc(slotLabel(it.tour_slot_id) || '')}</div>` : ''}
+      ${it.tour_slot_id ? `<div class="lead-tour">🗓️ נקבע סיור: ${esc(slotLabel(it.tour_slot_id) || '')} · ${it.tour_attendees || 1} ${it.tour_attendees === 2 ? 'הורים מגיעים' : 'הורה מגיע/ה'}</div>` : ''}
       ${it.family_info ? `<div class="lead-note"><div class="lbl">על המשפחה</div>${esc(it.family_info)}</div>` : ''}
       ${it.child_info ? `<div class="lead-note"><div class="lbl">על הילד/ה</div>${esc(it.child_info)}</div>` : ''}
     </div>`;

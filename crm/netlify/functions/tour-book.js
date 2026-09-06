@@ -34,16 +34,19 @@ exports.handler = async (event) => {
 
     if (event.httpMethod === 'POST') {
       const b = JSON.parse(event.body || '{}');
-      if (!b.lead_id || !b.slot_id) return json(400, { success: false, error: 'חסרים פרטים' });
-      const { data: lead, error: e1 } = await supabase.from('interest_forms').select('id,garden_id').eq('id', b.lead_id).single();
+      if (!b.lead_id || !b.slot_id || ![1, 2].includes(Number(b.attendees))) {
+        return json(400, { success: false, error: 'חסרים פרטים' });
+      }
+      const { data: lead, error: e1 } = await supabase.from('interest_forms').select('id,garden_id,tour_slot_id').eq('id', b.lead_id).single();
       if (e1 || !lead) return json(404, { success: false, error: 'הקישור לא תקין' });
       const slots = await slotsWithRemaining(lead.garden_id);
       const slot = slots.find(s => s.id === b.slot_id);
       if (!slot) return json(404, { success: false, error: 'התאריך לא נמצא' });
-      if (slot.remaining <= 0) return json(409, { success: false, error: 'התאריך הזה מלא — בחרו תאריך אחר' });
-      const { error: e2 } = await supabase.from('interest_forms').update({ tour_slot_id: b.slot_id }).eq('id', b.lead_id);
+      if (slot.remaining <= 0 && lead.tour_slot_id !== b.slot_id) return json(409, { success: false, error: 'התאריך הזה מלא — בחרו תאריך אחר' });
+      const { error: e2 } = await supabase.from('interest_forms')
+        .update({ tour_slot_id: b.slot_id, tour_attendees: Number(b.attendees) }).eq('id', b.lead_id);
       if (e2) throw e2;
-      return json(200, { success: true });
+      return json(200, { success: true, date: slot.date, time_start: slot.time_start, time_end: slot.time_end });
     }
 
     return json(405, { success: false, error: 'Method not allowed' });
