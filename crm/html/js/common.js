@@ -197,7 +197,7 @@ function renderNavSidebar() {
   const links = [
     { href: 'dashboard.html',       icon: '🏠', label: 'עמוד הבית' },
     { href: 'children-manage.html', icon: '👶', label: 'ילדים' },
-    { href: 'interest-forms.html',  icon: '📝', label: 'התעניינויות' },
+    { href: 'interest-forms.html',  icon: '📝', label: 'רשימת המתנה לשנה הבאה' },
     { href: 'parents-tuition.html', icon: '👨‍👩‍👧', label: 'הורים' },
     { href: 'staff-salaries.html',  icon: '👥', label: 'צוות' },
     { href: 'content.html',         icon: '📚', label: 'תוכן חינוכי' },
