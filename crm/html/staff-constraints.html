@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>אילוצים לסידור עבודה — גן לב ❤️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:linear-gradient(135deg,#1F3D34 0%,#2D5A50 100%); color:#3D3228; direction:rtl; min-height:100vh; padding:24px; }
+    .card { background:#fff; border-radius:22px; max-width:560px; margin:20px auto; padding:36px 32px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .head { text-align:center; margin-bottom:20px; }
+    .head img { width:80px; height:80px; border-radius:50%; object-fit:cover; margin:0 auto 10px; display:block; }
+    .head h1 { font-size:21px; color:#1F3D34; margin-bottom:8px; line-height:1.4; }
+    .head p { font-size:13.5px; color:#9B8E82; line-height:1.65; }
+    .legend { display:flex; gap:16px; justify-content:center; margin:16px 0 20px; font-size:12.5px; color:#6f6457; }
+    .legend span { display:inline-flex; align-items:center; gap:5px; }
+    .dot { width:11px; height:11px; border-radius:4px; display:inline-block; }
+    .dot.on { background:#f1f5f2; border:1.5px solid #cfd8d3; }
+    .dot.off { background:#c0563f; }
+    .days { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+    .day-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border:1.5px solid #e3ddd2; border-radius:12px; flex-wrap:wrap; }
+    .day-row .d { font-weight:700; color:#1F3D34; font-size:14px; }
+    .parts { display:flex; gap:8px; }
+    .part-btn { padding:8px 14px; border-radius:9px; border:1.5px solid #e3ddd2; background:#f1f5f2; font-family:'Heebo'; font-size:12.5px; font-weight:700; cursor:pointer; color:#3D3228; }
+    .part-btn.off { background:#c0563f; border-color:#c0563f; color:#fff; }
+    label.note-lbl { display:block; font-size:14px; font-weight:700; color:#1F3D34; margin-bottom:6px; }
+    textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo',sans-serif; font-size:14.5px; outline:none; resize:vertical; line-height:1.6; margin-bottom:18px; }
+    textarea:focus { border-color:#1F3D34; }
+    .btn { width:100%; padding:15px; border:none; border-radius:12px; background:#1F3D34; color:#fff; font-family:'Heebo'; font-size:16px; font-weight:700; cursor:pointer; }
+    .btn:hover { background:#154428; }
+    .btn:disabled { background:#cfc8bd; cursor:not-allowed; }
+    .msg { display:none; text-align:center; padding:30px 10px; }
+    .msg .v { font-size:46px; }
+    .msg h2 { color:#1F3D34; margin:10px 0 6px; }
+    .msg p { color:#9B8E82; }
+    .err { background:#fdf0ef; color:#c0563f; padding:12px; border-radius:10px; font-size:14px; margin-bottom:14px; display:none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="wrap">
+      <div class="head">
+        <img src="logo.png" alt="גן לב">
+        <h1 id="titleLine">אילוצים לסידור העבודה</h1>
+        <p>סמנו בוקר ו/או צהריים שבהם <b>אינכם</b> יכולים לעבוד. ברירת המחדל היא שאתם זמינים בכל התקופה.</p>
+      </div>
+      <div class="legend">
+        <span><span class="dot on"></span> זמין/ה</span>
+        <span><span class="dot off"></span> לא זמין/ה</span>
+      </div>
+      <div class="err" id="err"></div>
+      <div id="loading" style="text-align:center; color:#9B8E82; padding:20px;">טוען...</div>
+      <div class="days" id="days" style="display:none;"></div>
+      <div id="noteBlock" style="display:none;">
+        <label class="note-lbl">הערה (לא חובה)</label>
+        <textarea id="notes" rows="2" placeholder="למשל: חייב/ת לצאת מוקדם בימי שני"></textarea>
+        <button class="btn" id="submitBtn">שמירת האילוצים</button>
+      </div>
+    </div>
+    <div class="msg" id="thanks">
+      <div class="v">✅</div>
+      <h2>נשמר!</h2>
+      <p>תודה, נעדכן את הסידור בהתאם 💛</p>
+    </div>
+  </div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const ROUND = params.get('round');
+const STAFF = params.get('staff');
+const DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+let unavailable = new Set(); // keys: "date|part"
+
+function fmtDate(d) {
+  const [y, m, dd] = d.split('-').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, dd)).getUTCDay();
+  return `יום ${DAY_NAMES[dow]}, ${dd} ב${MONTHS[m - 1]}`;
+}
+function datesBetween(start, end) {
+  const out = [];
+  let d = new Date(start + 'T00:00:00Z');
+  const last = new Date(end + 'T00:00:00Z');
+  while (d <= last) { out.push(d.toISOString().slice(0, 10)); d.setUTCDate(d.getUTCDate() + 1); }
+  return out;
+}
+function showErr(m) { const e = document.getElementById('err'); e.textContent = m; e.style.display = 'block'; }
+
+async function load() {
+  if (!ROUND || !STAFF) { showErr('קישור לא תקין'); document.getElementById('loading').style.display = 'none'; return; }
+  try {
+    const res = await fetch(`/.netlify/functions/staff-constraints?round=${encodeURIComponent(ROUND)}&staff=${encodeURIComponent(STAFF)}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאה');
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('titleLine').textContent = 'אילוצים לסידור העבודה — ' + data.staff_name;
+    (data.existing.unavailable || []).forEach(u => unavailable.add(u.date + '|' + u.part));
+    if (data.existing.notes) document.getElementById('notes').value = data.existing.notes;
+    renderDays(datesBetween(data.round.start_date, data.round.end_date));
+    document.getElementById('days').style.display = 'flex';
+    document.getElementById('noteBlock').style.display = 'block';
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    showErr(e.message);
+  }
+}
+
+function renderDays(dates) {
+  document.getElementById('days').innerHTML = dates.map(d => `
+    <div class="day-row">
+      <div class="d">${fmtDate(d)}</div>
+      <div class="parts">
+        <button type="button" class="part-btn ${unavailable.has(d + '|morning') ? 'off' : ''}" onclick="toggle('${d}','morning',this)">בוקר</button>
+        <button type="button" class="part-btn ${unavailable.has(d + '|afternoon') ? 'off' : ''}" onclick="toggle('${d}','afternoon',this)">צהריים</button>
+      </div>
+    </div>`).join('');
+}
+
+function toggle(date, part, el) {
+  const key = date + '|' + part;
+  if (unavailable.has(key)) { unavailable.delete(key); el.classList.remove('off'); }
+  else { unavailable.add(key); el.classList.add('off'); }
+}
+
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'שומר...';
+  const unavailableArr = Array.from(unavailable).map(k => { const [date, part] = k.split('|'); return { date, part }; });
+  try {
+    const res = await fetch('/.netlify/functions/staff-constraints', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ round_id: ROUND, staff_id: STAFF, unavailable: unavailableArr, notes: document.getElementById('notes').value.trim() || null }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאה');
+    document.getElementById('wrap').style.display = 'none';
+    document.getElementById('thanks').style.display = 'block';
+  } catch (e) {
+    showErr(e.message);
+    btn.disabled = false; btn.textContent = 'שמירת האילוצים';
+  }
+});
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>סידור עבודה — מערכת גנים</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:12px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; }
+    .btn-add:hover { background:#154428; }
+    .btn-link { background:#C4846C; color:#fff; border:none; padding:9px 16px; border-radius:9px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:12.5px; }
+    .btn-link:hover { background:#a96b54; }
+    .btn-delete { padding:8px 12px; border:none; border-radius:9px; cursor:pointer; font-size:12px; font-family:'Heebo'; font-weight:700; background:#e74c3c; color:#fff; }
+    .btn-whatsapp { padding:7px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; font-weight:700; background:#25D366; color:#fff; }
+    .btn-ai { background:linear-gradient(135deg,#7A6A55,#5f5342); color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13.5px; }
+    .btn-ai:hover { opacity:.92; }
+    .btn-ai:disabled { background:#cfc8bd; cursor:not-allowed; }
+    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .error.show { display:block; }
+    .success { background:#d4edda; color:#155724; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .success.show { display:block; }
+    .form-box { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:20px; display:none; }
+    .form-box.show { display:block; }
+    .form-row { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px; }
+    .f-field { display:flex; flex-direction:column; gap:5px; }
+    .f-field label { font-size:12px; color:#9B8E82; font-weight:700; }
+    .f-field input, .f-field select { padding:9px 12px; border:1.5px solid #e3ddd2; border-radius:9px; font-family:'Heebo'; font-size:13.5px; outline:none; }
+    .rounds { display:flex; flex-direction:column; gap:14px; }
+    .round-card { background:#fff; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.05); overflow:hidden; }
+    .round-head { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; cursor:pointer; flex-wrap:wrap; gap:10px; }
+    .round-head:hover { background:#FAF8F4; }
+    .round-title { font-size:15.5px; font-weight:800; color:#1F3D34; }
+    .round-sub { font-size:12px; color:#9B8E82; margin-top:3px; }
+    .badge { font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:20px; }
+    .badge.collecting { background:#fff3cd; color:#856404; }
+    .badge.generated { background:#d4edda; color:#155724; }
+    .round-body { display:none; padding:0 20px 20px; border-top:1px solid #f0ece6; }
+    .round-body.show { display:block; }
+    .section-title { font-size:13.5px; font-weight:700; color:#1F3D34; margin:16px 0 8px; }
+    .staff-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid #f0ece6; font-size:13.5px; flex-wrap:wrap; }
+    .staff-row:last-child { border-bottom:none; }
+    .staff-status { font-size:12px; font-weight:700; }
+    .staff-status.done { color:#1F7a4f; }
+    .staff-status.pending { color:#c0563f; }
+    .sched-day { margin-bottom:10px; border:1px solid #f0ece6; border-radius:10px; padding:10px 12px; }
+    .sched-day .d { font-weight:700; color:#1F3D34; font-size:13.5px; margin-bottom:6px; }
+    .sched-part { font-size:12.5px; margin-bottom:3px; }
+    .sched-part b { color:#6f6457; }
+    .sched-warn { color:#c0563f; font-size:12px; margin-top:2px; }
+    .summary-box { background:#f6f1e9; border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.6; margin-top:12px; }
+    .loading { text-align:center; padding:40px; color:#9B8E82; }
+    .empty-note { color:#9B8E82; font-size:13px; padding:14px 0; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🗓️ סידור עבודה</h1>
+    <button class="btn-add" onclick="toggleForm()">+ סבב אילוצים חדש</button>
+  </div>
+
+  <div id="error" class="error"></div>
+  <div id="success" class="success"></div>
+
+  <div class="form-box" id="formBox">
+    <div class="section-title" style="margin-top:0;">סבב חדש: מבקשים מהצוות למלא אילוצים</div>
+    <div class="form-row">
+      <div class="f-field">
+        <label>עבור</label>
+        <select id="periodType">
+          <option value="week">שבוע קרוב</option>
+          <option value="month">חודש קרוב</option>
+        </select>
+      </div>
+      <div class="f-field">
+        <label>תאריך התחלה</label>
+        <input type="date" id="startDate">
+      </div>
+      <div class="f-field">
+        <label>עד מתי הצוות צריך למלא (דדליין)</label>
+        <input type="date" id="deadline">
+      </div>
+      <button class="btn-add" onclick="createRound()">צור סבב</button>
+    </div>
+  </div>
+
+  <div id="list" class="loading">טוען...</div>
+
+<script src="js/common.js?v=15"></script>
+<script src="js/api.js?v=15"></script>
+<script>
+let rounds = [];
+const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
+const DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+function fmtDate(d) {
+  const [y, m, dd] = d.split('-').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, dd)).getUTCDay();
+  return `${DAY_NAMES[dow]}, ${dd}/${m}`;
+}
+function toggleForm() { document.getElementById('formBox').classList.toggle('show'); }
+
+async function load() {
+  try {
+    const res = await api.getScheduleRounds();
+    rounds = res.data || [];
+    render();
+  } catch (err) { showError('שגיאה בטעינה: ' + err.message); }
+}
+
+function render() {
+  const el = document.getElementById('list');
+  if (!rounds.length) { el.innerHTML = '<p class="empty-note">אין עדיין סבבים. לחצי על "+ סבב אילוצים חדש" כדי להתחיל.</p>'; return; }
+  el.innerHTML = '<div class="rounds">' + rounds.map(r => `
+    <div class="round-card" id="card-${r.id}">
+      <div class="round-head" onclick="openRound('${r.id}')">
+        <div>
+          <div class="round-title">${r.period_type === 'week' ? 'שבוע' : 'חודש'}: ${fmtDate(r.start_date)} – ${fmtDate(r.end_date)}</div>
+          <div class="round-sub">דדליין למילוי: ${fmtDate(r.deadline)} · ${r.submitted_count}/${r.total_staff} מילאו</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="badge ${r.status}">${r.status === 'generated' ? 'נוצרה טיוטה' : 'באיסוף אילוצים'}</span>
+          <button class="btn-delete" onclick="event.stopPropagation(); deleteRound('${r.id}')">מחק</button>
+        </div>
+      </div>
+      <div class="round-body" id="body-${r.id}"></div>
+    </div>`).join('') + '</div>';
+}
+
+const openIds = new Set();
+async function openRound(id) {
+  const body = document.getElementById('body-' + id);
+  if (openIds.has(id)) { body.classList.remove('show'); openIds.delete(id); return; }
+  openIds.add(id);
+  body.classList.add('show');
+  body.innerHTML = '<div class="empty-note">טוען...</div>';
+  try {
+    const res = await api.getScheduleRoundDetail(id);
+    renderRoundBody(id, res.round, res.staff, res.constraints);
+  } catch (err) { body.innerHTML = '<div class="empty-note">שגיאה: ' + err.message + '</div>'; }
+}
+
+function renderRoundBody(id, round, staff, constraints) {
+  const byStaff = {};
+  constraints.forEach(c => { byStaff[c.staff_id] = c; });
+  const staffHtml = staff.map(s => {
+    const c = byStaff[s.id];
+    const done = c && c.submitted_at;
+    const link = location.origin + '/crm/html/staff-constraints.html?round=' + id + '&staff=' + s.id;
+    return `<div class="staff-row">
+      <div>${esc(s.full_name_he)} <span class="staff-status ${done ? 'done' : 'pending'}">${done ? '✓ מילא/ה' : '⏳ ממתין/ה'}</span></div>
+      ${s.phone ? `<button class="btn-whatsapp" onclick="sendConstraintInvite('${esc(s.full_name_he).replace(/'/g, "\\'")}', '${s.phone}', '${link}', ${round.period_type === 'week' ? "'שבוע'" : "'חודש'"})">📤 שלח קישור</button>` : '<span class="empty-note">אין טלפון</span>'}
+    </div>`;
+  }).join('');
+
+  let scheduleHtml = '';
+  if (round.status === 'generated' && round.generated_schedule) {
+    const gs = round.generated_schedule;
+    const nameOf = id2 => { const s = staff.find(x => x.id === id2); return s ? s.full_name_he : id2; };
+    scheduleHtml = '<div class="section-title">טיוטת סידור (AI) — לבדיקה ואישור</div>' + gs.days.map(day => `
+      <div class="sched-day">
+        <div class="d">${fmtDate(day.date)}</div>
+        <div class="sched-part"><b>בוקר:</b> ${day.morning.working_staff_ids.map(nameOf).map(esc).join(', ') || 'אף אחד'}</div>
+        ${day.morning.warning ? `<div class="sched-warn">⚠️ ${esc(day.morning.warning)}</div>` : ''}
+        <div class="sched-part"><b>צהריים:</b> ${day.afternoon.working_staff_ids.map(nameOf).map(esc).join(', ') || 'אף אחד'}</div>
+        ${day.afternoon.warning ? `<div class="sched-warn">⚠️ ${esc(day.afternoon.warning)}</div>` : ''}
+      </div>`).join('') + `<div class="summary-box">📝 ${esc(gs.summary)}</div>`;
+  }
+
+  document.getElementById('body-' + id).innerHTML = `
+    <div class="section-title">צוות (${staff.length})</div>
+    ${staffHtml || '<div class="empty-note">אין עובדים פעילים</div>'}
+    <button class="btn-ai" style="margin-top:14px;" onclick="generate('${id}', this)">✨ ${round.status === 'generated' ? 'הפק מחדש טיוטת סידור' : 'הצע סידור אוטומטי (AI)'}</button>
+    ${scheduleHtml}
+  `;
+}
+
+function sendConstraintInvite(name, phone, link, periodLabel) {
+  const firstName = name ? name.split(' ')[0] : '';
+  const text = (firstName ? `היי ${firstName}! ` : 'היי! ') + `לקראת בניית סידור העבודה ל${periodLabel} הקרוב, נשמח שתמלא/י את האילוצים שלך כאן:\n${link}`;
+  window.open(waHref(phone) + '?text=' + encodeURIComponent(text), '_blank');
+}
+
+async function generate(id, btn) {
+  btn.disabled = true; btn.textContent = 'מפיק טיוטה... (יכול לקחת כדקה)';
+  try {
+    await api.generateSchedule(id);
+    showSuccess('הטיוטה נוצרה');
+    await load();
+    openIds.delete(id); // force fresh render as open
+    openRound(id);
+  } catch (err) { showError('שגיאה ביצירת הסידור: ' + err.message); btn.disabled = false; }
+}
+
+async function createRound() {
+  const period_type = document.getElementById('periodType').value;
+  const start_date = document.getElementById('startDate').value;
+  const deadline = document.getElementById('deadline').value;
+  if (!start_date || !deadline) { showError('נא למלא תאריך התחלה ודדליין'); return; }
+  try {
+    await api.createScheduleRound({ period_type, start_date, deadline });
+    document.getElementById('formBox').classList.remove('show');
+    document.getElementById('startDate').value = '';
+    document.getElementById('deadline').value = '';
+    showSuccess('הסבב נוצר');
+    load();
+  } catch (err) { showError('שגיאה: ' + err.message); }
+}
+
+async function deleteRound(id) {
+  if (!confirm('למחוק את הסבב וכל האילוצים שנאספו בו?')) return;
+  try { await api.deleteScheduleRound(id); showSuccess('נמחק'); load(); }
+  catch (err) { showError('שגיאה: ' + err.message); }
+}
+
+load();
+</script>
+
+</body>
+</html>

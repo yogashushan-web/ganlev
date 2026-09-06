@@ -174,4 +174,11 @@ const api = {
   getTourSlots: () => apiCall(`/tour-slots?garden_id=${getGardenId()}`),
   createTourSlot: (data) => apiCall(`/tour-slots?garden_id=${getGardenId()}`, 'POST', data),
   deleteTourSlot: (id) => apiCall(`/tour-slots/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+
+  // Staff work-schedule rounds ("סידור עבודה")
+  getScheduleRounds: () => apiCall(`/schedule-rounds?garden_id=${getGardenId()}`),
+  getScheduleRoundDetail: (id) => apiCall(`/schedule-rounds?garden_id=${getGardenId()}&id=${id}`),
+  createScheduleRound: (data) => apiCall(`/schedule-rounds?garden_id=${getGardenId()}`, 'POST', data),
+  deleteScheduleRound: (id) => apiCall(`/schedule-rounds/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+  generateSchedule: (round_id) => apiCall(`/schedule-generate?garden_id=${getGardenId()}`, 'POST', { round_id }),
 };
