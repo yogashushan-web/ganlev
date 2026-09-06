@@ -13,17 +13,13 @@
     .head img { width:80px; height:80px; border-radius:50%; object-fit:cover; margin:0 auto 10px; display:block; }
     .head h1 { font-size:21px; color:#1F3D34; margin-bottom:8px; line-height:1.4; }
     .head p { font-size:13.5px; color:#9B8E82; line-height:1.65; }
-    .legend { display:flex; gap:16px; justify-content:center; margin:16px 0 20px; font-size:12.5px; color:#6f6457; }
-    .legend span { display:inline-flex; align-items:center; gap:5px; }
-    .dot { width:11px; height:11px; border-radius:4px; display:inline-block; }
-    .dot.on { background:#f1f5f2; border:1.5px solid #cfd8d3; }
-    .dot.off { background:#c0563f; }
     .days { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
     .day-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border:1.5px solid #e3ddd2; border-radius:12px; flex-wrap:wrap; }
     .day-row .d { font-weight:700; color:#1F3D34; font-size:14px; }
-    .parts { display:flex; gap:8px; }
-    .part-btn { padding:8px 14px; border-radius:9px; border:1.5px solid #e3ddd2; background:#f1f5f2; font-family:'Heebo'; font-size:12.5px; font-weight:700; cursor:pointer; color:#3D3228; }
-    .part-btn.off { background:#c0563f; border-color:#c0563f; color:#fff; }
+    .parts { display:flex; gap:6px; }
+    .part-btn { padding:8px 12px; border-radius:9px; border:1.5px solid #e3ddd2; background:#f1f5f2; font-family:'Heebo'; font-size:12.5px; font-weight:700; cursor:pointer; color:#3D3228; }
+    .part-btn.active { background:#C4846C; border-color:#C4846C; color:#fff; }
+    .part-btn.full { border-color:#d8c3b8; }
     label.note-lbl { display:block; font-size:14px; font-weight:700; color:#1F3D34; margin-bottom:6px; }
     textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo',sans-serif; font-size:14.5px; outline:none; resize:vertical; line-height:1.6; margin-bottom:18px; }
     textarea:focus { border-color:#1F3D34; }
@@ -43,11 +39,7 @@
       <div class="head">
         <img src="logo.png" alt="גן לב">
         <h1 id="titleLine">אילוצים לסידור העבודה</h1>
-        <p>סמנו בוקר ו/או צהריים שבהם <b>אינכם</b> יכולים לעבוד. ברירת המחדל היא שאתם זמינים בכל התקופה.</p>
-      </div>
-      <div class="legend">
-        <span><span class="dot on"></span> זמין/ה</span>
-        <span><span class="dot off"></span> לא זמין/ה</span>
+        <p>לכל יום, סמנו אם אתם צריכים <b>חופש</b> (יום שלם), רק <b>בוקר</b>, או רק <b>צהריים</b>. ברירת המחדל היא שאתם זמינים לעבודה.</p>
       </div>
       <div class="err" id="err"></div>
       <div id="loading" style="text-align:center; color:#9B8E82; padding:20px;">טוען...</div>
@@ -106,21 +98,42 @@ async function load() {
   }
 }
 
+let allDates = [];
 function renderDays(dates) {
-  document.getElementById('days').innerHTML = dates.map(d => `
-    <div class="day-row">
-      <div class="d">${fmtDate(d)}</div>
-      <div class="parts">
-        <button type="button" class="part-btn ${unavailable.has(d + '|morning') ? 'off' : ''}" onclick="toggle('${d}','morning',this)">בוקר</button>
-        <button type="button" class="part-btn ${unavailable.has(d + '|afternoon') ? 'off' : ''}" onclick="toggle('${d}','afternoon',this)">צהריים</button>
-      </div>
-    </div>`).join('');
+  allDates = dates;
+  document.getElementById('days').innerHTML = dates.map(d => dayRowHtml(d)).join('');
 }
 
-function toggle(date, part, el) {
+function dayRowHtml(d) {
+  const morning = unavailable.has(d + '|morning');
+  const afternoon = unavailable.has(d + '|afternoon');
+  const full = morning && afternoon;
+  return `<div class="day-row" id="row-${d}">
+      <div class="d">${fmtDate(d)}</div>
+      <div class="parts">
+        <button type="button" class="part-btn full ${full ? 'active' : ''}" onclick="toggleFull('${d}')">חופש</button>
+        <button type="button" class="part-btn ${morning ? 'active' : ''}" onclick="togglePart('${d}','morning')">בוקר</button>
+        <button type="button" class="part-btn ${afternoon ? 'active' : ''}" onclick="togglePart('${d}','afternoon')">צהריים</button>
+      </div>
+    </div>`;
+}
+
+function refreshDay(d) {
+  document.getElementById('row-' + d).outerHTML = dayRowHtml(d);
+}
+
+function togglePart(date, part) {
   const key = date + '|' + part;
-  if (unavailable.has(key)) { unavailable.delete(key); el.classList.remove('off'); }
-  else { unavailable.add(key); el.classList.add('off'); }
+  if (unavailable.has(key)) unavailable.delete(key); else unavailable.add(key);
+  refreshDay(date);
+}
+
+function toggleFull(date) {
+  const morningKey = date + '|morning', afternoonKey = date + '|afternoon';
+  const bothOn = unavailable.has(morningKey) && unavailable.has(afternoonKey);
+  if (bothOn) { unavailable.delete(morningKey); unavailable.delete(afternoonKey); }
+  else { unavailable.add(morningKey); unavailable.add(afternoonKey); }
+  refreshDay(date);
 }
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
