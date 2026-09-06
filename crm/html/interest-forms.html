@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>התעניינויות — מערכת גנים</title>
+  <title>רשימת המתנה לשנה הבאה — מערכת גנים</title>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -43,12 +43,27 @@
     .lead-note { background:#FAF8F4; border-radius:10px; padding:10px 12px; font-size:13.5px; line-height:1.6; margin-top:6px; }
     .lead-note .lbl { font-size:11px; color:#9B8E82; font-weight:700; margin-bottom:3px; }
     .loading { text-align:center; padding:40px; color:#9B8E82; }
+    .btn-whatsapp { padding:8px 12px; border:none; border-radius:9px; cursor:pointer; font-size:12px; font-family:'Heebo'; font-weight:700; background:#25D366; color:#fff; }
+    .lead-tour { font-size:12.5px; font-weight:700; color:#1F3D34; background:#f1f5f2; border-radius:8px; padding:5px 10px; display:inline-block; margin-top:6px; }
+    .tour-box { background:#fff; border-radius:16px; padding:18px 20px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:20px; }
+    .tour-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .tour-head h2 { font-size:16px; color:#1F3D34; }
+    .tour-slot-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid #f0ece6; font-size:13.5px; flex-wrap:wrap; }
+    .tour-slot-row:last-child { border-bottom:none; }
+    .tour-slot-info { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .tour-slot-cap { font-size:12px; color:#9B8E82; font-weight:600; }
+    .add-slot-form { display:none; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px; padding-top:10px; border-top:1px dashed #e3ddd2; }
+    .add-slot-form.show { display:flex; }
+    .add-slot-form input { padding:8px 10px; border:1.5px solid #e3ddd2; border-radius:8px; font-family:'Heebo'; font-size:13px; outline:none; }
+    .add-slot-form input[type="date"] { width:150px; }
+    .add-slot-form input[type="text"] { width:90px; }
+    .add-slot-form input[type="number"] { width:80px; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <h1>📝 התעניינויות</h1>
+    <h1>📝 רשימת המתנה לשנה הבאה</h1>
     <div class="link-box">
       <span style="font-size:13px; color:#9B8E82; font-weight:600;">שנה:</span>
       <input type="text" id="yearInput" value="2026-27">
@@ -59,6 +74,21 @@
   <div id="error" class="error"></div>
   <div id="success" class="success"></div>
 
+  <div class="tour-box">
+    <div class="tour-head">
+      <h2>🗓️ תאריכי סיור</h2>
+      <button class="btn-link" onclick="toggleAddSlot()">+ הוסף תאריך</button>
+    </div>
+    <div id="slotsList" style="color:#9B8E82; font-size:13px;">טוען...</div>
+    <div class="add-slot-form" id="addSlotForm">
+      <input type="date" id="slotDate">
+      <input type="text" id="slotTimeStart" placeholder="משעה (לא חובה)">
+      <input type="text" id="slotTimeEnd" placeholder="עד שעה (לא חובה)">
+      <input type="number" id="slotCapacity" placeholder="קיבולת" value="10" min="1">
+      <button class="btn-link" onclick="addSlot()">שמור</button>
+    </div>
+  </div>
+
   <div class="toolbar">
     <input type="text" id="search" placeholder="🔍 חיפוש לפי שם ילד / הורה / טלפון...">
     <div class="status-tabs" id="statusTabs"></div>
@@ -67,15 +97,85 @@
 
   <div id="list" class="loading">טוען...</div>
 
-<script src="js/common.js?v=13"></script>
-<script src="js/api.js?v=13"></script>
+<script src="js/common.js?v=14"></script>
+<script src="js/api.js?v=14"></script>
 <script>
 const STATUS_LABELS = { new:'חדש', contacted:'יצרנו קשר', waitlist:'רשימת המתנה', accepted:'התקבל/ה', declined:'לא ממשיך/ה' };
 const STATUS_ORDER = ['new', 'contacted', 'waitlist', 'accepted', 'declined'];
-let items = [], statusFilter = 'all';
+let items = [], tourSlots = [], statusFilter = 'all';
 
 const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
 const norm = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+const DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+function fmtSlotDate(d) {
+  const [y, m, dd] = d.split('-').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, dd)).getUTCDay();
+  return `יום ${DAY_NAMES[dow]}, ${dd} ב${MONTHS[m - 1]}`;
+}
+
+async function loadTourSlots() {
+  try {
+    const res = await api.getTourSlots();
+    tourSlots = res.data || [];
+    renderSlots();
+    if (items.length) render();
+  } catch (err) { document.getElementById('slotsList').textContent = 'שגיאה בטעינת התאריכים: ' + err.message; }
+}
+
+function renderSlots() {
+  const el = document.getElementById('slotsList');
+  if (!tourSlots.length) { el.innerHTML = '<div style="color:#9B8E82; font-size:13px;">עדיין לא נוספו תאריכים. לחצי על "+ הוסף תאריך".</div>'; return; }
+  el.innerHTML = tourSlots.map(s => {
+    const timeStr = s.time_start ? (s.time_start + (s.time_end ? '–' + s.time_end : '')) : '';
+    return `<div class="tour-slot-row">
+      <div class="tour-slot-info"><b>${fmtSlotDate(s.date)}</b>${timeStr ? ' · ' + esc(timeStr) : ''}
+        <span class="tour-slot-cap">${s.booked}/${s.capacity} משפחות</span>
+      </div>
+      <button class="btn-delete" onclick="deleteSlot('${s.id}')">מחק</button>
+    </div>`;
+  }).join('');
+}
+
+function toggleAddSlot() { document.getElementById('addSlotForm').classList.toggle('show'); }
+
+async function addSlot() {
+  const date = document.getElementById('slotDate').value;
+  if (!date) { alert('נא לבחור תאריך'); return; }
+  const data = {
+    date,
+    time_start: document.getElementById('slotTimeStart').value.trim() || null,
+    time_end: document.getElementById('slotTimeEnd').value.trim() || null,
+    capacity: Number(document.getElementById('slotCapacity').value) || 10,
+  };
+  try {
+    await api.createTourSlot(data);
+    document.getElementById('slotDate').value = '';
+    document.getElementById('slotTimeStart').value = '';
+    document.getElementById('slotTimeEnd').value = '';
+    document.getElementById('slotCapacity').value = '10';
+    document.getElementById('addSlotForm').classList.remove('show');
+    loadTourSlots();
+  } catch (err) { alert('שגיאה: ' + err.message); }
+}
+
+async function deleteSlot(id) {
+  if (!confirm('למחוק את התאריך?')) return;
+  try { await api.deleteTourSlot(id); loadTourSlots(); }
+  catch (err) { alert('שגיאה: ' + err.message); }
+}
+
+function sendTourInvite(id) {
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+  if (!tourSlots.length) { alert('קודם צריך להוסיף לפחות תאריך סיור אחד'); return; }
+  if (!it.parent1_phone) { alert('אין מספר טלפון להורה 1'); return; }
+  const link = location.origin + '/crm/html/tour-book.html?lead=' + it.id;
+  const firstName = it.parent1_name ? it.parent1_name.split(' ')[0] : '';
+  const text = (firstName ? `היי ${firstName}! ` : 'היי! ') + `תודה שהשארתם לנו פרטים על ${it.child_name} 💛\nנשמח להזמין אתכם לסיור מקדים בגן לב.\nבחרו תאריך נוח כאן: ${link}`;
+  window.open(waHref(it.parent1_phone) + '?text=' + encodeURIComponent(text), '_blank');
+}
 
 function ageYM(bd) {
   if (!bd) return '';
@@ -105,6 +205,13 @@ async function load() {
   } catch (err) { showError('שגיאה בטעינה: ' + err.message); }
 }
 
+function slotLabel(id) {
+  const s = tourSlots.find(x => x.id === id);
+  if (!s) return null;
+  const timeStr = s.time_start ? (' · ' + s.time_start + (s.time_end ? '–' + s.time_end : '')) : '';
+  return fmtSlotDate(s.date) + timeStr;
+}
+
 function render() {
   const q = norm(document.getElementById('search').value);
   const filtered = items.filter(it => {
@@ -132,6 +239,7 @@ function render() {
           <select class="status-sel" onchange="updateStatus('${it.id}', this.value)">
             ${STATUS_ORDER.map(k => `<option value="${k}" ${(it.status || 'new') === k ? 'selected' : ''}>${STATUS_LABELS[k]}</option>`).join('')}
           </select>
+          <button class="btn-whatsapp" onclick="sendTourInvite('${it.id}')">📤 שלח הזמנה לסיור</button>
           <button class="btn-delete" onclick="deleteItem('${it.id}')">מחק</button>
         </div>
       </div>
@@ -139,6 +247,7 @@ function render() {
         <div class="lead-field"><div class="lbl">הורה 1</div><div class="val">${esc(it.parent1_name) || '<span class=\"muted\">-</span>'}${it.parent1_phone ? ` · <a class="tel" href="${waHref(it.parent1_phone)}" target="_blank">💬 ${esc(it.parent1_phone)}</a>` : ''}</div></div>
         <div class="lead-field"><div class="lbl">הורה 2</div><div class="val">${esc(it.parent2_name) || '<span class=\"muted\">-</span>'}${it.parent2_phone ? ` · <a class="tel" href="${waHref(it.parent2_phone)}" target="_blank">💬 ${esc(it.parent2_phone)}</a>` : ''}</div></div>
       </div>
+      ${it.tour_slot_id ? `<div class="lead-tour">🗓️ נקבע סיור: ${esc(slotLabel(it.tour_slot_id) || '')}</div>` : ''}
       ${it.family_info ? `<div class="lead-note"><div class="lbl">על המשפחה</div>${esc(it.family_info)}</div>` : ''}
       ${it.child_info ? `<div class="lead-note"><div class="lbl">על הילד/ה</div>${esc(it.child_info)}</div>` : ''}
     </div>`;
@@ -167,6 +276,7 @@ function copyFormLink(btn) {
 
 document.getElementById('search').addEventListener('input', render);
 renderStatusTabs();
+loadTourSlots();
 load();
 </script>
 

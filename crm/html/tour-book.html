@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>תיאום סיור — גן לב ❤️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:linear-gradient(135deg,#1F3D34 0%,#2D5A50 100%); color:#3D3228; direction:rtl; min-height:100vh; padding:24px; }
+    .card { background:#fff; border-radius:22px; max-width:520px; margin:20px auto; padding:36px 32px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .head { text-align:center; margin-bottom:22px; }
+    .head img { width:80px; height:80px; border-radius:50%; object-fit:cover; margin:0 auto 10px; display:block; }
+    .head h1 { font-size:22px; color:#1F3D34; margin-bottom:8px; line-height:1.4; }
+    .head p { font-size:14px; color:#9B8E82; line-height:1.6; }
+    .slots { display:flex; flex-direction:column; gap:10px; margin:22px 0; }
+    .slot { border:1.5px solid #e3ddd2; border-radius:13px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:.15s; }
+    .slot:hover { border-color:#1F3D34; background:#f6f1e9; }
+    .slot.chosen { border-color:#1F3D34; background:#f1f5f2; }
+    .slot.full { opacity:.5; cursor:not-allowed; }
+    .slot .d { font-weight:700; color:#1F3D34; font-size:15.5px; }
+    .slot .t { font-size:13px; color:#9B8E82; margin-top:2px; }
+    .slot .rem { font-size:12.5px; font-weight:700; color:#1F7a4f; }
+    .slot.full .rem { color:#c0563f; }
+    .btn { width:100%; margin-top:6px; padding:15px; border:none; border-radius:12px; background:#1F3D34; color:#fff; font-family:'Heebo'; font-size:16px; font-weight:700; cursor:pointer; }
+    .btn:hover { background:#154428; }
+    .btn:disabled { background:#cfc8bd; cursor:not-allowed; }
+    .msg { display:none; text-align:center; padding:30px 10px; }
+    .msg .v { font-size:46px; }
+    .msg h2 { color:#1F3D34; margin:10px 0 6px; }
+    .msg p { color:#9B8E82; }
+    .err { background:#fdf0ef; color:#c0563f; padding:12px; border-radius:10px; font-size:14px; margin-bottom:14px; display:none; }
+    .empty { text-align:center; padding:24px 10px; color:#9B8E82; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="wrap">
+      <div class="head">
+        <img src="logo.png" alt="גן לב">
+        <h1 id="titleLine">תיאום סיור מקדים בגן</h1>
+        <p>בחרו תאריך נוח לביקור — ניצור איתכם קשר לאישור סופי 💛</p>
+      </div>
+      <div class="err" id="err"></div>
+      <div id="loading" style="text-align:center; color:#9B8E82; padding:20px;">טוען תאריכים...</div>
+      <div class="slots" id="slots" style="display:none;"></div>
+      <button class="btn" id="submitBtn" style="display:none;" disabled>אישור תאריך</button>
+    </div>
+    <div class="msg" id="thanks">
+      <div class="v">✅</div>
+      <h2>הסיור נקבע!</h2>
+      <p>נשמח לפגוש אתכם 🌿</p>
+    </div>
+  </div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const LEAD = params.get('lead');
+let chosen = null;
+
+const DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+function fmtDate(d) {
+  const [y, m, dd] = d.split('-').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, dd)).getUTCDay();
+  return `יום ${DAY_NAMES[dow]}, ${dd} ב${MONTHS[m - 1]}`;
+}
+
+function showErr(m) { const e = document.getElementById('err'); e.textContent = m; e.style.display = 'block'; }
+
+async function load() {
+  if (!LEAD) { showErr('קישור לא תקין'); document.getElementById('loading').style.display = 'none'; return; }
+  try {
+    const res = await fetch('/.netlify/functions/tour-book?lead=' + encodeURIComponent(LEAD));
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאה');
+    document.getElementById('loading').style.display = 'none';
+    if (data.lead && data.lead.child_name) {
+      document.getElementById('titleLine').textContent = 'תיאום סיור מקדים — ' + data.lead.child_name;
+    }
+    if (!data.slots.length) {
+      document.getElementById('slots').style.display = 'block';
+      document.getElementById('slots').innerHTML = '<div class="empty">עדיין לא נפתחו תאריכים לסיור — ניצור איתכם קשר בקרוב 💛</div>';
+      return;
+    }
+    chosen = data.chosen_slot_id || null;
+    renderSlots(data.slots);
+    document.getElementById('slots').style.display = 'flex';
+    const btn = document.getElementById('submitBtn');
+    btn.style.display = 'block';
+    btn.disabled = !chosen;
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    showErr(e.message);
+  }
+}
+
+function renderSlots(slots) {
+  document.getElementById('slots').innerHTML = slots.map(s => {
+    const full = s.remaining <= 0 && chosen !== s.id;
+    const timeStr = s.time_start ? (s.time_start + (s.time_end ? '–' + s.time_end : '')) : '';
+    return `<div class="slot ${chosen === s.id ? 'chosen' : ''} ${full ? 'full' : ''}" onclick="${full ? '' : `pick('${s.id}', this)`}">
+      <div><div class="d">${fmtDate(s.date)}</div>${timeStr ? `<div class="t">${timeStr}</div>` : ''}</div>
+      <div class="rem">${full ? 'מלא' : s.remaining + ' מקומות פנויים'}</div>
+    </div>`;
+  }).join('');
+}
+
+function pick(id, el) {
+  chosen = id;
+  document.querySelectorAll('.slot').forEach(e => e.classList.remove('chosen'));
+  el.classList.add('chosen');
+  document.getElementById('submitBtn').disabled = false;
+}
+
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  if (!chosen) return;
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'שולח...';
+  try {
+    const res = await fetch('/.netlify/functions/tour-book', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lead_id: LEAD, slot_id: chosen }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאה');
+    document.getElementById('wrap').style.display = 'none';
+    document.getElementById('thanks').style.display = 'block';
+  } catch (e) {
+    showErr(e.message);
+    btn.disabled = false; btn.textContent = 'אישור תאריך';
+  }
+});
+
+load();
+</script>
+</body>
+</html>

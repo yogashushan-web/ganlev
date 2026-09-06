@@ -169,4 +169,9 @@ const api = {
   getInterestForms: () => apiCall(`/interest-forms?garden_id=${getGardenId()}`),
   updateInterestForm: (id, data) => apiCall(`/interest-forms/${id}?garden_id=${getGardenId()}`, 'PUT', data),
   deleteInterestForm: (id) => apiCall(`/interest-forms/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+
+  // Tour-visit dates ("סיור מקדים")
+  getTourSlots: () => apiCall(`/tour-slots?garden_id=${getGardenId()}`),
+  createTourSlot: (data) => apiCall(`/tour-slots?garden_id=${getGardenId()}`, 'POST', data),
+  deleteTourSlot: (id) => apiCall(`/tour-slots/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 };
