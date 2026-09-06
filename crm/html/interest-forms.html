@@ -48,10 +48,12 @@
     .tour-box { background:#fff; border-radius:16px; padding:18px 20px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:20px; }
     .tour-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
     .tour-head h2 { font-size:16px; color:#1F3D34; }
-    .tour-slot-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid #f0ece6; font-size:13.5px; flex-wrap:wrap; }
-    .tour-slot-row:last-child { border-bottom:none; }
+    .tour-slot-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid #f0ece6; font-size:13.5px; flex-wrap:wrap; cursor:pointer; }
+    .tour-slot-row:hover { background:#FAF8F4; }
     .tour-slot-info { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .tour-slot-cap { font-size:12px; color:#9B8E82; font-weight:600; }
+    .tour-slot-names { background:#FAF8F4; border-radius:10px; padding:8px 12px; margin:2px 0 8px; }
+    .tour-name-row { font-size:13px; padding:4px 0; }
     .tour-help { font-size:13px; color:#9B8E82; line-height:1.6; margin-bottom:12px; }
     .add-slot-form { display:none; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-top:12px; padding-top:14px; border-top:1px dashed #e3ddd2; }
     .add-slot-form.show { display:flex; }
@@ -71,7 +73,7 @@
     <h1>📝 רשימת המתנה לשנה הבאה</h1>
     <div class="link-box">
       <span style="font-size:13px; color:#9B8E82; font-weight:600;">שנה:</span>
-      <input type="text" id="yearInput" value="2026-27">
+      <input type="text" id="yearInput" value="">
       <button class="btn-link" onclick="copyFormLink(this)">📋 העתק לינק לטופס</button>
     </div>
   </div>
@@ -127,6 +129,13 @@ let items = [], tourSlots = [], statusFilter = 'all';
 const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
 const norm = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
 
+function nextSchoolYear() {
+  const d = new Date(), y = d.getFullYear();
+  const s = (d.getMonth() >= 8 ? y : y - 1) + 1;
+  return s + '-' + String(s + 1).slice(2);
+}
+document.getElementById('yearInput').value = nextSchoolYear();
+
 const DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 function fmtSlotDate(d) {
@@ -144,18 +153,32 @@ async function loadTourSlots() {
   } catch (err) { document.getElementById('slotsList').textContent = 'שגיאה בטעינת התאריכים: ' + err.message; }
 }
 
+function slotBookings(slotId) { return items.filter(it => it.tour_slot_id === slotId); }
+
 function renderSlots() {
   const el = document.getElementById('slotsList');
   if (!tourSlots.length) { el.innerHTML = '<div style="color:#9B8E82; font-size:13px;">עדיין לא נוספו תאריכים. לחצי על "+ הוסף תאריך".</div>'; return; }
   el.innerHTML = tourSlots.map(s => {
     const timeStr = s.time_start ? (s.time_start + (s.time_end ? '–' + s.time_end : '')) : '';
-    return `<div class="tour-slot-row">
-      <div class="tour-slot-info"><b>${fmtSlotDate(s.date)}</b>${timeStr ? ' · ' + esc(timeStr) : ''}
-        <span class="tour-slot-cap">${s.booked} מתוך ${s.capacity} מקומות נרשמו</span>
+    const bookings = slotBookings(s.id);
+    const namesHtml = bookings.length
+      ? bookings.map(b => `<div class="tour-name-row">${esc(b.child_name)}${b.parent1_name ? ' · הורה: ' + esc(b.parent1_name) : ''}${b.parent1_phone ? ` · <a class="tel" href="${waHref(b.parent1_phone)}" target="_blank">💬 ${esc(b.parent1_phone)}</a>` : ''}</div>`).join('')
+      : '<div class="tour-name-row muted">עדיין אין רשומים לתאריך הזה</div>';
+    return `<div>
+      <div class="tour-slot-row" onclick="toggleSlotNames('${s.id}')">
+        <div class="tour-slot-info"><b>${fmtSlotDate(s.date)}</b>${timeStr ? ' · ' + esc(timeStr) : ''}
+          <span class="tour-slot-cap">${s.booked} מתוך ${s.capacity} מקומות נרשמו · לחצו לפרטים ⌄</span>
+        </div>
+        <button class="btn-delete" onclick="event.stopPropagation(); deleteSlot('${s.id}')">מחק</button>
       </div>
-      <button class="btn-delete" onclick="deleteSlot('${s.id}')">מחק</button>
+      <div class="tour-slot-names" id="names-${s.id}" style="display:none;">${namesHtml}</div>
     </div>`;
   }).join('');
+}
+
+function toggleSlotNames(id) {
+  const box = document.getElementById('names-' + id);
+  if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
 }
 
 function toggleAddSlot() { document.getElementById('addSlotForm').classList.toggle('show'); }
@@ -222,6 +245,7 @@ async function load() {
     const res = await api.getInterestForms();
     items = res.data || [];
     render();
+    if (tourSlots.length) renderSlots();
   } catch (err) { showError('שגיאה בטעינה: ' + err.message); }
 }
 
@@ -286,7 +310,7 @@ async function deleteItem(id) {
 }
 
 function copyFormLink(btn) {
-  const year = document.getElementById('yearInput').value.trim() || '2026-27';
+  const year = document.getElementById('yearInput').value.trim() || nextSchoolYear();
   const url = location.origin + '/crm/html/interest-form.html?garden=' + getGardenId() + '&year=' + encodeURIComponent(year);
   navigator.clipboard.writeText(url).then(() => {
     btn.textContent = '✓ הועתק!';

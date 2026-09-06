@@ -116,9 +116,14 @@
   </div>
 
 <script>
+function nextSchoolYear() {
+  const d = new Date(), y = d.getFullYear();
+  const s = (d.getMonth() >= 8 ? y : y - 1) + 1;
+  return s + '-' + String(s + 1).slice(2);
+}
 const params = new URLSearchParams(location.search);
 const GARDEN = params.get('garden') || '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
-const YEAR = params.get('year') || '2026-27';
+const YEAR = params.get('year') || nextSchoolYear();
 document.getElementById('yearLabel').textContent = YEAR.replace('-', '/');
 
 document.getElementById('intForm').addEventListener('submit', async (e) => {
