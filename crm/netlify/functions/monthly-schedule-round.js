@@ -4,7 +4,7 @@
 // Registered also in netlify.toml (belt-and-suspenders — see comment there).
 
 const { supabase } = require('./lib/db');
-const { createRoundForNextMonth } = require('./lib/schedule-round');
+const { createUpcomingRound } = require('./lib/schedule-round');
 
 exports.handler = async () => {
   try {
@@ -14,7 +14,7 @@ exports.handler = async () => {
       const { count } = await supabase.from('staff').select('id', { count: 'exact', head: true }).eq('garden_id', g.id).eq('status', 'active');
       if (!count) continue;
       try {
-        const round = await createRoundForNextMonth(g.id);
+        const round = await createUpcomingRound(g.id);
         results.push({ garden: g.name, round_id: round.id });
       } catch (e) {
         console.error('monthly-schedule-round failed for garden', g.id, e);

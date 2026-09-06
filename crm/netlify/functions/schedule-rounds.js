@@ -10,7 +10,7 @@
 
 const { supabase, validateGardenScope } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
-const { createRoundForNextMonth } = require('./lib/schedule-round');
+const { createUpcomingRound } = require('./lib/schedule-round');
 
 const handler = withAuth(async (event) => {
   try {
@@ -49,7 +49,7 @@ const handler = withAuth(async (event) => {
     }
 
     if (event.httpMethod === 'POST') {
-      const result = await createRoundForNextMonth(garden_id);
+      const result = await createUpcomingRound(garden_id);
       return { statusCode: 201, body: JSON.stringify({ success: true, data: result }) };
     }
 

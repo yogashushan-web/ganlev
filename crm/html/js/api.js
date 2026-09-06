@@ -180,5 +180,5 @@ const api = {
   getScheduleRoundDetail: (id) => apiCall(`/schedule-rounds?garden_id=${getGardenId()}&id=${id}`),
   createScheduleRound: () => apiCall(`/schedule-rounds?garden_id=${getGardenId()}`, 'POST'),
   deleteScheduleRound: (id) => apiCall(`/schedule-rounds/${id}?garden_id=${getGardenId()}`, 'DELETE'),
-  generateSchedule: (round_id) => apiCall(`/schedule-generate?garden_id=${getGardenId()}`, 'POST', { round_id }),
+  generateSchedule: (round_id, target_month) => apiCall(`/schedule-generate?garden_id=${getGardenId()}`, 'POST', { round_id, target_month }),
 };

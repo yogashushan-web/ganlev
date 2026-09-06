@@ -49,6 +49,7 @@
     .sched-part b { color:#6f6457; }
     .sched-warn { color:#c0563f; font-size:12px; margin-top:2px; }
     .summary-box { background:#f6f1e9; border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.6; margin-top:12px; }
+    .month-block { margin-top:18px; padding-top:14px; border-top:1px dashed #e3ddd2; }
     .loading { text-align:center; padding:40px; color:#9B8E82; }
     .empty-note { color:#9B8E82; font-size:13px; padding:14px 0; }
   </style>
@@ -59,15 +60,15 @@
     <h1>🗓️ סידור עבודה</h1>
     <button class="btn-add" id="runNowBtn" onclick="runNow()">📧 שלח קישור עכשיו</button>
   </div>
-  <p class="intro">סבב אילוצים לחודש הבא נוצר אוטומטית בכל 15 לחודש, ונשלח מייל ליואל עם הקישור המשותף להעברה לקבוצת הוואטסאפ של הצוות. הכפתור למעלה מריץ את אותו תהליך מיידית (שימושי אם צריך קישור לפני התאריך הקבוע).</p>
+  <p class="intro">סבב אילוצים ל-3 החודשים הקרובים נוצר אוטומטית בכל 15 לחודש, ונשלח מייל ליואל עם הקישור המשותף להעברה לקבוצת הוואטסאפ של הצוות. הכפתור למעלה מריץ את אותו תהליך מיידית (שימושי אם צריך קישור לפני התאריך הקבוע). את הסידור עצמו אפשר להפיק חודש בכל פעם, בהתקרב הזמן.</p>
 
   <div id="error" class="error"></div>
   <div id="success" class="success"></div>
 
   <div id="list" class="loading">טוען...</div>
 
-<script src="js/common.js?v=17"></script>
-<script src="js/api.js?v=17"></script>
+<script src="js/common.js?v=18"></script>
+<script src="js/api.js?v=18"></script>
 <script>
 let rounds = [];
 const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
@@ -96,7 +97,7 @@ function render() {
     <div class="round-card" id="card-${r.id}">
       <div class="round-head" onclick="openRound('${r.id}')">
         <div>
-          <div class="round-title">${r.period_type === 'week' ? 'שבוע' : 'חודש'}: ${fmtDate(r.start_date)} – ${fmtDate(r.end_date)}</div>
+          <div class="round-title">${r.period_type === 'quarter' ? '3 חודשים' : (r.period_type === 'week' ? 'שבוע' : 'חודש')}: ${fmtDate(r.start_date)} – ${fmtDate(r.end_date)}</div>
           <div class="round-sub">דדליין למילוי: ${fmtDate(r.deadline)} · ${r.submitted_count}/${r.total_staff} הגיבו</div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
@@ -143,19 +144,26 @@ function renderRoundBody(id, round, staff, entries, responses) {
     </div>`;
   }).join('');
 
-  let scheduleHtml = '';
-  if (round.status === 'generated' && round.generated_schedule) {
-    const gs = round.generated_schedule;
-    const nameOf = id2 => nameById[id2] || id2;
-    scheduleHtml = '<div class="section-title">טיוטת סידור (AI) — לבדיקה ואישור</div>' + gs.days.map(day => `
+  const nameOf = id2 => nameById[id2] || id2;
+  const gsAll = round.generated_schedule || {};
+  const monthsHtml = monthsInRange(round.start_date, round.end_date).map(mo => {
+    const gs = gsAll[mo.key];
+    const body = gs ? gs.days.map(day => `
       <div class="sched-day">
         <div class="d">${fmtDate(day.date)}</div>
         <div class="sched-part"><b>בוקר:</b> ${day.morning.working_staff_ids.map(nameOf).map(esc).join(', ') || 'אף אחד'}</div>
         ${day.morning.warning ? `<div class="sched-warn">⚠️ ${esc(day.morning.warning)}</div>` : ''}
         <div class="sched-part"><b>צהריים:</b> ${day.afternoon.working_staff_ids.map(nameOf).map(esc).join(', ') || 'אף אחד'}</div>
         ${day.afternoon.warning ? `<div class="sched-warn">⚠️ ${esc(day.afternoon.warning)}</div>` : ''}
-      </div>`).join('') + `<div class="summary-box">📝 ${esc(gs.summary)}</div>`;
-  }
+      </div>`).join('') + `<div class="summary-box">📝 ${esc(gs.summary)}</div>` : '';
+    return `<div class="month-block">
+      <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>${mo.label}</span>
+        <button class="btn-ai" onclick="generate('${id}','${mo.key}', this)">✨ ${gs ? 'הפק מחדש' : 'הצע סידור אוטומטי (AI)'}</button>
+      </div>
+      ${body}
+    </div>`;
+  }).join('');
 
   document.getElementById('body-' + id).innerHTML = `
     <div class="link-row">
@@ -163,9 +171,20 @@ function renderRoundBody(id, round, staff, entries, responses) {
     </div>
     <div class="section-title">צוות (${staff.length})</div>
     ${staffHtml || '<div class="empty-note">אין עובדים פעילים</div>'}
-    <button class="btn-ai" style="margin-top:14px;" onclick="generate('${id}', this)">✨ ${round.status === 'generated' ? 'הפק מחדש טיוטת סידור' : 'הצע סידור אוטומטי (AI)'}</button>
-    ${scheduleHtml}
+    ${monthsHtml}
   `;
+}
+
+function monthsInRange(start, end) {
+  const out = [];
+  let d = new Date(start + 'T00:00:00Z');
+  const last = new Date(end + 'T00:00:00Z');
+  while (d <= last) {
+    const key = d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0');
+    if (!out.some(m => m.key === key)) out.push({ key, label: MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear() });
+    d.setUTCMonth(d.getUTCMonth() + 1, 1);
+  }
+  return out;
 }
 
 function copyLink(link, btn) {
@@ -181,10 +200,10 @@ function sendConstraintInvite(name, phone, link) {
   window.open(waHref(phone) + '?text=' + encodeURIComponent(text), '_blank');
 }
 
-async function generate(id, btn) {
+async function generate(id, targetMonth, btn) {
   btn.disabled = true; btn.textContent = 'מפיק טיוטה... (יכול לקחת כדקה)';
   try {
-    await api.generateSchedule(id);
+    await api.generateSchedule(id, targetMonth);
     showSuccess('הטיוטה נוצרה');
     await load();
     openIds.delete(id); // force fresh render as open

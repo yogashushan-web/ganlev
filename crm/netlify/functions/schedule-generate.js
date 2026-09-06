@@ -1,7 +1,11 @@
-// ADMIN: draft a weekly/monthly staff work schedule from submitted constraints, via Claude.
-// POST /schedule-generate?garden_id=X { round_id }
+// ADMIN: draft ONE month's staff work schedule from submitted constraints, via Claude.
+// POST /schedule-generate?garden_id=X { round_id, target_month }   -- target_month: 'YYYY-MM'
 //
-// This is a DRAFT based only on who marked themselves unavailable — it does not know
+// A round now spans 3 months (so staff can log known absences early), but each
+// generation call is scoped to a single month — a 90-day prompt/response risks
+// the function's execution timeout, and a month is what gets reviewed at a time.
+//
+// This is a DRAFT based only on the constraints submitted — it does not know
 // classroom/ratio requirements, so a human (Sharon/Yoel) should review before publishing.
 
 const Anthropic = require('@anthropic-ai/sdk');
@@ -11,6 +15,7 @@ const { supabase, validateGardenScope } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
 
 const DAY_NAMES_HE = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const MONTHS_HE = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
 
 function datesBetween(start, end) {
   const out = [];
@@ -21,6 +26,14 @@ function datesBetween(start, end) {
     d.setUTCDate(d.getUTCDate() + 1);
   }
   return out;
+}
+
+// The calendar-month range for 'YYYY-MM', clamped to the round's own start/end.
+function monthRangeClamped(targetMonth, roundStart, roundEnd) {
+  const [y, m] = targetMonth.split('-').map(Number);
+  const first = new Date(Date.UTC(y, m - 1, 1)).toISOString().slice(0, 10);
+  const last = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+  return { start: first < roundStart ? roundStart : first, end: last > roundEnd ? roundEnd : last };
 }
 
 const ScheduleSchema = z.object({
@@ -39,13 +52,16 @@ const handler = withAuth(async (event) => {
     const { garden_id } = event.queryStringParameters || {};
     validateGardenScope(user.garden_id, garden_id, user.role);
     const b = JSON.parse(event.body || '{}');
-    if (!b.round_id) return { statusCode: 400, body: JSON.stringify({ success: false, error: 'חסר מזהה סבב' }) };
+    if (!b.round_id || !b.target_month) return { statusCode: 400, body: JSON.stringify({ success: false, error: 'חסר מזהה סבב או חודש' }) };
 
     const { data: round, error: e1 } = await supabase.from('staff_schedule_rounds').select('*').eq('id', b.round_id).eq('garden_id', garden_id).single();
     if (e1 || !round) return { statusCode: 404, body: JSON.stringify({ success: false, error: 'הסבב לא נמצא' }) };
 
+    const { start: monthStart, end: monthEnd } = monthRangeClamped(b.target_month, round.start_date, round.end_date);
+
     const { data: staff } = await supabase.from('staff').select('id,full_name_he').eq('garden_id', garden_id).eq('status', 'active');
-    const { data: entries } = await supabase.from('staff_schedule_constraints').select('*').eq('round_id', b.round_id);
+    const { data: entries } = await supabase.from('staff_schedule_constraints')
+      .select('*').eq('round_id', b.round_id).gte('date', monthStart).lte('date', monthEnd);
     const { data: responses } = await supabase.from('staff_schedule_responses').select('staff_id').eq('round_id', b.round_id);
     if (!staff || !staff.length) return { statusCode: 400, body: JSON.stringify({ success: false, error: 'אין עובדים פעילים בגן' }) };
 
@@ -62,21 +78,24 @@ const handler = withAuth(async (event) => {
       const status = responded.has(s.id) ? 'מילא/ה אילוצים' : 'לא מילא/ה אילוצים (יש להניח זמין/ה לכל התקופה)';
       const entriesStr = myEntries.length
         ? myEntries.map(e => `${e.date} — ${PART_HE[e.part]}, סיבה: ${REASON_HE[e.reason]}${e.reason_note ? ' (' + e.reason_note + ')' : ''}, מחליף/ה: ${nameById[e.replacement_staff_id] || '?'}`).join('; ')
-        : 'אין ימי היעדרות';
+        : 'אין ימי היעדרות בחודש הזה';
       return `- ${s.full_name_he} [id: ${s.id}] — ${status}. ${entriesStr}`;
     }).join('\n');
 
-    const dateLines = datesBetween(round.start_date, round.end_date).map(d => {
+    const dateLines = datesBetween(monthStart, monthEnd).map(d => {
       const dow = new Date(d + 'T00:00:00Z').getUTCDay();
       return `${d} (יום ${DAY_NAMES_HE[dow]})`;
     }).join('\n');
 
-    const prompt = `את/ה עוזר/ת שמכין/ה טיוטת סידור עבודה שבועי/חודשי לגן ילדים ("גן לב"), על בסיס האילוצים שהצוות מילא.
+    const [ty, tm] = b.target_month.split('-').map(Number);
+    const monthLabel = MONTHS_HE[tm - 1] + ' ' + ty;
 
-התקופה (${round.period_type === 'week' ? 'שבוע' : 'חודש'}):
+    const prompt = `את/ה עוזר/ת שמכין/ה טיוטת סידור עבודה חודשי לגן ילדים ("גן לב"), על בסיס האילוצים שהצוות מילא.
+
+החודש: ${monthLabel}
 ${dateLines}
 
-רשימת הצוות ומה שכל אחד/ת מילא/ה (כל שורה = תאריך + חלק יום שבו העובד/ת נעדר/ת, הסיבה, ומי המחליף/ה שהם עצמם בחרו):
+רשימת הצוות ומה שכל אחד/ת מילא/ה לחודש הזה (כל שורה = תאריך + חלק יום שבו העובד/ת נעדר/ת, הסיבה, ומי המחליף/ה שהם עצמם בחרו):
 ${staffLines}
 
 הנחיות:
@@ -100,9 +119,9 @@ ${staffLines}
       return { statusCode: 502, body: JSON.stringify({ success: false, error: 'לא הצלחנו לפרש את תשובת ה-AI, נסי שוב' }) };
     }
 
-    const generated_schedule = response.parsed_output;
+    const merged = { ...(round.generated_schedule || {}), [b.target_month]: response.parsed_output };
     const { data: updated, error: e2 } = await supabase.from('staff_schedule_rounds')
-      .update({ generated_schedule, generated_at: new Date().toISOString(), status: 'generated' })
+      .update({ generated_schedule: merged, generated_at: new Date().toISOString(), status: 'generated' })
       .eq('id', b.round_id).select().single();
     if (e2) throw e2;
 
