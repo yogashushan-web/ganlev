@@ -8,27 +8,21 @@
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
-    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
     .header h1 { font-size:26px; color:#1F3D34; }
     .btn-add { background:#1F3D34; color:#FFF; border:none; padding:12px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; }
     .btn-add:hover { background:#154428; }
-    .btn-link { background:#C4846C; color:#fff; border:none; padding:9px 16px; border-radius:9px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:12.5px; }
-    .btn-link:hover { background:#a96b54; }
+    .btn-add:disabled { background:#cfc8bd; cursor:not-allowed; }
     .btn-delete { padding:8px 12px; border:none; border-radius:9px; cursor:pointer; font-size:12px; font-family:'Heebo'; font-weight:700; background:#e74c3c; color:#fff; }
     .btn-whatsapp { padding:7px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; font-weight:700; background:#25D366; color:#fff; }
     .btn-ai { background:linear-gradient(135deg,#7A6A55,#5f5342); color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13.5px; }
     .btn-ai:hover { opacity:.92; }
     .btn-ai:disabled { background:#cfc8bd; cursor:not-allowed; }
+    .intro { color:#9B8E82; font-size:13px; line-height:1.6; margin-bottom:18px; }
     .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
     .error.show { display:block; }
     .success { background:#d4edda; color:#155724; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
     .success.show { display:block; }
-    .form-box { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:20px; display:none; }
-    .form-box.show { display:block; }
-    .form-row { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px; }
-    .f-field { display:flex; flex-direction:column; gap:5px; }
-    .f-field label { font-size:12px; color:#9B8E82; font-weight:700; }
-    .f-field input, .f-field select { padding:9px 12px; border:1.5px solid #e3ddd2; border-radius:9px; font-family:'Heebo'; font-size:13.5px; outline:none; }
     .rounds { display:flex; flex-direction:column; gap:14px; }
     .round-card { background:#fff; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.05); overflow:hidden; }
     .round-head { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; cursor:pointer; flex-wrap:wrap; gap:10px; }
@@ -41,11 +35,14 @@
     .round-body { display:none; padding:0 20px 20px; border-top:1px solid #f0ece6; }
     .round-body.show { display:block; }
     .section-title { font-size:13.5px; font-weight:700; color:#1F3D34; margin:16px 0 8px; }
-    .staff-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid #f0ece6; font-size:13.5px; flex-wrap:wrap; }
+    .link-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 4px; }
+    .staff-row { padding:9px 0; border-bottom:1px solid #f0ece6; font-size:13.5px; }
     .staff-row:last-child { border-bottom:none; }
+    .staff-row-top { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
     .staff-status { font-size:12px; font-weight:700; }
     .staff-status.done { color:#1F7a4f; }
     .staff-status.pending { color:#c0563f; }
+    .entry-line { font-size:12.5px; color:#6f6457; margin-top:5px; padding-right:4px; }
     .sched-day { margin-bottom:10px; border:1px solid #f0ece6; border-radius:10px; padding:10px 12px; }
     .sched-day .d { font-weight:700; color:#1F3D34; font-size:13.5px; margin-bottom:6px; }
     .sched-part { font-size:12.5px; margin-bottom:3px; }
@@ -60,49 +57,29 @@
 
   <div class="header">
     <h1>🗓️ סידור עבודה</h1>
-    <button class="btn-add" onclick="toggleForm()">+ סבב אילוצים חדש</button>
+    <button class="btn-add" id="runNowBtn" onclick="runNow()">📧 שלח קישור עכשיו</button>
   </div>
+  <p class="intro">סבב אילוצים לחודש הבא נוצר אוטומטית בכל 15 לחודש, ונשלח מייל ליואל עם הקישור המשותף להעברה לקבוצת הוואטסאפ של הצוות. הכפתור למעלה מריץ את אותו תהליך מיידית (שימושי אם צריך קישור לפני התאריך הקבוע).</p>
 
   <div id="error" class="error"></div>
   <div id="success" class="success"></div>
 
-  <div class="form-box" id="formBox">
-    <div class="section-title" style="margin-top:0;">סבב חדש: מבקשים מהצוות למלא אילוצים</div>
-    <div class="form-row">
-      <div class="f-field">
-        <label>עבור</label>
-        <select id="periodType">
-          <option value="week">שבוע קרוב</option>
-          <option value="month">חודש קרוב</option>
-        </select>
-      </div>
-      <div class="f-field">
-        <label>תאריך התחלה</label>
-        <input type="date" id="startDate">
-      </div>
-      <div class="f-field">
-        <label>עד מתי הצוות צריך למלא (דדליין)</label>
-        <input type="date" id="deadline">
-      </div>
-      <button class="btn-add" onclick="createRound()">צור סבב</button>
-    </div>
-  </div>
-
   <div id="list" class="loading">טוען...</div>
 
-<script src="js/common.js?v=16"></script>
-<script src="js/api.js?v=16"></script>
+<script src="js/common.js?v=17"></script>
+<script src="js/api.js?v=17"></script>
 <script>
 let rounds = [];
 const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
 const DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const REASON_LABELS = { family: 'משפחתי', vacation: 'חופשה', sick: 'מחלה', other: 'אחר' };
+const PART_LABELS = { full: 'יום שלם', morning: 'בוקר בלבד', afternoon: 'צהריים בלבד' };
 function fmtDate(d) {
   const [y, m, dd] = d.split('-').map(Number);
   const dow = new Date(Date.UTC(y, m - 1, dd)).getUTCDay();
   return `${DAY_NAMES[dow]}, ${dd}/${m}`;
 }
-function toggleForm() { document.getElementById('formBox').classList.toggle('show'); }
 
 async function load() {
   try {
@@ -114,13 +91,13 @@ async function load() {
 
 function render() {
   const el = document.getElementById('list');
-  if (!rounds.length) { el.innerHTML = '<p class="empty-note">אין עדיין סבבים. לחצי על "+ סבב אילוצים חדש" כדי להתחיל.</p>'; return; }
+  if (!rounds.length) { el.innerHTML = '<p class="empty-note">אין עדיין סבבים. הראשון ייווצר אוטומטית ב-15 לחודש, או לחצי על "📧 שלח קישור עכשיו".</p>'; return; }
   el.innerHTML = '<div class="rounds">' + rounds.map(r => `
     <div class="round-card" id="card-${r.id}">
       <div class="round-head" onclick="openRound('${r.id}')">
         <div>
           <div class="round-title">${r.period_type === 'week' ? 'שבוע' : 'חודש'}: ${fmtDate(r.start_date)} – ${fmtDate(r.end_date)}</div>
-          <div class="round-sub">דדליין למילוי: ${fmtDate(r.deadline)} · ${r.submitted_count}/${r.total_staff} מילאו</div>
+          <div class="round-sub">דדליין למילוי: ${fmtDate(r.deadline)} · ${r.submitted_count}/${r.total_staff} הגיבו</div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           <span class="badge ${r.status}">${r.status === 'generated' ? 'נוצרה טיוטה' : 'באיסוף אילוצים'}</span>
@@ -140,27 +117,36 @@ async function openRound(id) {
   body.innerHTML = '<div class="empty-note">טוען...</div>';
   try {
     const res = await api.getScheduleRoundDetail(id);
-    renderRoundBody(id, res.round, res.staff, res.constraints);
+    renderRoundBody(id, res.round, res.staff, res.entries, res.responses);
   } catch (err) { body.innerHTML = '<div class="empty-note">שגיאה: ' + err.message + '</div>'; }
 }
 
-function renderRoundBody(id, round, staff, constraints) {
+function renderRoundBody(id, round, staff, entries, responses) {
+  const nameById = {}; staff.forEach(s => { nameById[s.id] = s.full_name_he; });
+  const respondedIds = new Set(responses.map(r => r.staff_id));
   const byStaff = {};
-  constraints.forEach(c => { byStaff[c.staff_id] = c; });
+  entries.forEach(e => { (byStaff[e.staff_id] = byStaff[e.staff_id] || []).push(e); });
+
+  const link = location.origin + '/crm/html/staff-constraints.html?round=' + id;
   const staffHtml = staff.map(s => {
-    const c = byStaff[s.id];
-    const done = c && c.submitted_at;
-    const link = location.origin + '/crm/html/staff-constraints.html?round=' + id + '&staff=' + s.id;
+    const done = respondedIds.has(s.id);
+    const myEntries = byStaff[s.id] || [];
+    const entriesHtml = myEntries.map(e =>
+      `<div class="entry-line">📅 ${fmtDate(e.date)} · ${PART_LABELS[e.part]} · ${REASON_LABELS[e.reason]}${e.reason_note ? ' (' + esc(e.reason_note) + ')' : ''} · מחליף/ה: ${esc(nameById[e.replacement_staff_id] || '?')}</div>`
+    ).join('');
     return `<div class="staff-row">
-      <div>${esc(s.full_name_he)} <span class="staff-status ${done ? 'done' : 'pending'}">${done ? '✓ מילא/ה' : '⏳ ממתין/ה'}</span></div>
-      ${s.phone ? `<button class="btn-whatsapp" onclick="sendConstraintInvite('${esc(s.full_name_he).replace(/'/g, "\\'")}', '${s.phone}', '${link}', ${round.period_type === 'week' ? "'שבוע'" : "'חודש'"})">📤 שלח קישור</button>` : '<span class="empty-note">אין טלפון</span>'}
+      <div class="staff-row-top">
+        <div>${esc(s.full_name_he)} <span class="staff-status ${done ? 'done' : 'pending'}">${done ? '✓ הגיב/ה' : '⏳ ממתין/ה'}</span></div>
+        ${s.phone ? `<button class="btn-whatsapp" onclick="sendConstraintInvite('${esc(s.full_name_he).replace(/'/g, "\\'")}', '${s.phone}', '${link}')">📤 שלח תזכורת</button>` : ''}
+      </div>
+      ${entriesHtml}
     </div>`;
   }).join('');
 
   let scheduleHtml = '';
   if (round.status === 'generated' && round.generated_schedule) {
     const gs = round.generated_schedule;
-    const nameOf = id2 => { const s = staff.find(x => x.id === id2); return s ? s.full_name_he : id2; };
+    const nameOf = id2 => nameById[id2] || id2;
     scheduleHtml = '<div class="section-title">טיוטת סידור (AI) — לבדיקה ואישור</div>' + gs.days.map(day => `
       <div class="sched-day">
         <div class="d">${fmtDate(day.date)}</div>
@@ -172,6 +158,9 @@ function renderRoundBody(id, round, staff, constraints) {
   }
 
   document.getElementById('body-' + id).innerHTML = `
+    <div class="link-row">
+      <button class="btn-whatsapp" onclick="copyLink('${link}', this)">📋 העתק את הקישור המשותף</button>
+    </div>
     <div class="section-title">צוות (${staff.length})</div>
     ${staffHtml || '<div class="empty-note">אין עובדים פעילים</div>'}
     <button class="btn-ai" style="margin-top:14px;" onclick="generate('${id}', this)">✨ ${round.status === 'generated' ? 'הפק מחדש טיוטת סידור' : 'הצע סידור אוטומטי (AI)'}</button>
@@ -179,9 +168,16 @@ function renderRoundBody(id, round, staff, constraints) {
   `;
 }
 
-function sendConstraintInvite(name, phone, link, periodLabel) {
+function copyLink(link, btn) {
+  navigator.clipboard.writeText(link).then(() => {
+    btn.textContent = '✓ הועתק!';
+    setTimeout(() => btn.textContent = '📋 העתק את הקישור המשותף', 2000);
+  }, () => { prompt('העתיקי את הלינק:', link); });
+}
+
+function sendConstraintInvite(name, phone, link) {
   const firstName = name ? name.split(' ')[0] : '';
-  const text = (firstName ? `היי ${firstName}! ` : 'היי! ') + `לקראת בניית סידור העבודה ל${periodLabel} הקרוב, נשמח שתמלא/י את האילוצים שלך כאן:\n${link}`;
+  const text = (firstName ? `היי ${firstName}! ` : 'היי! ') + `תזכורת למלא את האילוצים שלך לחודש הקרוב כאן:\n${link}`;
   window.open(waHref(phone) + '?text=' + encodeURIComponent(text), '_blank');
 }
 
@@ -196,19 +192,15 @@ async function generate(id, btn) {
   } catch (err) { showError('שגיאה ביצירת הסידור: ' + err.message); btn.disabled = false; }
 }
 
-async function createRound() {
-  const period_type = document.getElementById('periodType').value;
-  const start_date = document.getElementById('startDate').value;
-  const deadline = document.getElementById('deadline').value;
-  if (!start_date || !deadline) { showError('נא למלא תאריך התחלה ודדליין'); return; }
+async function runNow() {
+  const btn = document.getElementById('runNowBtn');
+  btn.disabled = true; btn.textContent = 'שולח...';
   try {
-    await api.createScheduleRound({ period_type, start_date, deadline });
-    document.getElementById('formBox').classList.remove('show');
-    document.getElementById('startDate').value = '';
-    document.getElementById('deadline').value = '';
-    showSuccess('הסבב נוצר');
+    await api.createScheduleRound();
+    showSuccess('הסבב נוצר ומייל נשלח ליואל');
     load();
   } catch (err) { showError('שגיאה: ' + err.message); }
+  btn.disabled = false; btn.textContent = '📧 שלח קישור עכשיו';
 }
 
 async function deleteRound(id) {

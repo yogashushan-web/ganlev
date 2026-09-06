@@ -87,6 +87,14 @@
   to = "/crm/html/interest-form.html"
   status = 200
 
+# Monthly (15th, 06:00 UTC ≈ 08:00-09:00 Israel): creates next month's staff work-
+# schedule round + emails Yoel the shared fill-in link. Registered here too (not
+# only via the in-code exports.config.schedule) in case of a --no-build deploy,
+# which does not pick up in-code schedules — same precaution as reconcile-renewals
+# in the yoga-course project.
+[functions."monthly-schedule-round"]
+  schedule = "0 6 15 * *"
+
 # NOTE: SUPABASE_URL and SUPABASE_ANON_KEY are provided via Netlify dashboard
 # env vars (all-context). They are intentionally NOT hardcoded here so the
 # secrets scanner does not flag netlify.toml and fail the build.

@@ -45,24 +45,28 @@ const handler = withAuth(async (event) => {
     if (e1 || !round) return { statusCode: 404, body: JSON.stringify({ success: false, error: 'הסבב לא נמצא' }) };
 
     const { data: staff } = await supabase.from('staff').select('id,full_name_he').eq('garden_id', garden_id).eq('status', 'active');
-    const { data: constraints } = await supabase.from('staff_schedule_constraints').select('*').eq('round_id', b.round_id);
+    const { data: entries } = await supabase.from('staff_schedule_constraints').select('*').eq('round_id', b.round_id);
+    const { data: responses } = await supabase.from('staff_schedule_responses').select('staff_id').eq('round_id', b.round_id);
     if (!staff || !staff.length) return { statusCode: 400, body: JSON.stringify({ success: false, error: 'אין עובדים פעילים בגן' }) };
 
-    const dates = datesBetween(round.start_date, round.end_date);
+    const nameById = {}; staff.forEach(s => { nameById[s.id] = s.full_name_he; });
+    const responded = new Set((responses || []).map(r => r.staff_id));
+    const PART_HE = { full: 'יום שלם', morning: 'בוקר בלבד', afternoon: 'צהריים בלבד' };
+    const REASON_HE = { family: 'משפחתי', vacation: 'חופשה', sick: 'מחלה', other: 'אחר' };
+
     const byStaff = {};
-    (constraints || []).forEach(c => { byStaff[c.staff_id] = c; });
+    (entries || []).forEach(e => { (byStaff[e.staff_id] = byStaff[e.staff_id] || []).push(e); });
 
     const staffLines = staff.map(s => {
-      const c = byStaff[s.id];
-      const unavailable = (c && c.unavailable) || [];
-      const status = c && c.submitted_at ? 'מילא/ה אילוצים' : 'לא מילא/ה אילוצים (יש להניח זמין/ה לכל התקופה)';
-      const unavailStr = unavailable.length
-        ? unavailable.map(u => `${u.date} (${u.part === 'morning' ? 'בוקר' : 'צהריים'})`).join(', ')
-        : 'אין אילוצים שסומנו';
-      return `- ${s.full_name_he} [id: ${s.id}] — ${status}. לא זמין/ה ב: ${unavailStr}${c && c.notes ? '. הערה: ' + c.notes : ''}`;
+      const myEntries = byStaff[s.id] || [];
+      const status = responded.has(s.id) ? 'מילא/ה אילוצים' : 'לא מילא/ה אילוצים (יש להניח זמין/ה לכל התקופה)';
+      const entriesStr = myEntries.length
+        ? myEntries.map(e => `${e.date} — ${PART_HE[e.part]}, סיבה: ${REASON_HE[e.reason]}${e.reason_note ? ' (' + e.reason_note + ')' : ''}, מחליף/ה: ${nameById[e.replacement_staff_id] || '?'}`).join('; ')
+        : 'אין ימי היעדרות';
+      return `- ${s.full_name_he} [id: ${s.id}] — ${status}. ${entriesStr}`;
     }).join('\n');
 
-    const dateLines = dates.map(d => {
+    const dateLines = datesBetween(round.start_date, round.end_date).map(d => {
       const dow = new Date(d + 'T00:00:00Z').getUTCDay();
       return `${d} (יום ${DAY_NAMES_HE[dow]})`;
     }).join('\n');
@@ -72,16 +76,15 @@ const handler = withAuth(async (event) => {
 התקופה (${round.period_type === 'week' ? 'שבוע' : 'חודש'}):
 ${dateLines}
 
-רשימת הצוות והאילוצים שלהם:
+רשימת הצוות ומה שכל אחד/ת מילא/ה (כל שורה = תאריך + חלק יום שבו העובד/ת נעדר/ת, הסיבה, ומי המחליף/ה שהם עצמם בחרו):
 ${staffLines}
 
 הנחיות:
-1. כברירת מחדל כל עובד/ת עובד/ת בכל יום, בוקר וצהריים כאחד — חוץ מהתאריכים/החלקים שסומנו במפורש כ"לא זמין/ה" עבורו/ה.
-2. אל תשבצי עובד/ת בזמן שבו הוא/היא סימנ/ה שאינו/ה זמין/ה.
-3. נסי לאזן את העומס בין העובדים באופן סביר.
-4. אם ביום/חצי-יום מסוים נשארים פחות משני עובדים זמינים, ציין/י את זה כאזהרה קצרה בשדה warning של אותו slot (אחרת warning=null).
-5. בשדה summary כתבי סיכום קצר וברור (2-4 משפטים) בעברית פשוטה וזורמת, כולל כל דבר שחשוב שמנהלת הגן תבדוק ידנית לפני פרסום הסידור (למשל ימים חסרי כיסוי, עובדים שלא מילאו אילוצים כלל).
-6. החזירי בכל slot את מזהי העובדים (id) בדיוק כפי שהופיעו למעלה, לא את השם.
+1. כברירת מחדל כל עובד/ת עובד/ת בכל יום, בוקר וצהריים כאחד — חוץ מהתאריכים/החלקים שבהם נרשם שהוא/היא נעדר/ת.
+2. בכל תאריך/חלק-יום שבו עובד/ת נעדר/ת, שבצי במקומו/ה את המחליף/ה שהם ציינו (בנוסף ליום הרגיל של המחליף/ה עצמו/ה, אלא אם גם הוא/היא נעדר/ת באותו זמן — במקרה כזה ציין/י זאת כאזהרה).
+3. אם ביום/חצי-יום מסוים נשארים פחות משני עובדים זמינים (כולל אחרי שילוב המחליפים), ציין/י את זה כאזהרה קצרה בשדה warning של אותו slot (אחרת warning=null).
+4. בשדה summary כתבי סיכום קצר וברור (2-4 משפטים) בעברית פשוטה וזורמת, כולל כל דבר שחשוב שמנהלת הגן תבדוק ידנית לפני פרסום הסידור (למשל התנגשויות בין נעדר/ת למחליף/ה, עובדים שלא מילאו אילוצים כלל).
+5. החזירי בכל slot את מזהי העובדים (id) בדיוק כפי שהופיעו למעלה, לא את השם.
 
 זו טיוטה ראשונית בלבד — מנהלת הגן תבדוק ותתאים אותה ידנית, כולל דרישות תקן/יחס מטפלות-ילדים שלא ידועות לך.`;
 
