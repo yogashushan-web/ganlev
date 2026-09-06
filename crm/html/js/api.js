@@ -164,4 +164,9 @@ const api = {
 
   // Birthday-call reminders — backfill for all current-year children
   generateBirthdayReminders: () => apiCall(`/birthday-reminders?garden_id=${getGardenId()}`, 'POST'),
+
+  // Interest-form submissions ("טופס התעניינות")
+  getInterestForms: () => apiCall(`/interest-forms?garden_id=${getGardenId()}`),
+  updateInterestForm: (id, data) => apiCall(`/interest-forms/${id}?garden_id=${getGardenId()}`, 'PUT', data),
+  deleteInterestForm: (id) => apiCall(`/interest-forms/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 };

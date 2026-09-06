@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>התעניינויות — מערכת גנים</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .link-box { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .link-box input { padding:9px 12px; border:1.5px solid #e3ddd2; border-radius:9px; font-family:'Heebo'; font-size:13px; width:64px; text-align:center; outline:none; }
+    .btn-link { background:#C4846C; color:#fff; border:none; padding:11px 18px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn-link:hover { background:#a96b54; }
+    .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+    .toolbar input[type="text"] { padding:10px 14px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; min-width:260px; }
+    .toolbar input:focus { border-color:#1F3D34; }
+    .status-tabs { display:flex; gap:8px; flex-wrap:wrap; }
+    .status-tab { padding:8px 16px; border:none; background:#fff; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; color:#9B8E82; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+    .status-tab:hover { background:#f1ece3; }
+    .status-tab.active { background:#1F3D34; color:#fff; }
+    .count-pill { background:#fff; border-radius:20px; padding:8px 16px; font-size:13px; box-shadow:0 2px 8px rgba(0,0,0,.05); font-weight:600; color:#1F3D34; margin-right:auto; }
+    .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .error.show { display:block; }
+    .success { background:#d4edda; color:#155724; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+    .success.show { display:block; }
+    .cards { display:flex; flex-direction:column; gap:12px; }
+    .lead-card { background:#fff; border-radius:16px; padding:18px 20px; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
+    .lead-top { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:10px; }
+    .lead-name { font-size:17px; font-weight:800; color:#1F3D34; }
+    .lead-meta { font-size:12.5px; color:#9B8E82; margin-top:3px; }
+    .lead-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    select.status-sel { padding:8px 12px; border-radius:9px; border:1.5px solid #e3ddd2; font-family:'Heebo'; font-size:12.5px; font-weight:700; cursor:pointer; outline:none; }
+    .btn-delete { padding:8px 12px; border:none; border-radius:9px; cursor:pointer; font-size:12px; font-family:'Heebo'; background:#e74c3c; color:#fff; }
+    .lead-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; margin-bottom:10px; }
+    @media(max-width:640px){ .lead-grid{grid-template-columns:1fr;} }
+    .lead-field .lbl { font-size:11px; color:#9B8E82; font-weight:700; margin-bottom:2px; }
+    .lead-field .val { font-size:14px; }
+    a.tel { color:#1F7a4f; text-decoration:none; font-weight:600; }
+    .muted { color:#c4bcae; }
+    .lead-note { background:#FAF8F4; border-radius:10px; padding:10px 12px; font-size:13.5px; line-height:1.6; margin-top:6px; }
+    .lead-note .lbl { font-size:11px; color:#9B8E82; font-weight:700; margin-bottom:3px; }
+    .loading { text-align:center; padding:40px; color:#9B8E82; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>📝 התעניינויות</h1>
+    <div class="link-box">
+      <span style="font-size:13px; color:#9B8E82; font-weight:600;">שנה:</span>
+      <input type="text" id="yearInput" value="2026-27">
+      <button class="btn-link" onclick="copyFormLink(this)">📋 העתק לינק לטופס</button>
+    </div>
+  </div>
+
+  <div id="error" class="error"></div>
+  <div id="success" class="success"></div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="🔍 חיפוש לפי שם ילד / הורה / טלפון...">
+    <div class="status-tabs" id="statusTabs"></div>
+    <span class="count-pill" id="countPill">—</span>
+  </div>
+
+  <div id="list" class="loading">טוען...</div>
+
+<script src="js/common.js?v=12"></script>
+<script src="js/api.js?v=12"></script>
+<script>
+const STATUS_LABELS = { new:'חדש', contacted:'יצרנו קשר', waitlist:'רשימת המתנה', accepted:'התקבל/ה', declined:'לא ממשיך/ה' };
+const STATUS_ORDER = ['new', 'contacted', 'waitlist', 'accepted', 'declined'];
+let items = [], statusFilter = 'all';
+
+const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
+const norm = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+function ageYM(bd) {
+  if (!bd) return '';
+  const b = new Date(bd), n = new Date();
+  let months = (n.getFullYear() - b.getFullYear()) * 12 + (n.getMonth() - b.getMonth());
+  if (n.getDate() < b.getDate()) months--;
+  if (months < 0) return '';
+  return Math.floor(months / 12) + '.' + (months % 12);
+}
+function formatSubmitted(dateStr) {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('he-IL', { year:'numeric', month:'2-digit', day:'2-digit' });
+}
+
+function renderStatusTabs() {
+  const tabs = [{ key:'all', label:'הכל' }].concat(STATUS_ORDER.map(k => ({ key:k, label:STATUS_LABELS[k] })));
+  document.getElementById('statusTabs').innerHTML = tabs.map(t =>
+    `<button class="status-tab ${t.key === statusFilter ? 'active' : ''}" onclick="selectStatus('${t.key}')">${t.label}</button>`).join('');
+}
+function selectStatus(k) { statusFilter = k; renderStatusTabs(); render(); }
+
+async function load() {
+  try {
+    const res = await api.getInterestForms();
+    items = res.data || [];
+    render();
+  } catch (err) { showError('שגיאה בטעינה: ' + err.message); }
+}
+
+function render() {
+  const q = norm(document.getElementById('search').value);
+  const filtered = items.filter(it => {
+    if (statusFilter !== 'all' && (it.status || 'new') !== statusFilter) return false;
+    if (!q) return true;
+    const hay = norm([it.child_name, it.parent1_name, it.parent1_phone, it.parent2_name, it.parent2_phone].join(' '));
+    return hay.includes(q);
+  });
+  document.getElementById('countPill').textContent = filtered.length + ' פניות';
+
+  if (!filtered.length) {
+    document.getElementById('list').innerHTML = '<p style="padding:24px; color:#9B8E82; text-align:center;">אין פניות להצגה.</p>';
+    return;
+  }
+
+  document.getElementById('list').innerHTML = '<div class="cards">' + filtered.map(it => {
+    const age = ageYM(it.birth_date);
+    return `<div class="lead-card">
+      <div class="lead-top">
+        <div>
+          <div class="lead-name">${esc(it.child_name)}${it.gender ? ' · ' + esc(it.gender) : ''}${age ? ' · גיל ' + age : ''}</div>
+          <div class="lead-meta">התקבל ב-${formatSubmitted(it.created_at)}${it.school_year ? ' · לשנת ' + esc(it.school_year) : ''}</div>
+        </div>
+        <div class="lead-actions">
+          <select class="status-sel" onchange="updateStatus('${it.id}', this.value)">
+            ${STATUS_ORDER.map(k => `<option value="${k}" ${(it.status || 'new') === k ? 'selected' : ''}>${STATUS_LABELS[k]}</option>`).join('')}
+          </select>
+          <button class="btn-delete" onclick="deleteItem('${it.id}')">מחק</button>
+        </div>
+      </div>
+      <div class="lead-grid">
+        <div class="lead-field"><div class="lbl">הורה 1</div><div class="val">${esc(it.parent1_name) || '<span class=\"muted\">-</span>'}${it.parent1_phone ? ` · <a class="tel" href="${waHref(it.parent1_phone)}" target="_blank">💬 ${esc(it.parent1_phone)}</a>` : ''}</div></div>
+        <div class="lead-field"><div class="lbl">הורה 2</div><div class="val">${esc(it.parent2_name) || '<span class=\"muted\">-</span>'}${it.parent2_phone ? ` · <a class="tel" href="${waHref(it.parent2_phone)}" target="_blank">💬 ${esc(it.parent2_phone)}</a>` : ''}</div></div>
+      </div>
+      ${it.family_info ? `<div class="lead-note"><div class="lbl">על המשפחה</div>${esc(it.family_info)}</div>` : ''}
+      ${it.child_info ? `<div class="lead-note"><div class="lbl">על הילד/ה</div>${esc(it.child_info)}</div>` : ''}
+    </div>`;
+  }).join('') + '</div>';
+}
+
+async function updateStatus(id, status) {
+  try { await api.updateInterestForm(id, { status }); const it = items.find(x => x.id === id); if (it) it.status = status; showSuccess('הסטטוס עודכן'); render(); }
+  catch (err) { showError('שגיאה בעדכון: ' + err.message); }
+}
+
+async function deleteItem(id) {
+  if (!confirm('למחוק את הפנייה?')) return;
+  try { await api.deleteInterestForm(id); showSuccess('נמחק'); load(); }
+  catch (err) { showError('שגיאה במחיקה: ' + err.message); }
+}
+
+function copyFormLink(btn) {
+  const year = document.getElementById('yearInput').value.trim() || '2026-27';
+  const url = location.origin + '/crm/html/interest-form.html?garden=' + getGardenId() + '&year=' + encodeURIComponent(year);
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✓ הועתק!';
+    setTimeout(() => btn.textContent = '📋 העתק לינק לטופס', 2000);
+  }, () => { prompt('העתיקי את הלינק:', url); });
+}
+
+document.getElementById('search').addEventListener('input', render);
+renderStatusTabs();
+load();
+</script>
+
+</body>
+</html>

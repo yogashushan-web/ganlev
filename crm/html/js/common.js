@@ -122,7 +122,7 @@ function initializePage() {
   renderTrashBin();
 }
 
-const TRASH_LABELS = { children:'ילד', parents:'הורה', staff:'עובד', events:'אירוע', utilities:'גוף', documents:'מסמך', income:'הכנסה', expenses:'הוצאה' };
+const TRASH_LABELS = { children:'ילד', parents:'הורה', staff:'עובד', events:'אירוע', utilities:'גוף', documents:'מסמך', income:'הכנסה', expenses:'הוצאה', interest_forms:'התעניינות' };
 
 function renderTrashBin() {
   if (!localStorage.getItem('crm_token') || document.getElementById('trashFab')) return;
@@ -197,6 +197,7 @@ function renderNavSidebar() {
   const links = [
     { href: 'dashboard.html',       icon: '🏠', label: 'עמוד הבית' },
     { href: 'children-manage.html', icon: '👶', label: 'ילדים' },
+    { href: 'interest-forms.html',  icon: '📝', label: 'התעניינויות' },
     { href: 'parents-tuition.html', icon: '👨‍👩‍👧', label: 'הורים' },
     { href: 'staff-salaries.html',  icon: '👥', label: 'צוות' },
     { href: 'content.html',         icon: '📚', label: 'תוכן חינוכי' },

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>טופס התעניינות — גן לב ❤️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:linear-gradient(135deg,#1F3D34 0%,#2D5A50 100%); color:#3D3228; direction:rtl; min-height:100vh; padding:24px; }
+    .card { background:#fff; border-radius:22px; max-width:620px; margin:20px auto; padding:36px 32px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .head { text-align:center; margin-bottom:22px; }
+    .head img { width:92px; height:92px; border-radius:50%; object-fit:cover; margin:0 auto 10px; display:block; }
+    .head h1 { font-size:23px; color:#1F3D34; margin-bottom:14px; line-height:1.4; }
+    .intro { background:#f6f1e9; border:1px solid #ece3d4; border-radius:14px; padding:16px 18px; font-size:14px; color:#6f6457; line-height:1.75; text-align:right; margin-bottom:22px; }
+    .intro b { color:#1F3D34; }
+    .intro a { color:#1F3D34; font-weight:700; }
+    .intro ul { margin:10px 0 0; padding-right:20px; }
+    .intro li { margin-bottom:5px; }
+    .grp { margin-bottom:17px; }
+    label { display:block; font-size:14px; font-weight:700; color:#1F3D34; margin-bottom:6px; line-height:1.5; }
+    label .req { color:#c0563f; }
+    input, textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo',sans-serif; font-size:15px; outline:none; }
+    input:focus, textarea:focus { border-color:#1F3D34; }
+    textarea { resize:vertical; line-height:1.6; }
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:520px){ .two{grid-template-columns:1fr;} }
+    .radios { display:flex; gap:22px; padding:6px 2px; }
+    .radios label { display:flex; align-items:center; gap:7px; font-weight:500; margin:0; cursor:pointer; }
+    .radios input { width:auto; }
+    .btn { width:100%; margin-top:8px; padding:15px; border:none; border-radius:12px; background:#1F3D34; color:#fff; font-family:'Heebo'; font-size:16px; font-weight:700; cursor:pointer; }
+    .btn:hover { background:#154428; }
+    .btn:disabled { background:#cfc8bd; cursor:not-allowed; }
+    .msg { display:none; text-align:center; padding:30px 10px; }
+    .msg .v { font-size:46px; }
+    .msg h2 { color:#1F3D34; margin:10px 0 6px; }
+    .msg p { color:#9B8E82; }
+    .err { background:#fdf0ef; color:#c0563f; padding:12px; border-radius:10px; font-size:14px; margin-bottom:14px; display:none; }
+    .sep { border:none; border-top:1px dashed #e3ddd2; margin:22px 0 18px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="form-wrap">
+      <div class="head">
+        <img src="logo.png" alt="גן לב">
+        <h1>❤️ טופס התעניינות לשנת <span id="yearLabel">2026/27</span> — גן לב</h1>
+      </div>
+      <div class="intro">
+        ברוכים הבאים! נעים להכיר, כאן מאיה ויואל :) נשמח לעבור איתכם צעד אחר צעד את ההתעניינות ולענות על כל שאלה שעולה. מוזמנים ליצור קשר לייעוץ ותיאום דרך <a href="https://wa.me/972534408250" target="_blank">WhatsApp במספר 053-440-8250</a> (גן לב 2026/27).<br><br>
+        טופס זה הוא צעד ראשון להתעניינים בהרשמה לגן לב. הוא עוזר לנו להכיר קצת אתכם, את ילדכם/ילדתכם ואת התהליך שלכם. <b>מילוי הטופס אינו מבטיח קבלה</b>, ומספר המקומות מוגבל.
+        <ul>
+          <li>אנו מקבלים כרגע ילדים בני 1.5 ומעלה.</li>
+          <li>מילוי טופס ההתעניינות אינו דורש תשלום ואינו מחייב.</li>
+          <li>מספר המקומות מוגבל — מילוי הטופס אינו מבטיח מקום.</li>
+          <li>הפניות ייענו לפי סדר ההרשמה, ובמידה ויימצא עבורכם מקום פנוי.</li>
+        </ul>
+      </div>
+      <div class="err" id="err"></div>
+      <form id="intForm">
+        <div class="grp">
+          <label>שם הילד/ה <span class="req">*</span></label>
+          <input type="text" id="childName" required>
+        </div>
+        <div class="two">
+          <div class="grp">
+            <label>תאריך לידה</label>
+            <input type="date" id="birthDate">
+          </div>
+          <div class="grp">
+            <label>מין</label>
+            <div class="radios">
+              <label><input type="radio" name="gender" value="זכר"> זכר</label>
+              <label><input type="radio" name="gender" value="נקבה"> נקבה</label>
+            </div>
+          </div>
+        </div>
+        <hr class="sep">
+        <div class="two">
+          <div class="grp">
+            <label>שם הורה 1</label>
+            <input type="text" id="parent1Name">
+          </div>
+          <div class="grp">
+            <label>מס' טלפון הורה 1 <span class="req">*</span></label>
+            <input type="tel" id="parent1Phone" required>
+          </div>
+        </div>
+        <div class="two">
+          <div class="grp">
+            <label>שם הורה 2</label>
+            <input type="text" id="parent2Name">
+          </div>
+          <div class="grp">
+            <label>מס' טלפון הורה 2</label>
+            <input type="tel" id="parent2Phone">
+          </div>
+        </div>
+        <hr class="sep">
+        <div class="grp">
+          <label>ספרו לנו בכמה מילים על המשפחה שלכם — מקום מגורים, מי גר בבית, אילו שפות מדוברות בבית וכל דבר שתרצו להוסיף שחשוב לכם שנדע :)</label>
+          <textarea id="familyInfo" rows="3"></textarea>
+        </div>
+        <div class="grp">
+          <label>ספרו לנו בכמה מילים על הילד/ה שלכם! מה הם אוהבים, מה קשה להם, האם יש אלרגיות וכל דבר נוסף שחשוב לכם שנדע :)</label>
+          <textarea id="childInfo" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn" id="submitBtn">שליחה</button>
+      </form>
+    </div>
+    <div class="msg" id="thanks">
+      <div class="v">✅</div>
+      <h2>תודה רבה!</h2>
+      <p>קיבלנו את פנייתכם ונחזור אליכם בהקדם 💛</p>
+    </div>
+  </div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const GARDEN = params.get('garden') || '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
+const YEAR = params.get('year') || '2026-27';
+document.getElementById('yearLabel').textContent = YEAR.replace('-', '/');
+
+document.getElementById('intForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.style.display = 'none';
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'שולח...';
+  const body = {
+    garden_id: GARDEN,
+    school_year: YEAR,
+    child_name: document.getElementById('childName').value.trim(),
+    birth_date: document.getElementById('birthDate').value || null,
+    gender: (document.querySelector('input[name="gender"]:checked') || {}).value || null,
+    parent1_name: document.getElementById('parent1Name').value.trim() || null,
+    parent1_phone: document.getElementById('parent1Phone').value.trim(),
+    parent2_name: document.getElementById('parent2Name').value.trim() || null,
+    parent2_phone: document.getElementById('parent2Phone').value.trim() || null,
+    family_info: document.getElementById('familyInfo').value.trim() || null,
+    child_info: document.getElementById('childInfo').value.trim() || null,
+  };
+  try {
+    const res = await fetch('/.netlify/functions/interest-intake', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'שגיאה');
+    document.getElementById('form-wrap').style.display = 'none';
+    document.getElementById('thanks').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (e2) {
+    err.textContent = 'שגיאה בשליחה: ' + e2.message;
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'שליחה';
+  }
+});
+</script>
+</body>
+</html>
