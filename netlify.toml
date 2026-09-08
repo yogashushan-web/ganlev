@@ -13,9 +13,12 @@
 
 [functions]
   node_bundler = "esbuild"
-  # heic-convert / libheif-js load a .wasm file from disk at runtime, so keep them
-  # unbundled (copied as-is with their assets) instead of letting esbuild inline them.
-  external_node_modules = ["heic-convert", "heic-decode", "libheif-js"]
+  # heic-convert / libheif-js load a .wasm file from disk at runtime, and pdfkit reads
+  # its built-in .afm metrics the same way, so keep them unbundled (copied as-is with
+  # their assets) instead of letting esbuild inline them.
+  external_node_modules = ["heic-convert", "heic-decode", "libheif-js", "pdfkit", "fontkit"]
+  # The Hebrew font the contact-roster PDF embeds — esbuild would not carry a .ttf along.
+  included_files = ["crm/netlify/functions/assets/**"]
 
 # Security headers applied to every response
 [[headers]]
@@ -27,6 +30,19 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     Permissions-Policy = "geolocation=(), camera=(), microphone=(), payment=()"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://zjawuhqldnqesnflmtoa.supabase.co; connect-src 'self' https://www.hebcal.com https://zjawuhqldnqesnflmtoa.supabase.co; frame-src https://calendar.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+
+# The staff boards page signs people in with Google Identity Services, which needs
+# to load its script, open its iframe and call its endpoints. Relax script/frame/connect
+# for THIS page only (and for the /boards short link that rewrites to it).
+[[headers]]
+  for = "/crm/html/staff-boards.html"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://zjawuhqldnqesnflmtoa.supabase.co https://lh3.googleusercontent.com; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://zjawuhqldnqesnflmtoa.supabase.co; frame-src https://accounts.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+
+[[headers]]
+  for = "/boards"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://zjawuhqldnqesnflmtoa.supabase.co https://lh3.googleusercontent.com; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://zjawuhqldnqesnflmtoa.supabase.co; frame-src https://accounts.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 
 # The album page bundles a HEIC->JPEG converter (libheif) that internally uses
 # `new Function`, which requires 'unsafe-eval'. Relax script-src for THIS page
@@ -67,6 +83,18 @@
 [[redirects]]
   from = "/nap"
   to = "/crm/html/nap.html"
+  status = 200
+
+# Parent contact roster — the link goes in the parents' WhatsApp group description.
+[[redirects]]
+  from = "/contacts"
+  to = "/crm/html/contacts.html"
+  status = 200
+
+# Staff-only consolidated boards (nap ritual + personal cards), behind Google sign-in.
+[[redirects]]
+  from = "/boards"
+  to = "/crm/html/staff-boards.html"
   status = 200
 
 # Short link for the public "כרטיס אישי" registration form (share with parents).

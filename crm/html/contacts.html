@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>רשימת קשר — הורי גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#2b2b2b; direction:rtl; }
+    .wrap { max-width:760px; margin:0 auto; padding:18px 14px 50px; }
+
+    .top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:6px; }
+    h1 { font-size:21px; color:#1F3D34; }
+    .sub { color:#9B8E82; font-size:12.5px; margin-top:3px; }
+    .dl { background:#1F3D34; color:#fff; border:none; padding:10px 15px; border-radius:11px;
+          font-family:'Heebo'; font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap; text-decoration:none;
+          display:inline-flex; align-items:center; gap:6px; }
+    .dl:active { opacity:.8; }
+
+    .search { width:100%; margin:14px 0 16px; padding:12px 15px; border:1px solid #e6dfd4; border-radius:12px;
+              font-family:'Heebo'; font-size:15px; background:#fff; }
+    .search:focus { outline:none; border-color:#1F3D34; }
+
+    .fam { background:#fff; border-radius:14px; padding:14px 16px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+    .kid { font-size:17px; font-weight:800; color:#1F3D34; margin-bottom:9px; }
+    .p { display:flex; align-items:center; gap:8px; padding:5px 0; font-size:14.5px; flex-wrap:wrap; }
+    .p .role { color:#b3a89a; font-size:12px; min-width:34px; }
+    .p .nm { font-weight:600; }
+    .p a { color:#1F7a4f; text-decoration:none; font-weight:700; direction:ltr; }
+    .p a:hover { text-decoration:underline; }
+    .addr { margin-top:8px; padding-top:9px; border-top:1px solid #f2ede5; color:#6f6457; font-size:13.5px; }
+    .none { color:#c4bcae; }
+    .msg { text-align:center; color:#9B8E82; padding:36px 10px; }
+    .err { text-align:center; color:#c0492a; padding:36px 10px; }
+    .foot { text-align:center; color:#b3a89a; font-size:11.5px; margin-top:22px; line-height:1.7; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>📇 רשימת קשר — הורי גן לב</h1>
+        <div class="sub" id="sub">טוען…</div>
+      </div>
+      <a class="dl" id="dlBtn" href="/.netlify/functions/parents-list?format=pdf">⬇️ הורדה</a>
+    </div>
+
+    <input class="search" id="q" type="search" placeholder="חיפוש לפי שם ילד/ה או הורה…" autocomplete="off">
+    <div id="list"><div class="msg">טוען…</div></div>
+
+    <div class="foot">
+      הרשימה מתעדכנת מאליה לאורך השנה.<br>
+      כפתור ההורדה שומר צילום מצב כקובץ PDF במכשיר.
+    </div>
+  </div>
+
+<script>
+  const API = '/.netlify/functions/parents-list';
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const $ = id => document.getElementById(id);
+  let rows = [];
+
+  // Israeli mobile -> wa.me needs the international form.
+  function waHref(phone) {
+    const d = String(phone||'').replace(/\D/g,'');
+    if (!d) return '';
+    const intl = d.startsWith('972') ? d : (d.startsWith('0') ? '972' + d.slice(1) : d);
+    return 'https://wa.me/' + intl;
+  }
+
+  function person(role, name, phone) {
+    if (!name && !phone) return '';
+    const tel = phone ? `<a href="tel:${esc(phone)}">${esc(phone)}</a>` : '<span class="none">—</span>';
+    const wa  = phone ? `<a href="${waHref(phone)}" target="_blank" rel="noopener" title="וואטסאפ">💬</a>` : '';
+    return `<div class="p"><span class="role">${role}</span>` +
+           `<span class="nm">${name ? esc(name) : '<span class="none">—</span>'}</span>${tel}${wa}</div>`;
+  }
+
+  function famHtml(r) {
+    return `<div class="fam"><div class="kid">${esc(r.child)}</div>` +
+      person('אמא', r.parent1, r.phone1) +
+      person('אבא', r.parent2, r.phone2) +
+      (r.address ? `<div class="addr">📍 ${esc(r.address)}</div>` : '') +
+      `</div>`;
+  }
+
+  function render() {
+    const q = ($('q').value || '').trim();
+    const list = q
+      ? rows.filter(r => (r.child + ' ' + r.parent1 + ' ' + r.parent2 + ' ' + r.address).includes(q))
+      : rows;
+    $('list').innerHTML = list.length
+      ? list.map(famHtml).join('')
+      : '<div class="msg">לא נמצאו תוצאות.</div>';
+  }
+
+  async function load() {
+    try {
+      const d = await (await fetch(API)).json();
+      if (!d.success) throw new Error(d.error || 'שגיאה');
+      rows = d.rows || [];
+      const t = new Date(d.updated);
+      const p = n => String(n).padStart(2,'0');
+      $('sub').textContent = `${rows.length} משפחות · נכון ל־${p(t.getDate())}.${p(t.getMonth()+1)}.${t.getFullYear()}`;
+      render();
+    } catch (e) {
+      $('sub').textContent = '';
+      $('list').innerHTML = '<div class="err">שגיאה בטעינת הרשימה: ' + esc(e.message) + '</div>';
+    }
+  }
+
+  $('q').addEventListener('input', render);
+  load();
+</script>
+</body>
+</html>

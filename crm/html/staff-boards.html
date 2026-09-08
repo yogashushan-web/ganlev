@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>לוחות הגן — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#2b2b2b; direction:rtl; }
+    .wrap { max-width:820px; margin:0 auto; padding:24px 18px 60px; }
+
+    /* ---- sign-in gate ---- */
+    .gate { max-width:430px; margin:14vh auto 0; background:#fff; border-radius:18px; padding:34px 28px; text-align:center; box-shadow:0 4px 22px rgba(0,0,0,.07); }
+    .gate h1 { font-size:22px; color:#1F3D34; margin-bottom:8px; }
+    .gate p { color:#9B8E82; font-size:14px; line-height:1.65; margin-bottom:22px; }
+    .gate .gbtn { display:flex; justify-content:center; min-height:44px; }
+    .gate .err { color:#c0492a; font-size:13.5px; line-height:1.6; margin-top:16px; }
+    .gate .hint { color:#b3a89a; font-size:12px; margin-top:18px; line-height:1.6; }
+
+    /* ---- boards ---- */
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .who { font-size:13px; color:#6f6457; }
+    .who b { color:#1F3D34; }
+    .bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+    .btn { border:none; padding:11px 18px; border-radius:11px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; }
+    .btn.print { background:#1F3D34; color:#fff; } .btn.ghost { background:#efe9e0; color:#6f6457; }
+    .tabs { display:flex; gap:8px; margin-bottom:18px; }
+    .tab { flex:1; border:none; padding:12px 10px; border-radius:12px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14.5px; background:#efe9e0; color:#6f6457; }
+    .tab.on { background:#1F3D34; color:#fff; }
+    h1.bt { font-size:24px; text-align:center; margin-bottom:4px; }
+    .sub { text-align:center; color:#9B8E82; font-size:13px; margin-bottom:20px; }
+    .count { text-align:center; color:#b3a89a; font-size:12.5px; margin-bottom:18px; }
+
+    .kid { background:#fff; border-radius:14px; padding:16px 18px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:14px; break-inside:avoid; }
+    .kh { display:flex; align-items:center; gap:14px; margin-bottom:9px; flex-wrap:wrap; }
+    .kh img { width:66px; height:66px; border-radius:50%; object-fit:cover; border:2px solid #eee; cursor:zoom-in; }
+    .kh .noimg { width:66px; height:66px; border-radius:50%; background:#f1ece3; display:flex; align-items:center; justify-content:center; font-size:26px; color:#c3b8a8; }
+    .kh .nm { font-size:19px; font-weight:800; }
+    .kh .age { font-size:12.5px; color:#9B8E82; display:block; margin-top:2px; }
+    .todo { color:#c48a3a; font-weight:700; font-size:14px; }
+
+    /* nap palette */
+    #napBoard .kid { border-top:4px solid #9cc3de; } #napBoard .kh .nm { color:#3a5b73; }
+    .chips { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+    .chip { background:#eef5fb; color:#3a5b73; border-radius:999px; padding:4px 11px; font-size:13px; font-weight:600; }
+    .chip.other { background:#f5efe6; color:#8a7a63; }
+    .blk { margin-top:8px; } .blk .t { font-size:12px; font-weight:700; color:#7fb0d0; } .blk .v { font-size:14.5px; line-height:1.6; white-space:pre-wrap; }
+
+    /* cards palette */
+    #cardsBoard .kid { border-top:4px solid #C4846C; } #cardsBoard .kh .nm { color:#1F3D34; }
+    .song { background:#fbf4ef; border-radius:10px; padding:8px 12px; font-size:14px; color:#a05a3d; margin:6px 0 10px; }
+    .qa { margin-top:9px; } .qa .q { font-size:12.5px; font-weight:700; color:#a05a3d; } .qa .a { font-size:14.5px; line-height:1.6; white-space:pre-wrap; }
+
+    .lightbox { position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:99999; cursor:zoom-out; padding:20px; }
+    .lightbox.show { display:flex; }
+    .lightbox img { max-width:96vw; max-height:92vh; border-radius:12px; box-shadow:0 10px 50px rgba(0,0,0,.5); }
+    .msg { text-align:center; color:#c0492a; padding:30px; }
+    .hide { display:none !important; }
+    @media print { body{background:#fff;} .topbar,.bar,.tabs{display:none;} .kid{box-shadow:none;border:1px solid #ddd;} .lightbox{display:none !important;} }
+  </style>
+</head>
+<body>
+
+  <!-- sign-in gate -->
+  <div id="gate" class="gate">
+    <h1>🔐 לוחות הגן</h1>
+    <p>הכניסה לצוות גן לב בלבד.<br>התחברו עם חשבון Google של הגן.</p>
+    <div class="gbtn" id="gbtn"></div>
+    <div class="err" id="gateErr"></div>
+    <div class="hint" id="gateHint"></div>
+  </div>
+
+  <!-- boards -->
+  <div class="wrap hide" id="main">
+    <div class="topbar">
+      <div class="who">שלום <b id="viewerName"></b></div>
+      <button class="btn ghost" onclick="signOut()">יציאה</button>
+    </div>
+    <div class="tabs">
+      <button class="tab on" id="tabNap" onclick="showTab('nap')">🌙 שנת הצהריים</button>
+      <button class="tab" id="tabCards" onclick="showTab('cards')">🗳️ כרטיסים אישיים</button>
+    </div>
+    <div class="bar">
+      <button class="btn print" onclick="window.print()">🖨️ הדפסה</button>
+      <button class="btn ghost" onclick="location.reload()">↻ רענון</button>
+    </div>
+
+    <div id="napWrap">
+      <h1 class="bt" style="color:#3a5b73;">🌙 שנת הצהריים · טקסי הירדמות</h1>
+      <div class="sub">גן לב · מהמבוגר/ת לצעיר/ה</div>
+      <div class="count" id="napCount"></div>
+      <div id="napBoard"></div>
+    </div>
+
+    <div id="cardsWrap" class="hide">
+      <h1 class="bt" style="color:#1F3D34;">🗳️ כרטיסים אישיים</h1>
+      <div class="sub">גן לב · מהמבוגר/ת לצעיר/ה</div>
+      <div class="count" id="cardsCount"></div>
+      <div id="cardsBoard"></div>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox" onclick="this.classList.remove('show')"><img id="lightboxImg" alt=""></div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+  const API = '/.netlify/functions/staff-boards';
+  const GID = '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
+  const NEED_IC = { 'בקבוק':'🍼','מוצץ':'👶','דובי / בובה':'🧸','שמיכה':'☁️','חיתול':'🤍','הנקה':'🤱' };
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const $ = id => document.getElementById(id);
+
+  function zoomPhoto(src) { $('lightboxImg').src = src; $('lightbox').classList.add('show'); }
+  function age(bd){ if(!bd) return ''; const [y,m,d]=bd.split('-').map(Number); const n=new Date(); let mo=(n.getFullYear()-y)*12+(n.getMonth()+1-m); if(n.getDate()<d) mo--; const yy=Math.floor(mo/12), mm=mo%12; return (yy?yy+' ש׳ ':'')+(mm?mm+' ח׳':'') || 'פחות מחודש'; }
+  function fmtBd(bd){ if(!bd) return ''; const [y,m,d]=bd.split('-'); return `${d}.${m}.${y}`; }
+  function napFilled(d){ return !!(d && ((d.needs&&d.needs.length)||d.needs_other||d.ritual||d.notes)); }
+  function cardFilled(d){ return !!(d && ((d.answers&&d.answers.some(a=>a&&a.a))||d.favorite_song||d.photo)); }
+
+  function head(r, withPhoto) {
+    const d = r.data;
+    const img = withPhoto
+      ? ((d && d.photo) ? `<img src="${esc(d.photo)}" alt="" onclick="zoomPhoto(this.src)" title="לחצו להגדלה">` : `<div class="noimg">🧒</div>`)
+      : '';
+    return `<div class="kh">${img}<div><span class="nm">${esc(r.name)}</span>${r.birth_date?`<span class="age">${fmtBd(r.birth_date)} · ${age(r.birth_date)}</span>`:''}</div></div>`;
+  }
+  function napHtml(r) {
+    const d = r.data;
+    if (!napFilled(d)) return `<div class="kid">${head(r,false)}<div class="todo">טרם מולא</div></div>`;
+    const needs = (d.needs||[]).map(n=>`<span class="chip">${NEED_IC[n]||'•'} ${esc(n)}</span>`).join('')
+      + (d.needs_other?`<span class="chip other">➕ ${esc(d.needs_other)}</span>`:'');
+    const blk = (t,v)=> v?`<div class="blk"><div class="t">${t}</div><div class="v">${esc(v)}</div></div>`:'';
+    return `<div class="kid">${head(r,false)}${needs?`<div class="chips">${needs}</div>`:''}${blk('טקס ההירדמות',d.ritual)}${blk('חשוב לדעת',d.notes)}</div>`;
+  }
+  function cardHtml(r) {
+    const d = r.data;
+    if (!cardFilled(d)) return `<div class="kid">${head(r,true)}<div class="todo">טרם מולא</div></div>`;
+    const song = d.favorite_song ? `<div class="song">🎵 שיר אהוב: ${esc(d.favorite_song)}</div>` : '';
+    const qa = (d.answers||[]).filter(a=>a&&a.a).map(a=>`<div class="qa"><div class="q">${esc(a.q)}</div><div class="a">${esc(a.a)}</div></div>`).join('');
+    return `<div class="kid">${head(r,true)}${song}${qa}</div>`;
+  }
+
+  function showTab(which) {
+    const nap = which === 'nap';
+    $('napWrap').classList.toggle('hide', !nap);
+    $('cardsWrap').classList.toggle('hide', nap);
+    $('tabNap').classList.toggle('on', nap);
+    $('tabCards').classList.toggle('on', !nap);
+  }
+
+  function render(d) {
+    $('viewerName').textContent = d.viewer.name || d.viewer.email;
+    const nf = (d.nap||[]).filter(r => napFilled(r.data)).length;
+    const cf = (d.cards||[]).filter(r => cardFilled(r.data)).length;
+    $('napCount').textContent   = `${nf} מתוך ${(d.nap||[]).length} מולאו`;
+    $('cardsCount').textContent = `${cf} מתוך ${(d.cards||[]).length} מולאו`;
+    $('napBoard').innerHTML   = (d.nap||[]).map(napHtml).join('')   || '<div class="msg">אין ילדים להצגה.</div>';
+    $('cardsBoard').innerHTML = (d.cards||[]).map(cardHtml).join('') || '<div class="msg">אין ילדים להצגה.</div>';
+    $('gate').classList.add('hide');
+    $('main').classList.remove('hide');
+    // Deep link: /boards#cards opens straight on the personal cards.
+    if ((location.hash || '').replace('#','') === 'cards') showTab('cards');
+  }
+
+  async function loadBoards(idToken) {
+    const r = await fetch(API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_token: idToken, garden_id: GID }),
+    });
+    const d = await r.json();
+    if (!d.success) { sessionStorage.removeItem('gl_gtoken'); throw new Error(d.error || 'ההתחברות נכשלה'); }
+    sessionStorage.setItem('gl_gtoken', idToken);
+    render(d);
+  }
+
+  function onGoogle(res) {
+    $('gateErr').textContent = 'טוען…';
+    loadBoards(res.credential).catch(e => { $('gateErr').textContent = e.message; });
+  }
+  function signOut() { sessionStorage.removeItem('gl_gtoken'); location.reload(); }
+
+  async function init() {
+    let cfg = {};
+    try { cfg = await (await fetch(API)).json(); } catch (e) {}
+    if (!cfg.configured) {
+      $('gateErr').textContent = 'התחברות Google עדיין לא הוגדרה במערכת.';
+      $('gateHint').textContent = 'צריך להגדיר GOOGLE_CLIENT_ID בהגדרות האתר.';
+      return;
+    }
+    // A token from earlier in this browser session — skip the button.
+    const saved = sessionStorage.getItem('gl_gtoken');
+    if (saved) {
+      try { await loadBoards(saved); return; } catch (e) { /* expired — fall through to the button */ }
+    }
+    const ready = setInterval(() => {
+      if (!(window.google && google.accounts && google.accounts.id)) return;
+      clearInterval(ready);
+      google.accounts.id.initialize({ client_id: cfg.client_id, callback: onGoogle });
+      google.accounts.id.renderButton($('gbtn'), { theme: 'outline', size: 'large', text: 'signin_with', locale: 'he' });
+      $('gateHint').textContent = 'הגישה נפתחת לפי רשימת העובדים הפעילים בגן.';
+    }, 120);
+  }
+  init();
+</script>
+</body>
+</html>
