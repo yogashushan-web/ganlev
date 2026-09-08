@@ -27,9 +27,9 @@ const INK = '#2b2b2b', MUTED = '#9B8E82', BRAND = '#1F3D34', LINE = '#e6dfd4', B
 // Right-to-left: the first column starts at the right edge and walks left.
 const COLS = [
   { key: 'child',   title: 'שם הילד/ה', w: 132, bold: true },
-  { key: 'parent1', title: 'אמא',        w: 116 },
+  { key: 'parent1', title: 'הורה',       w: 116 },
   { key: 'phone1',  title: 'טלפון',      w: 100, ltr: true },
-  { key: 'parent2', title: 'אבא',        w: 116 },
+  { key: 'parent2', title: 'הורה',       w: 116 },
   { key: 'phone2',  title: 'טלפון',      w: 100, ltr: true },
   { key: 'address', title: 'כתובת',      w: 218 },
 ];

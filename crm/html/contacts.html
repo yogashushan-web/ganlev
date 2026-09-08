@@ -24,9 +24,8 @@
 
     .fam { background:#fff; border-radius:14px; padding:14px 16px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
     .kid { font-size:17px; font-weight:800; color:#1F3D34; margin-bottom:9px; }
-    .p { display:flex; align-items:center; gap:8px; padding:5px 0; font-size:14.5px; flex-wrap:wrap; }
-    .p .role { color:#b3a89a; font-size:12px; min-width:34px; }
-    .p .nm { font-weight:600; }
+    .p { display:flex; align-items:center; gap:10px; padding:5px 0; font-size:14.5px; flex-wrap:wrap; }
+    .p .nm { font-weight:600; min-width:120px; }
     .p a { color:#1F7a4f; text-decoration:none; font-weight:700; direction:ltr; }
     .p a:hover { text-decoration:underline; }
     .addr { margin-top:8px; padding-top:9px; border-top:1px solid #f2ede5; color:#6f6457; font-size:13.5px; }
@@ -69,18 +68,17 @@
     return 'https://wa.me/' + intl;
   }
 
-  function person(role, name, phone) {
+  function person(name, phone) {
     if (!name && !phone) return '';
     const tel = phone ? `<a href="tel:${esc(phone)}">${esc(phone)}</a>` : '<span class="none">—</span>';
     const wa  = phone ? `<a href="${waHref(phone)}" target="_blank" rel="noopener" title="וואטסאפ">💬</a>` : '';
-    return `<div class="p"><span class="role">${role}</span>` +
-           `<span class="nm">${name ? esc(name) : '<span class="none">—</span>'}</span>${tel}${wa}</div>`;
+    return `<div class="p"><span class="nm">${name ? esc(name) : '<span class="none">—</span>'}</span>${tel}${wa}</div>`;
   }
 
   function famHtml(r) {
     return `<div class="fam"><div class="kid">${esc(r.child)}</div>` +
-      person('אמא', r.parent1, r.phone1) +
-      person('אבא', r.parent2, r.phone2) +
+      person(r.parent1, r.phone1) +
+      person(r.parent2, r.phone2) +
       (r.address ? `<div class="addr">📍 ${esc(r.address)}</div>` : '') +
       `</div>`;
   }
