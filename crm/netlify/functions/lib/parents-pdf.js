@@ -68,7 +68,7 @@ function cell(doc, text, x, y, w, opts = {}) {
 
 function header(doc, pageW, generatedAt, total) {
   doc.font('bold').fontSize(19).fillColor(BRAND)
-    .text(V('רשימת קשר — הורי גן לב'), M, M, { width: pageW - M * 2, align: 'right' });
+    .text(V('רשימת קשר - גן לב'), M, M, { width: pageW - M * 2, align: 'right' });
   doc.font('reg').fontSize(10).fillColor(MUTED)
     .text(V(`${total} משפחות · עודכן ${generatedAt}`), M, M + 25, { width: pageW - M * 2, align: 'right' });
 }
