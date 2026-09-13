@@ -65,7 +65,7 @@
          זה לוקח פחות מדקה 💛</p>
     </div>
 
-    <!-- step 1: child + phone check -->
+    <!-- step 1: pick the child -->
     <div id="stepPick" class="card">
       <label class="q">שם הילד/ה</label>
       <div class="hint">הקלידו ובחרו מהרשימה</div>
@@ -73,24 +73,15 @@
         <input type="text" class="f" id="acInput" placeholder="הקלידו שם…" autocomplete="off">
         <div class="ac-list" id="acList"></div>
       </div>
-      <div class="picked" id="picked">
-        <span class="nm" id="pickedName"></span>
-        <button type="button" class="x" onclick="clearChild()">×</button>
-      </div>
-
-      <div id="phoneBox" class="hide">
-        <div style="height:22px;"></div>
-        <label class="q">4 הספרות האחרונות של הטלפון שלכם</label>
-        <div class="hint">כדי לוודא שרק ההורים של הילד/ה ממלאים</div>
-        <input type="text" class="f num" id="phone4" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
-        <div style="height:18px;"></div>
-        <button class="send" id="nextBtn" onclick="verify()">המשך</button>
-      </div>
       <div class="err" id="err1"></div>
     </div>
 
     <!-- step 2: the parents' ID numbers -->
     <div id="stepIds" class="card hide">
+      <div class="picked show" style="margin-bottom:18px;">
+        <span class="nm" id="pickedName"></span>
+        <button type="button" class="x" onclick="backToPick()" title="בחירת ילד/ה אחר/ת">×</button>
+      </div>
       <label class="q">מספרי תעודת זהות</label>
       <div class="hint">9 ספרות, כולל ספרת הביקורת. אפשר למלא רק את שלכם, או את של שני ההורים</div>
       <div id="parents"></div>
@@ -150,35 +141,27 @@
     chosen = children.find(c => c.id === id) || null;
     if (!chosen) return;
     $('acList').classList.remove('show');
-    $('acInput').style.display = 'none';
+    $('acInput').value = chosen.name;
     $('pickedName').textContent = chosen.name;
-    $('picked').classList.add('show');
-    $('phoneBox').classList.remove('hide');
-    $('err1').textContent = '';
-    setTimeout(() => $('phone4').focus(), 50);
+    openParents();
   }
-  function clearChild() {
+  function backToPick() {
     chosen = null;
-    $('picked').classList.remove('show');
-    $('phoneBox').classList.add('hide');
-    $('acInput').style.display = ''; $('acInput').value = ''; $('acInput').focus();
+    $('stepIds').classList.add('hide');
+    $('stepPick').classList.remove('hide');
+    $('acInput').value = ''; $('acInput').focus();
   }
-  $('phone4').addEventListener('input', function () { this.value = this.value.replace(/\D/g,'').slice(0,4); });
-  $('phone4').addEventListener('keydown', e => { if (e.key === 'Enter') verify(); });
 
   async function post(body) {
     const r = await fetch(API, { method:'POST', headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ child_id: chosen.id, phone4: $('phone4').value, ...body }) });
+      body: JSON.stringify({ child_id: chosen.id, ...body }) });
     const d = await r.json();
     if (!d.success) throw new Error(d.error || 'שגיאה');
     return d;
   }
 
-  async function verify() {
-    $('err1').textContent = '';
-    if (!chosen) { $('err1').textContent = 'בחרו קודם את שם הילד/ה 🙏'; return; }
-    if ($('phone4').value.length !== 4) { $('err1').textContent = 'הקלידו 4 ספרות'; return; }
-    const btn = $('nextBtn'); btn.disabled = true; btn.textContent = 'בודק…';
+  async function openParents() {
+    $('err1').textContent = 'טוען…';
     try {
       const d = await post({ action:'verify' });
       parents = d.parents || [];
@@ -188,13 +171,13 @@
           <input type="text" class="f num" id="nid${i}" inputmode="numeric" maxlength="9" placeholder="${p.has_id ? 'להשאיר ריק אם אין שינוי' : '9 ספרות'}" autocomplete="off">
         </div>`).join('');
       parents.forEach((_,i) => $('nid'+i).addEventListener('input', function(){ this.value = this.value.replace(/\D/g,'').slice(0,9); }));
+      $('err1').textContent = '';
+      $('err2').textContent = '';
       $('stepPick').classList.add('hide');
       $('stepIds').classList.remove('hide');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
       $('err1').textContent = e.message;
-    } finally {
-      btn.disabled = false; btn.textContent = 'המשך';
     }
   }
 

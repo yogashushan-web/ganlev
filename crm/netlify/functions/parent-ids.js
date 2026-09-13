@@ -1,10 +1,10 @@
 // PUBLIC "תעודות זהות" form — parents add their own national ID numbers.
-// No login: the parent picks the child, then proves they belong to the family
-// with the last 4 digits of a parent phone that is already on file.
+// No login and no verification step (by Yoel's choice): the parent picks the child
+// and the child's parents open up for their ID numbers.
 //
-// GET                                                  -> { children:[{id,name}] }
-// POST { action:'verify', child_id, phone4 }          -> { parents:[{id,name,has_id}] }
-// POST { action:'save',   child_id, phone4, ids:[{parent_id,national_id}] }
+// GET                                         -> { children:[{id,name}] }
+// POST { action:'verify', child_id }          -> { parents:[{id,name,has_id}] }
+// POST { action:'save',   child_id, ids:[{parent_id,national_id}] }
 //
 // IDs are stored in events (calendar='parent-id', category=parent_id), one row per
 // parent, like the nap form — no schema change needed. They are NEVER sent back
@@ -31,21 +31,12 @@ function validIsraeliId(raw) {
 
 async function childParents(gid, childId) {
   const { data, error } = await supabase.from('parents')
-    .select('id,full_name_he,phone,relationship_type')
+    .select('id,full_name_he,relationship_type')
     .eq('garden_id', gid).eq('child_id', childId);
   if (error) throw error;
   // mother first, then father, then anyone else
   const rank = { mother: 0, father: 1 };
   return (data || []).sort((a, b) => (rank[a.relationship_type] ?? 2) - (rank[b.relationship_type] ?? 2));
-}
-
-// The family is verified when phone4 matches the end of any parent phone on file.
-// If nobody in the family has a phone on file there is nothing to check against.
-function verified(parents, phone4) {
-  const phones = parents.map(p => digits(p.phone)).filter(p => p.length >= 4);
-  if (!phones.length) return true;
-  const want = digits(phone4);
-  return want.length === 4 && phones.some(p => p.endsWith(want));
 }
 
 exports.handler = async (event) => {
@@ -71,9 +62,6 @@ exports.handler = async (event) => {
 
     const parents = await childParents(gid, b.child_id);
     if (!parents.length) return json(404, { success: false, error: 'לא מצאנו הורים רשומים לילד/ה הזה/ו — נא לפנות ליואל' });
-    if (!verified(parents, b.phone4)) {
-      return json(403, { success: false, error: 'הספרות לא תואמות לטלפון שרשום אצלנו. נסו את הטלפון של ההורה השני, או פנו ליואל' });
-    }
 
     if (b.action === 'verify') {
       const { data: existing } = await supabase.from('events').select('category')
