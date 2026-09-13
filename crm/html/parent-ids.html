@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>תעודות זהות · גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; direction:rtl; color:#43413c; min-height:100vh;
+      background:linear-gradient(170deg,#FBF7EF 0%,#F4EFE6 60%,#EFE7DA 100%); }
+    .wrap { max-width:560px; margin:0 auto; padding:26px 16px 60px; }
+    .card { background:rgba(255,255,255,.9); border-radius:26px; padding:26px 22px;
+      box-shadow:0 14px 44px rgba(140,120,90,.14); margin-bottom:18px; }
+    .head { text-align:center; }
+    .head .m { font-size:42px; }
+    .head h1 { font-size:26px; color:#1F3D34; margin-top:4px; font-weight:800; }
+    .head p { font-size:14.5px; color:#7d7568; line-height:1.7; margin-top:12px; }
+
+    label.q { display:block; font-size:17px; font-weight:700; color:#1F3D34; margin-bottom:4px; }
+    .hint { font-size:13px; color:#a49b8c; line-height:1.6; margin-bottom:12px; }
+
+    input.f { width:100%; padding:15px 16px; border:2px solid #e8e1d6; border-radius:16px; font-family:'Heebo';
+      font-size:17px; outline:none; background:#fff; transition:border-color .15s; }
+    input.f:focus { border-color:#C4846C; }
+    input.num { direction:ltr; text-align:center; letter-spacing:3px; font-weight:700; }
+
+    /* child picker */
+    .ac { position:relative; }
+    .ac-list { position:absolute; top:calc(100% + 6px); right:0; left:0; background:#fff; border-radius:14px;
+      box-shadow:0 10px 30px rgba(120,100,70,.18); max-height:260px; overflow:auto; z-index:20; display:none; padding:6px; }
+    .ac-list.show { display:block; }
+    .ac-item { padding:12px 14px; border-radius:10px; cursor:pointer; font-size:15.5px; }
+    .ac-item:hover, .ac-item.hl { background:#f6efe7; }
+    .ac-empty { padding:12px 14px; color:#a49b8c; font-size:14px; }
+    .picked { display:none; align-items:center; gap:10px; background:#f6efe7; border-radius:14px; padding:12px 15px; }
+    .picked.show { display:flex; }
+    .picked .nm { font-weight:700; color:#1F3D34; font-size:16px; }
+    .picked .x { margin-right:auto; background:none; border:none; color:#b39a86; font-size:20px; cursor:pointer; }
+
+    .parent { background:#fff; border:2px solid #efe8de; border-radius:18px; padding:16px; margin-bottom:12px; }
+    .parent .pn { font-size:17px; font-weight:800; color:#1F3D34; margin-bottom:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .badge { font-size:12px; font-weight:600; background:#e8f2ec; color:#3d7a5a; border-radius:999px; padding:3px 10px; }
+
+    .send { width:100%; margin-top:6px; background:linear-gradient(135deg,#2c5446,#1F3D34); color:#fff; border:none;
+      padding:17px; border-radius:18px; font-family:'Heebo'; font-weight:800; font-size:18px; cursor:pointer;
+      box-shadow:0 10px 26px rgba(31,61,52,.28); }
+    .send:disabled { opacity:.55; cursor:default; }
+    .err { color:#c0492a; font-size:14px; text-align:center; margin-top:12px; min-height:18px; font-weight:600; line-height:1.6; }
+    .lock { font-size:12.5px; color:#a49b8c; text-align:center; margin-top:14px; line-height:1.6; }
+    .hide { display:none !important; }
+
+    .thanks { text-align:center; padding:20px 10px; }
+    .thanks .big { font-size:58px; }
+    .thanks h2 { font-size:24px; color:#1F3D34; margin:10px 0 8px; }
+    .thanks p { color:#7d7568; font-size:15.5px; line-height:1.7; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card head">
+      <div class="m">🪪</div>
+      <h1>תעודות זהות להורים</h1>
+      <p>לצורך הרישום והמסמכים הרשמיים של הגן, נבקש מכל הורה להוסיף את מספר תעודת הזהות שלו.
+         זה לוקח פחות מדקה 💛</p>
+    </div>
+
+    <!-- step 1: child + phone check -->
+    <div id="stepPick" class="card">
+      <label class="q">שם הילד/ה</label>
+      <div class="hint">הקלידו ובחרו מהרשימה</div>
+      <div class="ac" id="ac">
+        <input type="text" class="f" id="acInput" placeholder="הקלידו שם…" autocomplete="off">
+        <div class="ac-list" id="acList"></div>
+      </div>
+      <div class="picked" id="picked">
+        <span class="nm" id="pickedName"></span>
+        <button type="button" class="x" onclick="clearChild()">×</button>
+      </div>
+
+      <div id="phoneBox" class="hide">
+        <div style="height:22px;"></div>
+        <label class="q">4 הספרות האחרונות של הטלפון שלכם</label>
+        <div class="hint">כדי לוודא שרק ההורים של הילד/ה ממלאים</div>
+        <input type="text" class="f num" id="phone4" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+        <div style="height:18px;"></div>
+        <button class="send" id="nextBtn" onclick="verify()">המשך</button>
+      </div>
+      <div class="err" id="err1"></div>
+    </div>
+
+    <!-- step 2: the parents' ID numbers -->
+    <div id="stepIds" class="card hide">
+      <label class="q">מספרי תעודת זהות</label>
+      <div class="hint">9 ספרות, כולל ספרת הביקורת. אפשר למלא רק את שלכם, או את של שני ההורים</div>
+      <div id="parents"></div>
+      <button class="send" id="saveBtn" onclick="save()">שמירה</button>
+      <div class="err" id="err2"></div>
+      <div class="lock">🔒 המספרים נשמרים במערכת הגן בלבד ולא מוצגים לאף אחד בדף הזה</div>
+    </div>
+
+    <div id="thanks" class="card thanks hide">
+      <div class="big">💛</div>
+      <h2>תודה!</h2>
+      <p id="thanksMsg">הפרטים נשמרו.</p>
+    </div>
+  </div>
+
+<script>
+  const API = '/.netlify/functions/parent-ids';
+  const $ = id => document.getElementById(id);
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let children = [], chosen = null, hl = -1, filtered = [], parents = [];
+
+  function validId(raw) {
+    const id = String(raw||'').replace(/\D/g,'');
+    if (!id || id.length > 9) return false;
+    const p = id.padStart(9,'0'); let sum = 0;
+    for (let i = 0; i < 9; i++) { let n = Number(p[i]) * (i%2+1); sum += n > 9 ? n-9 : n; }
+    return sum % 10 === 0 && Number(p) > 0;
+  }
+
+  async function loadChildren() {
+    try { const d = await (await fetch(API)).json(); children = d.children || []; }
+    catch (e) { children = []; }
+  }
+  function renderAc() {
+    const list = $('acList');
+    if (!filtered.length) { list.innerHTML = '<div class="ac-empty">לא נמצא שם כזה</div>'; list.classList.add('show'); return; }
+    list.innerHTML = filtered.map((c,i) => `<div class="ac-item ${i===hl?'hl':''}" onmousedown="pickChild('${c.id}')">${esc(c.name)}</div>`).join('');
+    list.classList.add('show');
+  }
+  $('acInput').addEventListener('input', function () {
+    const q = this.value.trim();
+    filtered = q ? children.filter(c => c.name.includes(q)) : children.slice(0, 40);
+    hl = -1; renderAc();
+  });
+  $('acInput').addEventListener('focus', function () {
+    filtered = this.value.trim() ? filtered : children.slice(0, 40); renderAc();
+  });
+  $('acInput').addEventListener('keydown', function (e) {
+    if (!filtered.length) return;
+    if (e.key === 'ArrowDown') { hl = Math.min(hl+1, filtered.length-1); renderAc(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { hl = Math.max(hl-1, 0); renderAc(); e.preventDefault(); }
+    else if (e.key === 'Enter' && hl >= 0) { pickChild(filtered[hl].id); e.preventDefault(); }
+  });
+  document.addEventListener('click', e => { if (!$('ac').contains(e.target)) $('acList').classList.remove('show'); });
+
+  function pickChild(id) {
+    chosen = children.find(c => c.id === id) || null;
+    if (!chosen) return;
+    $('acList').classList.remove('show');
+    $('acInput').style.display = 'none';
+    $('pickedName').textContent = chosen.name;
+    $('picked').classList.add('show');
+    $('phoneBox').classList.remove('hide');
+    $('err1').textContent = '';
+    setTimeout(() => $('phone4').focus(), 50);
+  }
+  function clearChild() {
+    chosen = null;
+    $('picked').classList.remove('show');
+    $('phoneBox').classList.add('hide');
+    $('acInput').style.display = ''; $('acInput').value = ''; $('acInput').focus();
+  }
+  $('phone4').addEventListener('input', function () { this.value = this.value.replace(/\D/g,'').slice(0,4); });
+  $('phone4').addEventListener('keydown', e => { if (e.key === 'Enter') verify(); });
+
+  async function post(body) {
+    const r = await fetch(API, { method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ child_id: chosen.id, phone4: $('phone4').value, ...body }) });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.error || 'שגיאה');
+    return d;
+  }
+
+  async function verify() {
+    $('err1').textContent = '';
+    if (!chosen) { $('err1').textContent = 'בחרו קודם את שם הילד/ה 🙏'; return; }
+    if ($('phone4').value.length !== 4) { $('err1').textContent = 'הקלידו 4 ספרות'; return; }
+    const btn = $('nextBtn'); btn.disabled = true; btn.textContent = 'בודק…';
+    try {
+      const d = await post({ action:'verify' });
+      parents = d.parents || [];
+      $('parents').innerHTML = parents.map((p,i) => `
+        <div class="parent">
+          <div class="pn">${esc(p.name)}${p.has_id ? '<span class="badge">✓ כבר נשמר · אפשר לעדכן</span>' : ''}</div>
+          <input type="text" class="f num" id="nid${i}" inputmode="numeric" maxlength="9" placeholder="${p.has_id ? 'להשאיר ריק אם אין שינוי' : '9 ספרות'}" autocomplete="off">
+        </div>`).join('');
+      parents.forEach((_,i) => $('nid'+i).addEventListener('input', function(){ this.value = this.value.replace(/\D/g,'').slice(0,9); }));
+      $('stepPick').classList.add('hide');
+      $('stepIds').classList.remove('hide');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      $('err1').textContent = e.message;
+    } finally {
+      btn.disabled = false; btn.textContent = 'המשך';
+    }
+  }
+
+  async function save() {
+    $('err2').textContent = '';
+    const ids = parents.map((p,i) => ({ parent_id: p.id, name: p.name, national_id: $('nid'+i).value.trim() }))
+      .filter(e => e.national_id);
+    if (!ids.length) { $('err2').textContent = 'הקלידו לפחות מספר תעודת זהות אחד'; return; }
+    const bad = ids.find(e => !validId(e.national_id));
+    if (bad) { $('err2').textContent = 'המספר של ' + bad.name + ' לא תקין. בדקו שהוקלדו 9 ספרות נכונות'; return; }
+    const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'שומר…';
+    try {
+      await post({ action:'save', ids: ids.map(({parent_id, national_id}) => ({ parent_id, national_id })) });
+      $('stepIds').classList.add('hide');
+      $('thanksMsg').textContent = 'שמרנו את ' + (ids.length > 1 ? 'מספרי תעודות הזהות של ' : 'מספר תעודת הזהות של ') + ids.map(e => e.name).join(' ו') + '.';
+      $('thanks').classList.remove('hide');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      $('err2').textContent = 'לא הצלחנו לשמור: ' + e.message;
+      btn.disabled = false; btn.textContent = 'שמירה';
+    }
+  }
+
+  loadChildren();
+</script>
+</body>
+</html>

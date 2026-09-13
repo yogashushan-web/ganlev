@@ -52,6 +52,11 @@
     .song { background:#fbf4ef; border-radius:10px; padding:8px 12px; font-size:14px; color:#a05a3d; margin:6px 0 10px; }
     .qa { margin-top:9px; } .qa .q { font-size:12.5px; font-weight:700; color:#a05a3d; } .qa .a { font-size:14.5px; line-height:1.6; white-space:pre-wrap; }
 
+    /* parent IDs palette (owner only) */
+    #idsBoard .kid { border-top:4px solid #8a9a5b; } #idsBoard .kh .nm { color:#1F3D34; }
+    .prow { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px dashed #eee6da; font-size:15px; }
+    .prow .nid { direction:ltr; font-weight:700; letter-spacing:1px; } .prow .miss { color:#c48a3a; font-weight:700; font-size:13.5px; }
+
     .lightbox { position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:99999; cursor:zoom-out; padding:20px; }
     .lightbox.show { display:flex; }
     .lightbox img { max-width:96vw; max-height:92vh; border-radius:12px; box-shadow:0 10px 50px rgba(0,0,0,.5); }
@@ -80,6 +85,7 @@
     <div class="tabs">
       <button class="tab on" id="tabNap" onclick="showTab('nap')">🌙 שנת הצהריים</button>
       <button class="tab" id="tabCards" onclick="showTab('cards')">🗳️ כרטיסים אישיים</button>
+      <button class="tab hide" id="tabIds" onclick="showTab('ids')">🪪 תעודות זהות</button>
     </div>
     <div class="bar">
       <button class="btn print" onclick="window.print()">🖨️ הדפסה</button>
@@ -98,6 +104,13 @@
       <div class="sub">גן לב · מהמבוגר/ת לצעיר/ה</div>
       <div class="count" id="cardsCount"></div>
       <div id="cardsBoard"></div>
+    </div>
+
+    <div id="idsWrap" class="hide">
+      <h1 class="bt" style="color:#1F3D34;">🪪 תעודות זהות של ההורים</h1>
+      <div class="sub">גן לב · נאסף בקישור ganlev.netlify.app/id · גלוי רק לך</div>
+      <div class="count" id="idsCount"></div>
+      <div id="idsBoard"></div>
     </div>
   </div>
 
@@ -140,12 +153,18 @@
     return `<div class="kid">${head(r,true)}${song}${qa}</div>`;
   }
 
+  function idsHtml(r) {
+    const rows = (r.parents||[]).map(p => `<div class="prow"><span>${esc(p.name)}</span>${p.national_id
+      ? `<span class="nid">${esc(p.national_id)}</span>` : '<span class="miss">טרם מולא</span>'}</div>`).join('')
+      || '<div class="todo">אין הורים רשומים</div>';
+    return `<div class="kid">${head(r,false)}${rows}</div>`;
+  }
+
   function showTab(which) {
-    const nap = which === 'nap';
-    $('napWrap').classList.toggle('hide', !nap);
-    $('cardsWrap').classList.toggle('hide', nap);
-    $('tabNap').classList.toggle('on', nap);
-    $('tabCards').classList.toggle('on', !nap);
+    [['nap','Nap'],['cards','Cards'],['ids','Ids']].forEach(([k,K]) => {
+      $(k+'Wrap').classList.toggle('hide', which !== k);
+      $('tab'+K).classList.toggle('on', which === k);
+    });
   }
 
   function render(d) {
@@ -156,10 +175,17 @@
     $('cardsCount').textContent = `${cf} מתוך ${(d.cards||[]).length} מולאו`;
     $('napBoard').innerHTML   = (d.nap||[]).map(napHtml).join('')   || '<div class="msg">אין ילדים להצגה.</div>';
     $('cardsBoard').innerHTML = (d.cards||[]).map(cardHtml).join('') || '<div class="msg">אין ילדים להצגה.</div>';
+    if (d.ids) {
+      const all = d.ids.flatMap(r => r.parents||[]);
+      $('idsCount').textContent = `${all.filter(p => p.national_id).length} מתוך ${all.length} הורים מילאו`;
+      $('idsBoard').innerHTML = d.ids.map(idsHtml).join('') || '<div class="msg">אין ילדים להצגה.</div>';
+      $('tabIds').classList.remove('hide');
+    }
     $('gate').classList.add('hide');
     $('main').classList.remove('hide');
-    // Deep link: /boards#cards opens straight on the personal cards.
-    if ((location.hash || '').replace('#','') === 'cards') showTab('cards');
+    // Deep link: /boards#cards opens straight on the personal cards (#ids on the IDs, owner only).
+    const hash = (location.hash || '').replace('#','');
+    if (hash === 'cards' || (hash === 'ids' && d.ids)) showTab(hash);
   }
 
   async function loadBoards(idToken) {

@@ -103,6 +103,12 @@
   to = "/crm/html/registration.html"
   status = 200
 
+# Short link for the public "תעודות זהות" form — parents add their national ID numbers.
+[[redirects]]
+  from = "/id"
+  to = "/crm/html/parent-ids.html"
+  status = 200
+
 # Short link for the public "ימי היכרות" August visit booking (share with parents).
 [[redirects]]
   from = "/visit"
