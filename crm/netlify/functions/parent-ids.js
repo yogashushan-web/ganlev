@@ -12,22 +12,9 @@
 
 const { supabase } = require('./lib/db');
 const { GARDEN_DEFAULT, orderedChildren } = require('./lib/boards');
+const { digits, validIsraeliId, saveParentId } = require('./lib/parent-id');
 
 const json = (c, b) => ({ statusCode: c, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
-const digits = s => String(s == null ? '' : s).replace(/\D/g, '');
-
-// Israeli ID check digit (9 digits, shorter numbers are left-padded with zeros).
-function validIsraeliId(raw) {
-  const id = digits(raw);
-  if (!id || id.length > 9) return false;
-  const p = id.padStart(9, '0');
-  let sum = 0;
-  for (let i = 0; i < 9; i++) {
-    let n = Number(p[i]) * (i % 2 + 1);
-    sum += n > 9 ? n - 9 : n;
-  }
-  return sum % 10 === 0 && Number(p) > 0;
-}
 
 async function childParents(gid, childId) {
   const { data, error } = await supabase.from('parents')
@@ -86,19 +73,9 @@ exports.handler = async (event) => {
         }
       }
 
-      const today = new Date().toISOString().slice(0, 10);
       for (const e of entries) {
         const p = byId[e.parent_id];
-        await supabase.from('events').delete().eq('garden_id', gid).eq('calendar', 'parent-id').eq('category', p.id);
-        const { error } = await supabase.from('events').insert({
-          garden_id: gid, calendar: 'parent-id', category: p.id,
-          title: p.full_name_he, event_date: today,
-          notes: JSON.stringify({
-            parent_id: p.id, child_id: b.child_id, parent_name: p.full_name_he,
-            national_id: digits(e.national_id).padStart(9, '0'), updated_at: new Date().toISOString(),
-          }),
-        });
-        if (error) throw error;
+        await saveParentId(gid, { parent_id: p.id, parent_name: p.full_name_he, child_id: b.child_id, national_id: e.national_id });
       }
       return json(200, { success: true, saved: entries.length });
     }
@@ -109,5 +86,3 @@ exports.handler = async (event) => {
     return json(500, { success: false, error: e.message });
   }
 };
-
-module.exports.validIsraeliId = validIsraeliId;

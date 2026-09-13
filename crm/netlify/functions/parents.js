@@ -6,6 +6,7 @@
 
 const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
+const { validIsraeliId, saveParentId } = require('./lib/parent-id');
 
 const handler = withAuth(async (event) => {
   try {
@@ -39,7 +40,7 @@ const handler = withAuth(async (event) => {
 
     if (event.httpMethod === 'POST') {
       // Create parent
-      const { child_id, full_name_he, phone, email, relationship_type, is_primary, address, occupation } = JSON.parse(event.body || '{}');
+      const { child_id, full_name_he, phone, email, relationship_type, is_primary, address, occupation, national_id } = JSON.parse(event.body || '{}');
 
       if (!full_name_he) {
         return {
@@ -65,6 +66,15 @@ const handler = withAuth(async (event) => {
         .single();
 
       if (error) throw error;
+
+      // National ID (e.g. read from the signed contract) lives with the /id form's
+      // submissions. Only a valid number is kept; a failure never blocks the parent.
+      if (national_id && validIsraeliId(national_id)) {
+        try {
+          await saveParentId(garden_id, { parent_id: data.id, parent_name: full_name_he, child_id: child_id || null, national_id });
+          data.national_id_saved = true;
+        } catch (e) { console.error('saveParentId failed:', e); }
+      }
 
       await auditLog(garden_id, user.id, 'created', 'parents', data.id, { child_id, full_name_he });
 
