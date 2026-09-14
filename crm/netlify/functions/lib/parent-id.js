@@ -34,4 +34,34 @@ async function saveParentId(gid, { parent_id, parent_name, child_id, national_id
   if (error) throw error;
 }
 
-module.exports = { digits, validIsraeliId, saveParentId };
+// Each current child with its parents and their stored ID numbers (owner-only views).
+async function buildIdsBoard(gid) {
+  const { orderedChildren } = require('./boards');
+  const kids = await orderedChildren(gid);
+  const [{ data: parents }, { data: rows }] = await Promise.all([
+    supabase.from('parents').select('id,child_id,full_name_he,relationship_type').eq('garden_id', gid),
+    supabase.from('events').select('category,notes').eq('garden_id', gid).eq('calendar', 'parent-id'),
+  ]);
+  const idOf = {};
+  (rows || []).forEach(r => { try { idOf[r.category] = JSON.parse(r.notes || '{}').national_id || ''; } catch (_) {} });
+  const rank = { mother: 0, father: 1 };
+  return kids.map(k => ({
+    ...k,
+    parents: (parents || []).filter(p => p.child_id === k.id)
+      .sort((a, b) => (rank[a.relationship_type] ?? 2) - (rank[b.relationship_type] ?? 2))
+      .map(p => ({ name: p.full_name_he, national_id: idOf[p.id] || '' })),
+  }));
+}
+
+function idsText(rows) {
+  const lines = ['תעודות זהות של ההורים — גן לב', ''];
+  rows.forEach(r => {
+    lines.push('— ' + r.name + ' —');
+    if (!r.parents.length) lines.push('אין הורים רשומים');
+    r.parents.forEach(p => lines.push(p.name + ': ' + (p.national_id || 'טרם מולא')));
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
+module.exports = { digits, validIsraeliId, saveParentId, buildIdsBoard, idsText };

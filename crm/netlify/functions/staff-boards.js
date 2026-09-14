@@ -6,7 +6,8 @@
 // POST { id_token, garden_id } -> { viewer, nap: rows, cards: rows }
 
 const { supabase } = require('./lib/db');
-const { GARDEN_DEFAULT, buildBoard, orderedChildren } = require('./lib/boards');
+const { GARDEN_DEFAULT, buildBoard } = require('./lib/boards');
+const { buildIdsBoard } = require('./lib/parent-id');
 
 const json = (c, b) => ({ statusCode: c, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
 const norm = e => (e || '').trim().toLowerCase();
@@ -21,24 +22,6 @@ async function verifyGoogleToken(idToken, clientId) {
   if (String(info.email_verified) !== 'true') return null;          // unverified Google address
   if (Number(info.exp) * 1000 < Date.now()) return null;            // expired
   return { email: norm(info.email), name: info.name || '' };
-}
-
-// Each current child with its parents and the ID numbers they submitted on /id.
-async function buildIdsBoard(gid) {
-  const kids = await orderedChildren(gid);
-  const [{ data: parents }, { data: rows }] = await Promise.all([
-    supabase.from('parents').select('id,child_id,full_name_he,relationship_type').eq('garden_id', gid),
-    supabase.from('events').select('category,notes').eq('garden_id', gid).eq('calendar', 'parent-id'),
-  ]);
-  const idOf = {};
-  (rows || []).forEach(r => { try { idOf[r.category] = JSON.parse(r.notes || '{}').national_id || ''; } catch (_) {} });
-  const rank = { mother: 0, father: 1 };
-  return kids.map(k => ({
-    ...k,
-    parents: (parents || []).filter(p => p.child_id === k.id)
-      .sort((a, b) => (rank[a.relationship_type] ?? 2) - (rank[b.relationship_type] ?? 2))
-      .map(p => ({ name: p.full_name_he, national_id: idOf[p.id] || '' })),
-  }));
 }
 
 exports.handler = async (event) => {

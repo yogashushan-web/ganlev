@@ -92,6 +92,7 @@
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
       <button class="btn-add" style="background:#2D5A50;" onclick="location.href='visit-manage.html'">🏠 ימי היכרות</button>
       <button class="btn-add" id="cardsBoardBtn" style="background:#C4846C; display:none;" onclick="openCardsBoard()">🗳️ לוח כרטיסים מלא</button>
+      <button class="btn-add" id="idsBoardBtn" style="background:#8a9a5b; display:none;" onclick="openIdsBoard()">🪪 תעודות זהות הורים</button>
       <button class="btn-add" onclick="toggleForm()">+ הוסף ילד</button>
     </div>
   </div>
@@ -651,8 +652,9 @@ async function openCardView(id) {
 }
 
 let OWNER_KEY = '';
-(async function () { try { const r = await api.getOwnerKey(); OWNER_KEY = r.admin_key || ''; if (OWNER_KEY) document.getElementById('cardsBoardBtn').style.display = ''; } catch (e) {} })();
+(async function () { try { const r = await api.getOwnerKey(); OWNER_KEY = r.admin_key || ''; if (OWNER_KEY) { document.getElementById('cardsBoardBtn').style.display = ''; document.getElementById('idsBoardBtn').style.display = ''; } } catch (e) {} })();
 function openCardsBoard() { if (OWNER_KEY) window.open('cards-board.html?admin=' + encodeURIComponent(OWNER_KEY), '_blank'); }
+function openIdsBoard() { if (OWNER_KEY) window.open('ids-board.html?admin=' + encodeURIComponent(OWNER_KEY), '_blank'); }
 
 renderYearTabs();
 loadChildren();

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>תעודות זהות של ההורים — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#2b2b2b; direction:rtl; }
+    .wrap { max-width:820px; margin:0 auto; padding:24px 18px 60px; }
+    .bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+    .btn { border:none; padding:11px 18px; border-radius:11px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; }
+    .btn.print { background:#1F3D34; color:#fff; } .btn.mail { background:#5f93b8; color:#fff; } .btn.ghost { background:#efe9e0; color:#6f6457; }
+    h1 { font-size:24px; color:#1F3D34; text-align:center; margin-bottom:4px; }
+    .sub { text-align:center; color:#9B8E82; font-size:13px; margin-bottom:6px; }
+    .count { text-align:center; color:#b3a89a; font-size:12.5px; margin-bottom:18px; }
+    .kid { background:#fff; border-radius:14px; padding:14px 18px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:14px; break-inside:avoid; border-top:4px solid #8a9a5b; }
+    .nm { font-size:18px; font-weight:800; color:#1F3D34; margin-bottom:6px; }
+    .prow { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px dashed #eee6da; font-size:15px; }
+    .nid { direction:ltr; font-weight:700; letter-spacing:1px; }
+    .miss { color:#c48a3a; font-weight:700; font-size:13.5px; }
+    .msg { text-align:center; color:#c0492a; padding:30px; }
+    @media print { body{background:#fff;} .bar{display:none;} .kid{box-shadow:none;border:1px solid #ddd;} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar">
+      <button class="btn print" onclick="window.print()">🖨️ הדפסה</button>
+      <button class="btn mail" onclick="emailBoard()">✉️ שלח למייל</button>
+      <button class="btn ghost" onclick="location.reload()">↻ רענון</button>
+    </div>
+    <h1>🪪 תעודות זהות של ההורים</h1>
+    <div class="sub">גן לב · נאסף מהחוזים ומהקישור ganlev.netlify.app/id</div>
+    <div class="count" id="count"></div>
+    <div id="board"><div class="msg">טוען…</div></div>
+  </div>
+<script>
+  const API = '/.netlify/functions/child-boards';
+  const GID = '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
+  const KEY = new URLSearchParams(location.search).get('admin') || '';
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const $ = id => document.getElementById(id);
+
+  function kidHtml(r) {
+    const rows = (r.parents||[]).map(p => `<div class="prow"><span>${esc(p.name)}</span>${p.national_id
+      ? `<span class="nid">${esc(p.national_id)}</span>` : '<span class="miss">טרם מולא</span>'}</div>`).join('')
+      || '<div class="miss">אין הורים רשומים</div>';
+    return `<div class="kid"><div class="nm">${esc(r.name)}</div>${rows}</div>`;
+  }
+
+  async function load() {
+    if (!KEY) { $('board').innerHTML = '<div class="msg">קישור לא תקין — חסר קוד גישה.</div>'; return; }
+    try {
+      const d = await (await fetch(`${API}?garden_id=${GID}&type=ids&admin=${encodeURIComponent(KEY)}`)).json();
+      if (!d.success) { $('board').innerHTML = '<div class="msg">אין הרשאה.</div>'; return; }
+      const rows = (d.rows||[]).slice().sort((a,b) => a.name.localeCompare(b.name,'he'));
+      const all = rows.flatMap(r => r.parents||[]);
+      $('count').textContent = `${all.filter(p => p.national_id).length} מתוך ${all.length} הורים מילאו`;
+      $('board').innerHTML = rows.map(kidHtml).join('') || '<div class="msg">אין ילדים להצגה.</div>';
+    } catch (e) { $('board').innerHTML = '<div class="msg">שגיאה: ' + esc(e.message) + '</div>'; }
+  }
+  async function emailBoard() {
+    try { const r = await (await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'email',type:'ids',garden_id:GID,admin:KEY})})).json();
+      alert(r.success ? 'הרשימה נשלחה למייל 📩' : ('שגיאה: '+(r.error||''))); } catch (e) { alert('שגיאה: '+e.message); }
+  }
+  load();
+</script>
+</body>
+</html>
