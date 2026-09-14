@@ -60,7 +60,7 @@
   <div class="year-tabs" id="yearTabs"></div>
 
   <div class="toolbar">
-    <input type="text" id="search" placeholder="🔍 חיפוש לפי שם הורה / ילד / טלפון / עיסוק...">
+    <input type="text" id="search" placeholder="🔍 חיפוש לפי שם הורה / ילד / טלפון / מייל / עיסוק...">
     <span class="count-pill" id="countPill">—</span>
   </div>
 
@@ -80,7 +80,7 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label>עיסוק</label><input type="text" id="pOccupation"></div>
-        <div class="form-group"></div>
+        <div class="form-group"><label>כתובת מייל</label><input type="email" id="pEmail" dir="ltr"></div>
       </div>
       <datalist id="childList"></datalist>
       <div style="display:flex; gap:10px; margin-top:8px;">
@@ -175,7 +175,7 @@ function renderTable() {
     const c = parentChild(p);
     const childName = c ? childFull(c) : pp.child;        // prefer the child_id-linked name
     p._child = childName;
-    const hay = ((p.full_name_he || '') + ' ' + (p.phone || '') + ' ' + (p.occupation || '') + ' ' + (p.address || '') + ' ' + childName).toLowerCase();
+    const hay = ((p.full_name_he || '') + ' ' + (p.phone || '') + ' ' + (p.email || '') + ' ' + (p.occupation || '') + ' ' + (p.address || '') + ' ' + childName).toLowerCase();
     if (q && !hay.includes(q.toLowerCase())) return;
     if (childName) (groups[childName] = groups[childName] || []).push(p);
     else noChild.push(p);
@@ -198,6 +198,7 @@ function renderTable() {
   const parentRow = p =>
     `<td><b>${esc(p._name)}</b></td>` +
     `<td class="ltr">${p.phone ? `<a class="tel" href="${waHref(p.phone)}" target="_blank">💬 ${esc(p.phone)}</a>` : '<span class="muted">-</span>'}</td>` +
+    `<td class="ltr">${p.email ? `<a class="tel" href="mailto:${attr(p.email)}">✉️ ${esc(p.email)}</a>` : '<span class="muted">-</span>'}</td>` +
     `<td>${p.address ? esc(p.address) : '<span class="muted">-</span>'}</td>` +
     `<td>${p.occupation ? esc(p.occupation) : '<span class="muted">-</span>'}</td>` +
     `<td style="display:flex; gap:6px;"><button class="btn-edit" onclick="editParent('${p.id}')">ערוך</button>` +
@@ -223,7 +224,7 @@ function renderTable() {
 
   document.getElementById('table').innerHTML = `
     <div class="tbl-wrap"><table>
-      <thead><tr><th>ילד</th><th>הורה</th><th>מספר טלפון נייד</th><th>כתובת מגורים</th><th>עיסוק</th><th>פעולות</th></tr></thead>
+      <thead><tr><th>ילד</th><th>הורה</th><th>מספר טלפון נייד</th><th>מייל</th><th>כתובת מגורים</th><th>עיסוק</th><th>פעולות</th></tr></thead>
       <tbody>${body}</tbody>
     </table></div>`;
 }
@@ -245,6 +246,7 @@ function editParent(id) {
   document.getElementById('pName').value = pp.name;
   document.getElementById('pChild').value = pp.child;
   document.getElementById('pPhone').value = p.phone || '';
+  document.getElementById('pEmail').value = p.email || '';
   document.getElementById('pAddress').value = p.address || '';
   document.getElementById('pOccupation').value = p.occupation || '';
   document.getElementById('form').classList.add('show');
@@ -266,6 +268,7 @@ document.getElementById('parentForm').addEventListener('submit', async (e) => {
   const data = {
     full_name_he: child ? `${name} (${child})` : name,
     phone: document.getElementById('pPhone').value || null,
+    email: document.getElementById('pEmail').value.trim() || null,
     address: document.getElementById('pAddress').value || null,
     occupation: document.getElementById('pOccupation').value || null,
   };
