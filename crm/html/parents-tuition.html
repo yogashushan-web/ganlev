@@ -48,6 +48,14 @@
     .year-tab { padding:9px 18px; border:none; background:#fff; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; color:#9B8E82; box-shadow:0 2px 8px rgba(0,0,0,.04); transition:all .15s; }
     .year-tab:hover { background:#f1ece3; }
     .year-tab.active { background:#1F3D34; color:#fff; }
+    /* detail chips: click copies, hover shows the value */
+    .chips { display:flex; gap:5px; flex-wrap:wrap; }
+    .chip { border:1px solid #e3ddd2; background:#fff; color:#3D3228; border-radius:999px; padding:3px 10px; font-family:'Heebo'; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .12s; }
+    .chip:hover { background:#1F3D34; color:#fff; border-color:#1F3D34; }
+    .chip.off { color:#c4bcae; border-style:dashed; background:transparent; }
+    .chip.off:hover { background:#f6f2ec; color:#9B8E82; border-color:#d8d0c3; }
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#1F3D34; color:#fff; padding:10px 18px; border-radius:12px; font-size:14px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.18); opacity:0; pointer-events:none; transition:all .2s; z-index:9999; max-width:90vw; direction:rtl; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
@@ -82,6 +90,10 @@
         <div class="form-group"><label>עיסוק</label><input type="text" id="pOccupation"></div>
         <div class="form-group"><label>כתובת מייל</label><input type="email" id="pEmail" dir="ltr"></div>
       </div>
+      <div class="form-row">
+        <div class="form-group"><label>תעודת זהות</label><input type="text" id="pNationalId" dir="ltr" inputmode="numeric" maxlength="9" placeholder="9 ספרות"></div>
+        <div class="form-group"></div>
+      </div>
       <datalist id="childList"></datalist>
       <div style="display:flex; gap:10px; margin-top:8px;">
         <button type="submit" class="btn-submit">שמור</button>
@@ -113,6 +125,45 @@ function selectYear(y) { selectedYear = y; renderYearTabs(); renderTable(); }
 const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
 const attr = s => (s == null ? '' : String(s)).replace(/"/g, '&quot;');
 const norm = s => (s || '').replace(/\s+/g, ' ').trim();
+
+// ---- detail chips: email / ID / address / occupation. Click copies, hover shows. ----
+const dattr = s => (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+const CHIPS = [
+  { key: 'email',       icon: '✉️', label: 'מייל' },
+  { key: 'national_id', icon: '🪪', label: 'ת"ז' },
+  { key: 'address',     icon: '🏠', label: 'כתובת' },
+  { key: 'occupation',  icon: '💼', label: 'עיסוק' },
+];
+function chips(p) {
+  return '<div class="chips">' + CHIPS.map(c => {
+    const v = p[c.key] || '';
+    return `<button type="button" class="chip${v ? '' : ' off'}" data-v="${dattr(v)}" data-l="${dattr(c.label)}" title="${v ? dattr(v) : 'חסר'}" onclick="copyChip(this)">${c.icon} ${c.label}</button>`;
+  }).join('') + '</div>';
+}
+async function copyChip(btn) {
+  const v = btn.dataset.v, l = btn.dataset.l;
+  if (!v) { toast(l + ' — חסר. אפשר להוסיף דרך "ערוך"'); return; }
+  try { await navigator.clipboard.writeText(v); }
+  catch (e) {
+    const t = document.createElement('textarea'); t.value = v; document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (_) {} t.remove();
+  }
+  toast('✓ הועתק: ' + v);
+}
+let toastTimer;
+function toast(msg) {
+  let el = document.getElementById('toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+function validId(raw) {
+  const id = String(raw || '').replace(/\D/g, '');
+  if (!id || id.length > 9) return false;
+  const p = id.padStart(9, '0'); let sum = 0;
+  for (let i = 0; i < 9; i++) { const n = Number(p[i]) * (i % 2 + 1); sum += n > 9 ? n - 9 : n; }
+  return sum % 10 === 0 && Number(p) > 0;
+}
 
 // "ParentName (ChildName)" -> { name, child }
 function parseParent(p) {
@@ -175,7 +226,7 @@ function renderTable() {
     const c = parentChild(p);
     const childName = c ? childFull(c) : pp.child;        // prefer the child_id-linked name
     p._child = childName;
-    const hay = ((p.full_name_he || '') + ' ' + (p.phone || '') + ' ' + (p.email || '') + ' ' + (p.occupation || '') + ' ' + (p.address || '') + ' ' + childName).toLowerCase();
+    const hay = ((p.full_name_he || '') + ' ' + (p.phone || '') + ' ' + (p.email || '') + ' ' + (p.national_id || '') + ' ' + (p.occupation || '') + ' ' + (p.address || '') + ' ' + childName).toLowerCase();
     if (q && !hay.includes(q.toLowerCase())) return;
     if (childName) (groups[childName] = groups[childName] || []).push(p);
     else noChild.push(p);
@@ -198,9 +249,7 @@ function renderTable() {
   const parentRow = p =>
     `<td><b>${esc(p._name)}</b></td>` +
     `<td class="ltr">${p.phone ? `<a class="tel" href="${waHref(p.phone)}" target="_blank">💬 ${esc(p.phone)}</a>` : '<span class="muted">-</span>'}</td>` +
-    `<td class="ltr">${p.email ? `<a class="tel" href="mailto:${attr(p.email)}">✉️ ${esc(p.email)}</a>` : '<span class="muted">-</span>'}</td>` +
-    `<td>${p.address ? esc(p.address) : '<span class="muted">-</span>'}</td>` +
-    `<td>${p.occupation ? esc(p.occupation) : '<span class="muted">-</span>'}</td>` +
+    `<td>${chips(p)}</td>` +
     `<td style="display:flex; gap:6px;"><button class="btn-edit" onclick="editParent('${p.id}')">ערוך</button>` +
     `<button class="btn-delete" onclick="deleteParent('${p.id}')">מחק</button></td>`;
 
@@ -224,7 +273,7 @@ function renderTable() {
 
   document.getElementById('table').innerHTML = `
     <div class="tbl-wrap"><table>
-      <thead><tr><th>ילד</th><th>הורה</th><th>מספר טלפון נייד</th><th>מייל</th><th>כתובת מגורים</th><th>עיסוק</th><th>פעולות</th></tr></thead>
+      <thead><tr><th>ילד</th><th>הורה</th><th>מספר טלפון נייד</th><th>פרטים</th><th>פעולות</th></tr></thead>
       <tbody>${body}</tbody>
     </table></div>`;
 }
@@ -247,6 +296,7 @@ function editParent(id) {
   document.getElementById('pChild').value = pp.child;
   document.getElementById('pPhone').value = p.phone || '';
   document.getElementById('pEmail').value = p.email || '';
+  document.getElementById('pNationalId').value = p.national_id || '';
   document.getElementById('pAddress').value = p.address || '';
   document.getElementById('pOccupation').value = p.occupation || '';
   document.getElementById('form').classList.add('show');
@@ -269,9 +319,11 @@ document.getElementById('parentForm').addEventListener('submit', async (e) => {
     full_name_he: child ? `${name} (${child})` : name,
     phone: document.getElementById('pPhone').value || null,
     email: document.getElementById('pEmail').value.trim() || null,
+    national_id: document.getElementById('pNationalId').value.replace(/\D/g, '') || null,
     address: document.getElementById('pAddress').value || null,
     occupation: document.getElementById('pOccupation').value || null,
   };
+  if (data.national_id && !validId(data.national_id)) { showError('מספר תעודת הזהות לא תקין — בדקו את 9 הספרות'); return; }
   try {
     const res = editingId ? await api.updateParent(editingId, data) : await api.createParent(data);
     if (res.success) { showSuccess(editingId ? 'ההורה עודכן' : 'ההורה נוסף'); toggleForm(); resetForm(); loadParents(); }

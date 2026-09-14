@@ -32,6 +32,13 @@ const handler = withAuth(async (event) => {
 
       if (error) throw error;
 
+      // Attach each parent's national ID (kept in events, see lib/parent-id.js).
+      const { data: idRows } = await supabase.from('events').select('category,notes')
+        .eq('garden_id', garden_id).eq('calendar', 'parent-id');
+      const idOf = {};
+      (idRows || []).forEach(r => { try { idOf[r.category] = JSON.parse(r.notes || '{}').national_id || null; } catch (_) {} });
+      (data || []).forEach(p => { p.national_id = idOf[p.id] || null; });
+
       return {
         statusCode: 200,
         body: JSON.stringify({ success: true, data }),
@@ -85,8 +92,11 @@ const handler = withAuth(async (event) => {
     }
 
     if (event.httpMethod === 'PUT') {
-      // Update parent
-      const body = JSON.parse(event.body || '{}');
+      // Update parent. national_id is not a parents column — it is stored separately.
+      const { national_id, ...body } = JSON.parse(event.body || '{}');
+      if (national_id && !validIsraeliId(national_id)) {
+        return { statusCode: 400, body: JSON.stringify({ success: false, error: 'מספר תעודת הזהות לא תקין' }) };
+      }
 
       const { data: existing } = await supabase
         .from('parents')
@@ -110,6 +120,14 @@ const handler = withAuth(async (event) => {
         .single();
 
       if (error) throw error;
+
+      if (national_id !== undefined) {
+        if (national_id) {
+          await saveParentId(garden_id, { parent_id: parentId, parent_name: data.full_name_he, child_id: data.child_id, national_id });
+        } else {
+          await supabase.from('events').delete().eq('garden_id', garden_id).eq('calendar', 'parent-id').eq('category', parentId);
+        }
+      }
 
       await auditLog(garden_id, user.id, 'updated', 'parents', parentId, body);
 
