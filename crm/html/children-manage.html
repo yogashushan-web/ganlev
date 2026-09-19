@@ -81,6 +81,15 @@
     .contract-drop .cd-sub { font-size:12px; color:#9B8E82; }
     .cd-status { margin-top:9px; font-size:13px; font-weight:700; }
 
+    /* ---- עריכה מהירה בתוך הטבלה ---- */
+    .ie { cursor:text; border-bottom:1px dashed transparent; padding:1px 3px; border-radius:4px; }
+    .ie:hover { border-bottom-color:#C4846C; background:#fdf8f4; }
+    .ie-input { width:100%; min-width:95px; padding:5px 7px; border:1.5px solid #1F3D34; border-radius:7px; font-family:'Heebo'; font-size:13px; outline:none; }
+    .gsel { border:1px solid #e3ddd2; border-radius:999px; padding:3px 9px; font-family:'Heebo'; font-size:12px; font-weight:700; background:#fff; color:#3D3228; cursor:pointer; }
+    .gsel.g-m { background:#eaf2f8; border-color:#cfe0ec; color:#3a6d92; }
+    .gsel.g-f { background:#fbf1ec; border-color:#f0d9cd; color:#a05a3d; }
+    .add-hint { color:#c4bcae; font-size:12.5px; }
+
     /* ---- פס סיכום: מין, גילים, שלמות נתונים ---- */
     .stats { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
     .stat { background:#fff; border-radius:14px; padding:14px 16px; box-shadow:0 2px 10px rgba(0,0,0,.05); flex:1; min-width:215px; }
@@ -448,17 +457,13 @@ function renderTable() {
   }
 
   const rows = list.map(c => {
-    const g = c.gender_he;
-    const gBadge = g === 'זכר' ? '<span class="g-badge g-m">זכר</span>'
-                 : g === 'נקבה' ? '<span class="g-badge g-f">נקבה</span>'
-                 : '<span class="muted">-</span>';
     return `
     <tr>
       <td><b class="name-link" onclick="openChildProfile('${c.id}')">${c.first_name_he} ${c.last_name_he || ''}</b>${feeBadge(c)}</td>
-      <td class="en">${c.name_en || '<span class="muted">-</span>'}</td>
-      <td>${gBadge}</td>
-      <td>${c.national_id || '<span class="muted">-</span>'}</td>
-      <td>${c.birth_date ? formatDate(c.birth_date) : '<span class="muted">-</span>'}</td>
+      <td class="en">${ieCell(c, 'name_en')}</td>
+      <td>${genderSelect(c)}</td>
+      <td>${ieCell(c, 'national_id')}</td>
+      <td>${ieCell(c, 'birth_date')}</td>
       <td>${ageStr(c.birth_date)}</td>
       <td>${c.birth_date ? monthNames[birthMonthNum(c.birth_date)] : '<span class="muted">-</span>'}</td>
       <td style="display:flex; gap:6px;">
@@ -483,6 +488,86 @@ function renderTable() {
       <tbody>${rows}</tbody>
     </table></div>`;
 }
+
+// ---------- עריכה מהירה בתוך הטבלה ----------
+// לחיצה על תא פותחת שדה; Enter או יציאה מהתא שומרים, Escape מבטל.
+const IE_FIELDS = { name_en: { type: 'text', ph: '+ הוסף' }, national_id: { type: 'text', ph: '+ הוסף' }, birth_date: { type: 'date', ph: '+ הוסף' } };
+
+function ieShown(c, f) {
+  if (f === 'birth_date') return c.birth_date ? formatDate(c.birth_date) : '';
+  return c[f] || '';
+}
+function ieCell(c, f) {
+  const v = ieShown(c, f);
+  return `<span class="ie" data-id="${c.id}" data-f="${f}" title="לחצו לעריכה">${v || '<span class="add-hint">' + IE_FIELDS[f].ph + '</span>'}</span>`;
+}
+function genderSelect(c) {
+  const v = c.gender_he || '';
+  const cls = v === 'זכר' ? 'g-m' : v === 'נקבה' ? 'g-f' : '';
+  return `<select class="gsel ${cls}" data-id="${c.id}" title="בחירה נשמרת מיד">
+    <option value=""${v ? '' : ' selected'}>—</option>
+    <option value="זכר"${v === 'זכר' ? ' selected' : ''}>זכר</option>
+    <option value="נקבה"${v === 'נקבה' ? ' selected' : ''}>נקבה</option>
+  </select>`;
+}
+function validIdIL(raw) {
+  const id = String(raw || '').replace(/\D/g, '');
+  if (!id || id.length > 9) return false;
+  const p = id.padStart(9, '0'); let sum = 0;
+  for (let i = 0; i < 9; i++) { const n = Number(p[i]) * (i % 2 + 1); sum += n > 9 ? n - 9 : n; }
+  return sum % 10 === 0 && Number(p) > 0;
+}
+
+async function saveField(id, field, value) {
+  const c = children.find(x => x.id === id);
+  if (!c) return;
+  const val = (value || '').trim() || null;
+  if (val === (c[field] || null)) { renderTable(); return; }
+  if (field === 'national_id' && val && !validIdIL(val)) {
+    showError('מספר תעודת הזהות לא תקין — בדקו את 9 הספרות');
+    renderTable(); return;
+  }
+  const old = c[field] || null;
+  c[field] = val;                       // מציגים מיד, ומחזירים אחורה אם השמירה נכשלה
+  renderTable();
+  try {
+    const res = await api.updateChild(id, { [field]: val });
+    if (!res.success) throw new Error(res.error || 'השמירה נכשלה');
+    showSuccess('נשמר ✓');
+  } catch (e) {
+    c[field] = old; renderTable();
+    showError('לא נשמר: ' + e.message);
+  }
+}
+
+function startEdit(span) {
+  const id = span.dataset.id, f = span.dataset.f;
+  const c = children.find(x => x.id === id);
+  if (!c) return;
+  const inp = document.createElement('input');
+  inp.type = IE_FIELDS[f].type;
+  inp.className = 'ie-input';
+  inp.value = c[f] || '';
+  if (f === 'national_id') { inp.inputMode = 'numeric'; inp.maxLength = 9; inp.dir = 'ltr'; }
+  if (f === 'name_en') inp.dir = 'ltr';
+  span.replaceWith(inp);
+  inp.focus(); try { inp.select(); } catch (e) {}
+  let closed = false;
+  const finish = save => { if (closed) return; closed = true; save ? saveField(id, f, inp.value) : renderTable(); };
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  inp.addEventListener('blur', () => finish(true));
+}
+
+document.getElementById('table').addEventListener('click', e => {
+  const s = e.target.closest('.ie');
+  if (s) startEdit(s);
+});
+document.getElementById('table').addEventListener('change', e => {
+  if (e.target.classList.contains('gsel')) saveField(e.target.dataset.id, 'gender_he', e.target.value);
+});
 
 let sortKey = 'birth_date';
 let sortDir = 'asc';
