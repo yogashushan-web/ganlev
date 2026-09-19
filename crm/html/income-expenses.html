@@ -171,10 +171,12 @@
       <div class="mini"><div class="lbl">הוצאות שנתיות</div><div class="val" id="kTotExp">₪0</div></div>
       <div class="mini"><div class="lbl">רווח שנתי</div><div class="val" id="kTotProfit">₪0</div></div>
       <div class="mini"><div class="lbl">מע״מ שנגבה (שנתי)</div><div class="val" id="kTotVat">₪0</div></div>
+      <div class="mini"><div class="lbl">צפוי לשנה משכר לימוד (נטו)</div><div class="val" id="kTotFc">₪0</div></div>
+      <div class="mini"><div class="lbl">נותר לגבייה (נטו)</div><div class="val" id="kLeftFc">₪0</div></div>
     </div>
     <div class="card">
       <h3>הכנסה נטו מול הוצאות, לפי חודש</h3>
-      <div class="legend"><span><i style="background:#27ae60"></i>הכנסה נטו</span><span><i style="background:#e74c3c"></i>הוצאות</span><span style="color:#c4bcae">המספרים על העמודות = אלפי ₪</span></div>
+      <div class="legend"><span><i style="background:#27ae60"></i>הכנסה נטו</span><span><i style="background:#cfe7d9"></i>צפוי משכר לימוד</span><span><i style="background:#e74c3c"></i>הוצאות</span><span style="color:#c4bcae">המספרים על העמודות = אלפי ₪</span></div>
       <div class="chart-wrap" id="chart1"></div>
     </div>
     <div class="card">
@@ -273,6 +275,7 @@ let SY;                       // school-year start (e.g. 2025 = ספט 2025 .. �
 let VAT_RATE = parseFloat(localStorage.getItem('ge_vat_rate') || '18');
 let VAT_INCL = localStorage.getItem('ge_vat_incl') !== '0';
 let incomeData = [], expensesData = [], extraServices = [], D = null, expMonth = null, editTarget = null;
+let tuitionData = [];         // שורות שכר לימוד של השנה הנבחרת — הבסיס לצפי
 
 const esc = s => (s==null?'':String(s)).replace(/</g,'&lt;');
 const attr = s => (s==null?'':String(s)).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -301,10 +304,13 @@ function buildYearOptions() {
 async function loadAll() {
   const from = SY + '-09-01', to = (SY+1) + '-08-31';
   try {
-    const [ri, re] = await Promise.all([api.getIncome(from, to), api.getExpenses(from, to)]);
+    const [ri, re, rt] = await Promise.all([
+      api.getIncome(from, to), api.getExpenses(from, to), api.getTuition().catch(() => ({ data: [] })),
+    ]);
     incomeData = (ri && ri.data) || [];
     expensesData = (re && re.data) || [];
-  } catch (e) { showError('שגיאה בטעינה: ' + e.message); incomeData = []; expensesData = []; }
+    tuitionData = (((rt && rt.data) || [])).filter(t => t.due_date >= from && t.due_date <= to);
+  } catch (e) { showError('שגיאה בטעינה: ' + e.message); incomeData = []; expensesData = []; tuitionData = []; }
   compute();
   if (expMonth === null) expMonth = defaultExpMonth();
   renderActive();
@@ -315,12 +321,16 @@ function compute() {
   incomeData.forEach(i => incGross[bucketOf(i.receipt_date)] += parseFloat(i.amount) || 0);
   expensesData.forEach(e => exp[bucketOf(e.expense_date)] += parseFloat(e.amount) || 0);
   const f = VAT_INCL ? (1 + VAT_RATE/100) : 1;
+  // צפי שכר לימוד לפי חודש (שורות פטור לא נספרות)
+  const fcGross = Array(12).fill(0);
+  tuitionData.forEach(t => { if (t.status !== 'waived') fcGross[bucketOf(t.due_date)] += parseFloat(t.amount) || 0; });
+  const fcNet = fcGross.map(v => v / f);
   const incNet = incGross.map(v => v / f);
   const vat = incGross.map((v,b) => v - incNet[b]);
   const profit = incNet.map((v,b) => v - exp[b]);
   const active = []; for (let b=0;b<12;b++) if (incGross[b]>0 || exp[b]>0) active.push(b);
   const ac = active.length || 1, sum = a => a.reduce((s,x)=>s+x,0);
-  D = { incGross, incNet, exp, vat, profit, active, ac,
+  D = { incGross, incNet, exp, vat, profit, active, ac, fcGross, fcNet, totFcNet:sum(fcNet),
     totIncNet:sum(incNet), totExp:sum(exp), totProfit:sum(profit), totVat:sum(vat),
     avgIncNet:sum(incNet)/ac, avgExp:sum(exp)/ac, avgProfit:sum(profit)/ac };
 }
@@ -335,19 +345,24 @@ function renderBalance() {
   document.getElementById('kTotExp').textContent = money(D.totExp);
   const tp = document.getElementById('kTotProfit'); tp.textContent = money(D.totProfit); tp.style.color = D.totProfit<0?'#e74c3c':'#1F3D34';
   document.getElementById('kTotVat').textContent = money(D.totVat);
-  document.getElementById('chart1').innerHTML = svgGrouped(D.incNet, D.exp, '#27ae60', '#e74c3c');
+  const fcEl = document.getElementById('kTotFc'), leftEl = document.getElementById('kLeftFc');
+  if (fcEl) fcEl.textContent = money(D.totFcNet);
+  if (leftEl) leftEl.textContent = money(Math.max(0, D.totFcNet - D.totIncNet));
+  document.getElementById('chart1').innerHTML = svgGrouped(D.incNet, D.exp, '#27ae60', '#e74c3c', D.fcNet);
   document.getElementById('chart2').innerHTML = svgProfit(D.profit);
 }
 
-function svgGrouped(s1, s2, c1, c2) {
+function svgGrouped(s1, s2, c1, c2, s0) {
   const W=760,H=240,pL=52,pR=8,pT=12,pB=26, iW=W-pL-pR, iH=H-pT-pB;
-  const max = Math.max(1, ...s1, ...s2), n=12, gw=iW/n, bw=gw*0.30;
+  const fc = s0 || Array(12).fill(0);
+  const max = Math.max(1, ...s1, ...s2, ...fc), n=12, gw=iW/n, bw=gw*0.30;
   let g = '';
   for (let k=0;k<=2;k++){ const y=pT+iH-iH*k/2; const val=max*k/2;
     g += `<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="#eee"/>`;
     g += `<text x="${pL-6}" y="${y+3}" font-size="9" text-anchor="end" fill="#bbb">${shortK(val)}</text>`; }
   for (let i=0;i<n;i++){ const cx=pL+i*gw+gw/2;
-    const h1=iH*(s1[i]/max), h2=iH*(s2[i]/max);
+    const h1=iH*(s1[i]/max), h2=iH*(s2[i]/max), h0=iH*(fc[i]/max);
+    if (fc[i]>0) g += `<rect x="${cx-bw-1}" y="${pT+iH-h0}" width="${bw}" height="${h0}" rx="2" fill="#cfe7d9"/>`;
     g += `<rect x="${cx-bw-1}" y="${pT+iH-h1}" width="${bw}" height="${h1}" rx="2" fill="${c1}"/>`;
     g += `<rect x="${cx+1}" y="${pT+iH-h2}" width="${bw}" height="${h2}" rx="2" fill="${c2}"/>`;
     if (s1[i]>0) g += `<text x="${cx-bw/2-1}" y="${pT+iH-h1-3}" font-size="8" font-weight="700" text-anchor="middle" fill="#1d7a44">${Math.round(s1[i]/1000)}</text>`;
