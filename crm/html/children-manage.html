@@ -80,6 +80,44 @@
     .contract-drop .cd-icon { font-size:26px; display:block; margin-bottom:6px; }
     .contract-drop .cd-sub { font-size:12px; color:#9B8E82; }
     .cd-status { margin-top:9px; font-size:13px; font-weight:700; }
+
+    /* ---- פס סיכום: מין, גילים, שלמות נתונים ---- */
+    .stats { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+    .stat { background:#fff; border-radius:14px; padding:14px 16px; box-shadow:0 2px 10px rgba(0,0,0,.05); flex:1; min-width:215px; }
+    .stat h3 { font-size:12.5px; color:#9B8E82; font-weight:700; margin-bottom:10px; }
+    .donut-wrap { display:flex; align-items:center; gap:14px; }
+    .donut { width:78px; height:78px; border-radius:50%; flex:none; position:relative; }
+    .donut::after { content:''; position:absolute; inset:19px; background:#fff; border-radius:50%; }
+    .donut .mid { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:#1F3D34; z-index:1; }
+    .legend { font-size:12.5px; line-height:1.8; color:#3D3228; }
+    .legend i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-left:6px; }
+    .legend b { font-weight:800; }
+    .bars { display:flex; align-items:flex-end; gap:8px; height:78px; }
+    .bar { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:3px; height:100%; }
+    .bar .b { width:100%; background:linear-gradient(180deg,#6a9d88,#1F3D34); border-radius:6px 6px 0 0; min-height:3px; }
+    .bar .n { font-size:12px; font-weight:800; color:#1F3D34; }
+    .bar .l { font-size:10.5px; color:#9B8E82; white-space:nowrap; }
+    .meter { height:10px; background:#f0ece6; border-radius:999px; overflow:hidden; margin:2px 0 9px; }
+    .meter i { display:block; height:100%; background:linear-gradient(90deg,#8a9a5b,#1F7a4f); }
+    .miss-list { font-size:12.5px; line-height:1.95; }
+    .miss-list .ok { color:#1F7a4f; font-weight:700; }
+    .miss-list button { background:none; border:none; font-family:'Heebo'; font-size:12.5px; color:#C4846C; font-weight:700; cursor:pointer; padding:0; text-align:right; }
+    .miss-list button:hover { text-decoration:underline; }
+
+    /* ---- לוחות: פנים הקבוצה / ימי הולדת ---- */
+    .modal-lg { max-width:860px; }
+    .gal { display:grid; grid-template-columns:repeat(auto-fill,minmax(108px,1fr)); gap:14px; }
+    .gal .g-item { text-align:center; }
+    .gal img, .gal .ph { width:90px; height:90px; border-radius:50%; object-fit:cover; border:3px solid #f0ece6; margin:0 auto; display:block; }
+    .gal .ph { background:#f1ece3; display:flex; align-items:center; justify-content:center; font-size:30px; color:#c3b8a8; }
+    .gal .g-nm { font-size:13px; font-weight:700; color:#1F3D34; margin-top:7px; line-height:1.35; }
+    .gal .g-ag { font-size:11.5px; color:#9B8E82; }
+    .bd-month h4 { font-size:14px; color:#C4846C; font-weight:800; margin:14px 0 7px; }
+    .bd-row { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 11px; border-radius:9px; background:#FAF8F4; margin-bottom:5px; font-size:13.5px; }
+    .bd-row.soon { background:#f4f9f6; border:1px solid #d8ebe1; }
+    .bd-row .d { color:#9B8E82; font-size:12.5px; white-space:nowrap; }
+    .bd-row .turns { font-weight:700; color:#1F3D34; white-space:nowrap; }
+    @media print { .header,.year-tabs,.toolbar,.stats,.cp-close,.form-container { display:none !important; } .ov { position:static; background:none; } .pf { box-shadow:none; max-height:none; } }
   </style>
 </head>
 <body>
@@ -93,11 +131,25 @@
       <button class="btn-add" style="background:#2D5A50;" onclick="location.href='visit-manage.html'">🏠 ימי היכרות</button>
       <button class="btn-add" id="cardsBoardBtn" style="background:#C4846C; display:none;" onclick="openCardsBoard()">🗳️ לוח כרטיסים מלא</button>
       <button class="btn-add" id="idsBoardBtn" style="background:#8a9a5b; display:none;" onclick="openIdsBoard()">🪪 תעודות זהות הורים</button>
+      <button class="btn-add" style="background:#C4846C;" onclick="openBirthdays()">🎂 לוח ימי הולדת</button>
+      <button class="btn-add" style="background:#5f93b8;" onclick="openFaces()">📸 הפנים של הקבוצה</button>
       <button class="btn-add" onclick="toggleForm()">+ הוסף ילד</button>
     </div>
   </div>
 
   <div class="year-tabs" id="yearTabs"></div>
+
+  <div class="stats" id="stats"></div>
+
+  <!-- לוח ימי הולדת / פנים הקבוצה -->
+  <div class="ov" id="boardOv" onclick="if(event.target===this)closeBoard()">
+    <div class="pf modal-lg">
+      <h2 id="boardTitle"></h2>
+      <div class="role" id="boardSub"></div>
+      <div id="boardBody"></div>
+      <button class="cp-close" onclick="closeBoard()">סגירה</button>
+    </div>
+  </div>
 
   <div class="toolbar">
     <input type="text" id="search" placeholder="🔍 חיפוש...">
@@ -206,6 +258,172 @@ async function loadChildren() {
   } catch (err) {
     showError('שגיאה בטעינת הנתונים: ' + err.message);
   }
+  // ההורים דרושים למד שלמות הנתונים (2 הורים, מייל, ת"ז) — נטען ברקע.
+  try { const rp = await api.getParents(); parentsCache = rp.data || []; renderStats(); } catch (e) {}
+}
+
+// ---------- פס הסיכום ----------
+let parentsCache = [];
+let MISSING = {};           // מפתח -> רשימת שמות, בשביל הלחיצה על "חסר"
+
+function ageYears(bd) {
+  if (!bd) return null;
+  const b = new Date(bd), n = new Date();
+  let m = (n.getFullYear() - b.getFullYear()) * 12 + (n.getMonth() - b.getMonth());
+  if (n.getDate() < b.getDate()) m--;
+  return m < 0 ? null : m / 12;
+}
+function yearList() { return children.filter(c => (c.school_year || CUR_YEAR) === selectedYear); }
+function childName(c) { return (c.first_name_he + ' ' + (c.last_name_he || '')).trim(); }
+
+function renderStats() {
+  const list = yearList();
+  const el = document.getElementById('stats');
+  if (!el) return;
+  if (!list.length) { el.innerHTML = ''; return; }
+
+  // --- מין ---
+  const boys = list.filter(c => c.gender_he === 'זכר').length;
+  const girls = list.filter(c => c.gender_he === 'נקבה').length;
+  const unk = list.length - boys - girls;
+  const deg = n => (n / list.length) * 360;
+  const p1 = deg(boys), p2 = p1 + deg(girls);
+  const donut = `background:conic-gradient(#5f93b8 0deg ${p1}deg, #C4846C ${p1}deg ${p2}deg, #e3ddd2 ${p2}deg 360deg);`;
+  const genderCard = `
+    <div class="stat">
+      <h3>בנים ובנות</h3>
+      <div class="donut-wrap">
+        <div class="donut" style="${donut}"><span class="mid">${list.length}</span></div>
+        <div class="legend">
+          <div><i style="background:#5f93b8"></i>בנים <b>${boys}</b></div>
+          <div><i style="background:#C4846C"></i>בנות <b>${girls}</b></div>
+          ${unk ? `<div><i style="background:#e3ddd2"></i>חסר <b>${unk}</b></div>` : ''}
+        </div>
+      </div>
+    </div>`;
+
+  // --- גילים (נכון להיום) ---
+  const BINS = [
+    { l: 'עד 1.5', t: a => a < 1.5 },
+    { l: '1.5–2', t: a => a >= 1.5 && a < 2 },
+    { l: '2–2.5', t: a => a >= 2 && a < 2.5 },
+    { l: '2.5+',  t: a => a >= 2.5 },
+  ];
+  const ages = list.map(c => ageYears(c.birth_date)).filter(a => a != null);
+  const counts = BINS.map(b => ages.filter(b.t).length);
+  const mx = Math.max(1, ...counts);
+  const ageCard = `
+    <div class="stat">
+      <h3>התפלגות גילים · נכון להיום</h3>
+      <div class="bars">
+        ${BINS.map((b, i) => `<div class="bar"><span class="n">${counts[i]}</span>
+          <div class="b" style="height:${Math.round((counts[i] / mx) * 100)}%"></div>
+          <span class="l">${b.l}</span></div>`).join('')}
+      </div>
+    </div>`;
+
+  // --- שלמות נתונים ---
+  const byChild = {};
+  parentsCache.forEach(p => { if (p.child_id) (byChild[p.child_id] = byChild[p.child_id] || []).push(p); });
+  MISSING = { gender: [], birth: [], nid: [], parents: [], pmail: [], pnid: [] };
+  let done = 0, total = 0;
+  list.forEach(c => {
+    const ps = byChild[c.id] || [];
+    const checks = [
+      [!!c.gender_he, 'gender'],
+      [!!c.birth_date, 'birth'],
+      [!!c.national_id, 'nid'],
+      [ps.length >= 2, 'parents'],
+      [ps.length > 0 && ps.every(p => p.email), 'pmail'],
+      [ps.length > 0 && ps.every(p => p.national_id), 'pnid'],
+    ];
+    checks.forEach(([ok, key]) => { total++; if (ok) done++; else MISSING[key].push(childName(c)); });
+  });
+  const pct = total ? Math.round((done / total) * 100) : 100;
+  const LBL = {
+    gender: 'ללא מין', birth: 'ללא תאריך לידה', nid: 'ללא ת"ז לילד/ה',
+    parents: 'פחות משני הורים', pmail: 'הורה בלי מייל', pnid: 'הורה בלי ת"ז',
+  };
+  const rows = Object.keys(LBL).filter(k => MISSING[k].length)
+    .map(k => `<div><button onclick="showMissing('${k}')">${MISSING[k].length} ${LBL[k]} ›</button></div>`).join('')
+    || '<div class="ok">הכול מלא 🎉</div>';
+  const fillCard = `
+    <div class="stat">
+      <h3>שלמות נתונים · ${pct}%</h3>
+      <div class="meter"><i style="width:${pct}%"></i></div>
+      <div class="miss-list">${rows}</div>
+    </div>`;
+
+  el.innerHTML = genderCard + ageCard + fillCard;
+}
+
+function showMissing(key) {
+  const names = MISSING[key] || [];
+  const LBL = {
+    gender: 'ילדים ללא מין', birth: 'ילדים ללא תאריך לידה', nid: 'ילדים ללא תעודת זהות',
+    parents: 'ילדים עם פחות משני הורים רשומים', pmail: 'ילדים שאצלם הורה בלי מייל',
+    pnid: 'ילדים שאצלם הורה בלי תעודת זהות',
+  };
+  const tip = (key === 'pnid')
+    ? '<div class="role" style="margin-top:10px;">אפשר לבקש מההורים להשלים בקישור ganlev.netlify.app/id</div>' : '';
+  openBoard(LBL[key], names.length + ' מתוך ' + yearList().length + ' ילדים בשנת ' + selectedYear,
+    '<div class="miss-list">' + names.map(n => '<div>• ' + n + '</div>').join('') + '</div>' + tip);
+}
+
+// ---------- לוחות ----------
+function openBoard(title, sub, html) {
+  document.getElementById('boardTitle').textContent = title;
+  document.getElementById('boardSub').textContent = sub || '';
+  document.getElementById('boardBody').innerHTML = html;
+  document.getElementById('boardOv').classList.add('show');
+}
+function closeBoard() { document.getElementById('boardOv').classList.remove('show'); }
+
+function openBirthdays() {
+  const list = yearList().filter(c => c.birth_date);
+  if (!list.length) { openBoard('🎂 לוח ימי הולדת', '', '<p>אין תאריכי לידה בשנה הזו.</p>'); return; }
+  const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const items = list.map(c => {
+    const b = new Date(c.birth_date);
+    let next = new Date(today.getFullYear(), b.getMonth(), b.getDate());
+    if (next < today) next = new Date(today.getFullYear() + 1, b.getMonth(), b.getDate());
+    const turns = next.getFullYear() - b.getFullYear();
+    const days = Math.round((next - today) / 864e5);
+    return { name: childName(c), m: b.getMonth() + 1, d: b.getDate(), turns, days };
+  });
+  let html = '';
+  for (let m = 1; m <= 12; m++) {
+    const inM = items.filter(x => x.m === m).sort((a, b) => a.d - b.d);
+    if (!inM.length) continue;
+    html += `<div class="bd-month"><h4>${monthNames[m]} · ${inM.length}</h4>` + inM.map(x =>
+      `<div class="bd-row ${x.days <= 30 ? 'soon' : ''}">
+         <span><b>${x.name}</b> <span class="d">${x.d}.${x.m}</span></span>
+         <span class="turns">בן/בת ${x.turns}${x.days <= 30 ? ' · בעוד ' + x.days + ' ימים' : ''}</span>
+       </div>`).join('') + '</div>';
+  }
+  openBoard('🎂 לוח ימי הולדת', selectedYear + ' · ' + list.length + ' ילדים · הקרובים מסומנים', html);
+}
+
+async function openFaces() {
+  openBoard('📸 הפנים של הקבוצה', selectedYear, '<p class="loading">טוען…</p>');
+  if (!OWNER_KEY) { document.getElementById('boardBody').innerHTML = '<p>אין הרשאה לטעון את התמונות.</p>'; return; }
+  let photos = {};
+  try {
+    const r = await fetch(`/.netlify/functions/child-boards?garden_id=${encodeURIComponent(getGardenId())}&type=cards&admin=${encodeURIComponent(OWNER_KEY)}`);
+    const d = await r.json();
+    (d.rows || []).forEach(row => { if (row.data && row.data.photo) photos[row.id] = row.data.photo; });
+  } catch (e) {}
+  const list = yearList().slice().sort((a, b) => (a.birth_date || '').localeCompare(b.birth_date || ''));
+  const withPhoto = list.filter(c => photos[c.id]).length;
+  const html = '<div class="gal">' + list.map(c => `
+    <div class="g-item">
+      ${photos[c.id] ? `<img src="${attrEsc(photos[c.id])}" alt="" onclick="zoomPhoto(this.src)" title="לחצו להגדלה">` : '<div class="ph">🧒</div>'}
+      <div class="g-nm">${childName(c)}</div>
+      <div class="g-ag">${ageStr(c.birth_date)}</div>
+    </div>`).join('') + '</div>';
+  document.getElementById('boardTitle').textContent = '📸 הפנים של הקבוצה';
+  document.getElementById('boardSub').textContent = `${selectedYear} · ${withPhoto} מתוך ${list.length} עם תמונה מהכרטיס האישי`;
+  document.getElementById('boardBody').innerHTML = html;
 }
 
 function renderTable() {
@@ -222,6 +440,7 @@ function renderTable() {
   });
 
   document.getElementById('countPill').textContent = list.length + ' ילדים';
+  renderStats();
 
   if (!list.length) {
     document.getElementById('table').innerHTML = `<p style="padding:24px; color:#9B8E82; text-align:center;">אין ילדים בשנת ${selectedYear}. אפשר להוסיף ילד או לייבא מטבלה.</p>`;
