@@ -199,6 +199,7 @@ function renderNavSidebar() {
     { href: 'children-manage.html', icon: '👶', label: 'ילדים' },
     { href: 'interest-forms.html',  icon: '📝', label: 'מתעניינים' },
     { href: 'parents-tuition.html', icon: '👨‍👩‍👧', label: 'הורים' },
+    { href: 'tuition-board.html',   icon: '💳', label: 'שכר לימוד' },
     { href: 'staff-salaries.html',  icon: '👥', label: 'צוות' },
     { href: 'content.html',         icon: '📚', label: 'תוכן חינוכי' },
     { href: 'forms.html',           icon: '📋', label: 'טפסים' },

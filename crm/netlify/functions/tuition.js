@@ -3,7 +3,7 @@
 // POST /tuition { garden_id, child_id, parent_id, amount, due_date }
 // PUT /tuition/:id { status, paid_date, amount }
 
-const { supabase, validateGardenScope, auditLog } = require('./lib/db');
+const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
 const { withAuth } = require('./lib/auth');
 
 const handler = withAuth(async (event) => {
@@ -57,9 +57,10 @@ const handler = withAuth(async (event) => {
 
     if (event.httpMethod === 'POST') {
       // Create tuition
-      const { child_id, parent_id, amount, due_date } = JSON.parse(event.body || '{}');
+      const { child_id, parent_id, amount, due_date, status, notes_he } = JSON.parse(event.body || '{}');
 
-      if (!child_id || !amount || !due_date) {
+      // סכום 0 הוא תקין — ילד בפטור מלא ("waived"), ולכן בודקים null/ריק ולא "falsy".
+      if (!child_id || amount == null || amount === '' || !due_date) {
         return {
           statusCode: 400,
           body: JSON.stringify({ success: false, error: 'Missing required fields' }),
@@ -74,7 +75,8 @@ const handler = withAuth(async (event) => {
           parent_id: parent_id || null,
           amount: parseFloat(amount),
           due_date,
-          status: 'pending',
+          status: ['pending', 'paid', 'overdue', 'waived'].includes(status) ? status : 'pending',
+          notes_he: notes_he || null,
         })
         .select()
         .single();
@@ -126,6 +128,35 @@ const handler = withAuth(async (event) => {
       return {
         statusCode: 200,
         body: JSON.stringify({ success: true, data }),
+      };
+    }
+
+    if (event.httpMethod === 'DELETE') {
+      // מחיקת שורת שכר לימוד (למשל בעת יצירה מחדש של השנה) — עוברת לפח וניתנת לשחזור.
+      const { data: existing } = await supabase
+        .from('tuition')
+        .select('*')
+        .eq('id', tuitionId)
+        .eq('garden_id', garden_id)
+        .single();
+
+      if (!existing) {
+        return {
+          statusCode: 404,
+          body: JSON.stringify({ success: false, error: 'Tuition not found' }),
+        };
+      }
+
+      await moveToTrash('tuition', existing, garden_id);
+
+      const { error } = await supabase.from('tuition').delete().eq('id', tuitionId);
+      if (error) throw error;
+
+      await auditLog(garden_id, user.id, 'deleted', 'tuition', tuitionId, { amount: existing.amount, due_date: existing.due_date });
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ success: true }),
       };
     }
 

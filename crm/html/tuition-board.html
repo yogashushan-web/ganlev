@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שכר לימוד — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .btn { background:#1F3D34; color:#FFF; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; }
+    .btn.ghost { background:#efe9e0; color:#6f6457; }
+    .year-tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .year-tab { padding:9px 18px; border:none; background:#fff; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; color:#9B8E82; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+    .year-tab.active { background:#1F3D34; color:#fff; }
+
+    .kpis { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+    .kpi { background:#fff; border-radius:14px; padding:14px 18px; box-shadow:0 2px 10px rgba(0,0,0,.05); flex:1; min-width:170px; }
+    .kpi .lbl { font-size:12.5px; color:#9B8E82; font-weight:700; margin-bottom:5px; }
+    .kpi .val { font-size:22px; font-weight:800; color:#1F3D34; }
+    .kpi.green .val { color:#1F7a4f; } .kpi.amber .val { color:#c48a3a; }
+
+    .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:#6f6457; margin-bottom:12px; align-items:center; }
+    .legend i { display:inline-block; width:11px; height:11px; border-radius:3px; margin-left:5px; vertical-align:-1px; }
+
+    .tbl-wrap { overflow:auto; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.05); background:#fff; max-height:70vh; }
+    table { width:100%; border-collapse:separate; border-spacing:0; }
+    th { background:#1F3D34; color:#fff; padding:10px 8px; font-size:12px; font-weight:600; white-space:nowrap; position:sticky; top:0; z-index:3; }
+    th.name-col, td.name-col { position:sticky; right:0; background:#fff; z-index:2; text-align:right; min-width:150px; box-shadow:-1px 0 0 #f0ece6 inset; }
+    th.name-col { background:#1F3D34; z-index:4; }
+    td { padding:6px 8px; border-bottom:1px solid #f4f1ec; font-size:13px; text-align:center; }
+    tr:hover td { background:#FAF8F4; } tr:hover td.name-col { background:#FAF8F4; }
+    td.name-col b { color:#1F3D34; font-size:13.5px; }
+    td.name-col .fee { display:block; font-size:11px; color:#9B8E82; font-weight:600; }
+
+    .cell { display:inline-block; min-width:62px; padding:5px 6px; border-radius:8px; cursor:pointer; font-weight:700; font-size:12.5px; border:1px solid transparent; user-select:none; }
+    .cell.pending { background:#f6f2ec; color:#8a7f70; }
+    .cell.pending:hover { background:#e9f3ed; color:#1F7a4f; }
+    .cell.paid { background:#e6f4ec; color:#1F7a4f; border-color:#cfe7d9; }
+    .cell.waived { background:#eef2f8; color:#5f7fa8; cursor:default; }
+    .cell.late { border-color:#e8c88a; background:#fdf6e9; color:#b8801f; }
+    .cell.none { color:#d8d2c8; cursor:default; background:none; }
+    tfoot td { font-weight:800; color:#1F3D34; background:#FAF8F4; border-top:2px solid #e8e4de; font-size:12.5px; }
+    .tot-col { font-weight:800; color:#1F3D34; background:#FAF8F4; }
+    .msg { padding:26px; text-align:center; color:#9B8E82; }
+    .err { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:14px; display:none; }
+    .err.show { display:block; }
+    .ok { background:#d4edda; color:#155724; padding:12px; border-radius:10px; margin-bottom:14px; display:none; }
+    .ok.show { display:block; }
+    .hint { font-size:12.5px; color:#9B8E82; margin-bottom:14px; line-height:1.7; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>💳 שכר לימוד</h1>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn ghost" onclick="window.print()">🖨️ הדפסה</button>
+      <button class="btn" onclick="generateYear()">↻ צור / השלם שנה</button>
+    </div>
+  </div>
+
+  <div class="year-tabs" id="yearTabs"></div>
+  <div id="error" class="err"></div>
+  <div id="success" class="ok"></div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="lbl">צפוי לשנה</div><div class="val" id="kExp">₪0</div></div>
+    <div class="kpi green"><div class="lbl">התקבל בפועל</div><div class="val" id="kPaid">₪0</div></div>
+    <div class="kpi amber"><div class="lbl">נותר לגבייה</div><div class="val" id="kLeft">₪0</div></div>
+    <div class="kpi"><div class="lbl">צפוי לחודש</div><div class="val" id="kMonth">₪0</div></div>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:#f6f2ec;border:1px solid #e3ddd2"></i>טרם שולם</span>
+    <span><i style="background:#e6f4ec;border:1px solid #cfe7d9"></i>שולם</span>
+    <span><i style="background:#fdf6e9;border:1px solid #e8c88a"></i>באיחור</span>
+    <span><i style="background:#eef2f8;border:1px solid #d5dfee"></i>פטור</span>
+    <span style="color:#c4bcae;">· לחיצה על תא מסמנת שולם · לחיצה ארוכה או לחיצה ימנית משנה סכום</span>
+  </div>
+
+  <div class="hint">סימון "שולם" יוצר אוטומטית שורת הכנסה בקטגוריית "דמי לימוד", כך שמסך הכספים מתעדכן לבד. ביטול הסימון מוחק אותה.</div>
+
+  <div class="tbl-wrap"><div id="table" class="msg">טוען…</div></div>
+
+<script src="js/common.js?v=18"></script>
+<script src="js/api.js?v=18"></script>
+<script>
+const STD_FEE = 6100;                    // תעריף רגיל לשנת 2026-27
+const MON = ['','ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
+
+function currentSchoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
+const CUR_YEAR = currentSchoolYear();
+const startY = parseInt(CUR_YEAR);
+const SCHOOL_YEARS = [startY - 1, startY, startY + 1].map(y => y + '-' + String(y + 1).slice(2));
+let selectedYear = CUR_YEAR;
+
+let kids = [], rows = [], income = [];
+const pad = n => String(n).padStart(2, '0');
+const money = n => '₪' + Number(n || 0).toLocaleString('he-IL');
+const esc = s => (s == null ? '' : String(s)).replace(/</g, '&lt;');
+const childName = c => (c.first_name_he + ' ' + (c.last_name_he || '')).trim();
+const feeOf = c => (c.monthly_fee == null ? STD_FEE : Number(c.monthly_fee));
+
+// חודשי שנת הלימודים: ספטמבר עד אוגוסט
+function yearMonths(year) {
+  const s = parseInt(year);
+  return Array.from({ length: 12 }, (_, i) => { const m = 9 + i; return m <= 12 ? { y: s, m } : { y: s + 1, m: m - 12 }; });
+}
+const dueOf = (mo) => `${mo.y}-${pad(mo.m)}-01`;
+const keyOf = (childId, due) => childId + '|' + due;
+
+function renderYearTabs() {
+  document.getElementById('yearTabs').innerHTML = SCHOOL_YEARS.map(y =>
+    `<button class="year-tab ${y === selectedYear ? 'active' : ''}" onclick="selectYear('${y}')">${y}${y === CUR_YEAR ? ' (נוכחית)' : ''}</button>`).join('');
+}
+function selectYear(y) { selectedYear = y; renderYearTabs(); load(); }
+
+async function load() {
+  try {
+    const [rc, rt] = await Promise.all([api.getChildren(), api.getTuition()]);
+    kids = ((rc && rc.data) || []).filter(c => (c.school_year || CUR_YEAR) === selectedYear && c.status === 'active')
+      .sort((a, b) => childName(a).localeCompare(childName(b), 'he'));
+    const months = yearMonths(selectedYear).map(dueOf);
+    rows = ((rt && rt.data) || []).filter(t => months.includes(t.due_date));
+    const ry = await api.getIncome(months[0], months[11]).catch(() => ({ data: [] }));
+    income = (ry && ry.data) || [];
+    render();
+  } catch (e) { showErr('שגיאה בטעינה: ' + e.message); }
+}
+
+function render() {
+  const months = yearMonths(selectedYear);
+  if (!kids.length) { document.getElementById('table').innerHTML = '<div class="msg">אין ילדים פעילים בשנה זו.</div>'; return; }
+  const byKey = {}; rows.forEach(t => { byKey[keyOf(t.child_id, t.due_date)] = t; });
+  const today = new Date().toISOString().slice(0, 10);
+
+  let expTot = 0, paidTot = 0;
+  const colExp = months.map(() => 0), colPaid = months.map(() => 0);
+
+  const body = kids.map(c => {
+    let rowExp = 0, rowPaid = 0;
+    const cells = months.map((mo, i) => {
+      const t = byKey[keyOf(c.id, dueOf(mo))];
+      if (!t) return '<td><span class="cell none">—</span></td>';
+      const amt = Number(t.amount || 0);
+      const waived = t.status === 'waived';
+      const paid = t.status === 'paid';
+      if (!waived) { rowExp += amt; colExp[i] += amt; expTot += amt; }
+      if (paid) { rowPaid += amt; colPaid[i] += amt; paidTot += amt; }
+      const late = !paid && !waived && t.due_date < today;
+      const cls = waived ? 'waived' : paid ? 'paid' : late ? 'late' : 'pending';
+      const label = waived ? 'פטור' : (amt ? Number(amt).toLocaleString('he-IL') : '0');
+      return `<td><span class="cell ${cls}" data-id="${t.id}" title="${t.due_date}${late ? ' · באיחור' : ''}">${label}</span></td>`;
+    }).join('');
+    return `<tr>
+      <td class="name-col"><b>${esc(childName(c))}</b><span class="fee">${feeOf(c) ? money(feeOf(c)) + ' לחודש' : 'פטור מלא'}</span></td>
+      ${cells}
+      <td class="tot-col">${money(rowPaid)} / ${money(rowExp)}</td>
+    </tr>`;
+  }).join('');
+
+  const head = `<tr><th class="name-col">ילד/ה</th>${months.map(mo => `<th>${MON[mo.m]} ${String(mo.y).slice(2)}</th>`).join('')}<th>שולם / צפוי</th></tr>`;
+  const foot = `<tr><td class="name-col"><b>סה"כ</b></td>${months.map((mo, i) =>
+    `<td>${money(colPaid[i])}<br><span style="color:#9B8E82;font-weight:600;">מתוך ${money(colExp[i])}</span></td>`).join('')}<td>${money(paidTot)} / ${money(expTot)}</td></tr>`;
+
+  document.getElementById('table').innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+
+  document.getElementById('kExp').textContent = money(expTot);
+  document.getElementById('kPaid').textContent = money(paidTot);
+  document.getElementById('kLeft').textContent = money(expTot - paidTot);
+  const mIdx = months.findIndex(mo => dueOf(mo).slice(0, 7) === new Date().toISOString().slice(0, 7));
+  document.getElementById('kMonth').textContent = money(mIdx >= 0 ? colExp[mIdx] : colExp[0]);
+}
+
+// ---------- סימון תשלום ----------
+function findIncomeRow(t) {
+  return income.find(i => i.category_he === 'דמי לימוד' && i.receipt_date === t.due_date
+    && Number(i.amount) === Number(t.amount) && i.source_he === t.child_name);
+}
+
+async function toggleCell(id) {
+  const t = rows.find(r => r.id === id);
+  if (!t || t.status === 'waived') return;
+  try {
+    if (t.status !== 'paid') {
+      await api.updateTuition(id, { status: 'paid', paid_date: t.due_date });
+      if (Number(t.amount) > 0) {
+        await api.createIncome({ source_he: t.child_name, amount: t.amount, receipt_date: t.due_date, category_he: 'דמי לימוד', notes_he: selectedYear });
+      }
+      showOk('סומן כשולם · נרשמה הכנסה');
+    } else {
+      await api.updateTuition(id, { status: 'pending', paid_date: null });
+      const inc = findIncomeRow(t);
+      if (inc) await api.deleteIncome(inc.id);
+      showOk('הסימון בוטל · ההכנסה נמחקה');
+    }
+    await load();
+  } catch (e) { showErr('לא נשמר: ' + e.message); }
+}
+
+async function editAmount(id) {
+  const t = rows.find(r => r.id === id);
+  if (!t) return;
+  const v = prompt('סכום לחודש ' + t.due_date.slice(0, 7) + ' (0 = פטור):', t.amount);
+  if (v === null) return;
+  const amt = Number(String(v).replace(/[^\d.]/g, ''));
+  if (!isFinite(amt)) { showErr('סכום לא תקין'); return; }
+  try {
+    await api.updateTuition(id, { amount: amt, status: amt === 0 ? 'waived' : (t.status === 'paid' ? 'paid' : 'pending') });
+    showOk('הסכום עודכן');
+    await load();
+  } catch (e) { showErr('לא נשמר: ' + e.message); }
+}
+
+document.getElementById('table').addEventListener('click', e => {
+  const c = e.target.closest('.cell'); if (c && c.dataset.id) toggleCell(c.dataset.id);
+});
+document.getElementById('table').addEventListener('contextmenu', e => {
+  const c = e.target.closest('.cell');
+  if (c && c.dataset.id) { e.preventDefault(); editAmount(c.dataset.id); }
+});
+
+// ---------- יצירת שנה ----------
+async function generateYear() {
+  if (!kids.length) { showErr('אין ילדים בשנה זו'); return; }
+  const months = yearMonths(selectedYear);
+  const have = {}; rows.forEach(t => { have[keyOf(t.child_id, t.due_date)] = true; });
+  let created = 0;
+  try {
+    for (const c of kids) {
+      const fee = feeOf(c);
+      for (const mo of months) {
+        const due = dueOf(mo);
+        if (have[keyOf(c.id, due)]) continue;
+        await api.createTuition({ child_id: c.id, amount: fee, due_date: due, status: fee === 0 ? 'waived' : 'pending', notes_he: selectedYear });
+        created++;
+      }
+    }
+    showOk(created ? ('נוצרו ' + created + ' שורות') : 'הכול כבר קיים — לא נוצר כלום');
+    await load();
+  } catch (e) { showErr('שגיאה ביצירה: ' + e.message); }
+}
+
+function showErr(m) { const el = document.getElementById('error'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 5000); }
+function showOk(m) { const el = document.getElementById('success'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000); }
+
+renderYearTabs();
+load();
+</script>
+</body>
+</html>
