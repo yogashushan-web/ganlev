@@ -112,14 +112,19 @@ const handler = withAuth(async (event) => {
         };
       }
 
-      const { data, error } = await supabase
-        .from('parents')
-        .update(body)
-        .eq('id', parentId)
-        .select()
-        .single();
-
-      if (error) throw error;
+      // מעדכנים את טבלת ההורים רק אם נשלחו שדות שלה. כששולחים ת"ז בלבד,
+      // body ריק — ועדכון ריק מחזיר 0 שורות ומפיל את הבקשה.
+      let data = existing;
+      if (Object.keys(body).length) {
+        const { data: upd, error } = await supabase
+          .from('parents')
+          .update(body)
+          .eq('id', parentId)
+          .select()
+          .single();
+        if (error) throw error;
+        data = upd;
+      }
 
       if (national_id !== undefined) {
         if (national_id) {
