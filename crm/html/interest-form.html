@@ -40,6 +40,11 @@
     .msg p { color:#9B8E82; }
     .err { background:#fdf0ef; color:#c0563f; padding:12px; border-radius:10px; font-size:14px; margin-bottom:14px; display:none; }
     .sep { border:none; border-top:1px dashed #e3ddd2; margin:22px 0 18px; }
+    .single-row { margin-bottom:12px; }
+    label.single { display:flex; align-items:center; gap:9px; font-weight:600; font-size:14px; color:#6f6457; cursor:pointer; margin:0; }
+    label.single input { width:auto; }
+    #parent2Row.off { opacity:.45; }
+    #parent2Row.off input { background:#f6f2ec; pointer-events:none; }
   </style>
 </head>
 <body>
@@ -98,13 +103,16 @@
             <input type="tel" id="parent1Phone" required>
           </div>
         </div>
-        <div class="two">
+        <div class="grp single-row">
+          <label class="single"><input type="checkbox" id="singleParent"> אנחנו משפחה חד-הורית — יש הורה אחד בלבד</label>
+        </div>
+        <div class="two" id="parent2Row">
           <div class="grp">
-            <label>שם הורה 2 <span class="req">*</span></label>
+            <label>שם הורה 2 <span class="req p2req">*</span></label>
             <input type="text" id="parent2Name" required>
           </div>
           <div class="grp">
-            <label>מס' טלפון הורה 2 <span class="req">*</span></label>
+            <label>מס' טלפון הורה 2 <span class="req p2req">*</span></label>
             <input type="tel" id="parent2Phone" required>
           </div>
         </div>
@@ -137,6 +145,16 @@ const params = new URLSearchParams(location.search);
 const GARDEN = params.get('garden') || '5120efca-8bb0-47a3-90d2-2c6a5a013e31';
 const YEAR = params.get('year') || nextSchoolYear();
 document.getElementById('yearLabel').textContent = YEAR.replace('-', '/');
+
+// משפחה חד-הורית: הורה 2 מפסיק להיות חובה, השדות מתרוקנים ונחסמים.
+document.getElementById('singleParent').addEventListener('change', function () {
+  const on = this.checked;
+  const row = document.getElementById('parent2Row');
+  const n = document.getElementById('parent2Name'), p = document.getElementById('parent2Phone');
+  row.classList.toggle('off', on);
+  [n, p].forEach(el => { el.required = !on; if (on) el.value = ''; });
+  document.querySelectorAll('.p2req').forEach(el => { el.style.display = on ? 'none' : ''; });
+});
 
 document.getElementById('intForm').addEventListener('submit', async (e) => {
   e.preventDefault();
