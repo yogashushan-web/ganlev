@@ -9,6 +9,23 @@
 // so the PDF's internal font encoding never matters.
 
 const { withAuth } = require('./lib/auth');
+const { PDFDocument } = require('pdf-lib');
+
+// Netlify kills a function at 26s, and a whole multi-page file does not fit:
+// a 6-page report took ~31s. So the browser asks for a couple of pages at a
+// time and we send the model only those pages.
+async function slicePages(b64, from, to) {
+  const src = await PDFDocument.load(Buffer.from(b64, 'base64'), { ignoreEncryption: true });
+  const total = src.getPageCount();
+  const out = await PDFDocument.create();
+  const idx = [];
+  for (let p = Math.max(1, from); p <= Math.min(total, to); p++) idx.push(p - 1);
+  if (!idx.length) return { data: b64, total };
+  const copied = await out.copyPages(src, idx);
+  copied.forEach((p) => out.addPage(p));
+  const bytes = await out.save();
+  return { data: Buffer.from(bytes).toString('base64'), total };
+}
 
 const INVOICE = {
   type: 'object',
@@ -57,12 +74,26 @@ const handler = withAuth(async (event) => {
     return { statusCode: 400, body: JSON.stringify({ success: false, error: 'חסר ANTHROPIC_API_KEY בהגדרות השרת' }) };
   }
   try {
-    const { file_base64, content_type } = JSON.parse(event.body || '{}');
+    const { file_base64, content_type, probe, page_from, page_to } = JSON.parse(event.body || '{}');
     if (!file_base64) {
       return { statusCode: 400, body: JSON.stringify({ success: false, error: 'לא צורף קובץ' }) };
     }
-    const data = file_base64.includes(',') ? file_base64.split(',').pop() : file_base64;
+    let data = file_base64.includes(',') ? file_base64.split(',').pop() : file_base64;
     const ct = content_type || 'application/pdf';
+    const isPdf = ct === 'application/pdf';
+
+    // שלב א׳: כמה עמודים יש בקובץ. מהיר, בלי קריאה למודל.
+    if (probe) {
+      if (!isPdf) return { statusCode: 200, body: JSON.stringify({ success: true, data: { pages: 1 } }) };
+      const doc = await PDFDocument.load(Buffer.from(data, 'base64'), { ignoreEncryption: true });
+      return { statusCode: 200, body: JSON.stringify({ success: true, data: { pages: doc.getPageCount() } }) };
+    }
+
+    // שלב ב׳: קריאה של טווח עמודים בלבד.
+    if (isPdf && page_from) {
+      const cut = await slicePages(data, Number(page_from), Number(page_to || page_from));
+      data = cut.data;
+    }
     const fileBlock = ct === 'application/pdf'
       ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data } }
       : { type: 'image', source: { type: 'base64', media_type: ct, data } };

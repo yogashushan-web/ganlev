@@ -94,8 +94,8 @@ const api = {
   createTuition: (data) => apiCall(`/tuition?garden_id=${getGardenId()}`, 'POST', data),
   updateTuition: (id, data) => apiCall(`/tuition/${id}?garden_id=${getGardenId()}`, 'PUT', data),
   deleteTuition: (id) => apiCall(`/tuition/${id}?garden_id=${getGardenId()}`, 'DELETE'),
-  parseInvoice: (file_base64, content_type) =>
-    apiCall(`/parse-invoice?garden_id=${getGardenId()}`, 'POST', { file_base64, content_type }),
+  parseInvoice: (file_base64, content_type, opts = {}) =>
+    apiCall(`/parse-invoice?garden_id=${getGardenId()}`, 'POST', { file_base64, content_type, ...opts }),
 
   // Income/Expenses
   getIncome: (dateFrom, dateTo) => apiCall(`/income?garden_id=${getGardenId()}&date_from=${dateFrom}&date_to=${dateTo}`),

@@ -1083,8 +1083,22 @@ async function invReadFiles(files){
       if (f.size > 4 * 1024 * 1024){ found.push({file:f.name, error:'הקובץ גדול מ-4MB'}); continue; }
       try {
         const b64 = await invB64(f);
-        const r = await api.parseInvoice(b64, f.type || 'application/pdf');
-        ((r.data && r.data.invoices) || []).forEach(v => found.push({...v, file: f.name}));
+        const ct = f.type || 'application/pdf';
+        // כמה עמודים? קובץ ארוך נקרא בקבוצות קטנות, כדי לא לחרוג מזמן השרת.
+        let pages = 1;
+        try { const p = await api.parseInvoice(b64, ct, {probe:true}); pages = (p.data && p.data.pages) || 1; } catch (e){}
+        if (pages <= 2){
+          const r = await api.parseInvoice(b64, ct);
+          ((r.data && r.data.invoices) || []).forEach(v => found.push({...v, file: f.name}));
+        } else {
+          const STEP = 2;
+          for (let s = 1; s <= pages; s += STEP){
+            const e2 = Math.min(s + STEP - 1, pages);
+            st.textContent = `קורא ${f.name} — עמודים ${s}–${e2} מתוך ${pages}`;
+            const r = await api.parseInvoice(b64, ct, {page_from:s, page_to:e2});
+            ((r.data && r.data.invoices) || []).forEach(v => found.push({...v, file: f.name}));
+          }
+        }
       } catch (e){
         const msg = /504|timeout|JSON/i.test(String(e.message))
           ? 'הקובץ כבד מדי לקריאה בבת אחת — נסו לגרור את החשבוניות כקבצים נפרדים'
