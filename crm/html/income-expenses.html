@@ -154,6 +154,7 @@
     <button class="tab active" data-tab="balance" onclick="switchTab('balance')">⚖️ מאזן</button>
     <button class="tab" data-tab="income" onclick="switchTab('income')">📈 הכנסות</button>
     <button class="tab" data-tab="expenses" onclick="switchTab('expenses')">📉 הוצאות</button>
+      <button class="tab" data-tab="invoices" onclick="switchTab('invoices')">🧾 חשבוניות</button>
   </div>
 
   <div id="error" class="error"></div>
@@ -238,6 +239,76 @@
 
     <div class="sec-h">🔄 הוצאות משתנות <span style="font-weight:600;color:#9B8E82;font-size:13px" id="varTot"></span></div>
     <div id="varTable" class="muted">טוען...</div>
+  </div>
+
+  <style>
+    /* ---- לשונית חשבוניות ---- */
+    #invoices .inv-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+    #invoices .inv-sum{display:flex;gap:9px;flex-wrap:wrap}
+    .pill{background:#fff;border:1px solid #e8e4de;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700;color:#1F3D34}
+    .pill.g{background:#e6f4ec;border-color:#cfe7d9;color:#1F7a4f}
+    .pill.a{background:#fdf6e9;border-color:#e8c88a;color:#b8801f}
+    .inv-card{background:#fff;border:1px solid #e8e4de;border-radius:14px;padding:16px 18px;margin-bottom:16px}
+    .inv-card h4{color:#1F3D34;font-size:15px;margin:0 0 6px}
+    .inv-card p{font-size:12.5px;color:#9B8E82;line-height:1.7;margin:0 0 10px}
+    .inv-card textarea{width:100%;min-height:80px;border:1.5px solid #e8e4de;border-radius:10px;padding:10px 12px;font-family:'Heebo';font-size:13px;resize:vertical}
+    .inv-match{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#FAF8F4;border-radius:9px;padding:8px 12px;margin-top:7px;font-size:13.5px}
+    .inv-match label{display:flex;align-items:center;gap:8px;cursor:pointer}
+    table.inv{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}
+    table.inv th{background:#1F3D34;color:#fff;font-size:12px;padding:10px 12px;text-align:right;white-space:nowrap}
+    table.inv td{padding:10px 12px;border-bottom:1px solid #f4f1ec;font-size:13.5px;vertical-align:middle}
+    table.inv tr:hover td{background:#FAF8F4}
+    .st-pill{display:inline-block;border-radius:999px;padding:3px 11px;font-size:12px;font-weight:700}
+    .st-pill.paid{background:#e6f4ec;color:#1F7a4f}
+    .st-pill.wait{background:#f6f2ec;color:#8a7f70}
+    .st-pill.inv{background:#eef2f8;color:#3a6d92}
+    .mini{border:1px solid #e8e4de;background:#fff;border-radius:8px;padding:5px 10px;font-family:'Heebo';font-size:12.5px;font-weight:600;cursor:pointer;color:#1F3D34;text-decoration:none;display:inline-block}
+    .mini:hover{border-color:#1F3D34}
+    .mini.go{background:#1F3D34;color:#fff;border-color:#1F3D34}
+    .mini.wa{background:#25D366;color:#fff;border-color:#25D366}
+  </style>
+
+  <!-- INVOICES -->
+  <div id="invoices" class="tab-content">
+    <div class="inv-head">
+      <div class="sec-h">🧾 חשבוניות ותשלומים</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:13px;color:#9B8E82;font-weight:700">חודש</label>
+        <select id="invMonth" class="mini" onchange="renderInvoices()"></select>
+      </div>
+    </div>
+    <div class="inv-sum" id="invSum"></div>
+
+    <div class="inv-card" style="margin-top:14px">
+      <h4>📥 ייבוא תנועות מהבנק</h4>
+      <p>הורידו מהבנק את קובץ התנועות של החודש (CSV) או העתיקו את הטבלה מהמסך, והדביקו כאן. המערכת תזהה לפי הסכום ושם המעביר מי שילם, ותציע לסמן. שום דבר לא נשמר בלי אישור שלך.</p>
+      <textarea id="bankText" placeholder="להדביק כאן את שורות התנועות…"></textarea>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:10px;align-items:center">
+        <input type="file" id="bankFile" accept=".csv,.txt" style="font-size:12.5px">
+        <button class="mini go" onclick="matchBank()">התאמה לתשלומים</button>
+      </div>
+      <div id="bankRes"></div>
+    </div>
+
+    <div id="invTable" class="muted">טוען…</div>
+  </div>
+
+  <div id="invModal" class="ov">
+    <div class="ed-box">
+      <h3>תיעוד חשבונית</h3>
+      <div class="ed-sub" id="invTitle"></div>
+      <label>מספר חשבונית</label>
+      <input type="text" id="invNum" placeholder="למשל 1042">
+      <label>קישור למסמך במורנינג (לא חובה)</label>
+      <input type="text" id="invLink" dir="ltr" placeholder="https://…">
+      <label>או העלאת ה-PDF (לא חובה)</label>
+      <input type="file" id="invFile" accept="application/pdf,image/*" style="font-size:12.5px;padding:6px 0">
+      <p class="ed-note">המסמך נשמר באתר ומשויך לחודש ולילד/ה.</p>
+      <div class="ed-actions">
+        <button class="btn" onclick="saveInvoice()">שמירה</button>
+        <button class="btn grey" onclick="closeInv()">ביטול</button>
+      </div>
+    </div>
   </div>
 
   <div id="edModal" class="ov">
@@ -570,6 +641,7 @@ function renderActive() {
   if (!D) return;
   if (activeTab==='balance') renderBalance();
   else if (activeTab==='income') renderIncome();
+  else if (activeTab==='invoices') renderInvoices();
   else renderExpenses();
 }
 function onYear(){ SY = parseInt(document.getElementById('yearSel').value,10); expMonth = null; loadAll(); }
@@ -620,6 +692,228 @@ document.getElementById('expFormEl').addEventListener('submit', async e => {
   await loadAll();
   buildYearOptions();
 })();
+
+/* =======================================================================
+   לשונית חשבוניות — מעקב תשלומים, תיעוד חשבוניות וייבוא תנועות מהבנק.
+   מקור האמת הוא אותן שורות שכר לימוד שבמסך "שכר לימוד", כך שסימון
+   "שולם" כאן וסימון שם הם אותו דבר בדיוק.
+   ======================================================================= */
+const INV_TPL_KEY = 'gl_tuition_reminder_tpl';
+const INV_TPL_DEFAULT = 'היי, לא ראיתי אצלנו העברה על שמכם החודש. יש מצב שאני פספסתי?';
+let invKids = [], invParents = [], invRows = [], invDocs = [], invLoaded = false, invTarget = null;
+
+const invPad = n => String(n).padStart(2,'0');
+const invChildName = c => (c.first_name_he + ' ' + (c.last_name_he || '')).trim();
+function invMonths(){
+  return Array.from({length:12},(_,i)=>{ const m=9+i; return m<=12?{y:SY,m}:{y:SY+1,m:m-12}; });
+}
+const invDue = mo => `${mo.y}-${invPad(mo.m)}-01`;
+function invPayer(childId){
+  const ps = invParents.filter(p => p.child_id === childId);
+  if (!ps.length) return null;
+  return ps.find(p => p.is_primary) || ps.find(p => p.relationship_type === 'mother') || ps[0];
+}
+function invDocFor(tid){ return invDocs.find(d => d.section === 'invoice:' + tid); }
+
+async function loadInvoices(){
+  const [rc, rt, rp, rd] = await Promise.all([
+    api.getChildren(), api.getTuition(),
+    api.getParents().catch(()=>({data:[]})),
+    api.getDocuments().catch(()=>({data:[]})),
+  ]);
+  const year = SY + '-' + String((SY+1)%100).padStart(2,'0');
+  invKids = ((rc&&rc.data)||[]).filter(c => (c.school_year||year) === year && c.status === 'active')
+    .sort((a,b)=>invChildName(a).localeCompare(invChildName(b),'he'));
+  invRows = (rt&&rt.data)||[];
+  invParents = (rp&&rp.data)||[];
+  invDocs = ((rd&&rd.data)||[]).filter(d => (d.section||'').startsWith('invoice:'));
+  invLoaded = true;
+}
+
+function invMonthOptions(){
+  const sel = document.getElementById('invMonth');
+  if (sel.options.length && sel.dataset.sy === String(SY)) return;
+  const now = new Date().toISOString().slice(0,7);
+  sel.dataset.sy = String(SY);
+  sel.innerHTML = invMonths().map(mo =>
+    `<option value="${invDue(mo)}">${MONTH_LBL[(mo.m>=9?mo.m-9:mo.m+3)]} ${mo.y}</option>`).join('');
+  const cur = invMonths().find(mo => `${mo.y}-${invPad(mo.m)}` === now);
+  sel.value = invDue(cur || invMonths()[0]);
+}
+
+async function renderInvoices(){
+  if (!invLoaded){
+    document.getElementById('invTable').innerHTML = '<div class="muted">טוען…</div>';
+    try { await loadInvoices(); } catch(e){ showError('שגיאה בטעינה: ' + e.message); return; }
+  }
+  invMonthOptions();
+  const due = document.getElementById('invMonth').value;
+  const rows = invKids.map(k => {
+    const t = invRows.find(r => r.child_id === k.id && r.due_date === due);
+    return t ? {k, t, doc: invDocFor(t.id)} : null;
+  }).filter(Boolean).filter(r => r.t.status !== 'waived' && Number(r.t.amount) > 0);
+
+  const paid = rows.filter(r => r.t.status === 'paid');
+  const withInv = rows.filter(r => r.doc);
+  const sum = a => a.reduce((s,r)=>s+Number(r.t.amount),0);
+  document.getElementById('invSum').innerHTML =
+    `<span class="pill">${rows.length} משלמים · ${money(sum(rows))}</span>` +
+    `<span class="pill g">שולמו ${paid.length} · ${money(sum(paid))}</span>` +
+    `<span class="pill a">ממתינים ${rows.length-paid.length} · ${money(sum(rows)-sum(paid))}</span>` +
+    `<span class="pill">חשבוניות ${withInv.length} מתוך ${paid.length}</span>`;
+
+  if (!rows.length){ document.getElementById('invTable').innerHTML = '<div class="muted">אין חיובים בחודש הזה.</div>'; return; }
+
+  const body = rows.map(({k,t,doc}) => {
+    const payer = invPayer(k.id);
+    const isPaid = t.status === 'paid';
+    const num = doc ? (doc.category || '') : '';
+    const link = doc ? (doc.file_url || (String(doc.title||'').split(' · ').find(x=>/^https?:/.test(x)) || '')) : '';
+    const acts = [];
+    acts.push(isPaid
+      ? `<button class="mini" onclick="invSetPaid('${t.id}',false)">ביטול סימון</button>`
+      : `<button class="mini go" onclick="invSetPaid('${t.id}',true)">סמן שולם</button>`);
+    if (isPaid) acts.push(`<button class="mini" onclick="openInv('${t.id}')">${doc ? 'עריכת חשבונית' : 'תעד חשבונית'}</button>`);
+    if (!isPaid && payer && payer.phone) acts.push(`<a class="mini wa" target="_blank" rel="noopener" href="${invWa(payer.phone, invChildName(k), t.amount)}">תזכורת</a>`);
+    return `<tr>
+      <td><b>${esc(invChildName(k))}</b></td>
+      <td>${payer ? esc(payer.full_name_he) : '<span class="muted">לא רשום</span>'}${payer&&payer.national_id?`<div style="font-size:11.5px;color:#9B8E82" dir="ltr">${esc(payer.national_id)}</div>`:''}</td>
+      <td>${money(t.amount)}</td>
+      <td><span class="st-pill ${isPaid?'paid':'wait'}">${isPaid?'שולם':'ממתין'}</span></td>
+      <td>${doc ? `<span class="st-pill inv">${esc(num||'הופקה')}</span>${link?` <a class="src" href="${esc(link)}" target="_blank" rel="noopener">פתח</a>`:''}` : '<span class="muted">—</span>'}</td>
+      <td><div style="display:flex;gap:6px;flex-wrap:wrap">${acts.join('')}</div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('invTable').innerHTML =
+    `<table class="inv"><thead><tr><th>ילד/ה</th><th>הורה משלם</th><th>סכום</th><th>תשלום</th><th>חשבונית</th><th>פעולות</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function invWa(phone, child, amount){
+  let d = String(phone||'').replace(/\D/g,''); if (d.startsWith('0')) d = '972' + d.slice(1);
+  const tpl = localStorage.getItem(INV_TPL_KEY) || INV_TPL_DEFAULT;
+  const msg = tpl.replace(/\{שם\}/g, child).replace(/\{סכום\}/g, money(amount));
+  return 'https://wa.me/' + d + '?text=' + encodeURIComponent(msg);
+}
+
+async function invSetPaid(tid, paid){
+  const t = invRows.find(r => r.id === tid); if (!t) return;
+  try {
+    if (paid){
+      await api.updateTuition(tid, {status:'paid', paid_date:t.due_date});
+      await api.createIncome({source_he:t.child_name, amount:t.amount, receipt_date:t.due_date,
+        category_he:'דמי לימוד', notes_he: SY + '-' + String((SY+1)%100).padStart(2,'0')});
+      t.status = 'paid';
+      showSuccess('סומן כשולם · נרשמה הכנסה');
+    } else {
+      await api.updateTuition(tid, {status:'pending', paid_date:null});
+      const inc = incomeData.find(i => i.category_he==='דמי לימוד' && i.receipt_date===t.due_date
+        && Number(i.amount)===Number(t.amount) && i.source_he===t.child_name);
+      if (inc) await api.deleteIncome(inc.id);
+      t.status = 'pending';
+      showSuccess('הסימון בוטל');
+    }
+    await loadAll();
+    renderInvoices();
+  } catch(e){ showError('לא נשמר: ' + e.message); }
+}
+
+function openInv(tid){
+  const t = invRows.find(r => r.id === tid); if (!t) return;
+  invTarget = t;
+  const doc = invDocFor(tid);
+  const k = invKids.find(x => x.id === t.child_id);
+  document.getElementById('invTitle').textContent = (k?invChildName(k):'') + ' · ' + t.due_date.slice(0,7);
+  document.getElementById('invNum').value = doc ? (doc.category||'') : '';
+  document.getElementById('invLink').value = doc ? (String(doc.title||'').split(' · ').find(x=>/^https?:/.test(x))||'') : '';
+  document.getElementById('invFile').value = '';
+  document.getElementById('invModal').classList.add('show');
+}
+function closeInv(){ document.getElementById('invModal').classList.remove('show'); invTarget = null; }
+
+function invB64(file){
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',').pop()); r.onerror=rej; r.readAsDataURL(file); });
+}
+
+async function saveInvoice(){
+  if (!invTarget) return;
+  const t = invTarget;
+  const num = document.getElementById('invNum').value.trim();
+  const link = document.getElementById('invLink').value.trim();
+  const f = document.getElementById('invFile').files[0];
+  if (!num && !link && !f){ showError('צריך מספר חשבונית, קישור או קובץ'); return; }
+  const k = invKids.find(x => x.id === t.child_id);
+  const title = [invChildName(k||{first_name_he:t.child_name||''}), t.due_date.slice(0,7), link].filter(Boolean).join(' · ');
+  try {
+    const old = invDocFor(t.id);
+    if (old) await api.deleteDocument(old.id);
+    const payload = {section:'invoice:'+t.id, category:num || 'חשבונית', title};
+    if (f){
+      if (f.size > 4*1024*1024){ showError('הקובץ גדול מדי (עד 4MB)'); return; }
+      payload.file_base64 = await invB64(f);
+      payload.file_name = f.name; payload.content_type = f.type || 'application/pdf';
+    }
+    await api.uploadDocument(payload);
+    const rd = await api.getDocuments();
+    invDocs = ((rd&&rd.data)||[]).filter(d => (d.section||'').startsWith('invoice:'));
+    closeInv(); showSuccess('החשבונית תועדה'); renderInvoices();
+  } catch(e){ showError('לא נשמר: ' + e.message); }
+}
+
+/* ---------- ייבוא תנועות מהבנק ---------- */
+document.getElementById('bankFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  document.getElementById('bankText').value = await f.text();
+});
+
+function matchBank(){
+  const txt = document.getElementById('bankText').value.trim();
+  if (!txt){ showError('אין מה לנתח — הדביקו או בחרו קובץ'); return; }
+  const due = document.getElementById('invMonth').value;
+  const open = invKids.map(k => {
+    const t = invRows.find(r => r.child_id===k.id && r.due_date===due);
+    return t && t.status==='pending' && Number(t.amount)>0 ? {k,t,payer:invPayer(k.id)} : null;
+  }).filter(Boolean);
+  if (!open.length){ document.getElementById('bankRes').innerHTML = '<p style="margin-top:10px">כל התשלומים של החודש כבר מסומנים.</p>'; return; }
+
+  const lines = txt.split(/\r?\n/).filter(l => l.trim());
+  const hits = [];
+  open.forEach(o => {
+    const amt = Number(o.t.amount);
+    const cand = lines.filter(l => {
+      const nums = (l.match(/[\d,]+(?:\.\d{1,2})?/g)||[]).map(x=>Number(x.replace(/,/g,'')));
+      return nums.some(n => Math.abs(n - amt) < 0.5);
+    });
+    if (!cand.length) return;
+    let line = cand[0], strong = cand.length === 1;
+    if (o.payer){
+      const words = String(o.payer.full_name_he).split(/\s+/).filter(w=>w.length>1);
+      const byName = cand.find(l => words.some(w => l.includes(w)));
+      if (byName){ line = byName; strong = true; }
+    }
+    hits.push({...o, line, strong});
+  });
+
+  document.getElementById('bankRes').innerHTML = hits.length
+    ? `<div style="margin-top:12px">${hits.map((h,i)=>`
+        <div class="inv-match">
+          <label><input type="checkbox" class="bchk" data-id="${h.t.id}" ${h.strong?'checked':''}>
+            <b>${esc(invChildName(h.k))}</b> · ${money(h.t.amount)} ${h.strong?'':'<span style="color:#b8801f">· התאמה לפי סכום בלבד</span>'}</label>
+          <span class="muted" style="font-size:12px;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(h.line)}">${esc(h.line.slice(0,70))}</span>
+        </div>`).join('')}
+        <button class="mini go" style="margin-top:12px" onclick="applyBank()">סמן את המסומנים כשולמו</button>
+      </div>`
+    : '<p style="margin-top:10px">לא נמצאה התאמה בין הסכומים לשורות שהודבקו.</p>';
+}
+
+async function applyBank(){
+  const ids = [...document.querySelectorAll('.bchk:checked')].map(c => c.dataset.id);
+  if (!ids.length){ showError('לא נבחר אף תשלום'); return; }
+  for (const id of ids) await invSetPaid(id, true);
+  document.getElementById('bankRes').innerHTML = '';
+  document.getElementById('bankText').value = '';
+  showSuccess('סומנו ' + ids.length + ' תשלומים');
+}
 </script>
 
 </body>
