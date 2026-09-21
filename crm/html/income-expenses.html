@@ -1085,7 +1085,12 @@ async function invReadFiles(files){
         const b64 = await invB64(f);
         const r = await api.parseInvoice(b64, f.type || 'application/pdf');
         ((r.data && r.data.invoices) || []).forEach(v => found.push({...v, file: f.name}));
-      } catch (e){ found.push({file:f.name, error:e.message}); }
+      } catch (e){
+        const msg = /504|timeout|JSON/i.test(String(e.message))
+          ? 'הקובץ כבד מדי לקריאה בבת אחת — נסו לגרור את החשבוניות כקבצים נפרדים'
+          : e.message;
+        found.push({file:f.name, error:msg});
+      }
     }
     st.textContent = `נמצאו ${found.filter(x=>!x.error).length} מסמכים ב-${files.length} קבצים`;
     invBuildProposals(found);
@@ -1128,6 +1133,11 @@ function invBuildProposals(found){
   found.forEach(v => {
     if (v.error){ invParsedRows.push({state:'error', file:v.file, msg:v.error}); return; }
     const num = String(v.doc_number || '').trim();
+    // חשבונית זיכוי מבטלת חשבונית קודמת — לא מתייגים אותה כחשבונית של החודש
+    if (/זיכוי/.test(String(v.doc_type || ''))){
+      invParsedRows.push({state:'credit', num, name:v.client_name, amount:invDigits(v.amount), file:v.file});
+      return;
+    }
     if (num && seen.has(num)){ invParsedRows.push({state:'dup', num, name:v.client_name, file:v.file}); return; }
     if (num) seen.add(num);
     if (num && already.has(num)){ invParsedRows.push({state:'exists', num, name:v.client_name, file:v.file}); return; }
@@ -1150,6 +1160,7 @@ function invRenderProposals(){
     if (r.state === 'error') return `<div class="pr-row dup"><span class="pr-tag warn">שגיאה</span><b>${esc(r.file)}</b><span class="muted">${esc(r.msg)}</span></div>`;
     if (r.state === 'dup')   return `<div class="pr-row dup"><span class="pr-tag skip">כפילות</span>חשבונית ${esc(r.num)} הופיעה פעמיים בגרירה</div>`;
     if (r.state === 'exists')return `<div class="pr-row dup"><span class="pr-tag skip">כבר תויגה</span>חשבונית ${esc(r.num)} כבר שמורה במערכת</div>`;
+    if (r.state === 'credit') return `<div class="pr-row dup"><span class="pr-tag skip">זיכוי</span>מסמך ${esc(r.num)} הוא חשבונית זיכוי${r.name ? ' · ' + esc(r.name) : ''}${r.amount ? ' · ' + money(r.amount) : ''} — לא מתויג</div>`;
     return `<div class="pr-row">
       <span class="pr-tag ${r.state === 'ok' ? 'ok' : 'warn'}">${r.state === 'ok' ? 'זוהה לפי ' + esc(r.how) : 'לא זוהה'}</span>
       <b>${esc(r.num || '—')}</b>

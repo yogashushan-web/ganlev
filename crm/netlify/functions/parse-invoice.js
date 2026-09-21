@@ -75,8 +75,10 @@ const handler = withAuth(async (event) => {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-8',
-        max_tokens: 4000,
+        // קריאת טבלה מובנית לא דורשת את המודל הכבד. Netlify קוטע פונקציה
+        // אחרי 26 שניות, ודוח חודשי של 6 עמודים חרג מזה עם אופוס.
+        model: 'claude-sonnet-5',
+        max_tokens: 3000,
         output_config: { format: { type: 'json_schema', schema: SCHEMA } },
         messages: [{ role: 'user', content: [fileBlock, { type: 'text', text: PROMPT }] }],
       }),
