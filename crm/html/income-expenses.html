@@ -1091,7 +1091,7 @@ async function invReadFiles(files){
           const r = await api.parseInvoice(b64, ct);
           ((r.data && r.data.invoices) || []).forEach(v => found.push({...v, file: f.name}));
         } else {
-          const STEP = 2;
+          const STEP = 1;   // עמוד אחד בכל קריאה — שוליים בטוחים מול מגבלת 26 השניות
           for (let s = 1; s <= pages; s += STEP){
             const e2 = Math.min(s + STEP - 1, pages);
             st.textContent = `קורא ${f.name} — עמודים ${s}–${e2} מתוך ${pages}`;
