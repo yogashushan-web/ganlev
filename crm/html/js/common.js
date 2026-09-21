@@ -224,7 +224,8 @@ function renderNavSidebar() {
       "button{transition:background .15s,box-shadow .15s,transform .1s,opacity .15s;}",
       "button:active{transform:scale(.97);}",
       // --- sidebar ---
-      "#crmSidebar{position:fixed;top:0;right:0;width:252px;height:100vh;background:linear-gradient(180deg,#244c40 0%,#1c3e34 55%,#173229 100%);padding:24px 15px 86px;overflow-y:auto;z-index:9000;font-family:'Heebo',sans-serif;box-shadow:-4px 0 26px rgba(0,0,0,.16);}",
+      "#crmSidebar{position:fixed;top:0;right:0;width:252px;height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#244c40 0%,#1c3e34 55%,#173229 100%);padding:24px 15px 22px;overflow-y:auto;z-index:9000;font-family:'Heebo',sans-serif;box-shadow:-4px 0 26px rgba(0,0,0,.16);}",
+      "#crmSidebar .cs-logo,#crmSidebar a,#crmSidebar .cs-logout{flex-shrink:0;}",
       "#crmSidebar::-webkit-scrollbar{width:6px;}",
       "#crmSidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border:none;border-radius:6px;}",
       "#crmSidebar .cs-logo{color:#fff;font-size:18px;font-weight:800;text-align:center;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.13);letter-spacing:.3px;}",
@@ -234,7 +235,7 @@ function renderNavSidebar() {
       "#crmSidebar a span:first-child{width:24px;text-align:center;font-size:16px;flex-shrink:0;}",
       "#crmSidebar a:hover{background:rgba(255,255,255,.09);color:#fff;transform:translateX(-3px);}",
       "#crmSidebar a.active{background:linear-gradient(135deg,#C4846C,#b06f55);color:#fff;font-weight:700;box-shadow:0 6px 16px rgba(196,132,108,.42);}",
-      "#crmSidebar .cs-logout{position:absolute;bottom:20px;right:15px;width:222px;padding:11px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.18);border-radius:11px;font-family:'Heebo';cursor:pointer;font-size:13px;font-weight:600;transition:background .16s,border-color .16s;}",
+      "#crmSidebar .cs-logout{margin:auto 0 0;align-self:stretch;padding:11px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.18);border-radius:11px;font-family:'Heebo';cursor:pointer;font-size:13px;font-weight:600;transition:background .16s,border-color .16s;}",
       "#crmSidebar .cs-logout:hover{background:rgba(231,76,60,.88);border-color:transparent;color:#fff;}",
       "body{padding:26px 286px 44px 30px !important;}",
       // hamburger + backdrop: hidden on desktop, used as a slide-out drawer on mobile
