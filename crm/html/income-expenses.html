@@ -187,11 +187,45 @@
   </div>
 
   <!-- INCOME -->
+  <style>
+    /* ---- ראש לשונית הכנסות: חודש, מד השלמה ופס שנה ---- */
+    .fin-nav{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+    .fin-month{position:relative;background:#1F3D34;border-radius:12px;padding:8px 16px;min-width:186px;text-align:center}
+    .fin-month b{color:#fff;font-size:17px;font-weight:800}
+    .fin-month::after{content:"▾";position:absolute;left:11px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.6);font-size:12px;pointer-events:none}
+    .fin-arrow{border:1px solid #e8e4de;background:#fff;border-radius:10px;padding:7px 13px;font-size:16px;font-weight:700;color:#1F3D34;cursor:pointer;font-family:'Heebo'}
+    .fin-arrow:hover{border-color:#1F3D34}
+    .meter-card{background:#fff;border:1px solid #e8e4de;border-radius:14px;padding:16px 18px;margin-bottom:16px}
+    .meter-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+    .meter-row:last-child{margin-bottom:0}
+    .meter-lbl{font-size:13px;font-weight:700;color:#6f6457;min-width:74px}
+    .meter-bar{flex:1;height:13px;background:#f0ece6;border-radius:999px;overflow:hidden}
+    .meter-bar i{display:block;height:100%;border-radius:999px}
+    .meter-bar i.pay{background:linear-gradient(90deg,#8a9a5b,#1F7a4f)}
+    .meter-bar i.inv{background:linear-gradient(90deg,#8fb3d4,#3a6d92)}
+    .meter-num{font-size:14px;font-weight:800;color:#1F3D34;min-width:62px;text-align:left}
+    .meter-left{font-size:12.5px;color:#9B8E82;margin-top:10px}
+    .ystrip{display:flex;align-items:flex-end;gap:6px;height:64px;margin-top:14px}
+    .ycol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;cursor:pointer}
+    .ycol .stack{width:100%;background:#eee8df;border-radius:5px 5px 0 0;display:flex;align-items:flex-end}
+    .ycol .fill{width:100%;background:#1F7a4f;border-radius:5px 5px 0 0}
+    .ycol .lb{font-size:10.5px;color:#9B8E82;font-weight:700}
+    .ycol.on .lb{color:#1F3D34}
+    .ycol.on .stack{outline:2px solid #C4846C;outline-offset:1px}
+  </style>
+
   <div id="income" class="tab-content">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
       <div class="sec-h">📈 הכנסות <span style="font-weight:600;color:#9B8E82;font-size:13px" id="incTot"></span></div>
-      <button class="btn" onclick="document.getElementById('incForm').classList.toggle('show')">+ הוסף הכנסה</button>
+      <div class="fin-nav" style="margin:0">
+        <button class="fin-arrow" onclick="finStep(-1)" title="חודש קודם">‹</button>
+        <div class="fin-month"><b id="incMonthTitle">—</b></div>
+        <button class="fin-arrow" onclick="finStep(1)" title="חודש הבא">›</button>
+        <button class="btn" onclick="document.getElementById('incForm').classList.toggle('show')">+ הוסף הכנסה</button>
+      </div>
     </div>
+
+    <div class="meter-card" id="incMeter"></div>
     <div id="incForm" class="form">
       <form id="incFormEl"><div class="form-row">
         <div class="fg"><label>מקור / משלם *</label><input type="text" id="iSource" required></div>
@@ -465,15 +499,79 @@ function svgProfit(s) {
 function shortK(v){ v=Math.round(v); if (Math.abs(v)>=1000) return (v/1000).toFixed(Math.abs(v)<10000?1:0)+'k'; return v; }
 
 // ---------- income tab ----------
-function renderIncome() {
-  document.getElementById('incTot').textContent = '— נטו: ' + money(D.totIncNet) + ' (ברוטו ' + money(D.totIncNet+D.totVat) + ')';
-  const list = incomeData.slice().sort((a,b)=> (b.receipt_date>a.receipt_date?1:-1));
-  if (!list.length) { document.getElementById('incTable').innerHTML = '<div class="muted">אין הכנסות בשנה זו.</div>'; return; }
-  const rows = list.map(i => `<tr>
-    <td>${esc(i.source_he)}</td><td>${esc(i.category_he)||'-'}</td>
-    <td>${money(i.amount)}</td><td>${formatDate(i.receipt_date)}</td>
-    <td><button class="del" onclick="delInc('${i.id}')">מחק</button></td></tr>`).join('');
-  document.getElementById('incTable').innerHTML = `<table><thead><tr><th>מקור</th><th>קטגוריה</th><th>סכום</th><th>תאריך</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+/* לשונית הכנסות: חודש בפוקוס + מד השלמה (סופר משפחות) + פס שנה.
+   מציגה שכר לימוד בלבד. החודש משותף עם לשונית החשבוניות. */
+async function renderIncome() {
+  if (!invLoaded) {
+    document.getElementById('incTable').innerHTML = '<div class="muted">טוען…</div>';
+    try { await loadInvoices(); } catch (e) { showError('שגיאה בטעינה: ' + e.message); return; }
+  }
+  invMonthOptions();
+  const sel = document.getElementById('invMonth');
+  const due = sel.value;
+  document.getElementById('incMonthTitle').textContent =
+    sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : due;
+
+  // כל המשפחות שמחויבות בחודש הזה
+  const fam = invKids.map(k => {
+    const t = invRows.find(r => r.child_id === k.id && r.due_date === due);
+    return t && t.status !== 'waived' && Number(t.amount) > 0 ? {k, t, doc: invDocFor(t.id)} : null;
+  }).filter(Boolean);
+  const paid = fam.filter(f => f.t.status === 'paid');
+  const invd = fam.filter(f => f.doc);
+  const pct = n => fam.length ? Math.round(n / fam.length * 100) : 0;
+  const leftPay = fam.length - paid.length, leftInv = paid.length - invd.length;
+
+  document.getElementById('incMeter').innerHTML = `
+    <div class="meter-row">
+      <span class="meter-lbl">תשלומים</span>
+      <span class="meter-bar"><i class="pay" style="width:${pct(paid.length)}%"></i></span>
+      <span class="meter-num">${paid.length}/${fam.length}</span>
+    </div>
+    <div class="meter-row">
+      <span class="meter-lbl">חשבוניות</span>
+      <span class="meter-bar"><i class="inv" style="width:${pct(invd.length)}%"></i></span>
+      <span class="meter-num">${invd.length}/${fam.length}</span>
+    </div>
+    <div class="meter-left">${leftPay || leftInv
+      ? `נותרו: ${leftPay ? leftPay + ' תשלומים' : ''}${leftPay && leftInv > 0 ? ' · ' : ''}${leftInv > 0 ? leftInv + ' חשבוניות להפקה' : ''}`
+      : 'החודש הזה סגור — כל התשלומים התקבלו וכל החשבוניות הופקו 🎉'}</div>
+    <div class="ystrip">${invMonths().map((mo, i) => {
+      const d = invDue(mo);
+      const all = invKids.map(k => invRows.find(r => r.child_id === k.id && r.due_date === d))
+        .filter(t => t && t.status !== 'waived' && Number(t.amount) > 0);
+      const p = all.filter(t => t.status === 'paid').length;
+      const h = all.length ? 100 : 12;
+      return `<div class="ycol ${d === due ? 'on' : ''}" onclick="finGo('${d}')" title="${MONTH_LBL[i]}: ${p} מתוך ${all.length} שילמו">
+        <div class="stack" style="height:${h}%"><div class="fill" style="height:${all.length ? Math.round(p/all.length*100) : 0}%"></div></div>
+        <span class="lb">${MONTH_LBL[i]}</span></div>`;
+    }).join('')}</div>`;
+
+  // רשימת התקבולים של החודש — שכר לימוד בלבד
+  const list = incomeData.filter(i => i.category_he === 'דמי לימוד' && i.receipt_date === due)
+    .sort((a,b) => String(a.source_he).localeCompare(String(b.source_he), 'he'));
+  const tot = list.reduce((s,i) => s + (parseFloat(i.amount)||0), 0);
+  document.getElementById('incTot').textContent = '— התקבל החודש: ' + money(tot);
+  document.getElementById('incTable').innerHTML = list.length
+    ? `<table><thead><tr><th>ילד/ה</th><th>סכום</th><th>תאריך</th><th></th></tr></thead><tbody>${
+        list.map(i => `<tr><td>${esc(i.source_he)}</td><td>${money(i.amount)}</td>
+          <td>${formatDate(i.receipt_date)}</td>
+          <td><button class="del" onclick="delInc('${i.id}')">מחק</button></td></tr>`).join('')
+      }</tbody></table>`
+    : '<div class="muted">עוד לא התקבלו תשלומי שכר לימוד בחודש הזה.</div>';
+}
+
+/* ניווט חודשים משותף לשתי הלשוניות */
+function finStep(d){
+  const sel = document.getElementById('invMonth');
+  const i = Math.min(sel.options.length - 1, Math.max(0, sel.selectedIndex + d));
+  if (i === sel.selectedIndex) return;
+  sel.selectedIndex = i; renderActive();
+}
+function finGo(due){
+  const sel = document.getElementById('invMonth');
+  if (sel.value === due) return;
+  sel.value = due; renderActive();
 }
 
 // ---------- expenses tab ----------
