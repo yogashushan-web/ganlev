@@ -15,8 +15,11 @@
     .intro { background:#f6f1e9; border:1px solid #ece3d4; border-radius:14px; padding:16px 18px; font-size:14px; color:#6f6457; line-height:1.75; text-align:right; margin-bottom:22px; }
     .intro b { color:#1F3D34; }
     .intro a { color:#1F3D34; font-weight:700; }
-    .intro ul { margin:10px 0 0; padding-right:20px; }
+    .intro ul { margin:8px 0 0; padding-right:20px; }
     .intro li { margin-bottom:5px; }
+    .intro h3 { font-size:15px; color:#1F3D34; margin:18px 0 6px; }
+    .intro p { margin-bottom:9px; }
+    .intro p:last-child { margin-bottom:0; }
     .grp { margin-bottom:17px; }
     label { display:block; font-size:14px; font-weight:700; color:#1F3D34; margin-bottom:6px; line-height:1.5; }
     label .req { color:#c0563f; }
@@ -44,16 +47,25 @@
     <div id="form-wrap">
       <div class="head">
         <img src="logo.png" alt="גן לב">
-        <h1>❤️ טופס התעניינות לשנת <span id="yearLabel">2026/27</span> — גן לב</h1>
+        <h1>ברוכים הבאים לגן לב 🌿<br><span style="font-size:16px;color:#9B8E82;font-weight:600;">טופס התעניינות לשנת <span id="yearLabel">2027/28</span></span></h1>
       </div>
       <div class="intro">
-        ברוכים הבאים! נעים להכיר, כאן מאיה ויואל :) נשמח לעבור איתכם צעד אחר צעד את ההתעניינות ולענות על כל שאלה שעולה. מוזמנים ליצור קשר לייעוץ ותיאום דרך <a href="https://wa.me/972534408250" target="_blank">WhatsApp במספר 053-440-8250</a> (גן לב 2026/27).<br><br>
-        טופס זה הוא צעד ראשון להתעניינים בהרשמה לגן לב. הוא עוזר לנו להכיר קצת אתכם, את ילדכם/ילדתכם ואת התהליך שלכם. <b>מילוי הטופס אינו מבטיח קבלה</b>, ומספר המקומות מוגבל.
+        <p>נעים להכיר, אנחנו <b>מאימאי ויואל</b> :)</p>
+        <p>נשמח ללוות אתכם צעד־צעד לאורך תהליך ההתעניינות, לענות על השאלות שעולות בדרך ולעזור לכם להכיר אותנו ואת הגן.</p>
+        <p>מוזמנים ליצור איתנו קשר ב־<a href="https://wa.me/972528440033" target="_blank" rel="noopener">WhatsApp: 052-844-0033</a></p>
+
+        <h3>קצת על התהליך</h3>
+        <p>טופס זה הוא הצעד הראשון עבור משפחות המתעניינות בהרשמה לגן לב לשנת הלימודים <b>תשפ״ח (2027/28)</b>.</p>
+        <p>נבקש מכם למלא מספר פרטים אישיים עליכם, על ילדכם/ילדתכם ועל המשפחה.</p>
+        <p>הרשמה לגן היא תהליך משמעותי, והדרך הטובה ביותר להתחיל היא להגיע, להתבונן ולהרגיש את המרחב.</p>
+        <p>לאחר מילוי הטופס, ובמידה ויימצא עבורכם מקום להמשך התהליך, ניצור איתכם קשר ונזמין אתכם לביקור בגן.</p>
+
+        <h3>כמה דברים שחשוב לדעת</h3>
         <ul>
-          <li>אנו מקבלים כרגע ילדים בני 1.5 ומעלה.</li>
-          <li>מילוי טופס ההתעניינות אינו דורש תשלום ואינו מחייב.</li>
-          <li>מספר המקומות מוגבל — מילוי הטופס אינו מבטיח מקום.</li>
-          <li>הפניות ייענו לפי סדר ההרשמה, ובמידה ויימצא עבורכם מקום פנוי.</li>
+          <li>הקבוצה הזו מיועדת לילדים בגילים <b>1.5–2.5</b> (בספטמבר).</li>
+          <li>מילוי טופס ההתעניינות אינו כרוך בתשלום.</li>
+          <li>מספר המקומות בגן מוגבל, ולכן מילוי הטופס אינו מבטיח מקום.</li>
+          <li>הפניות ייענו בהתאם לסדר שבו נשלחו, ובהתאם לזמינות המקומות בגן.</li>
         </ul>
       </div>
       <div class="err" id="err"></div>
@@ -64,13 +76,13 @@
         </div>
         <div class="two">
           <div class="grp">
-            <label>תאריך לידה</label>
-            <input type="date" id="birthDate">
+            <label>תאריך לידה <span class="req">*</span></label>
+            <input type="date" id="birthDate" required>
           </div>
           <div class="grp">
-            <label>מין</label>
+            <label>מין <span class="req">*</span></label>
             <div class="radios">
-              <label><input type="radio" name="gender" value="זכר"> זכר</label>
+              <label><input type="radio" name="gender" value="זכר" required> זכר</label>
               <label><input type="radio" name="gender" value="נקבה"> נקבה</label>
             </div>
           </div>
@@ -78,8 +90,8 @@
         <hr class="sep">
         <div class="two">
           <div class="grp">
-            <label>שם הורה 1</label>
-            <input type="text" id="parent1Name">
+            <label>שם הורה 1 <span class="req">*</span></label>
+            <input type="text" id="parent1Name" required>
           </div>
           <div class="grp">
             <label>מס' טלפון הורה 1 <span class="req">*</span></label>
@@ -88,12 +100,12 @@
         </div>
         <div class="two">
           <div class="grp">
-            <label>שם הורה 2</label>
-            <input type="text" id="parent2Name">
+            <label>שם הורה 2 <span class="req">*</span></label>
+            <input type="text" id="parent2Name" required>
           </div>
           <div class="grp">
-            <label>מס' טלפון הורה 2</label>
-            <input type="tel" id="parent2Phone">
+            <label>מס' טלפון הורה 2 <span class="req">*</span></label>
+            <input type="tel" id="parent2Phone" required>
           </div>
         </div>
         <hr class="sep">
