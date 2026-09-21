@@ -279,6 +279,18 @@
     /* ---- לשונית חשבוניות ---- */
     #invoices .inv-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
     #invoices .inv-nav{display:flex;align-items:center;gap:8px}
+    .inv-drop{border:2px dashed #C4846C;border-radius:12px;padding:20px 16px;text-align:center;color:#8a5a44;background:#FBF6F2;cursor:pointer;line-height:1.5}
+    .inv-drop:hover{background:#f6ebe3}
+    .inv-drop.over{border-color:#16a34a;background:#f0faf2;color:#16a34a}
+    .inv-drop.busy{opacity:.65;pointer-events:none}
+    .inv-drop-sub{font-size:12px;color:#9B8E82;margin-top:6px}
+    .pr-row{display:flex;align-items:center;gap:10px;background:#FAF8F4;border-radius:10px;padding:9px 12px;margin-top:8px;font-size:13.5px;flex-wrap:wrap}
+    .pr-row.dup{opacity:.6}
+    .pr-row select{border:1px solid #e8e4de;border-radius:8px;padding:5px 8px;font-family:'Heebo';font-size:12.5px;max-width:190px}
+    .pr-tag{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px}
+    .pr-tag.ok{background:#e6f4ec;color:#1F7a4f}
+    .pr-tag.warn{background:#fdf6e9;color:#b8801f}
+    .pr-tag.skip{background:#eef2f8;color:#5f7fa8}
     #invoices .inv-month{position:relative;background:#1F3D34;border-radius:12px;padding:8px 16px;min-width:186px;text-align:center}
     #invoices .inv-month b{color:#fff;font-size:17px;font-weight:800;letter-spacing:.2px}
     #invoices .inv-month select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-family:'Heebo'}
@@ -334,6 +346,18 @@
     </div>
 
     <div id="invTable" class="muted">טוען…</div>
+
+    <div class="inv-card" style="margin-top:16px">
+      <h4>📎 תיוג חשבוניות מהמורנינג</h4>
+      <p>גררו לכאן את חשבוניות החודש — אפשר קובץ לכל חשבונית, קובץ מאוחד עם כולן, או את הדוח החודשי. המערכת תקרא כל מסמך, תשייך אותו לילד/ה, ותתעלם מכפילויות. שום דבר לא נשמר עד שתאשרו.</p>
+      <div class="inv-drop" id="invDrop">
+        <span style="font-size:26px;display:block;margin-bottom:6px">📄⬇️</span>
+        <b>גררו לכאן קבצים</b> · או לחצו לבחירה
+        <div class="inv-drop-sub" id="invDropStatus">PDF או תמונה · עד 4MB לקובץ</div>
+      </div>
+      <input type="file" id="invFiles" accept="application/pdf,image/*" multiple style="display:none">
+      <div id="invParsed"></div>
+    </div>
   </div>
 
   <div id="invModal" class="ov">
@@ -1028,6 +1052,144 @@ function matchBank(){
         <button class="mini go" style="margin-top:12px" onclick="applyBank()">סמן את המסומנים כשולמו</button>
       </div>`
     : '<p style="margin-top:10px">לא נמצאה התאמה בין הסכומים לשורות שהודבקו.</p>';
+}
+
+/* ---------- תיוג חשבוניות: גרירה, קריאה, התאמה וכפילויות ---------- */
+let invParsedRows = [];
+const invDigits = s => String(s == null ? '' : s).replace(/\D/g, '');
+
+(function wireInvDrop(){
+  const dz = document.getElementById('invDrop'), inp = document.getElementById('invFiles');
+  if (!dz || !inp) return;
+  dz.addEventListener('click', () => inp.click());
+  inp.addEventListener('change', () => { invReadFiles([...inp.files]); inp.value = ''; });
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', e => { if (e.target === dz) dz.classList.remove('over'); });
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('over');
+    if (e.dataTransfer.files && e.dataTransfer.files.length) invReadFiles([...e.dataTransfer.files]);
+  });
+})();
+
+async function invReadFiles(files){
+  if (!files.length) return;
+  const dz = document.getElementById('invDrop'), st = document.getElementById('invDropStatus');
+  dz.classList.add('busy');
+  const found = [];
+  try {
+    for (let i = 0; i < files.length; i++){
+      const f = files[i];
+      st.textContent = `קורא קובץ ${i+1} מתוך ${files.length}: ${f.name}`;
+      if (f.size > 4 * 1024 * 1024){ found.push({file:f.name, error:'הקובץ גדול מ-4MB'}); continue; }
+      try {
+        const b64 = await invB64(f);
+        const r = await api.parseInvoice(b64, f.type || 'application/pdf');
+        ((r.data && r.data.invoices) || []).forEach(v => found.push({...v, file: f.name}));
+      } catch (e){ found.push({file:f.name, error:e.message}); }
+    }
+    st.textContent = `נמצאו ${found.filter(x=>!x.error).length} מסמכים ב-${files.length} קבצים`;
+    invBuildProposals(found);
+  } finally { dz.classList.remove('busy'); }
+}
+
+// שיוך מסמך לילד: ת"ז המשלם ← שם המשלם ← סכום
+function invMatchChild(v, due){
+  const id = invDigits(v.client_national_id);
+  const amt = Number(invDigits(v.amount));
+  const cands = invKids.map(k => {
+    const t = invRows.find(r => r.child_id === k.id && r.due_date === due);
+    return t && t.status !== 'waived' && Number(t.amount) > 0 ? {k, t, payers: invPayerList(k.id)} : null;
+  }).filter(Boolean);
+  if (id){
+    const byId = cands.find(c => c.payers.some(p => invDigits(p.national_id) === id));
+    if (byId) return {...byId, how:'ת"ז'};
+  }
+  const words = String(v.client_name || '').split(/\s+/).filter(w => w.length > 1);
+  if (words.length){
+    const byName = cands.find(c => c.payers.some(p => words.some(w => p.full_name_he.includes(w))));
+    if (byName) return {...byName, how:'שם'};
+  }
+  if (v.child_name){
+    const byChild = cands.find(c => String(v.child_name).includes(c.k.first_name_he));
+    if (byChild) return {...byChild, how:'שם הילד/ה'};
+  }
+  if (amt){
+    const byAmt = cands.filter(c => Math.abs(Number(c.t.amount) - amt) < 1);
+    if (byAmt.length === 1) return {...byAmt[0], how:'סכום'};
+  }
+  return null;
+}
+
+function invBuildProposals(found){
+  const due = document.getElementById('invMonth').value;
+  const seen = new Set();                                  // כפילויות בתוך אותה גרירה
+  const already = new Set(invDocs.map(d => String(d.category || '')));
+  invParsedRows = [];
+  found.forEach(v => {
+    if (v.error){ invParsedRows.push({state:'error', file:v.file, msg:v.error}); return; }
+    const num = String(v.doc_number || '').trim();
+    if (num && seen.has(num)){ invParsedRows.push({state:'dup', num, name:v.client_name, file:v.file}); return; }
+    if (num) seen.add(num);
+    if (num && already.has(num)){ invParsedRows.push({state:'exists', num, name:v.client_name, file:v.file}); return; }
+    const m = invMatchChild(v, due);
+    invParsedRows.push({ state: m ? 'ok' : 'nomatch', num, name:v.client_name, amount:invDigits(v.amount),
+      file:v.file, how: m ? m.how : '', tid: m ? m.t.id : '', child: m ? invChildName(m.k) : '' });
+  });
+  invRenderProposals();
+}
+
+function invRenderProposals(){
+  const due = document.getElementById('invMonth').value;
+  const opts = invKids.map(k => {
+    const t = invRows.find(r => r.child_id === k.id && r.due_date === due);
+    return t && t.status !== 'waived' && Number(t.amount) > 0
+      ? `<option value="${t.id}">${esc(invChildName(k))}</option>` : '';
+  }).join('');
+  const usable = invParsedRows.filter(r => r.state === 'ok' || r.state === 'nomatch');
+  const html = invParsedRows.map((r, i) => {
+    if (r.state === 'error') return `<div class="pr-row dup"><span class="pr-tag warn">שגיאה</span><b>${esc(r.file)}</b><span class="muted">${esc(r.msg)}</span></div>`;
+    if (r.state === 'dup')   return `<div class="pr-row dup"><span class="pr-tag skip">כפילות</span>חשבונית ${esc(r.num)} הופיעה פעמיים בגרירה</div>`;
+    if (r.state === 'exists')return `<div class="pr-row dup"><span class="pr-tag skip">כבר תויגה</span>חשבונית ${esc(r.num)} כבר שמורה במערכת</div>`;
+    return `<div class="pr-row">
+      <span class="pr-tag ${r.state === 'ok' ? 'ok' : 'warn'}">${r.state === 'ok' ? 'זוהה לפי ' + esc(r.how) : 'לא זוהה'}</span>
+      <b>${esc(r.num || '—')}</b>
+      <span>${esc(r.name || '')}</span>
+      <span class="muted">${r.amount ? money(r.amount) : ''}</span>
+      <select onchange="invParsedRows[${i}].tid=this.value">
+        <option value="">— בחרו ילד/ה —</option>${opts.replace(`value="${r.tid}"`, `value="${r.tid}" selected`)}
+      </select>
+    </div>`;
+  }).join('');
+  document.getElementById('invParsed').innerHTML = invParsedRows.length
+    ? html + (usable.length ? `<button class="mini go" style="margin-top:12px" onclick="invApplyTags()">תייג ${usable.length} חשבוניות</button>` : '')
+    : '';
+}
+
+async function invApplyTags(){
+  const rows = invParsedRows.filter(r => (r.state === 'ok' || r.state === 'nomatch') && r.tid);
+  if (!rows.length){ showError('אין שורה משויכת לתיוג'); return; }
+  let n = 0;
+  try {
+    for (const r of rows){
+      const t = invRows.find(x => x.id === r.tid); if (!t) continue;
+      const k = invKids.find(x => x.id === t.child_id);
+      const old = invDocFor(t.id);
+      if (old) await api.deleteDocument(old.id);
+      await api.uploadDocument({
+        section: 'invoice:' + t.id,
+        category: r.num || 'חשבונית',
+        title: [invChildName(k || {first_name_he: r.child || ''}), t.due_date.slice(0,7), r.name].filter(Boolean).join(' · '),
+      });
+      n++;
+    }
+    const rd = await api.getDocuments();
+    invDocs = ((rd && rd.data) || []).filter(d => (d.section || '').startsWith('invoice:'));
+    invParsedRows = [];
+    document.getElementById('invParsed').innerHTML = '';
+    document.getElementById('invDropStatus').textContent = 'PDF או תמונה · עד 4MB לקובץ';
+    showSuccess('תויגו ' + n + ' חשבוניות');
+    renderInvoices();
+  } catch (e){ showError('התיוג נכשל: ' + e.message); }
 }
 
 async function applyBank(){
