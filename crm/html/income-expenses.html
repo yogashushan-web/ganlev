@@ -244,6 +244,11 @@
   <style>
     /* ---- לשונית חשבוניות ---- */
     #invoices .inv-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+    #invoices .inv-nav{display:flex;align-items:center;gap:8px}
+    #invoices .inv-month{position:relative;background:#1F3D34;border-radius:12px;padding:8px 16px;min-width:186px;text-align:center}
+    #invoices .inv-month b{color:#fff;font-size:17px;font-weight:800;letter-spacing:.2px}
+    #invoices .inv-month select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-family:'Heebo'}
+    #invoices .inv-month::after{content:"▾";position:absolute;left:11px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.6);font-size:12px;pointer-events:none}
     #invoices .inv-sum{display:flex;gap:9px;flex-wrap:wrap}
     .pill{background:#fff;border:1px solid #e8e4de;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700;color:#1F3D34}
     .pill.g{background:#e6f4ec;border-color:#cfe7d9;color:#1F7a4f}
@@ -272,9 +277,13 @@
   <div id="invoices" class="tab-content">
     <div class="inv-head">
       <div class="sec-h">🧾 חשבוניות ותשלומים</div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <label style="font-size:13px;color:#9B8E82;font-weight:700">חודש</label>
-        <select id="invMonth" class="mini" onchange="renderInvoices()"></select>
+      <div class="inv-nav">
+        <button class="mini" onclick="invStep(-1)" title="חודש קודם">‹</button>
+        <div class="inv-month">
+          <b id="invMonthTitle">—</b>
+          <select id="invMonth" onchange="renderInvoices()"></select>
+        </div>
+        <button class="mini" onclick="invStep(1)" title="חודש הבא">›</button>
       </div>
     </div>
     <div class="inv-sum" id="invSum"></div>
@@ -708,11 +717,16 @@ function invMonths(){
   return Array.from({length:12},(_,i)=>{ const m=9+i; return m<=12?{y:SY,m}:{y:SY+1,m:m-12}; });
 }
 const invDue = mo => `${mo.y}-${invPad(mo.m)}-01`;
-function invPayer(childId){
+// ההורים שרשומים על החשבונית. יכולים להיות שניים — חשבון בנק משותף.
+function invPayerList(childId){
   const ps = invParents.filter(p => p.child_id === childId);
-  if (!ps.length) return null;
-  return ps.find(p => p.is_primary) || ps.find(p => p.relationship_type === 'mother') || ps[0];
+  if (!ps.length) return [];
+  const marked = ps.filter(p => p.is_primary);
+  if (marked.length) return marked;
+  const mother = ps.find(p => p.relationship_type === 'mother');
+  return [mother || ps[0]];
 }
+function invPayer(childId){ return invPayerList(childId)[0] || null; }
 function invDocFor(tid){ return invDocs.find(d => d.section === 'invoice:' + tid); }
 
 async function loadInvoices(){
@@ -747,7 +761,10 @@ async function renderInvoices(){
     try { await loadInvoices(); } catch(e){ showError('שגיאה בטעינה: ' + e.message); return; }
   }
   invMonthOptions();
-  const due = document.getElementById('invMonth').value;
+  const sel = document.getElementById('invMonth');
+  const due = sel.value;
+  document.getElementById('invMonthTitle').textContent =
+    (sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : due);
   const rows = invKids.map(k => {
     const t = invRows.find(r => r.child_id === k.id && r.due_date === due);
     return t ? {k, t, doc: invDocFor(t.id)} : null;
@@ -765,7 +782,8 @@ async function renderInvoices(){
   if (!rows.length){ document.getElementById('invTable').innerHTML = '<div class="muted">אין חיובים בחודש הזה.</div>'; return; }
 
   const body = rows.map(({k,t,doc}) => {
-    const payer = invPayer(k.id);
+    const payers = invPayerList(k.id);
+    const payer = payers[0] || null;
     const isPaid = t.status === 'paid';
     const num = doc ? (doc.category || '') : '';
     const link = doc ? (doc.file_url || (String(doc.title||'').split(' · ').find(x=>/^https?:/.test(x)) || '')) : '';
@@ -777,7 +795,8 @@ async function renderInvoices(){
     if (!isPaid && payer && payer.phone) acts.push(`<a class="mini wa" target="_blank" rel="noopener" href="${invWa(payer.phone, invChildName(k), t.amount)}">תזכורת</a>`);
     return `<tr>
       <td><b>${esc(invChildName(k))}</b></td>
-      <td>${payer ? esc(payer.full_name_he) : '<span class="muted">לא רשום</span>'}${payer&&payer.national_id?`<div style="font-size:11.5px;color:#9B8E82" dir="ltr">${esc(payer.national_id)}</div>`:''}</td>
+      <td>${payers.length ? esc(payers.map(p=>p.full_name_he).join(' ו')) : '<span class="muted">לא רשום</span>'}
+        ${payers.filter(p=>p.national_id).map(p=>`<div style="font-size:11.5px;color:#9B8E82" dir="ltr">${esc(p.national_id)}</div>`).join('')}</td>
       <td>${money(t.amount)}</td>
       <td><span class="st-pill ${isPaid?'paid':'wait'}">${isPaid?'שולם':'ממתין'}</span></td>
       <td>${doc ? `<span class="st-pill inv">${esc(num||'הופקה')}</span>${link?` <a class="src" href="${esc(link)}" target="_blank" rel="noopener">פתח</a>`:''}` : '<span class="muted">—</span>'}</td>
@@ -787,6 +806,13 @@ async function renderInvoices(){
 
   document.getElementById('invTable').innerHTML =
     `<table class="inv"><thead><tr><th>ילד/ה</th><th>הורה משלם</th><th>סכום</th><th>תשלום</th><th>חשבונית</th><th>פעולות</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function invStep(d){
+  const sel = document.getElementById('invMonth');
+  const i = Math.min(sel.options.length - 1, Math.max(0, sel.selectedIndex + d));
+  if (i === sel.selectedIndex) return;
+  sel.selectedIndex = i; renderInvoices();
 }
 
 function invWa(phone, child, amount){
