@@ -79,6 +79,9 @@ const api = {
   deleteParent: (id) => apiCall(`/parents/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 
   // Staff
+  getStaffBirthdays: () => apiCall(`/staff-birthdays?garden_id=${getGardenId()}`),
+  createStaffBirthdayReminders: () =>
+    apiCall(`/staff-birthdays?garden_id=${getGardenId()}`, 'POST', { action: 'reminders' }),
   getStaff: () => apiCall(`/staff?garden_id=${getGardenId()}`),
   createStaff: (data) => apiCall(`/staff?garden_id=${getGardenId()}`, 'POST', data),
   updateStaff: (id, data) => apiCall(`/staff/${id}?garden_id=${getGardenId()}`, 'PUT', data),

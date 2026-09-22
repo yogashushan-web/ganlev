@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ימי הולדת של הצוות — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .btn { background:#1F3D34; color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; }
+    .btn.ghost { background:#efe9e0; color:#6f6457; }
+    .btn:disabled { opacity:.55; cursor:default; }
+    .err, .ok { padding:12px; border-radius:10px; margin-bottom:14px; display:none; }
+    .err { background:#fdf0ef; color:#c94147; } .ok { background:#d4edda; color:#155724; }
+    .err.show, .ok.show { display:block; }
+    .hint { font-size:12.5px; color:#9B8E82; line-height:1.7; margin-bottom:16px; }
+
+    .list { display:flex; flex-direction:column; gap:10px; }
+    .row { display:flex; align-items:center; gap:16px; background:#fff; border-radius:14px; padding:14px 18px;
+      box-shadow:0 2px 10px rgba(0,0,0,.05); border-right:5px solid #e8e4de; flex-wrap:wrap; }
+    .row.soon { border-right-color:#C4846C; background:#fdf8f4; }
+    .row.today { border-right-color:#1F7a4f; background:#f4f9f6; }
+    .when { min-width:96px; text-align:center; }
+    .when .d { font-size:19px; font-weight:800; color:#1F3D34; line-height:1.15; }
+    .when .w { font-size:12px; color:#9B8E82; font-weight:600; }
+    .who { flex:1; min-width:150px; }
+    .who .n { font-size:17px; font-weight:800; color:#1F3D34; }
+    .who .r { font-size:12.5px; color:#9B8E82; }
+    .age { background:#f6f2ec; border-radius:999px; padding:5px 14px; font-size:13px; font-weight:700; color:#6f6457; white-space:nowrap; }
+    .in { min-width:92px; text-align:left; font-size:13.5px; font-weight:700; color:#9B8E82; }
+    .row.soon .in { color:#C4846C; } .row.today .in { color:#1F7a4f; }
+    .msg { text-align:center; padding:40px; color:#9B8E82; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🎂 ימי ההולדת של הצוות</h1>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn ghost" onclick="location.href='staff-salaries.html'">← חזרה לצוות</button>
+      <button class="btn ghost" id="pdfBtn" onclick="downloadPdf()">📄 הורדה ל-PDF</button>
+      <button class="btn" id="remBtn" onclick="makeReminders()">🔔 צור תזכורות שבוע לפני</button>
+    </div>
+  </div>
+
+  <div id="error" class="err"></div>
+  <div id="success" class="ok"></div>
+  <div class="hint">הרשימה בנויה מאנשי הצוות <b>הפעילים</b> בלבד ומתעדכנת לבד — מי שמסומן כלא פעיל נעלם ממנה.
+    יום ההולדת עצמו כבר מופיע ביומן הגן; הכפתור מוסיף גם תזכורת שבוע לפני, ביומן הגן וביומן האישי.</div>
+
+  <div id="list" class="msg">טוען…</div>
+
+<script src="js/common.js?v=19"></script>
+<script src="js/api.js?v=19"></script>
+<script>
+let rows = [];
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function load() {
+  try {
+    const r = await api.getStaffBirthdays();
+    rows = (r && r.rows) || [];
+    render();
+  } catch (e) { showErr('שגיאה בטעינה: ' + e.message); }
+}
+
+function render() {
+  if (!rows.length) {
+    document.getElementById('list').className = 'msg';
+    document.getElementById('list').textContent = 'אין אנשי צוות פעילים עם תאריך לידה.';
+    return;
+  }
+  document.getElementById('list').className = 'list';
+  document.getElementById('list').innerHTML = rows.map(r => `
+    <div class="row ${r.days === 0 ? 'today' : r.days <= 7 ? 'soon' : ''}">
+      <div class="when"><div class="d">${esc(r.date)}</div><div class="w">יום ${esc(r.weekday)}</div></div>
+      <div class="who"><div class="n">${esc(r.name)}</div>${r.role ? `<div class="r">${esc(r.role)}</div>` : ''}</div>
+      <div class="age">חוגג/ת ${esc(r.age)}</div>
+      <div class="in">${esc(r.inDays)}</div>
+    </div>`).join('');
+}
+
+async function downloadPdf() {
+  const btn = document.getElementById('pdfBtn');
+  btn.disabled = true; const t = btn.textContent; btn.textContent = 'מכין…';
+  try {
+    const res = await fetch(`/.netlify/functions/staff-birthdays?garden_id=${encodeURIComponent(getGardenId())}&format=pdf`, {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('crm_token') },
+    });
+    if (!res.ok) throw new Error('סטטוס ' + res.status);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'ימי-הולדת-צוות-גן-לב.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch (e) { showErr('ההורדה נכשלה: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = t; }
+}
+
+async function makeReminders() {
+  const btn = document.getElementById('remBtn');
+  btn.disabled = true; const t = btn.textContent; btn.textContent = 'יוצר…';
+  try {
+    const r = await api.createStaffBirthdayReminders();
+    showOk(r.created ? ('נוצרו ' + r.created + ' תזכורות · נשלחו גם ליומן האישי') : 'כל התזכורות כבר קיימות');
+  } catch (e) { showErr('לא נוצרו תזכורות: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = t; }
+}
+
+function showErr(m) { const el = document.getElementById('error'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 6000); }
+function showOk(m) { const el = document.getElementById('success'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 4000); }
+
+load();
+</script>
+</body>
+</html>
