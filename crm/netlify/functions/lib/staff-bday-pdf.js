@@ -4,7 +4,43 @@
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
-const { drawRtl, measureRtl } = require('./rtl');
+
+// העברית מסודרת כאן ולא דרך lib/rtl.js: האריזה של Netlify לפונקציה הזו
+// החזירה "drawRtl is not a function" למרות שהמודול תקין ועובד מקומית.
+// שתי הפונקציות קצרות ויציבות, והטמעתן מבטלת את התלות חוצת-המודולים.
+// ההסבר המלא למה PDFKit צריך את זה נמצא ב-lib/rtl.js.
+const WS = /\s+/;
+function wordsOf(text) {
+  const s = String(text == null ? '' : text).trim();
+  return s ? s.split(WS) : [];
+}
+function measureRtl(doc, text) {
+  const words = wordsOf(text);
+  if (!words.length) return 0;
+  const space = doc.widthOfString(' ');
+  return words.reduce((sum, w) => sum + doc.widthOfString(w), 0) + space * (words.length - 1);
+}
+function drawRtl(doc, text, x, y, width, opts = {}) {
+  const words = wordsOf(text);
+  if (!words.length) return;
+  const sx = doc.x, sy = doc.y;
+  const restore = () => { doc.x = sx; doc.y = sy; };
+  if (opts.align === 'left') {
+    doc.text(words.join(' '), x, y, { lineBreak: false });
+    restore();
+    return;
+  }
+  const space = doc.widthOfString(' ');
+  const total = measureRtl(doc, text);
+  let cursor = x + Math.max(width, total);
+  for (const word of words) {
+    const w = doc.widthOfString(word);
+    cursor -= w;
+    doc.text(word, cursor, y, { lineBreak: false });
+    restore();
+    cursor -= space;
+  }
+}
 
 function fontPath(name) {
   const tries = [
