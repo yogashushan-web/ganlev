@@ -40,10 +40,40 @@
     .pick .p.staff.on { background:#C4846C; border-color:#C4846C; }
     .count-line { font-size:13px; color:#9B8E82; margin:12px 0 4px; font-weight:600; }
 
-    .tcards { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
-    .tcard { border:1.5px solid #e8e4de; border-radius:14px; padding:13px; background:#FAF8F4; text-align:center; }
-    .tcard b { color:#1F3D34; font-size:13.5px; display:block; margin-bottom:8px; }
-    .tcard select { width:100%; padding:8px 9px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:12.5px; margin-top:8px; }
+    /* ---- בחירת שולחנות, ויזואלית ---- */
+    .palette { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+    .shape { border:2px solid #e8e4de; background:#fff; border-radius:14px; padding:10px 12px 8px; cursor:pointer;
+             text-align:center; font-family:'Heebo'; transition:.12s; }
+    .shape:hover { border-color:#1F3D34; background:#f4f9f6; transform:translateY(-2px); }
+    .shape.on { border-color:#1F3D34; background:#f4f9f6; }
+    .shape .cap { font-size:11.5px; font-weight:700; color:#6f6457; margin-top:4px; }
+    .tcards { display:flex; gap:12px; flex-wrap:wrap; }
+    .tcard { position:relative; border:2px solid #e8e4de; border-radius:16px; padding:12px 14px 10px; background:#fff; text-align:center; }
+    .tcard.picking { border-color:#C4846C; background:#fdf8f4; }
+    .tcard b { color:#1F3D34; font-size:13px; display:block; margin-bottom:6px; }
+    .tcard .swapline { font-size:11.5px; color:#9B8E82; margin-top:6px; }
+    .tcard .kill { position:absolute; top:6px; left:8px; background:none; border:none; color:#c4bcae;
+                   font-size:15px; cursor:pointer; font-family:'Heebo'; line-height:1; }
+    .tcard .kill:hover { color:#c94147; }
+    .capbar { height:16px; border-radius:999px; background:#efe9e0; overflow:hidden; display:flex; margin:6px 0 4px; max-width:420px; }
+    .capbar i { display:block; height:100%; }
+    .capbar i.kids { background:#5f93b8; } .capbar i.staff { background:#C4846C; }
+    .capnote { font-size:13px; font-weight:700; color:#1F3D34; }
+    .capnote.bad { color:#c94147; }
+
+    /* ---- חלוקה ויזואלית ---- */
+    .splits { display:grid; grid-template-columns:repeat(auto-fill,minmax(178px,1fr)); gap:11px; }
+    .sp { border:2px solid #e8e4de; background:#fff; border-radius:16px; padding:14px 12px 12px; cursor:pointer;
+          font-family:'Heebo'; text-align:center; transition:.12s; }
+    .sp:hover { border-color:#1F3D34; transform:translateY(-2px); }
+    .sp.on { border-color:#1F3D34; background:#f4f9f6; }
+    .sp .t { font-size:14px; font-weight:800; color:#1F3D34; margin-top:9px; }
+    .sp .h { font-size:11.5px; color:#9B8E82; margin-top:2px; line-height:1.4; }
+    .mini { display:flex; gap:7px; justify-content:center; align-items:flex-end; height:46px; }
+    .mt { background:#efe6d8; border:1.5px solid #ddd0bb; border-radius:5px; width:34px; padding:4px 2px;
+          display:flex; flex-wrap:wrap; gap:2px; justify-content:center; align-content:flex-end; min-height:22px; }
+    .dot { border-radius:50%; background:#5f93b8; }
+    .d-s { width:5px; height:5px; } .d-m { width:7px; height:7px; } .d-l { width:9px; height:9px; }
 
     .staff-row { display:flex; align-items:center; gap:10px; background:#FAF8F4; border-radius:11px; padding:11px 14px; margin-bottom:9px; flex-wrap:wrap; }
     .staff-row select { padding:7px 10px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:12.5px; }
@@ -148,6 +178,23 @@ async function boot() {
       .map(s => ({ id: s.id, name: s.full_name_he })).sort((a, b) => a.name.localeCompare(b.name, 'he'));
   } catch (e) { showErr('שגיאה בטעינת הילדים והצוות: ' + e.message); }
   plan = newPlan();
+  // שחזור טיוטה שנקטעה
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT) || 'null');
+    if (d && d.plan && (d.plan.childIds || []).length) {
+      plan = Object.assign(newPlan(), d.plan);
+      plan.layout = plan.layout || {};
+      step = d.step || 1;
+      if (Object.keys(plan.seats || {}).length) {
+        built = true;
+        document.getElementById('wizard').classList.add('hide');
+        document.getElementById('steps').classList.add('hide');
+        document.getElementById('board').classList.remove('hide');
+        renderTop(); renderBoard(); return;
+      }
+      showOk('שוחזרה הטיוטה האחרונה');
+    }
+  } catch (e) {}
   renderTop(); renderSteps(); renderStep();
 }
 function currentSchoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
@@ -157,7 +204,8 @@ function renderTop() {
     ? `<button class="btn ghost" onclick="backToWizard()">שינוי הגדרות</button>
        <button class="btn soft" onclick="saveVersion()">שמור גרסה</button>
        <button class="btn" onclick="savePlan()">שמירה</button>`
-    : `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>`;
+    : `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
+       <button class="btn ghost" onclick="startFresh()">סידור חדש</button>`;
 }
 function renderSteps() {
   document.getElementById('steps').innerHTML = STEPS.map((s, i) => {
@@ -175,7 +223,14 @@ function goStep(n) {
 function backToWizard() { goStep(1); }
 
 /* ---------- השאלון ---------- */
+// טיוטה נשמרת בדפדפן אחרי כל שינוי, כדי שרענון או יציאה בטעות
+// לא יאבדו את מה שהוזן. נמחקת כשנפתח סידור חדש או נטען סידור שמור.
+const DRAFT = 'gl_seating_draft';
+function saveDraft() { try { localStorage.setItem(DRAFT, JSON.stringify({ plan, step })); } catch (e) {} }
+function clearDraft() { try { localStorage.removeItem(DRAFT); } catch (e) {} }
+
 function renderStep() {
+  saveDraft();
   const w = document.getElementById('wizard');
   if (step === 1) w.innerHTML = stepChildren();
   if (step === 2) w.innerHTML = stepTables();
@@ -214,54 +269,79 @@ function toggleKid(id) {
 }
 function allKidsOn() { plan.childIds = allKids.map(k => k.id); renderStep(); }
 
+let pickingTable = null;   // שולחן שממתין לבחירת צורה חדשה
+
 function stepTables() {
   const need = plan.childIds.length;
-  const cap = plan.tables.reduce((s, t) => s + tplOf(t).seats.length, 0);
   const seated = Object.keys(plan.staff).filter(k => plan.staff[k].sits === 'seat').length;
+  const cap = plan.tables.reduce((s, t) => s + tplOf(t).seats.length, 0);
   const opts = Object.values(E.TEMPLATES);
+  const w = cap ? Math.min(100, need / cap * 100) : 0;
+  const ws = cap ? Math.min(100 - w, seated / cap * 100) : 0;
+
   return `<div class="card">
     <h2>השולחנות</h2>
-    <div class="sub">כמה שולחנות יש, ואיך המקומות מסודרים סביב כל אחד. אפשר לתת לכל שולחן מבנה שונה —
-      למשל ריבוע אחד ושלושה מלבנים. המבנה קובע מי באמת יושב ליד מי.</div>
-    <div class="fld"><label>כמה שולחנות?</label>
-      <input type="number" id="nTables" min="1" max="10" value="${plan.tables.length || ''}" placeholder="למשל 4" oninput="setTables(this.value)"></div>
+    <div class="sub">לחצי על צורה כדי להוסיף שולחן. אפשר לערבב צורות.</div>
+
+    <div class="palette">
+      ${opts.map(t => `<button class="shape" onclick="addTable('${t.id}')" title="${esc(t.name)}">
+        ${tplPreview(t, 20)}<div class="cap">${t.seats.length} מקומות</div></button>`).join('')}
+    </div>
+
     ${plan.tables.length ? `
-      <div class="fld"><label>אותו מבנה לכולם? בחרי והחילי בבת אחת</label>
-        <select onchange="if(this.value)applyAll(this.value)">
-          <option value="">— בחרי תבנית —</option>
-          ${opts.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}
-        </select></div>
-      <div class="tcards">
-        ${plan.tables.map(t => `<div class="tcard">
-          <b>${esc(t.name)}</b>
-          ${tplPreview(tplOf(t))}
-          <select onchange="setTpl('${t.id}',this.value)">
-            ${opts.map(o => `<option value="${o.id}" ${t.templateId === o.id ? 'selected' : ''}>${esc(o.name)}</option>`).join('')}
-          </select></div>`).join('')}
+      <div style="margin-top:18px" class="tcards">
+        ${plan.tables.map(t => pickingTable === t.id ? `
+          <div class="tcard picking">
+            <b>${esc(t.name)} — בחרי צורה</b>
+            <div class="palette" style="justify-content:center;max-width:300px">
+              ${opts.map(o => `<button class="shape ${t.templateId === o.id ? 'on' : ''}" onclick="setTpl('${t.id}','${o.id}')">
+                ${tplPreview(o, 16)}<div class="cap">${o.seats.length}</div></button>`).join('')}
+            </div>
+            <div class="swapline"><a href="#" onclick="pickingTable=null;renderStep();return false" style="color:#9B8E82">ביטול</a></div>
+          </div>` : `
+          <div class="tcard">
+            <button class="kill" onclick="removeTable('${t.id}')" title="הסרה">✕</button>
+            <b>${esc(t.name)}</b>
+            <div style="cursor:pointer" onclick="pickingTable='${t.id}';renderStep()">${tplPreview(tplOf(t), 26)}</div>
+            <div class="swapline">${tplOf(t).seats.length} מקומות · לחיצה משנה צורה</div>
+          </div>`).join('')}
       </div>
-      <div class="count-line">${need} ילדים${seated ? ' ועוד ' + seated + ' אנשי צוות בשולחן' : ''} · ${cap} מקומות
-        ${cap < need + seated ? ' — <b style="color:#c94147">חסרים מקומות</b>' : ' ✓'}</div>` : ''}
+
+      <div style="margin-top:16px">
+        <div class="capbar"><i class="kids" style="width:${w}%"></i><i class="staff" style="width:${ws}%"></i></div>
+        <div class="capnote ${cap < need + seated ? 'bad' : ''}">
+          👧 ${need} ילדים${seated ? ' · 🧑‍🏫 ' + seated + ' צוות' : ''} · 🪑 ${cap} מקומות
+          ${cap < need + seated ? ' — חסרים ' + (need + seated - cap) : ' ✓'}</div>
+      </div>` : '<div class="count-line" style="margin-top:14px">עוד לא נוספו שולחנות.</div>'}
+
     <div class="nav">
       <button class="btn ghost" onclick="goStep(1)">חזרה</button>
       <button class="btn" onclick="goStep(3)" ${plan.tables.length ? '' : 'disabled'}>המשך</button>
     </div></div>`;
 }
-function setTables(v) {
-  const n = Math.max(0, Math.min(10, parseInt(v, 10) || 0));
-  const old = plan.tables.slice();
-  plan.tables = Array.from({ length: n }, (_, i) => old[i] ||
-    { id: 't' + (i + 1), name: 'שולחן ' + (i + 1), templateId: 'rect6_heads' });
+function addTable(tid) {
+  const n = plan.tables.length + 1;
+  plan.tables.push({ id: 't' + Date.now().toString(36), name: 'שולחן ' + n, templateId: tid });
   renderStep();
 }
-function setTpl(tid, v) { const t = plan.tables.find(x => x.id === tid); if (t) t.templateId = v; renderStep(); }
-function applyAll(v) { plan.tables.forEach(t => { t.templateId = v; }); renderStep(); }
+function removeTable(id) {
+  plan.tables = plan.tables.filter(t => t.id !== id);
+  plan.tables.forEach((t, i) => { t.name = 'שולחן ' + (i + 1); });
+  delete plan.layout[id];
+  renderStep();
+}
+function setTpl(tid, v) {
+  const t = plan.tables.find(x => x.id === tid); if (t) t.templateId = v;
+  pickingTable = null; renderStep();
+}
 
-function tplPreview(t) {
-  const S = 24, PAD = 14;
+function tplPreview(t, scale) {
+  const S = scale || 24, PAD = Math.round(S * 0.58);
   const w = t.w * S, h = t.h * S;
+  const d = Math.max(8, Math.round(S * 0.5));
   const seats = t.seats.map(s =>
-    `<div style="position:absolute;width:12px;height:12px;border-radius:50%;background:#C4846C;
-      left:${PAD + s.x * S - 6}px;top:${PAD + s.y * S - 6}px;"></div>`).join('');
+    `<div style="position:absolute;width:${d}px;height:${d}px;border-radius:50%;background:#C4846C;
+      left:${PAD + s.x * S - d / 2}px;top:${PAD + s.y * S - d / 2}px;"></div>`).join('');
   return `<div style="position:relative;width:${w + PAD * 2}px;height:${h + PAD * 2}px;margin:0 auto;">
     <div style="position:absolute;left:${PAD}px;top:${PAD}px;width:${w}px;height:${h}px;
       background:#efe6d8;border:1.5px solid #ddd0bb;${t.shape === 'round' ? 'border-radius:50%;' : 'border-radius:5px;'}"></div>
@@ -390,21 +470,36 @@ function toggleRule(id) { const r = plan.rules.find(x => x.id === id); r.active 
 function delRule(id) { plan.rules = plan.rules.filter(x => x.id !== id); built ? renderBoard() : renderStep(); }
 
 /* ---------- חלוקה ---------- */
+// כל אפשרות מוצגת כתרשים קטן: שלושה שולחנות ונקודות שמייצגות ילדים.
+// גודל הנקודה = גיל. כך המסר נקרא במבט אחד בלי פסקה.
+const dots = arr => arr.map(c => `<span class="dot d-${c}"></span>`).join('');
+const mt = arr => `<div class="mt">${dots(arr)}</div>`;
 const SPLITS = [
-  { id: 'even',   t: 'שווה ככל האפשר',            d: 'מחלק את הילדים בין השולחנות במספרים קרובים. למשל 19 ילדים ו-4 שולחנות: 5 · 5 · 5 · 4.' },
-  { id: 'age',    t: 'לפי גיל — קרובים יחד',       d: 'הגדולים בשולחן אחד והקטנים באחר. מתאים כשרוצים קצב אכילה דומה ועזרה דומה סביב השולחן.' },
-  { id: 'mixed',  t: 'ערבוב גילים',                d: 'בכל שולחן גם גדולים וגם קטנים. הגדולים משמשים דוגמה, והקטנים לומדים מהם.' },
-  { id: 'fill',   t: 'למלא שולחן אחר שולחן',       d: 'ממלא את השולחן הראשון עד הסוף ורק אז עובר לבא. שימושי כשחלק מהשולחנות בשימוש רק לפעמים.' },
-  { id: 'manual', t: 'אני קובעת כמה בכל שולחן',    d: 'את מזינה מספר לכל שולחן בנפרד.' },
-  { id: 'any',    t: 'לא משנה לי',                 d: 'המערכת תבחר את מה שמקיים את הכללים בצורה הפשוטה ביותר.' },
+  { id: 'even',   t: 'שווה',        h: 'אותו מספר בכל שולחן',
+    fig: mt(['m','m','m']) + mt(['m','m','m']) + mt(['m','m','m']) },
+  { id: 'age',    t: 'לפי גיל',     h: 'גדולים יחד, קטנים יחד',
+    fig: mt(['l','l','l']) + mt(['m','m','m']) + mt(['s','s','s']) },
+  { id: 'mixed',  t: 'ערבוב גילים', h: 'גדולים וקטנים יחד',
+    fig: mt(['l','m','s']) + mt(['l','m','s']) + mt(['l','m','s']) },
+  { id: 'fill',   t: 'אחד אחרי השני', h: 'ממלא שולחן ועובר לבא',
+    fig: mt(['m','m','m','m']) + mt(['m','m']) + mt([]) },
+  { id: 'manual', t: 'אני קובעת',   h: 'מספר לכל שולחן',
+    fig: `<div class="mt" style="align-items:center;font-size:12px;font-weight:800;color:#8a7f70">5</div>
+          <div class="mt" style="align-items:center;font-size:12px;font-weight:800;color:#8a7f70">4</div>
+          <div class="mt" style="align-items:center;font-size:12px;font-weight:800;color:#8a7f70">3</div>` },
+  { id: 'any',    t: 'לא משנה לי',  h: 'מה שיסתדר הכי פשוט',
+    fig: mt(['s','l']) + mt(['m','m','s','l']) + mt(['l','s','m']) },
 ];
 function stepSplit() {
   const m = plan.split.mode;
   return `<div class="card">
-    <h2>חלוקת הילדים בין השולחנות</h2>
-    <div class="sub">איך לפזר את הילדים? המערכת תתחשב תמיד גם בקיבולת של כל שולחן ובכללי הישיבה.</div>
-    ${SPLITS.map(s => `<button class="opt ${m === s.id ? 'on' : ''}" onclick="setSplit('${s.id}')">
-      <b>${esc(s.t)}</b><span>${esc(s.d)}</span></button>`).join('')}
+    <h2>איך לחלק את הילדים?</h2>
+    <div class="sub">כל נקודה היא ילד/ה — גודל הנקודה מסמן גיל.</div>
+    <div class="splits">
+      ${SPLITS.map(s => `<button class="sp ${m === s.id ? 'on' : ''}" onclick="setSplit('${s.id}')">
+        <div class="mini">${s.fig}</div>
+        <div class="t">${esc(s.t)}</div><div class="h">${esc(s.h)}</div></button>`).join('')}
+    </div>
     ${m === 'manual' ? `<div style="margin-top:12px">${plan.tables.map(t => `
       <div class="staff-row"><b style="min-width:84px">${esc(t.name)}</b>
         <input type="number" min="0" max="${tplOf(t).seats.length}" style="width:90px;padding:7px 9px;border:1px solid #e8e4de;border-radius:9px;font-family:'Heebo'"
@@ -526,7 +621,13 @@ function rotateTable(tid) {
 }
 
 /* ---------- הלוח ---------- */
+function startFresh() {
+  if (plan.childIds.length && !confirm('להתחיל סידור חדש? מה שלא נשמר יימחק.')) return;
+  clearDraft(); plan = newPlan(); built = false; goStep(1);
+}
+
 function renderBoard() {
+  saveDraft();
   const ep = enginePlan(); ep.seats = plan.seats;
   const viols = E.checkViolations(ep, tplOf);
   const bad = new Set();
