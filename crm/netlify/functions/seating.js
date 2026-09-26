@@ -29,14 +29,16 @@ const handler = withAuth(async (event) => {
     validateGardenScope(user.garden_id, garden_id, user.role);
 
     if (event.httpMethod === 'GET') {
+      // לטבלת האירועים אין updated_at — הזמן האחרון נשמר בתוך ה-JSON עצמו.
       const { data, error } = await supabase.from('events')
-        .select('id,category,title,notes,updated_at,created_at')
+        .select('id,category,title,notes,created_at,event_date')
         .eq('garden_id', garden_id).eq('calendar', CAL);
       if (error) throw error;
 
       const plans = (data || []).map(r => {
         const p = parse(r.notes);
-        return { id: r.category, row_id: r.id, name: r.title, updated: r.updated_at || r.created_at, plan: p };
+        return { id: r.category, row_id: r.id, name: r.title,
+                 updated: p.saved_at || r.event_date || r.created_at, plan: p };
       }).sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
 
       if (q.id) {
@@ -58,6 +60,7 @@ const handler = withAuth(async (event) => {
       if (b.action === 'save') {
         const p = b.plan || {};
         if (!p.id || !p.name) return json(400, { success: false, error: 'חסר מזהה או שם לסידור' });
+        p.saved_at = new Date().toISOString();
         const body = {
           garden_id, calendar: CAL, category: p.id, title: p.name,
           event_date: today(), notes: JSON.stringify(p),
@@ -66,7 +69,7 @@ const handler = withAuth(async (event) => {
           .select('id').eq('garden_id', garden_id).eq('calendar', CAL).eq('category', p.id).limit(1);
         if (existing && existing.length) {
           const { error } = await supabase.from('events')
-            .update({ title: p.name, notes: body.notes, updated_at: new Date().toISOString() })
+            .update({ title: p.name, notes: body.notes, event_date: today() })
             .eq('id', existing[0].id);
           if (error) throw error;
         } else {
