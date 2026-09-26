@@ -52,14 +52,32 @@
     .tcard.picking { border-color:#C4846C; background:#fdf8f4; }
     .tcard b { color:#1F3D34; font-size:13px; display:block; margin-bottom:6px; }
     .tcard .swapline { font-size:11.5px; color:#9B8E82; margin-top:6px; }
-    .tcard .kill { position:absolute; top:6px; left:8px; background:none; border:none; color:#c4bcae;
-                   font-size:15px; cursor:pointer; font-family:'Heebo'; line-height:1; }
-    .tcard .kill:hover { color:#c94147; }
+    .tcard .kill { position:absolute; top:7px; left:8px; background:#f6f2ec; border:1px solid #e8e1d6; color:#8a7f70;
+                   font-size:11px; font-weight:700; cursor:pointer; font-family:'Heebo'; line-height:1;
+                   border-radius:7px; padding:4px 8px; }
+    .tcard .kill:hover { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
     .capbar { height:16px; border-radius:999px; background:#efe9e0; overflow:hidden; display:flex; margin:6px 0 4px; max-width:420px; }
     .capbar i { display:block; height:100%; }
     .capbar i.kids { background:#5f93b8; } .capbar i.staff { background:#C4846C; }
     .capnote { font-size:13px; font-weight:700; color:#1F3D34; }
     .capnote.bad { color:#c94147; }
+
+    /* ---- סקיצת השולחנות בשלב הכללים ---- */
+    .sketch { background:#FAF8F4; border:1px solid #efe9e0; border-radius:14px; padding:14px 16px; margin-bottom:18px; }
+    .sk-hint { font-size:12.5px; color:#9B8E82; font-weight:700; margin-bottom:10px; }
+    .sk-tables { display:flex; gap:20px; flex-wrap:wrap; }
+    .sk-one { text-align:center; }
+    .sk-one .nm { font-size:11.5px; font-weight:700; color:#1F3D34; margin-bottom:4px; }
+    .sk-wrap { position:relative; margin:0 auto; }
+    .sk-surface { position:absolute; background:#efe6d8; border:1.5px solid #ddd0bb; }
+    .sk-seat { position:absolute; width:30px; height:30px; border-radius:50%; border:2px solid #ddd0bb;
+      background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      font-size:8.5px; font-weight:700; color:#b3a89a; }
+    .sk-seat:hover { border-color:#1F3D34; }
+    .sk-seat.sel { background:#1F7a4f; border-color:#1F7a4f; color:#fff; }
+    .sk-seat.nb  { background:#fdf1e3; border-color:#C4846C; color:#8a5a33; }
+    .sk-legend { font-size:12px; color:#6f6457; margin-top:11px; display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+    .sk-legend i { display:inline-block; width:12px; height:12px; border-radius:50%; margin-left:5px; vertical-align:-2px; }
 
     /* ---- חלוקה ויזואלית ---- */
     .splits { display:grid; grid-template-columns:repeat(auto-fill,minmax(178px,1fr)); gap:11px; }
@@ -300,7 +318,7 @@ function stepTables() {
             <div class="swapline"><a href="#" onclick="pickingTable=null;renderStep();return false" style="color:#9B8E82">ביטול</a></div>
           </div>` : `
           <div class="tcard">
-            <button class="kill" onclick="removeTable('${t.id}')" title="הסרה">✕</button>
+            <button class="kill" onclick="removeTable('${t.id}')">הסר</button>
             <b>${esc(t.name)}</b>
             <div style="cursor:pointer" onclick="pickingTable='${t.id}';renderStep()">${tplPreview(tplOf(t), 26)}</div>
             <div class="swapline">${tplOf(t).seats.length} מקומות · לחיצה משנה צורה</div>
@@ -310,8 +328,11 @@ function stepTables() {
       <div style="margin-top:16px">
         <div class="capbar"><i class="kids" style="width:${w}%"></i><i class="staff" style="width:${ws}%"></i></div>
         <div class="capnote ${cap < need + seated ? 'bad' : ''}">
-          👧 ${need} ילדים${seated ? ' · 🧑‍🏫 ' + seated + ' צוות' : ''} · 🪑 ${cap} מקומות
-          ${cap < need + seated ? ' — חסרים ' + (need + seated - cap) : ' ✓'}</div>
+          👧 ${need} ילדים${seated ? ' · 🧑‍🏫 ' + seated + ' צוות' : ''} · 🪑 ${cap} מקומות —
+          ${cap < need + seated
+            ? '<b>חסרים ' + (need + seated - cap) + ' מקומות</b>'
+            : (cap - need - seated === 0 ? '<b>בדיוק מספיק</b> ✓'
+               : '<b>' + (cap - need - seated) + ' מקומות פנויים</b> ✓')}</div>
       </div>` : '<div class="count-line" style="margin-top:14px">עוד לא נוספו שולחנות.</div>'}
 
     <div class="nav">
@@ -412,11 +433,51 @@ function peopleOptions(kind) {
   return list.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
 }
 
+// סקיצה חיה של השולחנות שהוגדרו. לחיצה על מושב מדגישה את שכניו —
+// כך רואים בדיוק מה נחשב "ליד" לפני שמגדירים כלל.
+let sketchSel = null;
+function rulesSketch() {
+  if (!plan.tables.length) return '';
+  const SK = 32, P = 20;
+  const tables = plan.tables.map(t => {
+    const tpl = tplOf(t), nb = E.neighborMap(tpl);
+    const selHere = sketchSel && sketchSel.t === t.id ? sketchSel.s : null;
+    const neigh = selHere ? (nb[selHere] || []) : [];
+    const seats = tpl.seats.map(s => {
+      const cls = ['sk-seat'];
+      if (s.id === selHere) cls.push('sel');
+      else if (neigh.indexOf(s.id) >= 0) cls.push('nb');
+      const lbl = s.role === 'head' ? 'ראש' : s.role === 'middle' ? 'אמצע' : '';
+      return `<div class="${cls.join(' ')}" style="left:${P + s.x * SK - 15}px;top:${P + s.y * SK - 15}px"
+        onclick="sketchSel={t:'${t.id}',s:'${s.id}'};renderStep()" title="${s.role === 'head' ? 'ראש השולחן' : s.role === 'middle' ? 'אמצע הצלע' : 'קצה'}">${lbl}</div>`;
+    }).join('');
+    return `<div class="sk-one"><div class="nm">${esc(t.name)}</div>
+      <div class="sk-wrap" style="width:${tpl.w * SK + P * 2}px;height:${tpl.h * SK + P * 2}px">
+        <div class="sk-surface" style="left:${P}px;top:${P}px;width:${tpl.w * SK}px;height:${tpl.h * SK}px;
+          ${tpl.shape === 'round' ? 'border-radius:50%' : 'border-radius:8px'}"></div>${seats}</div></div>`;
+  }).join('');
+  const sel = sketchSel ? (() => {
+    const t = plan.tables.find(x => x.id === sketchSel.t);
+    if (!t) return '';
+    const n = (E.neighborMap(tplOf(t))[sketchSel.s] || []).length;
+    return `<b style="color:#1F3D34">למושב הזה יש ${n} שכנים</b> — רק הם נחשבים "יושבים לידו".`;
+  })() : 'לחצי על מושב כדי לראות מי נחשב יושב לידו 👇';
+  return `<div class="sketch">
+    <div class="sk-hint">${sel}</div>
+    <div class="sk-tables">${tables}</div>
+    <div class="sk-legend">
+      <span><i style="background:#1F7a4f"></i>המושב שנבחר</span>
+      <span><i style="background:#fdf1e3;border:1.5px solid #C4846C"></i>השכנים שלו</span>
+      <span style="color:#b3a89a">מי שיושב מולו לא נחשב "ליד"</span>
+    </div></div>`;
+}
+
 function stepRules() {
   return `<div class="card">
     <h2>כללי ישיבה</h2>
-    <div class="sub">כללים שהמערכת תנסה לקיים בכל סידור. שימי לב להבדל: <b>"לא באותו שולחן"</b> מרחיק לגמרי,
+    <div class="sub">שימי לב להבדל: <b>"לא באותו שולחן"</b> מרחיק לגמרי,
       ואילו <b>"לא אחד ליד השני"</b> מאפשר אותו שולחן ובלבד שלא במושבים צמודים.</div>
+    ${rulesSketch()}
     <div class="rule-row">
       <select id="rType" onchange="renderRuleRow()">
         ${Object.keys(E.RULE_TYPES).map(k => `<option value="${k}">${E.RULE_TYPES[k].label}</option>`).join('')}
