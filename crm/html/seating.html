@@ -113,7 +113,12 @@
 
     /* ---------- לוח ---------- */
     .board-top { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
-    .room { position:relative; background:#fffdf9; border:1.5px dashed #e0d7c7; border-radius:16px; margin:6px 0 14px; overflow:hidden; }
+    /* החדר הוא דף A4 לרוחב (1123×794 בפיקסלים). על המסך הוא מוקטן
+       כדי להיכנס לרוחב, ובהדפסה הוא חוזר לגודלו המלא ונכנס לעמוד אחד. */
+    .room-outer { overflow:hidden; margin:6px 0 14px; }
+    .room { position:relative; width:1123px; height:794px; background:#fffdf9;
+            border:1.5px dashed #e0d7c7; border-radius:16px; transform-origin:top right; }
+    .a4note { font-size:11.5px; color:#b3a89a; text-align:left; margin-bottom:4px; }
     .twrap { position:absolute; touch-action:none; }
     .tlabel { position:absolute; top:-2px; right:50%; transform:translateX(50%); font-size:12px; font-weight:700; color:#1F3D34; white-space:nowrap; background:#fffdf9; padding:1px 7px; border-radius:6px; cursor:grab; z-index:5; }
     .tlabel:active { cursor:grabbing; }
@@ -142,7 +147,13 @@
     .conflict p { font-size:13.5px; color:#8a6a23; line-height:1.7; margin-bottom:12px; }
     .conflict .opts { display:flex; gap:8px; flex-wrap:wrap; }
     .conflict .opts button { background:#fff; border:1px solid #e8c88a; color:#8a6a23; border-radius:9px; padding:8px 13px; font-family:'Heebo'; font-size:13px; font-weight:700; cursor:pointer; }
-    @media print { .header,.steps,.board-top,.layouts,.legend,.viol,.allgood { display:none !important; } .room { border:none; } }
+    @media print {
+      @page { size: A4 landscape; margin: 8mm; }
+      body { background:#fff; padding:0 !important; }
+      .header,.steps,.board-top,.layouts,.legend,.viol,.allgood,.a4note,#crmSidebar,#crmMenuBtn { display:none !important; }
+      .room-outer { overflow:visible; }
+      .room { transform:none !important; border:none; width:1123px; height:794px; }
+    }
   </style>
 </head>
 <body>
@@ -645,37 +656,72 @@ function resolvePair(a, b) {
   buildPlan();
 }
 
-/* ---------- פריסת החדר ---------- */
-const S = 58, PAD = 32, GAP = 40;
+/* ---------- פריסת החדר (קנבס A4 לרוחב) ---------- */
+const ROOM_W = 1123, ROOM_H = 794;
+const S = 50, PAD = 30, GAP = 26;
 function tableBox(t) { const tp = tplOf(t); return { w: tp.w * S + PAD * 2, h: tp.h * S + PAD * 2 }; }
+
+// מרכוז הפריסה בתוך הדף, כך שמה שנראה על המסך הוא מה שיודפס.
+function centerLayout(L) {
+  const ids = Object.keys(L); if (!ids.length) return L;
+  const boxes = {}; plan.tables.forEach(t => { boxes[t.id] = tableBox(t); });
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  ids.forEach(id => {
+    const b = boxes[id], l = L[id];
+    const rot = ((l.rot % 180) + 180) % 180;
+    const w = rot === 90 ? b.h : b.w, h = rot === 90 ? b.w : b.h;
+    minX = Math.min(minX, l.x); minY = Math.min(minY, l.y);
+    maxX = Math.max(maxX, l.x + w); maxY = Math.max(maxY, l.y + h);
+  });
+  const dx = (ROOM_W - (maxX - minX)) / 2 - minX;
+  const dy = (ROOM_H - (maxY - minY)) / 2 - minY;
+  ids.forEach(id => { L[id].x = Math.round(L[id].x + dx); L[id].y = Math.round(L[id].y + dy); });
+  return L;
+}
+
 function autoLayout(kind, silent) {
   const boxes = plan.tables.map(t => ({ id: t.id, ...tableBox(t) }));
   const L = {};
   if (kind === 'row') {
+    // אם שורה אחת רחבה מהדף — נשברת לשתי שורות מעצמה
+    const total = boxes.reduce((s, b) => s + b.w + GAP, -GAP);
+    if (total > ROOM_W) return autoLayout('two', silent);
     let x = 0; boxes.forEach(b => { L[b.id] = { x, y: 0, rot: 0 }; x += b.w + GAP; });
   } else if (kind === 'two') {
     const half = Math.ceil(boxes.length / 2);
-    let x = 0, y = 0, maxH = 0;
+    const rowH = Math.max(...boxes.map(b => b.h));
+    let x = 0;
     boxes.forEach((b, i) => {
-      if (i === half) { x = 0; y = maxH + GAP; }
-      L[b.id] = { x, y, rot: 0 }; x += b.w + GAP; maxH = Math.max(maxH, (i < half ? b.h : 0));
+      if (i === half) x = 0;
+      L[b.id] = { x, y: i < half ? 0 : rowH + GAP, rot: 0 };
+      x += b.w + GAP;
     });
   } else if (kind === 'parallel') {
     let x = 0; boxes.forEach(b => { L[b.id] = { x, y: 0, rot: 90 }; x += b.h + GAP; });
   } else if (kind === 'circle') {
-    const R = 150 + boxes.length * 22;
+    const R = Math.min(ROOM_W, ROOM_H) / 2 - Math.max(...boxes.map(b => Math.max(b.w, b.h))) / 2;
     boxes.forEach((b, i) => {
       const a = (i / boxes.length) * Math.PI * 2 - Math.PI / 2;
-      L[b.id] = { x: R + Math.cos(a) * R, y: R + Math.sin(a) * R, rot: 0 };
+      L[b.id] = { x: R + Math.cos(a) * R - b.w / 2, y: R + Math.sin(a) * R - b.h / 2, rot: 0 };
     });
   } else { // grid
     const cols = Math.ceil(Math.sqrt(boxes.length));
     const cw = Math.max(...boxes.map(b => b.w)) + GAP, ch = Math.max(...boxes.map(b => b.h)) + GAP;
     boxes.forEach((b, i) => { L[b.id] = { x: (i % cols) * cw, y: Math.floor(i / cols) * ch, rot: 0 }; });
   }
-  plan.layout = L;
+  plan.layout = centerLayout(L);
   if (!silent) renderBoard();
 }
+
+// הקטנת הדף כך שייכנס לרוחב המסך, בלי לשנות את הפריסה עצמה.
+function fitRoom() {
+  const outer = document.getElementById('roomOuter'), room = document.getElementById('room');
+  if (!outer || !room) return;
+  const scale = Math.min(1, outer.clientWidth / ROOM_W);
+  room.style.transform = 'scale(' + scale + ')';
+  outer.style.height = (ROOM_H * scale) + 'px';
+}
+window.addEventListener('resize', fitRoom);
 function rotateTable(tid) {
   const l = plan.layout[tid] || { x: 0, y: 0, rot: 0 };
   l.rot = (l.rot + 45) % 360; plan.layout[tid] = l; renderBoard();
@@ -746,9 +792,11 @@ function renderBoard() {
       <button class="lb" onclick="autoLayout('grid')">רשת</button>
       <button class="lb" onclick="autoLayout('circle')">מעגל</button>
     </div>
-    <div class="room" id="room" style="height:${maxY + 50}px">${tablesHtml}</div>
+    <div class="a4note">📄 הדף בגודל A4 לרוחב — מה שנראה כאן הוא בדיוק מה שיודפס</div>
+    <div class="room-outer" id="roomOuter"><div class="room" id="room">${tablesHtml}</div></div>
     <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
       גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
+  fitRoom();
 }
 
 /* ---------- גרירה ---------- */
@@ -763,8 +811,11 @@ function startDrag(ev, tid) {
 function onDrag(ev) {
   if (!drag) return;
   const el = document.querySelector('.twrap[data-t="' + drag.tid + '"]');
-  const x = Math.max(0, drag.ox + ev.clientX - drag.sx);
-  const y = Math.max(0, drag.oy + ev.clientY - drag.sy);
+  // המסך מציג את הדף מוקטן, אז מרחק העכבר מחולק ביחס ההקטנה
+  const room = document.getElementById('room');
+  const sc = room ? (room.getBoundingClientRect().width / ROOM_W) || 1 : 1;
+  const x = Math.max(0, drag.ox + (ev.clientX - drag.sx) / sc);
+  const y = Math.max(0, drag.oy + (ev.clientY - drag.sy) / sc);
   plan.layout[drag.tid] = Object.assign(plan.layout[drag.tid] || { rot: 0 }, { x, y });
   if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
 }
