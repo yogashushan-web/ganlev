@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>סידור ישיבה — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .btn { background:#1F3D34; color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; }
+    .btn.ghost { background:#efe9e0; color:#6f6457; }
+    .btn.soft { background:#fff; color:#1F3D34; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+    .btn:disabled { opacity:.5; cursor:default; }
+    .err,.ok { padding:12px; border-radius:10px; margin-bottom:14px; display:none; }
+    .err { background:#fdf0ef; color:#c94147; } .ok { background:#d4edda; color:#155724; }
+    .err.show,.ok.show { display:block; }
+    .hide { display:none !important; }
+
+    /* ---------- שאלון ---------- */
+    .steps { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
+    .step-pill { padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700; background:#fff; color:#b3a89a; border:1px solid #e8e4de; }
+    .step-pill.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
+    .step-pill.done { background:#e6f4ec; color:#1F7a4f; border-color:#cfe7d9; cursor:pointer; }
+    .card { background:#fff; border-radius:18px; padding:24px 26px; box-shadow:0 2px 14px rgba(0,0,0,.06); margin-bottom:16px; }
+    .card h2 { font-size:20px; color:#1F3D34; margin-bottom:5px; }
+    .card .sub { color:#9B8E82; font-size:13.5px; margin-bottom:18px; line-height:1.6; }
+    .fld { margin-bottom:16px; }
+    .fld label { display:block; font-size:13px; font-weight:700; color:#3D3228; margin-bottom:7px; }
+    .fld input, .fld select { width:100%; max-width:340px; padding:11px 13px; border:1.5px solid #e8e4de; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .fld input:focus, .fld select:focus { border-color:#1F3D34; }
+    .nav { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
+
+    .pick { display:flex; gap:8px; flex-wrap:wrap; }
+    .pick .p { border:1.5px solid #e8e4de; background:#fff; border-radius:999px; padding:8px 15px; font-family:'Heebo'; font-size:13.5px; font-weight:600; cursor:pointer; color:#6f6457; }
+    .pick .p.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
+    .pick .p.staff.on { background:#C4846C; border-color:#C4846C; }
+    .count-line { font-size:13px; color:#9B8E82; margin:12px 0 4px; font-weight:600; }
+
+    .tpl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
+    .tpl { border:2px solid #e8e4de; border-radius:14px; padding:14px; cursor:pointer; background:#fff; text-align:center; }
+    .tpl.on { border-color:#1F3D34; background:#f4f9f6; }
+    .tpl .nm { font-size:12.5px; font-weight:700; color:#1F3D34; margin-top:10px; line-height:1.4; }
+
+    .staff-row { display:flex; align-items:center; gap:12px; background:#FAF8F4; border-radius:11px; padding:11px 14px; margin-bottom:9px; flex-wrap:wrap; }
+    .staff-row b { color:#1F3D34; min-width:90px; }
+    .staff-row select { padding:7px 10px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:12.5px; }
+
+    .rule-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+    .rule-row select { padding:9px 11px; border:1.5px solid #e8e4de; border-radius:10px; font-family:'Heebo'; font-size:13px; }
+    .rule-list { display:flex; flex-direction:column; gap:7px; margin-top:14px; }
+    .rule { display:flex; align-items:center; gap:10px; background:#FAF8F4; border-radius:10px; padding:9px 13px; font-size:13.5px; flex-wrap:wrap; }
+    .rule .x { margin-right:auto; background:none; border:none; color:#c94147; cursor:pointer; font-size:15px; font-family:'Heebo'; }
+    .rule .state { border:1px solid #cfe7d9; background:#e6f4ec; color:#1F7a4f; border-radius:999px; padding:3px 11px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Heebo'; }
+    .rule.off { opacity:.5; }
+    .rule.off .state { background:#f6f2ec; color:#8a7f70; border-color:#e8e1d6; }
+
+    /* ---------- לוח ---------- */
+    .board-top { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+    .tables { display:flex; gap:26px; flex-wrap:wrap; justify-content:center; padding:10px 0 4px; }
+    .twrap { position:relative; }
+    .tlabel { text-align:center; font-size:13px; font-weight:700; color:#1F3D34; margin-bottom:6px; }
+    .tsurface { position:absolute; background:#efe6d8; border:2px solid #ddd0bb; }
+    .seat { position:absolute; width:56px; height:56px; border-radius:50%; border:2px dashed #ddd0bb; background:#fff;
+      display:flex; align-items:center; justify-content:center; text-align:center; font-size:11.5px; font-weight:700;
+      color:#8a7f70; cursor:pointer; line-height:1.15; padding:3px; overflow:hidden; transition:.12s; }
+    .seat.filled { border-style:solid; border-color:#cfe0ec; background:#eef5fb; color:#2c4d66; }
+    .seat.staff { border-color:#eccfc2; background:#fbf1ec; color:#8a4d33; }
+    .seat.sel { outline:3px solid #1F3D34; outline-offset:2px; }
+    .seat.bad { border-color:#e0837a; background:#fdf0ef; color:#a33; }
+    .seat.lock::after { content:'🔒'; position:absolute; top:-2px; left:2px; font-size:11px; }
+    .seat:hover { transform:scale(1.05); }
+    .legend { font-size:12.5px; color:#9B8E82; text-align:center; margin:10px 0 16px; line-height:1.7; }
+
+    .viol { background:#fdf0ef; border:1px solid #f3cfc9; border-radius:12px; padding:14px 16px; margin-bottom:14px; }
+    .viol h4 { color:#c94147; font-size:14.5px; margin-bottom:8px; }
+    .viol .v { display:flex; align-items:center; gap:10px; font-size:13.5px; color:#8a3b34; padding:5px 0; flex-wrap:wrap; }
+    .viol .v button { background:#fff; border:1px solid #f3cfc9; color:#c94147; border-radius:8px; padding:4px 10px; font-family:'Heebo'; font-size:12px; font-weight:700; cursor:pointer; }
+    .allgood { background:#e6f4ec; border:1px solid #cfe7d9; color:#1F7a4f; border-radius:12px; padding:13px 16px; margin-bottom:14px; font-weight:700; font-size:14px; }
+
+    .conflict { background:#fdf6e9; border:1px solid #e8c88a; border-radius:12px; padding:16px 18px; margin-bottom:14px; }
+    .conflict h4 { color:#b8801f; margin-bottom:8px; font-size:15px; }
+    .conflict p { font-size:13.5px; color:#8a6a23; line-height:1.7; margin-bottom:12px; }
+    .conflict .opts { display:flex; gap:8px; flex-wrap:wrap; }
+    .conflict .opts button { background:#fff; border:1px solid #e8c88a; color:#8a6a23; border-radius:9px; padding:8px 13px; font-family:'Heebo'; font-size:13px; font-weight:700; cursor:pointer; }
+    .conflict .opts button:hover { background:#fdf1e3; }
+    .msg { text-align:center; padding:36px; color:#9B8E82; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🍽️ סידור ישיבה</h1>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;" id="topActions"></div>
+  </div>
+
+  <div id="error" class="err"></div>
+  <div id="success" class="ok"></div>
+
+  <div class="steps" id="steps"></div>
+  <div id="wizard"></div>
+  <div id="board" class="hide"></div>
+
+<script src="js/common.js?v=19"></script>
+<script src="js/api.js?v=19"></script>
+<script src="js/seating-engine.js?v=1"></script>
+<script>
+const E = SeatingEngine;
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid = () => 's' + Math.random().toString(36).slice(2, 9);
+
+let allKids = [], allStaff = [], step = 1, plan = null, selectedSeat = null, lastResult = null;
+
+const STEPS = ['מי אוכל', 'שולחנות', 'צוות', 'כללי ישיבה', 'חלוקה'];
+
+function newPlan() {
+  return { id: uid(), name: 'סידור ארוחה', childIds: [], tables: [], staff: {},
+           rules: [], split: { mode: 'even' }, seats: {}, locks: {} };
+}
+const tplOf = t => E.TEMPLATES[t.templateId] || E.TEMPLATES.rect6_heads;
+
+/* ---------- טעינה ---------- */
+async function boot() {
+  try {
+    const [rc, rs] = await Promise.all([api.getChildren(), api.getStaff()]);
+    const year = currentSchoolYear();
+    allKids = ((rc && rc.data) || [])
+      .filter(c => (c.school_year || year) === year && c.status === 'active')
+      .map(c => ({ id: c.id, name: (c.first_name_he + ' ' + (c.last_name_he || '')).trim() }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'he'));
+    allStaff = ((rs && rs.data) || []).filter(s => s.status === 'active')
+      .map(s => ({ id: s.id, name: s.full_name_he }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'he'));
+  } catch (e) { showErr('שגיאה בטעינת הילדים והצוות: ' + e.message); }
+  plan = newPlan();
+  renderTop(); renderSteps(); renderStep();
+}
+function currentSchoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
+
+/* ---------- ניווט ---------- */
+function renderTop() {
+  document.getElementById('topActions').innerHTML = lastResult
+    ? `<button class="btn ghost" onclick="backToWizard()">✎ שינוי הגדרות</button>
+       <button class="btn soft" onclick="saveVersion()">🕘 שמור גרסה</button>
+       <button class="btn" onclick="savePlan()">שמירה</button>`
+    : `<button class="btn ghost" onclick="loadExisting()">📂 סידורים שמורים</button>`;
+}
+function renderSteps() {
+  document.getElementById('steps').innerHTML = STEPS.map((s, i) => {
+    const n = i + 1;
+    const cls = n === step ? 'on' : n < step ? 'done' : '';
+    return `<span class="step-pill ${cls}" ${n < step ? `onclick="goStep(${n})"` : ''}>${n}. ${s}</span>`;
+  }).join('');
+}
+function goStep(n) { step = n; renderSteps(); renderStep(); window.scrollTo({top:0,behavior:'smooth'}); }
+function backToWizard() {
+  lastResult = null; document.getElementById('board').classList.add('hide');
+  document.getElementById('wizard').classList.remove('hide');
+  document.getElementById('steps').classList.remove('hide');
+  renderTop(); goStep(1);
+}
+
+/* ---------- השאלון ---------- */
+function renderStep() {
+  const w = document.getElementById('wizard');
+  if (step === 1) w.innerHTML = stepChildren();
+  if (step === 2) w.innerHTML = stepTables();
+  if (step === 3) w.innerHTML = stepStaff();
+  if (step === 4) { w.innerHTML = stepRules(); renderRuleRow(); }
+  if (step === 5) w.innerHTML = stepSplit();
+}
+
+function stepChildren() {
+  const n = plan.childIds.length;
+  return `<div class="card">
+    <h2>מי אוכל בארוחה?</h2>
+    <div class="sub">בחרי את הילדים שמשתתפים. לא חייבים להיות כל ילדי הגן — אפשר להתאים לכל ארוחה.</div>
+    <div class="fld"><label>שם הסידור</label>
+      <input type="text" id="planName" value="${esc(plan.name)}" oninput="plan.name=this.value" placeholder="למשל: ארוחת בוקר"></div>
+    <div class="pick">
+      ${allKids.map(k => `<button class="p ${plan.childIds.includes(k.id) ? 'on' : ''}" onclick="toggleKid('${k.id}')">${esc(k.name)}</button>`).join('')}
+    </div>
+    <div class="count-line">נבחרו ${n} מתוך ${allKids.length} ילדים</div>
+    <div class="nav">
+      <button class="btn soft" onclick="allKidsOn()">בחרי את כולם</button>
+      <button class="btn ghost" onclick="plan.childIds=[];renderStep()">נקי בחירה</button>
+      <button class="btn" onclick="goStep(2)" ${n ? '' : 'disabled'}>המשך →</button>
+    </div></div>`;
+}
+function toggleKid(id) {
+  const i = plan.childIds.indexOf(id);
+  if (i >= 0) plan.childIds.splice(i, 1); else plan.childIds.push(id);
+  renderStep();
+}
+function allKidsOn() { plan.childIds = allKids.map(k => k.id); renderStep(); }
+
+function stepTables() {
+  const need = plan.childIds.length;
+  const cap = plan.tables.reduce((s, t) => s + tplOf(t).seats.length, 0);
+  const seatedStaff = Object.keys(plan.staff).filter(k => plan.staff[k].sits === 'seat').length;
+  return `<div class="card">
+    <h2>השולחנות</h2>
+    <div class="sub">כמה שולחנות יש, ואיך המקומות מסודרים סביב כל אחד. המבנה הזה קובע מי באמת יושב ליד מי.</div>
+    <div class="fld"><label>כמה שולחנות?</label>
+      <input type="number" id="nTables" min="1" max="10" value="${plan.tables.length || ''}" placeholder="למשל 4" oninput="setTables(this.value)"></div>
+    ${plan.tables.length ? `
+      <div class="fld"><label>איך נראה השולחן?</label>
+        <div class="tpl-grid">
+          ${Object.values(E.TEMPLATES).map(t => `
+            <div class="tpl ${plan.tables[0].templateId === t.id ? 'on' : ''}" onclick="setTpl('${t.id}')">
+              ${tplPreview(t)}<div class="nm">${esc(t.name)}</div></div>`).join('')}
+        </div></div>
+      <div class="count-line">${need} ילדים${seatedStaff ? ' ועוד ' + seatedStaff + ' אנשי צוות בשולחן' : ''} · ${cap} מקומות בסך הכל
+        ${cap < need + seatedStaff ? ' — <b style="color:#c94147">חסרים מקומות</b>' : ' ✓'}</div>` : ''}
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(1)">← חזרה</button>
+      <button class="btn" onclick="goStep(3)" ${plan.tables.length ? '' : 'disabled'}>המשך →</button>
+    </div></div>`;
+}
+function setTables(v) {
+  const n = Math.max(0, Math.min(10, parseInt(v, 10) || 0));
+  const id = plan.tables.length ? plan.tables[0].templateId : 'rect6_heads';
+  plan.tables = Array.from({ length: n }, (_, i) => ({ id: 't' + (i + 1), name: 'שולחן ' + (i + 1), templateId: id }));
+  renderStep();
+}
+function setTpl(id) { plan.tables.forEach(t => { t.templateId = id; }); renderStep(); }
+
+function tplPreview(t) {
+  const S = 26, PAD = 15;
+  const w = t.w * S, h = t.h * S;
+  const seats = t.seats.map(s =>
+    `<div style="position:absolute;width:13px;height:13px;border-radius:50%;background:#C4846C;
+      left:${PAD + s.x * S - 6.5}px;top:${PAD + s.y * S - 6.5}px;"></div>`).join('');
+  return `<div style="position:relative;width:${w + PAD * 2}px;height:${h + PAD * 2}px;margin:0 auto;">
+    <div style="position:absolute;left:${PAD}px;top:${PAD}px;width:${w}px;height:${h}px;
+      background:#efe6d8;border:1.5px solid #ddd0bb;${t.shape === 'round' ? 'border-radius:50%;' : 'border-radius:5px;'}"></div>
+    ${seats}</div>`;
+}
+
+function stepStaff() {
+  return `<div class="card">
+    <h2>אנשי הצוות בארוחה</h2>
+    <div class="sub">בחרי מי נמצא/ת, ואיך. זה משנה את הסידור: מי שיושב/ת בתוך השולחן תופס/ת מקום ויכול/ה להיות "ליד" ילד.</div>
+    <div class="pick">
+      ${allStaff.map(s => `<button class="p staff ${plan.staff[s.id] ? 'on' : ''}" onclick="toggleStaff('${s.id}')">${esc(s.name)}</button>`).join('')}
+    </div>
+    ${Object.keys(plan.staff).length ? `<div style="margin-top:18px;">
+      ${Object.keys(plan.staff).map(id => {
+        const s = allStaff.find(x => x.id === id) || { name: '—' };
+        const cfg = plan.staff[id];
+        return `<div class="staff-row"><b>${esc(s.name)}</b>
+          <select onchange="plan.staff['${id}'].sits=this.value;renderStep()">
+            <option value="seat"    ${cfg.sits === 'seat' ? 'selected' : ''}>יושבת במקום בשולחן</option>
+            <option value="beside"  ${cfg.sits === 'beside' ? 'selected' : ''}>יושבת ליד השולחן</option>
+            <option value="rove"    ${cfg.sits === 'rove' ? 'selected' : ''}>לא יושבת — משגיחה</option>
+          </select>
+          ${cfg.sits !== 'seat' ? `<span style="font-size:12px;color:#9B8E82;">אחראית על:</span>
+            ${plan.tables.map(t => `<label style="font-size:12.5px;display:flex;align-items:center;gap:4px;">
+              <input type="checkbox" ${(cfg.tables||[]).includes(t.id)?'checked':''} onchange="toggleResp('${id}','${t.id}')"> ${esc(t.name)}</label>`).join('')}` : ''}
+        </div>`;
+      }).join('')}</div>` : '<div class="count-line">אפשר גם בלי אנשי צוות בסידור.</div>'}
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(2)">← חזרה</button>
+      <button class="btn" onclick="goStep(4)">המשך →</button>
+    </div></div>`;
+}
+function toggleStaff(id) {
+  if (plan.staff[id]) delete plan.staff[id];
+  else plan.staff[id] = { sits: 'seat', tables: [] };
+  renderStep();
+}
+function toggleResp(sid, tid) {
+  const a = plan.staff[sid].tables = plan.staff[sid].tables || [];
+  const i = a.indexOf(tid); if (i >= 0) a.splice(i, 1); else a.push(tid);
+}
+
+function peopleOptions(kind) {
+  const list = kind === 'staff'
+    ? Object.keys(plan.staff).map(id => ({ id, name: (allStaff.find(s => s.id === id) || {}).name || '' }))
+    : plan.childIds.map(id => ({ id, name: (allKids.find(k => k.id === id) || {}).name || '' }));
+  return list.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+}
+
+function stepRules() {
+  return `<div class="card">
+    <h2>כללי ישיבה</h2>
+    <div class="sub">כללים שהמערכת תנסה לקיים בכל סידור. שימי לב להבדל: <b>"לא באותו שולחן"</b> מרחיק לגמרי,
+      ואילו <b>"לא אחד ליד השני"</b> מאפשר אותו שולחן ובלבד שלא במושבים צמודים.</div>
+    <div class="rule-row">
+      <select id="rType" onchange="renderRuleRow()">
+        ${Object.keys(E.RULE_TYPES).map(k => `<option value="${k}">${E.RULE_TYPES[k].label}</option>`).join('')}
+      </select>
+      <span id="ruleFields"></span>
+      <button class="btn" onclick="addRule()">+ הוסף כלל</button>
+    </div>
+    <div class="rule-list">${plan.rules.map(ruleHtml).join('') || '<div class="count-line">עוד לא הוגדרו כללים.</div>'}</div>
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(3)">← חזרה</button>
+      <button class="btn" onclick="goStep(5)">המשך →</button>
+    </div></div>`;
+}
+function renderRuleRow() {
+  const t = document.getElementById('rType').value;
+  const el = document.getElementById('ruleFields');
+  const kids = `<select id="rA">${peopleOptions('child')}</select>`;
+  if (E.RULE_TYPES[t].pair) { el.innerHTML = kids + `<select id="rB">${peopleOptions('child')}</select>`; return; }
+  if (t === 'position') {
+    el.innerHTML = kids + `<select id="rPos">
+      <option value="head">בראש השולחן</option><option value="edge">בקצה הצלע</option>
+      <option value="middle">באמצע הצלע</option></select>`; return;
+  }
+  el.innerHTML = kids + `<select id="rB"><option value="">כל איש צוות</option>${peopleOptions('staff')}</select>`;
+}
+function addRule() {
+  const type = document.getElementById('rType').value;
+  const a = (document.getElementById('rA') || {}).value;
+  const b = (document.getElementById('rB') || {}).value || null;
+  const pos = (document.getElementById('rPos') || {}).value || null;
+  if (!a) return;
+  if (E.RULE_TYPES[type].pair && a === b) { showErr('צריך לבחור שני ילדים שונים'); return; }
+  plan.rules.push({ id: uid(), type, a, b, pos, active: true });
+  renderStep(); renderRuleRow();
+}
+function ruleHtml(r) {
+  return `<div class="rule ${r.active === false ? 'off' : ''}">
+    <span class="state" onclick="toggleRule('${r.id}')">${r.active === false ? 'מבוטל' : 'פעיל'}</span>
+    <b>${esc(E.RULE_TYPES[r.type].label)}:</b> ${esc(ruleText(r))}
+    <button class="x" onclick="delRule('${r.id}')">מחק</button></div>`;
+}
+function ruleText(r) {
+  const nm = id => (allKids.find(k => k.id === id) || allStaff.find(s => s.id === id) || {}).name || '—';
+  if (r.type === 'position') {
+    const L = { head: 'בראש השולחן', edge: 'בקצה הצלע', middle: 'באמצע הצלע' };
+    return nm(r.a) + ' — ' + (L[r.pos] || r.pos);
+  }
+  return nm(r.a) + (r.b ? ' · ' + nm(r.b) : ' · כל איש צוות');
+}
+function toggleRule(id) { const r = plan.rules.find(x => x.id === id); r.active = r.active === false; refresh(); }
+function delRule(id) { plan.rules = plan.rules.filter(x => x.id !== id); refresh(); }
+function refresh() { if (lastResult) { renderBoard(); } else { renderStep(); } }
+
+function stepSplit() {
+  const m = plan.split.mode;
+  return `<div class="card">
+    <h2>חלוקת הילדים בין השולחנות</h2>
+    <div class="sub">איך לפזר את הילדים? המערכת תתחשב גם בקיבולת של כל שולחן.</div>
+    <div class="pick">
+      <button class="p ${m === 'even' ? 'on' : ''}" onclick="plan.split={mode:'even'};renderStep()">שווה ככל האפשר</button>
+      <button class="p ${m === 'any' ? 'on' : ''}" onclick="plan.split={mode:'any'};renderStep()">לא משנה לי</button>
+    </div>
+    <div class="count-line" style="margin-top:18px;">
+      ${plan.childIds.length} ילדים · ${plan.tables.length} שולחנות ·
+      ${Object.keys(plan.staff).filter(k => plan.staff[k].sits === 'seat').length} אנשי צוות בשולחן ·
+      ${plan.rules.filter(r => r.active !== false).length} כללים פעילים
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(4)">← חזרה</button>
+      <button class="btn" onclick="buildPlan()">✨ צרי סידור</button>
+    </div></div>`;
+}
+
+/* ---------- בניית הסידור ---------- */
+function enginePlan() {
+  const people = {};
+  plan.childIds.forEach(id => { people[id] = { name: (allKids.find(k => k.id === id) || {}).name, kind: 'child' }; });
+  Object.keys(plan.staff).forEach(id => {
+    people[id] = { name: (allStaff.find(s => s.id === id) || {}).name, kind: 'staff',
+                   sits: plan.staff[id].sits, tables: plan.staff[id].tables };
+  });
+  return { tables: plan.tables, people, rules: plan.rules, seats: plan.seats };
+}
+
+function buildPlan() {
+  const ep = enginePlan();
+  const res = E.solve(ep, tplOf, { split: plan.split, locks: plan.locks });
+  if (!res.ok) { showConflict(res, ep); return; }
+  plan.seats = res.seats;
+  lastResult = res;
+  document.getElementById('wizard').classList.add('hide');
+  document.getElementById('steps').classList.add('hide');
+  document.getElementById('board').classList.remove('hide');
+  renderTop(); renderBoard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showConflict(res, ep) {
+  const box = document.getElementById('wizard');
+  let html = '';
+  (res.issues || []).forEach(i => { html += `<div class="conflict"><h4>צריך לשים לב</h4><p>${esc(i.text)}</p></div>`; });
+
+  if (res.group) {
+    const nm = id => (allKids.find(k => k.id === id) || {}).name || id;
+    const pairs = [];
+    for (let i = 0; i < res.group.length; i++)
+      for (let j = i + 1; j < res.group.length; j++) pairs.push([res.group[i], res.group[j]]);
+    html += `<div class="conflict">
+      <h4>מצאתי בעיה — הכללים הנוכחיים לא מאפשרים סידור</h4>
+      <p>הגדרת ש<b>${res.group.map(nm).join(', ')}</b> לא יכולים לשבת יחד — זה ${res.group.length} ילדים
+         שצריכים ${res.group.length} שולחנות שונים, אבל יש רק ${plan.tables.length}.</p>
+      <p><b>שאלה אחת תפתור את זה:</b> איזה זוג מתוכם כן יכול לשבת באותו שולחן?</p>
+      <div class="opts">
+        ${pairs.map(p => `<button onclick="resolvePair('${p[0]}','${p[1]}')">${esc(nm(p[0]))} ו${esc(nm(p[1]))}</button>`).join('')}
+      </div></div>`;
+  } else if (res.exhausted) {
+    html += `<div class="conflict"><h4>לא מצאתי סידור שמקיים את כל הכללים</h4>
+      <p>הכללים לא סותרים זה את זה באופן ישיר, אבל יחד הם לא מותירים אפשרות.
+         אפשר לבטל כלל אחד ולנסות שוב, או להוסיף שולחן.</p>
+      <div class="opts">${plan.rules.filter(r => r.active !== false).map(r =>
+        `<button onclick="toggleRule('${r.id}');buildPlan()">בטלי: ${esc(E.RULE_TYPES[r.type].label)} — ${esc(ruleText(r))}</button>`).join('')}
+      </div></div>`;
+  }
+  box.innerHTML = html + `<div class="nav"><button class="btn ghost" onclick="goStep(4)">← חזרה לכללים</button></div>`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function resolvePair(a, b) {
+  plan.rules.forEach(r => {
+    if (r.type === 'not_same_table' &&
+        ((r.a === a && r.b === b) || (r.a === b && r.b === a))) r.active = false;
+  });
+  buildPlan();
+}
+
+/* ---------- הלוח ---------- */
+function renderBoard() {
+  const ep = enginePlan(); ep.seats = plan.seats;
+  const viols = E.checkViolations(ep, tplOf);
+  const badPeople = new Set();
+  viols.forEach(v => { const r = plan.rules.find(x => x.id === v.ruleId); if (r) { badPeople.add(r.a); if (r.b) badPeople.add(r.b); } });
+
+  const S = 60, PAD = 34;
+  const tablesHtml = plan.tables.map(t => {
+    const tpl = tplOf(t);
+    const w = tpl.w * S, h = tpl.h * S;
+    const seats = tpl.seats.map(s => {
+      const k = E.key(t.id, s.id);
+      const pid = plan.seats[k];
+      const p = pid ? ep.people[pid] : null;
+      const cls = ['seat'];
+      if (p) cls.push('filled');
+      if (p && p.kind === 'staff') cls.push('staff');
+      if (pid && badPeople.has(pid)) cls.push('bad');
+      if (selectedSeat === k) cls.push('sel');
+      if (plan.locks[k]) cls.push('lock');
+      return `<div class="${cls.join(' ')}" style="left:${PAD + s.x * S - 28}px;top:${PAD + s.y * S - 28}px"
+        onclick="tapSeat('${k}')" oncontextmenu="event.preventDefault();toggleLock('${k}')"
+        title="${p ? esc(p.name) : 'מקום פנוי'}">${p ? esc(p.name) : ''}</div>`;
+    }).join('');
+    const staffBeside = Object.keys(plan.staff)
+      .filter(id => plan.staff[id].sits !== 'seat' && (plan.staff[id].tables || []).includes(t.id))
+      .map(id => (allStaff.find(s => s.id === id) || {}).name).filter(Boolean);
+    return `<div><div class="tlabel">${esc(t.name)}${staffBeside.length ? ' · ' + esc(staffBeside.join(', ')) : ''}</div>
+      <div class="twrap" style="width:${w + PAD * 2}px;height:${h + PAD * 2}px">
+        <div class="tsurface" style="left:${PAD}px;top:${PAD}px;width:${w}px;height:${h}px;
+          ${tpl.shape === 'round' ? 'border-radius:50%;' : 'border-radius:10px;'}"></div>
+        ${seats}</div></div>`;
+  }).join('');
+
+  document.getElementById('board').innerHTML = `
+    <div class="board-top">
+      <div><b style="font-size:18px;color:#1F3D34">${esc(plan.name)}</b>
+        <span style="color:#9B8E82;font-size:13px"> · ${plan.childIds.length} ילדים · ${plan.tables.length} שולחנות</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn soft" onclick="reSolve()">🔄 סדרי מחדש</button>
+        <button class="btn ghost" onclick="window.print()">🖨️ הדפסה</button>
+      </div>
+    </div>
+    ${viols.length ? `<div class="viol"><h4>${viols.length} הפרות של כללי ישיבה</h4>
+      ${viols.map(v => `<div class="v">🔴 ${esc(v.text)}
+        <button onclick="killRule('${v.ruleId}')">בטלי את הכלל</button></div>`).join('')}</div>`
+      : '<div class="allgood">🟢 הסידור מקיים את כל כללי הישיבה</div>'}
+    <div class="tables">${tablesHtml}</div>
+    <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם ·
+      לחיצה ארוכה או קליק ימני על מקום — נועלת אותו 🔒 כך שסידור מחדש לא יזיז אותו</div>`;
+}
+
+function tapSeat(k) {
+  if (!selectedSeat) { if (plan.seats[k]) { selectedSeat = k; renderBoard(); } return; }
+  if (selectedSeat === k) { selectedSeat = null; renderBoard(); return; }
+  const a = plan.seats[selectedSeat], b = plan.seats[k];
+  if (plan.locks[selectedSeat] || plan.locks[k]) { showErr('אחד המקומות נעול — אפשר לשחרר בקליק ימני'); selectedSeat = null; renderBoard(); return; }
+  if (b) plan.seats[selectedSeat] = b; else delete plan.seats[selectedSeat];
+  plan.seats[k] = a;
+  selectedSeat = null;
+  renderBoard();
+}
+function toggleLock(k) {
+  if (!plan.seats[k]) return;
+  if (plan.locks[k]) delete plan.locks[k]; else plan.locks[k] = plan.seats[k];
+  renderBoard();
+}
+function killRule(id) { const r = plan.rules.find(x => x.id === id); if (r) r.active = false; renderBoard(); }
+function reSolve() {
+  const ep = enginePlan();
+  const res = E.solve(ep, tplOf, { split: plan.split, locks: plan.locks });
+  if (!res.ok) { showErr('לא נמצא סידור טוב יותר עם הכללים הנוכחיים'); return; }
+  plan.seats = res.seats; lastResult = res; renderBoard(); showOk('סודר מחדש');
+}
+
+/* ---------- שמירה ---------- */
+async function savePlan() {
+  try { await api.saveSeatingPlan(plan); showOk('הסידור נשמר'); }
+  catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+async function saveVersion() {
+  const note = prompt('שם לגרסה:', 'גרסה מ-' + new Date().toLocaleDateString('he-IL'));
+  if (note === null) return;
+  try { await api.saveSeatingPlan(plan); await api.saveSeatingVersion(plan, note); showOk('נשמרה גרסה'); }
+  catch (e) { showErr('שמירת הגרסה נכשלה: ' + e.message); }
+}
+async function loadExisting() {
+  try {
+    const r = await api.getSeatingPlans();
+    const list = (r && r.plans) || [];
+    if (!list.length) { showErr('אין עדיין סידורים שמורים'); return; }
+    const pick = prompt('איזה סידור לפתוח?\n\n' + list.map((p, i) => (i + 1) + '. ' + p.name).join('\n'), '1');
+    const idx = parseInt(pick, 10) - 1;
+    if (isNaN(idx) || !list[idx]) return;
+    plan = Object.assign(newPlan(), list[idx].plan);
+    if (Object.keys(plan.seats || {}).length) {
+      lastResult = { ok: true };
+      document.getElementById('wizard').classList.add('hide');
+      document.getElementById('steps').classList.add('hide');
+      document.getElementById('board').classList.remove('hide');
+      renderTop(); renderBoard();
+    } else { renderTop(); goStep(1); }
+    showOk('נטען: ' + plan.name);
+  } catch (e) { showErr('הטעינה נכשלה: ' + e.message); }
+}
+
+function showErr(m) { const el = document.getElementById('error'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 5000); }
+function showOk(m) { const el = document.getElementById('success'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000); }
+
+boot();
+</script>
+</body>
+</html>

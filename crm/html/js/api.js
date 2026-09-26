@@ -78,6 +78,13 @@ const api = {
   updateParent: (id, data) => apiCall(`/parents/${id}?garden_id=${getGardenId()}`, 'PUT', data),
   deleteParent: (id) => apiCall(`/parents/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 
+  // Seating plans (meal seating)
+  getSeatingPlans: () => apiCall(`/seating?garden_id=${getGardenId()}`),
+  getSeatingPlan: (id) => apiCall(`/seating?garden_id=${getGardenId()}&id=${encodeURIComponent(id)}`),
+  saveSeatingPlan: (plan) => apiCall(`/seating?garden_id=${getGardenId()}`, 'POST', { action: 'save', plan }),
+  saveSeatingVersion: (plan, note) => apiCall(`/seating?garden_id=${getGardenId()}`, 'POST', { action: 'version', plan, note }),
+  deleteSeatingPlan: (id) => apiCall(`/seating/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+
   // Staff
   getStaffBirthdays: () => apiCall(`/staff-birthdays?garden_id=${getGardenId()}`),
   createStaffBirthdayReminders: () =>
