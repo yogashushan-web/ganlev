@@ -65,15 +65,17 @@
       adjacent: [['a','b'],['b','c'],['c','d'],['d','e'],['e','f'],['f','g'],['g','h'],['h','a']],
       across:   [['b','h'],['c','g'],['d','f']],
     },
+    round4: {
+      id: 'round4', shape: 'round', name: 'עגול · 4 מקומות',
+      w: 2.6, h: 2.6, seats: ring(4, 1.3), adjacent: ringEdges(4), across: [],
+    },
     round6: {
       id: 'round6', shape: 'round', name: 'עגול · 6 מקומות',
-      w: 3, h: 3,
-      seats: ring(6), adjacent: ringEdges(6), across: [],
+      w: 3, h: 3, seats: ring(6, 1.5), adjacent: ringEdges(6), across: [],
     },
     round8: {
       id: 'round8', shape: 'round', name: 'עגול · 8 מקומות',
-      w: 3.4, h: 3.4,
-      seats: ring(8), adjacent: ringEdges(8), across: [],
+      w: 3.6, h: 3.6, seats: ring(8, 1.8), adjacent: ringEdges(8), across: [],
     },
     square4: {
       id: 'square4', shape: 'square', name: 'ריבוע · 4 · אחד בכל צלע',
@@ -89,13 +91,15 @@
     },
   };
 
-  function ring(n) {
+  // R הוא גם מרכז השולחן וגם רדיוס המושבים, כך שהמושבים יושבים בדיוק
+  // על היקף השולחן שרוחבו 2R. אי-התאמה בין השניים הזיזה את המושבים.
+  function ring(n, R) {
     const LETTERS = 'abcdefghijkl';
     const out = [];
     for (let i = 0; i < n; i++) {
       const t = (i / n) * Math.PI * 2 - Math.PI / 2;
       out.push({ id: LETTERS[i], role: 'round',
-        x: 1.5 + Math.cos(t) * 1.5, y: 1.5 + Math.sin(t) * 1.5 });
+        x: R + Math.cos(t) * R, y: R + Math.sin(t) * R });
     }
     return out;
   }
@@ -356,6 +360,7 @@
       .sort((a, b) => ((no[b] ? no[b].size : 0) + (yes[b] ? yes[b].size : 0))
                     - ((no[a] ? no[a].size : 0) + (yes[a] ? yes[a].size : 0)) || (a < b ? -1 : 1));
 
+    const even = !!(opts.split && opts.split.mode === 'even');
     const target = distribution(plan, tplOf, kids.length, seatedStaff.length, opts.split);
     const assign = Object.assign({}, fixed);
     let result = null, nodes = 0;
@@ -368,12 +373,25 @@
         return;
       }
       const p = order[i];
-      for (const t of plan.tables) {
+      // סדר בדיקת השולחנות: קודם שולחן מועדף (גיל / מילוי לפי סדר), אחרת
+      // ב"שווה ככל האפשר" מתחילים מהשולחן הכי ריק. זו העדפה ולא תקרה —
+      // תקרה נוקשה הייתה חוסמת מקום לאנשי הצוות ומפילה את החיפוש.
+      const pref = (opts.prefer || {})[p];
+      const countKids = t => Object.keys(assign)
+        .filter(x => assign[x] === t.id && people[x].kind === 'child').length;
+      let tablesOrdered = plan.tables.slice();
+      if (even) tablesOrdered.sort((a, b) => countKids(a) - countKids(b));
+      if (pref) tablesOrdered.sort((a, b) => (a.id === pref ? -1 : b.id === pref ? 1 : 0));
+
+      for (const t of tablesOrdered) {
         const here = Object.keys(assign).filter(x => assign[x] === t.id);
         if (here.length >= cap[t.id]) continue;
-        if (target[t.id] != null && here.filter(x => people[x].kind === 'child').length
-            >= target[t.id] && people[p].kind === 'child') continue;
+        // ספירה מפורשת לשולחן היא תקרה אמיתית (המשתמשת קבעה אותה בעצמה)
+        if (target[t.id] != null && people[p].kind === 'child'
+            && countKids(t) >= target[t.id]) continue;
         if (no[p] && here.some(x => no[p].has(x))) continue;
+        // "חייבים באותו שולחן" — אם מי שקשור אליו כבר יושב במקום אחר, לא כאן
+        if (yes[p] && [...yes[p]].some(q => assign[q] && assign[q] !== t.id)) continue;
         assign[p] = t.id;
         place(i + 1);
         delete assign[p];
@@ -388,17 +406,13 @@
   // כמה ילדים בכל שולחן
   function distribution(plan, tplOf, nKids, nStaff, split) {
     const t = {};
-    if (split && split.mode === 'manual' && split.counts) {
+    // ספירה מפורשת לכל שולחן גוברת על כל מצב אחר.
+    if (split && split.counts) {
       plan.tables.forEach(x => { t[x.id] = split.counts[x.id]; });
       return t;
     }
-    if (!split || split.mode !== 'even') { plan.tables.forEach(x => { t[x.id] = null; }); return t; }
-    const room = plan.tables.map(x => ({ id: x.id, cap: tplOf(x).seats.length }));
-    let left = nKids;
-    room.forEach((r, i) => {
-      const share = Math.min(r.cap, Math.ceil(left / (room.length - i)));
-      t[r.id] = share; left -= share;
-    });
+    // "שווה ככל האפשר" מיושם כהעדפת סדר בחיפוש, לא כתקרה — ראו solve().
+    plan.tables.forEach(x => { t[x.id] = null; });
     return t;
   }
 
@@ -447,6 +461,13 @@
       }
       if (r.type === 'far_from_staff' && r.a === person) {
         if (neigh.some(n => people[n] && people[n].kind === 'staff')) return false;
+      }
+      // "חייבים לשבת ליד": נאכף כשהשני כבר יושב בשולחן הזה.
+      if ((r.type === 'adjacent' || (r.type === 'near_staff' && r.b)) &&
+          (r.a === person || r.b === person)) {
+        const other = r.a === person ? r.b : r.a;
+        const seatedElsewhere = Object.keys(placed).find(s => placed[s] === other);
+        if (seatedElsewhere && neigh.indexOf(other) < 0) return false;
       }
     }
     // גם בכיוון ההפוך: שכן שנוסף עכשיו לא שובר כלל של מי שכבר יושב

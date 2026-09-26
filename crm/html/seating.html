@@ -19,11 +19,12 @@
     .err.show,.ok.show { display:block; }
     .hide { display:none !important; }
 
-    /* ---------- שאלון ---------- */
     .steps { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
-    .step-pill { padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700; background:#fff; color:#b3a89a; border:1px solid #e8e4de; }
+    .step-pill { padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700; background:#fff; color:#8a7f70; border:1px solid #e8e4de; cursor:pointer; font-family:'Heebo'; }
+    .step-pill:hover { border-color:#1F3D34; color:#1F3D34; }
     .step-pill.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
-    .step-pill.done { background:#e6f4ec; color:#1F7a4f; border-color:#cfe7d9; cursor:pointer; }
+    .step-pill.done { background:#e6f4ec; color:#1F7a4f; border-color:#cfe7d9; }
+
     .card { background:#fff; border-radius:18px; padding:24px 26px; box-shadow:0 2px 14px rgba(0,0,0,.06); margin-bottom:16px; }
     .card h2 { font-size:20px; color:#1F3D34; margin-bottom:5px; }
     .card .sub { color:#9B8E82; font-size:13.5px; margin-bottom:18px; line-height:1.6; }
@@ -39,54 +40,61 @@
     .pick .p.staff.on { background:#C4846C; border-color:#C4846C; }
     .count-line { font-size:13px; color:#9B8E82; margin:12px 0 4px; font-weight:600; }
 
-    .tpl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
-    .tpl { border:2px solid #e8e4de; border-radius:14px; padding:14px; cursor:pointer; background:#fff; text-align:center; }
-    .tpl.on { border-color:#1F3D34; background:#f4f9f6; }
-    .tpl .nm { font-size:12.5px; font-weight:700; color:#1F3D34; margin-top:10px; line-height:1.4; }
+    .tcards { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
+    .tcard { border:1.5px solid #e8e4de; border-radius:14px; padding:13px; background:#FAF8F4; text-align:center; }
+    .tcard b { color:#1F3D34; font-size:13.5px; display:block; margin-bottom:8px; }
+    .tcard select { width:100%; padding:8px 9px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:12.5px; margin-top:8px; }
 
-    .staff-row { display:flex; align-items:center; gap:12px; background:#FAF8F4; border-radius:11px; padding:11px 14px; margin-bottom:9px; flex-wrap:wrap; }
-    .staff-row b { color:#1F3D34; min-width:90px; }
+    .staff-row { display:flex; align-items:center; gap:10px; background:#FAF8F4; border-radius:11px; padding:11px 14px; margin-bottom:9px; flex-wrap:wrap; }
     .staff-row select { padding:7px 10px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:12.5px; }
+    .swap { background:#fff; border:1px solid #eccfc2; color:#8a4d33; border-radius:999px; padding:5px 12px; font-family:'Heebo'; font-size:12.5px; font-weight:700; cursor:pointer; }
+    .swap:hover { background:#fbf1ec; }
 
     .rule-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
     .rule-row select { padding:9px 11px; border:1.5px solid #e8e4de; border-radius:10px; font-family:'Heebo'; font-size:13px; }
     .rule-list { display:flex; flex-direction:column; gap:7px; margin-top:14px; }
     .rule { display:flex; align-items:center; gap:10px; background:#FAF8F4; border-radius:10px; padding:9px 13px; font-size:13.5px; flex-wrap:wrap; }
-    .rule .x { margin-right:auto; background:none; border:none; color:#c94147; cursor:pointer; font-size:15px; font-family:'Heebo'; }
+    .rule .x { margin-right:auto; background:none; border:none; color:#c94147; cursor:pointer; font-size:13px; font-family:'Heebo'; }
     .rule .state { border:1px solid #cfe7d9; background:#e6f4ec; color:#1F7a4f; border-radius:999px; padding:3px 11px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Heebo'; }
-    .rule.off { opacity:.5; }
-    .rule.off .state { background:#f6f2ec; color:#8a7f70; border-color:#e8e1d6; }
+    .rule.off { opacity:.5; } .rule.off .state { background:#f6f2ec; color:#8a7f70; border-color:#e8e1d6; }
+
+    .opt { display:block; width:100%; text-align:right; border:1.5px solid #e8e4de; background:#fff; border-radius:13px; padding:13px 16px; margin-bottom:9px; cursor:pointer; font-family:'Heebo'; }
+    .opt.on { border-color:#1F3D34; background:#f4f9f6; }
+    .opt b { display:block; font-size:14.5px; color:#1F3D34; margin-bottom:3px; }
+    .opt span { font-size:12.5px; color:#9B8E82; line-height:1.55; }
 
     /* ---------- לוח ---------- */
     .board-top { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
-    .tables { display:flex; gap:26px; flex-wrap:wrap; justify-content:center; padding:10px 0 4px; }
-    .twrap { position:relative; }
-    .tlabel { text-align:center; font-size:13px; font-weight:700; color:#1F3D34; margin-bottom:6px; }
-    .tsurface { position:absolute; background:#efe6d8; border:2px solid #ddd0bb; }
-    .seat { position:absolute; width:56px; height:56px; border-radius:50%; border:2px dashed #ddd0bb; background:#fff;
-      display:flex; align-items:center; justify-content:center; text-align:center; font-size:11.5px; font-weight:700;
-      color:#8a7f70; cursor:pointer; line-height:1.15; padding:3px; overflow:hidden; transition:.12s; }
+    .room { position:relative; background:#fffdf9; border:1.5px dashed #e0d7c7; border-radius:16px; margin:6px 0 14px; overflow:hidden; }
+    .twrap { position:absolute; touch-action:none; }
+    .tlabel { position:absolute; top:-2px; right:50%; transform:translateX(50%); font-size:12px; font-weight:700; color:#1F3D34; white-space:nowrap; background:#fffdf9; padding:1px 7px; border-radius:6px; cursor:grab; z-index:5; }
+    .tlabel:active { cursor:grabbing; }
+    .rot { background:#fff; border:1px solid #e8e4de; border-radius:6px; font-size:10.5px; cursor:pointer; font-family:'Heebo'; padding:0 4px; margin-right:4px; }
+    .tsurface { position:absolute; background:#efe6d8; border:2px solid #ddd0bb; cursor:grab; }
+    .seat { position:absolute; width:54px; height:54px; border-radius:50%; border:2px dashed #ddd0bb; background:#fff;
+      display:flex; align-items:center; justify-content:center; text-align:center; font-size:11px; font-weight:700;
+      color:#8a7f70; cursor:pointer; line-height:1.12; padding:3px; overflow:hidden; }
     .seat.filled { border-style:solid; border-color:#cfe0ec; background:#eef5fb; color:#2c4d66; }
     .seat.staff { border-color:#eccfc2; background:#fbf1ec; color:#8a4d33; }
     .seat.sel { outline:3px solid #1F3D34; outline-offset:2px; }
     .seat.bad { border-color:#e0837a; background:#fdf0ef; color:#a33; }
-    .seat.lock::after { content:'🔒'; position:absolute; top:-2px; left:2px; font-size:11px; }
-    .seat:hover { transform:scale(1.05); }
-    .legend { font-size:12.5px; color:#9B8E82; text-align:center; margin:10px 0 16px; line-height:1.7; }
+    .seat.lock::after { content:'🔒'; position:absolute; top:-1px; left:2px; font-size:10px; }
+    .layouts { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+    .layouts .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px; padding:7px 13px; font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#1F3D34; cursor:pointer; }
+    .layouts .lb:hover { border-color:#1F3D34; background:#f4f9f6; }
+    .legend { font-size:12.5px; color:#9B8E82; text-align:center; margin:4px 0 16px; line-height:1.7; }
 
     .viol { background:#fdf0ef; border:1px solid #f3cfc9; border-radius:12px; padding:14px 16px; margin-bottom:14px; }
     .viol h4 { color:#c94147; font-size:14.5px; margin-bottom:8px; }
     .viol .v { display:flex; align-items:center; gap:10px; font-size:13.5px; color:#8a3b34; padding:5px 0; flex-wrap:wrap; }
     .viol .v button { background:#fff; border:1px solid #f3cfc9; color:#c94147; border-radius:8px; padding:4px 10px; font-family:'Heebo'; font-size:12px; font-weight:700; cursor:pointer; }
     .allgood { background:#e6f4ec; border:1px solid #cfe7d9; color:#1F7a4f; border-radius:12px; padding:13px 16px; margin-bottom:14px; font-weight:700; font-size:14px; }
-
     .conflict { background:#fdf6e9; border:1px solid #e8c88a; border-radius:12px; padding:16px 18px; margin-bottom:14px; }
     .conflict h4 { color:#b8801f; margin-bottom:8px; font-size:15px; }
     .conflict p { font-size:13.5px; color:#8a6a23; line-height:1.7; margin-bottom:12px; }
     .conflict .opts { display:flex; gap:8px; flex-wrap:wrap; }
     .conflict .opts button { background:#fff; border:1px solid #e8c88a; color:#8a6a23; border-radius:9px; padding:8px 13px; font-family:'Heebo'; font-size:13px; font-weight:700; cursor:pointer; }
-    .conflict .opts button:hover { background:#fdf1e3; }
-    .msg { text-align:center; padding:36px; color:#9B8E82; }
+    @media print { .header,.steps,.board-top,.layouts,.legend,.viol,.allgood { display:none !important; } .room { border:none; } }
   </style>
 </head>
 <body>
@@ -105,21 +113,27 @@
 
 <script src="js/common.js?v=19"></script>
 <script src="js/api.js?v=19"></script>
-<script src="js/seating-engine.js?v=1"></script>
+<script src="js/seating-engine.js?v=2"></script>
 <script>
 const E = SeatingEngine;
 const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const uid = () => 's' + Math.random().toString(36).slice(2, 9);
 
-let allKids = [], allStaff = [], step = 1, plan = null, selectedSeat = null, lastResult = null;
-
+let allKids = [], allStaff = [], step = 1, plan = null, selectedSeat = null, built = false, kidFilter = '';
 const STEPS = ['מי אוכל', 'שולחנות', 'צוות', 'כללי ישיבה', 'חלוקה'];
 
 function newPlan() {
   return { id: uid(), name: 'סידור ארוחה', childIds: [], tables: [], staff: {},
-           rules: [], split: { mode: 'even' }, seats: {}, locks: {} };
+           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {} };
 }
 const tplOf = t => E.TEMPLATES[t.templateId] || E.TEMPLATES.rect6_heads;
+const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
+const staffName = id => (allStaff.find(s => s.id === id) || {}).name || '';
+// שם המשבצת: מי שפעילה כרגע מבין המחליפות
+const slotName = sid => {
+  const s = plan.staff[sid]; if (!s) return '';
+  return staffName(s.members[s.active || 0]);
+};
 
 /* ---------- טעינה ---------- */
 async function boot() {
@@ -128,39 +142,37 @@ async function boot() {
     const year = currentSchoolYear();
     allKids = ((rc && rc.data) || [])
       .filter(c => (c.school_year || year) === year && c.status === 'active')
-      .map(c => ({ id: c.id, name: (c.first_name_he + ' ' + (c.last_name_he || '')).trim() }))
+      .map(c => ({ id: c.id, name: (c.first_name_he + ' ' + (c.last_name_he || '')).trim(), birth: c.birth_date || '' }))
       .sort((a, b) => a.name.localeCompare(b.name, 'he'));
     allStaff = ((rs && rs.data) || []).filter(s => s.status === 'active')
-      .map(s => ({ id: s.id, name: s.full_name_he }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'he'));
+      .map(s => ({ id: s.id, name: s.full_name_he })).sort((a, b) => a.name.localeCompare(b.name, 'he'));
   } catch (e) { showErr('שגיאה בטעינת הילדים והצוות: ' + e.message); }
   plan = newPlan();
   renderTop(); renderSteps(); renderStep();
 }
 function currentSchoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
 
-/* ---------- ניווט ---------- */
 function renderTop() {
-  document.getElementById('topActions').innerHTML = lastResult
-    ? `<button class="btn ghost" onclick="backToWizard()">✎ שינוי הגדרות</button>
-       <button class="btn soft" onclick="saveVersion()">🕘 שמור גרסה</button>
+  document.getElementById('topActions').innerHTML = built
+    ? `<button class="btn ghost" onclick="backToWizard()">שינוי הגדרות</button>
+       <button class="btn soft" onclick="saveVersion()">שמור גרסה</button>
        <button class="btn" onclick="savePlan()">שמירה</button>`
-    : `<button class="btn ghost" onclick="loadExisting()">📂 סידורים שמורים</button>`;
+    : `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>`;
 }
 function renderSteps() {
   document.getElementById('steps').innerHTML = STEPS.map((s, i) => {
     const n = i + 1;
-    const cls = n === step ? 'on' : n < step ? 'done' : '';
-    return `<span class="step-pill ${cls}" ${n < step ? `onclick="goStep(${n})"` : ''}>${n}. ${s}</span>`;
+    return `<button class="step-pill ${n === step ? 'on' : n < step ? 'done' : ''}" onclick="goStep(${n})">${n}. ${s}</button>`;
   }).join('');
 }
-function goStep(n) { step = n; renderSteps(); renderStep(); window.scrollTo({top:0,behavior:'smooth'}); }
-function backToWizard() {
-  lastResult = null; document.getElementById('board').classList.add('hide');
+function goStep(n) {
+  step = n; built = false;
+  document.getElementById('board').classList.add('hide');
   document.getElementById('wizard').classList.remove('hide');
   document.getElementById('steps').classList.remove('hide');
-  renderTop(); goStep(1);
+  renderTop(); renderSteps(); renderStep(); window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+function backToWizard() { goStep(1); }
 
 /* ---------- השאלון ---------- */
 function renderStep() {
@@ -170,23 +182,29 @@ function renderStep() {
   if (step === 3) w.innerHTML = stepStaff();
   if (step === 4) { w.innerHTML = stepRules(); renderRuleRow(); }
   if (step === 5) w.innerHTML = stepSplit();
+  renderSteps();
 }
 
 function stepChildren() {
-  const n = plan.childIds.length;
+  const f = kidFilter.trim();
+  const shown = f ? allKids.filter(k => k.name.includes(f)) : allKids;
   return `<div class="card">
     <h2>מי אוכל בארוחה?</h2>
     <div class="sub">בחרי את הילדים שמשתתפים. לא חייבים להיות כל ילדי הגן — אפשר להתאים לכל ארוחה.</div>
     <div class="fld"><label>שם הסידור</label>
       <input type="text" id="planName" value="${esc(plan.name)}" oninput="plan.name=this.value" placeholder="למשל: ארוחת בוקר"></div>
+    <div class="fld"><label>חיפוש ילד/ה</label>
+      <input type="text" id="kidSearch" value="${esc(kidFilter)}" placeholder="הקלידי שם…"
+        oninput="kidFilter=this.value;renderStep();document.getElementById('kidSearch').focus()"></div>
     <div class="pick">
-      ${allKids.map(k => `<button class="p ${plan.childIds.includes(k.id) ? 'on' : ''}" onclick="toggleKid('${k.id}')">${esc(k.name)}</button>`).join('')}
+      ${shown.map(k => `<button class="p ${plan.childIds.includes(k.id) ? 'on' : ''}" onclick="toggleKid('${k.id}')">${esc(k.name)}</button>`).join('')
+        || '<div class="count-line">לא נמצא ילד/ה בשם הזה.</div>'}
     </div>
-    <div class="count-line">נבחרו ${n} מתוך ${allKids.length} ילדים</div>
+    <div class="count-line">נבחרו ${plan.childIds.length} מתוך ${allKids.length} ילדים</div>
     <div class="nav">
       <button class="btn soft" onclick="allKidsOn()">בחרי את כולם</button>
       <button class="btn ghost" onclick="plan.childIds=[];renderStep()">נקי בחירה</button>
-      <button class="btn" onclick="goStep(2)" ${n ? '' : 'disabled'}>המשך →</button>
+      <button class="btn" onclick="goStep(2)" ${plan.childIds.length ? '' : 'disabled'}>המשך</button>
     </div></div>`;
 }
 function toggleKid(id) {
@@ -199,40 +217,51 @@ function allKidsOn() { plan.childIds = allKids.map(k => k.id); renderStep(); }
 function stepTables() {
   const need = plan.childIds.length;
   const cap = plan.tables.reduce((s, t) => s + tplOf(t).seats.length, 0);
-  const seatedStaff = Object.keys(plan.staff).filter(k => plan.staff[k].sits === 'seat').length;
+  const seated = Object.keys(plan.staff).filter(k => plan.staff[k].sits === 'seat').length;
+  const opts = Object.values(E.TEMPLATES);
   return `<div class="card">
     <h2>השולחנות</h2>
-    <div class="sub">כמה שולחנות יש, ואיך המקומות מסודרים סביב כל אחד. המבנה הזה קובע מי באמת יושב ליד מי.</div>
+    <div class="sub">כמה שולחנות יש, ואיך המקומות מסודרים סביב כל אחד. אפשר לתת לכל שולחן מבנה שונה —
+      למשל ריבוע אחד ושלושה מלבנים. המבנה קובע מי באמת יושב ליד מי.</div>
     <div class="fld"><label>כמה שולחנות?</label>
       <input type="number" id="nTables" min="1" max="10" value="${plan.tables.length || ''}" placeholder="למשל 4" oninput="setTables(this.value)"></div>
     ${plan.tables.length ? `
-      <div class="fld"><label>איך נראה השולחן?</label>
-        <div class="tpl-grid">
-          ${Object.values(E.TEMPLATES).map(t => `
-            <div class="tpl ${plan.tables[0].templateId === t.id ? 'on' : ''}" onclick="setTpl('${t.id}')">
-              ${tplPreview(t)}<div class="nm">${esc(t.name)}</div></div>`).join('')}
-        </div></div>
-      <div class="count-line">${need} ילדים${seatedStaff ? ' ועוד ' + seatedStaff + ' אנשי צוות בשולחן' : ''} · ${cap} מקומות בסך הכל
-        ${cap < need + seatedStaff ? ' — <b style="color:#c94147">חסרים מקומות</b>' : ' ✓'}</div>` : ''}
+      <div class="fld"><label>אותו מבנה לכולם? בחרי והחילי בבת אחת</label>
+        <select onchange="if(this.value)applyAll(this.value)">
+          <option value="">— בחרי תבנית —</option>
+          ${opts.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}
+        </select></div>
+      <div class="tcards">
+        ${plan.tables.map(t => `<div class="tcard">
+          <b>${esc(t.name)}</b>
+          ${tplPreview(tplOf(t))}
+          <select onchange="setTpl('${t.id}',this.value)">
+            ${opts.map(o => `<option value="${o.id}" ${t.templateId === o.id ? 'selected' : ''}>${esc(o.name)}</option>`).join('')}
+          </select></div>`).join('')}
+      </div>
+      <div class="count-line">${need} ילדים${seated ? ' ועוד ' + seated + ' אנשי צוות בשולחן' : ''} · ${cap} מקומות
+        ${cap < need + seated ? ' — <b style="color:#c94147">חסרים מקומות</b>' : ' ✓'}</div>` : ''}
     <div class="nav">
-      <button class="btn ghost" onclick="goStep(1)">← חזרה</button>
-      <button class="btn" onclick="goStep(3)" ${plan.tables.length ? '' : 'disabled'}>המשך →</button>
+      <button class="btn ghost" onclick="goStep(1)">חזרה</button>
+      <button class="btn" onclick="goStep(3)" ${plan.tables.length ? '' : 'disabled'}>המשך</button>
     </div></div>`;
 }
 function setTables(v) {
   const n = Math.max(0, Math.min(10, parseInt(v, 10) || 0));
-  const id = plan.tables.length ? plan.tables[0].templateId : 'rect6_heads';
-  plan.tables = Array.from({ length: n }, (_, i) => ({ id: 't' + (i + 1), name: 'שולחן ' + (i + 1), templateId: id }));
+  const old = plan.tables.slice();
+  plan.tables = Array.from({ length: n }, (_, i) => old[i] ||
+    { id: 't' + (i + 1), name: 'שולחן ' + (i + 1), templateId: 'rect6_heads' });
   renderStep();
 }
-function setTpl(id) { plan.tables.forEach(t => { t.templateId = id; }); renderStep(); }
+function setTpl(tid, v) { const t = plan.tables.find(x => x.id === tid); if (t) t.templateId = v; renderStep(); }
+function applyAll(v) { plan.tables.forEach(t => { t.templateId = v; }); renderStep(); }
 
 function tplPreview(t) {
-  const S = 26, PAD = 15;
+  const S = 24, PAD = 14;
   const w = t.w * S, h = t.h * S;
   const seats = t.seats.map(s =>
-    `<div style="position:absolute;width:13px;height:13px;border-radius:50%;background:#C4846C;
-      left:${PAD + s.x * S - 6.5}px;top:${PAD + s.y * S - 6.5}px;"></div>`).join('');
+    `<div style="position:absolute;width:12px;height:12px;border-radius:50%;background:#C4846C;
+      left:${PAD + s.x * S - 6}px;top:${PAD + s.y * S - 6}px;"></div>`).join('');
   return `<div style="position:relative;width:${w + PAD * 2}px;height:${h + PAD * 2}px;margin:0 auto;">
     <div style="position:absolute;left:${PAD}px;top:${PAD}px;width:${w}px;height:${h}px;
       background:#efe6d8;border:1.5px solid #ddd0bb;${t.shape === 'round' ? 'border-radius:50%;' : 'border-radius:5px;'}"></div>
@@ -240,37 +269,57 @@ function tplPreview(t) {
 }
 
 function stepStaff() {
+  const used = new Set(Object.values(plan.staff).flatMap(s => s.members));
   return `<div class="card">
     <h2>אנשי הצוות בארוחה</h2>
-    <div class="sub">בחרי מי נמצא/ת, ואיך. זה משנה את הסידור: מי שיושב/ת בתוך השולחן תופס/ת מקום ויכול/ה להיות "ליד" ילד.</div>
+    <div class="sub">בחרי מי נמצאת, ואיך. מי שיושבת בתוך השולחן תופסת מקום ויכולה להיות "ליד" ילד.
+      אם שתיים מתחלפות ביניהן בסידור השבועי — אפשר לצרף אותן למשבצת אחת ולהחליף בלחיצה.</div>
     <div class="pick">
-      ${allStaff.map(s => `<button class="p staff ${plan.staff[s.id] ? 'on' : ''}" onclick="toggleStaff('${s.id}')">${esc(s.name)}</button>`).join('')}
+      ${allStaff.map(s => `<button class="p staff ${used.has(s.id) ? 'on' : ''}" onclick="toggleStaff('${s.id}')">${esc(s.name)}</button>`).join('')}
     </div>
     ${Object.keys(plan.staff).length ? `<div style="margin-top:18px;">
-      ${Object.keys(plan.staff).map(id => {
-        const s = allStaff.find(x => x.id === id) || { name: '—' };
-        const cfg = plan.staff[id];
-        return `<div class="staff-row"><b>${esc(s.name)}</b>
-          <select onchange="plan.staff['${id}'].sits=this.value;renderStep()">
-            <option value="seat"    ${cfg.sits === 'seat' ? 'selected' : ''}>יושבת במקום בשולחן</option>
-            <option value="beside"  ${cfg.sits === 'beside' ? 'selected' : ''}>יושבת ליד השולחן</option>
-            <option value="rove"    ${cfg.sits === 'rove' ? 'selected' : ''}>לא יושבת — משגיחה</option>
+      ${Object.keys(plan.staff).map(sid => {
+        const cfg = plan.staff[sid];
+        const free = allStaff.filter(s => !used.has(s.id));
+        return `<div class="staff-row">
+          <b style="color:#1F3D34;min-width:88px">${esc(slotName(sid))}</b>
+          ${cfg.members.length > 1
+            ? `<button class="swap" onclick="flipSlot('${sid}')">⇄ ${esc(cfg.members.map(staffName).join(' / '))}</button>`
+            : (free.length ? `<select onchange="if(this.value)addAlt('${sid}',this.value)">
+                 <option value="">+ מחליפה…</option>
+                 ${free.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>` : '')}
+          <select onchange="plan.staff['${sid}'].sits=this.value;renderStep()">
+            <option value="seat"   ${cfg.sits === 'seat' ? 'selected' : ''}>יושבת במקום בשולחן</option>
+            <option value="beside" ${cfg.sits === 'beside' ? 'selected' : ''}>יושבת ליד השולחן</option>
+            <option value="rove"   ${cfg.sits === 'rove' ? 'selected' : ''}>לא יושבת — משגיחה</option>
           </select>
           ${cfg.sits !== 'seat' ? `<span style="font-size:12px;color:#9B8E82;">אחראית על:</span>
             ${plan.tables.map(t => `<label style="font-size:12.5px;display:flex;align-items:center;gap:4px;">
-              <input type="checkbox" ${(cfg.tables||[]).includes(t.id)?'checked':''} onchange="toggleResp('${id}','${t.id}')"> ${esc(t.name)}</label>`).join('')}` : ''}
+              <input type="checkbox" ${(cfg.tables||[]).includes(t.id)?'checked':''} onchange="toggleResp('${sid}','${t.id}')"> ${esc(t.name)}</label>`).join('')}` : ''}
+          <button class="x" style="margin-right:auto;background:none;border:none;color:#c94147;cursor:pointer;font-family:'Heebo';font-size:13px"
+            onclick="delSlot('${sid}')">הסר</button>
         </div>`;
       }).join('')}</div>` : '<div class="count-line">אפשר גם בלי אנשי צוות בסידור.</div>'}
     <div class="nav">
-      <button class="btn ghost" onclick="goStep(2)">← חזרה</button>
-      <button class="btn" onclick="goStep(4)">המשך →</button>
+      <button class="btn ghost" onclick="goStep(2)">חזרה</button>
+      <button class="btn" onclick="goStep(4)">המשך</button>
     </div></div>`;
 }
 function toggleStaff(id) {
-  if (plan.staff[id]) delete plan.staff[id];
-  else plan.staff[id] = { sits: 'seat', tables: [] };
+  const slot = Object.keys(plan.staff).find(k => plan.staff[k].members.includes(id));
+  if (slot) {
+    const s = plan.staff[slot];
+    s.members = s.members.filter(m => m !== id);
+    if (!s.members.length) delete plan.staff[slot];
+    else s.active = 0;
+  } else {
+    plan.staff[uid()] = { members: [id], active: 0, sits: 'seat', tables: [] };
+  }
   renderStep();
 }
+function addAlt(sid, staffId) { plan.staff[sid].members.push(staffId); renderStep(); }
+function flipSlot(sid) { const s = plan.staff[sid]; s.active = (s.active + 1) % s.members.length; renderStep(); if (built) renderBoard(); }
+function delSlot(sid) { delete plan.staff[sid]; renderStep(); }
 function toggleResp(sid, tid) {
   const a = plan.staff[sid].tables = plan.staff[sid].tables || [];
   const i = a.indexOf(tid); if (i >= 0) a.splice(i, 1); else a.push(tid);
@@ -278,8 +327,8 @@ function toggleResp(sid, tid) {
 
 function peopleOptions(kind) {
   const list = kind === 'staff'
-    ? Object.keys(plan.staff).map(id => ({ id, name: (allStaff.find(s => s.id === id) || {}).name || '' }))
-    : plan.childIds.map(id => ({ id, name: (allKids.find(k => k.id === id) || {}).name || '' }));
+    ? Object.keys(plan.staff).map(id => ({ id, name: slotName(id) }))
+    : plan.childIds.map(id => ({ id, name: kidName(id) }));
   return list.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
 }
 
@@ -293,12 +342,12 @@ function stepRules() {
         ${Object.keys(E.RULE_TYPES).map(k => `<option value="${k}">${E.RULE_TYPES[k].label}</option>`).join('')}
       </select>
       <span id="ruleFields"></span>
-      <button class="btn" onclick="addRule()">+ הוסף כלל</button>
+      <button class="btn" onclick="addRule()">הוסף כלל</button>
     </div>
     <div class="rule-list">${plan.rules.map(ruleHtml).join('') || '<div class="count-line">עוד לא הוגדרו כללים.</div>'}</div>
     <div class="nav">
-      <button class="btn ghost" onclick="goStep(3)">← חזרה</button>
-      <button class="btn" onclick="goStep(5)">המשך →</button>
+      <button class="btn ghost" onclick="goStep(3)">חזרה</button>
+      <button class="btn" onclick="goStep(5)">המשך</button>
     </div></div>`;
 }
 function renderRuleRow() {
@@ -321,7 +370,7 @@ function addRule() {
   if (!a) return;
   if (E.RULE_TYPES[type].pair && a === b) { showErr('צריך לבחור שני ילדים שונים'); return; }
   plan.rules.push({ id: uid(), type, a, b, pos, active: true });
-  renderStep(); renderRuleRow();
+  renderStep();
 }
 function ruleHtml(r) {
   return `<div class="rule ${r.active === false ? 'off' : ''}">
@@ -330,131 +379,189 @@ function ruleHtml(r) {
     <button class="x" onclick="delRule('${r.id}')">מחק</button></div>`;
 }
 function ruleText(r) {
-  const nm = id => (allKids.find(k => k.id === id) || allStaff.find(s => s.id === id) || {}).name || '—';
+  const nm = id => kidName(id) || slotName(id) || '—';
   if (r.type === 'position') {
     const L = { head: 'בראש השולחן', edge: 'בקצה הצלע', middle: 'באמצע הצלע' };
     return nm(r.a) + ' — ' + (L[r.pos] || r.pos);
   }
   return nm(r.a) + (r.b ? ' · ' + nm(r.b) : ' · כל איש צוות');
 }
-function toggleRule(id) { const r = plan.rules.find(x => x.id === id); r.active = r.active === false; refresh(); }
-function delRule(id) { plan.rules = plan.rules.filter(x => x.id !== id); refresh(); }
-function refresh() { if (lastResult) { renderBoard(); } else { renderStep(); } }
+function toggleRule(id) { const r = plan.rules.find(x => x.id === id); r.active = r.active === false; built ? renderBoard() : renderStep(); }
+function delRule(id) { plan.rules = plan.rules.filter(x => x.id !== id); built ? renderBoard() : renderStep(); }
 
+/* ---------- חלוקה ---------- */
+const SPLITS = [
+  { id: 'even',   t: 'שווה ככל האפשר',            d: 'מחלק את הילדים בין השולחנות במספרים קרובים. למשל 19 ילדים ו-4 שולחנות: 5 · 5 · 5 · 4.' },
+  { id: 'age',    t: 'לפי גיל — קרובים יחד',       d: 'הגדולים בשולחן אחד והקטנים באחר. מתאים כשרוצים קצב אכילה דומה ועזרה דומה סביב השולחן.' },
+  { id: 'mixed',  t: 'ערבוב גילים',                d: 'בכל שולחן גם גדולים וגם קטנים. הגדולים משמשים דוגמה, והקטנים לומדים מהם.' },
+  { id: 'fill',   t: 'למלא שולחן אחר שולחן',       d: 'ממלא את השולחן הראשון עד הסוף ורק אז עובר לבא. שימושי כשחלק מהשולחנות בשימוש רק לפעמים.' },
+  { id: 'manual', t: 'אני קובעת כמה בכל שולחן',    d: 'את מזינה מספר לכל שולחן בנפרד.' },
+  { id: 'any',    t: 'לא משנה לי',                 d: 'המערכת תבחר את מה שמקיים את הכללים בצורה הפשוטה ביותר.' },
+];
 function stepSplit() {
   const m = plan.split.mode;
   return `<div class="card">
     <h2>חלוקת הילדים בין השולחנות</h2>
-    <div class="sub">איך לפזר את הילדים? המערכת תתחשב גם בקיבולת של כל שולחן.</div>
-    <div class="pick">
-      <button class="p ${m === 'even' ? 'on' : ''}" onclick="plan.split={mode:'even'};renderStep()">שווה ככל האפשר</button>
-      <button class="p ${m === 'any' ? 'on' : ''}" onclick="plan.split={mode:'any'};renderStep()">לא משנה לי</button>
-    </div>
-    <div class="count-line" style="margin-top:18px;">
+    <div class="sub">איך לפזר את הילדים? המערכת תתחשב תמיד גם בקיבולת של כל שולחן ובכללי הישיבה.</div>
+    ${SPLITS.map(s => `<button class="opt ${m === s.id ? 'on' : ''}" onclick="setSplit('${s.id}')">
+      <b>${esc(s.t)}</b><span>${esc(s.d)}</span></button>`).join('')}
+    ${m === 'manual' ? `<div style="margin-top:12px">${plan.tables.map(t => `
+      <div class="staff-row"><b style="min-width:84px">${esc(t.name)}</b>
+        <input type="number" min="0" max="${tplOf(t).seats.length}" style="width:90px;padding:7px 9px;border:1px solid #e8e4de;border-radius:9px;font-family:'Heebo'"
+          value="${(plan.split.counts && plan.split.counts[t.id]) || ''}" oninput="setCount('${t.id}',this.value)">
+        <span style="font-size:12px;color:#9B8E82">מתוך ${tplOf(t).seats.length} מקומות</span></div>`).join('')}</div>` : ''}
+    <div class="count-line" style="margin-top:16px;">
       ${plan.childIds.length} ילדים · ${plan.tables.length} שולחנות ·
       ${Object.keys(plan.staff).filter(k => plan.staff[k].sits === 'seat').length} אנשי צוות בשולחן ·
-      ${plan.rules.filter(r => r.active !== false).length} כללים פעילים
-    </div>
+      ${plan.rules.filter(r => r.active !== false).length} כללים פעילים</div>
     <div class="nav">
-      <button class="btn ghost" onclick="goStep(4)">← חזרה</button>
-      <button class="btn" onclick="buildPlan()">✨ צרי סידור</button>
+      <button class="btn ghost" onclick="goStep(4)">חזרה</button>
+      <button class="btn" onclick="buildPlan()">צרי סידור</button>
     </div></div>`;
 }
+function setSplit(m) { plan.split = { mode: m, counts: plan.split.counts }; renderStep(); }
+function setCount(tid, v) {
+  plan.split.counts = plan.split.counts || {};
+  plan.split.counts[tid] = Math.max(0, parseInt(v, 10) || 0);
+}
 
-/* ---------- בניית הסידור ---------- */
+/* ---------- בנייה ---------- */
 function enginePlan() {
   const people = {};
-  plan.childIds.forEach(id => { people[id] = { name: (allKids.find(k => k.id === id) || {}).name, kind: 'child' }; });
-  Object.keys(plan.staff).forEach(id => {
-    people[id] = { name: (allStaff.find(s => s.id === id) || {}).name, kind: 'staff',
-                   sits: plan.staff[id].sits, tables: plan.staff[id].tables };
+  plan.childIds.forEach(id => { people[id] = { name: kidName(id), kind: 'child' }; });
+  Object.keys(plan.staff).forEach(sid => {
+    people[sid] = { name: slotName(sid), kind: 'staff', sits: plan.staff[sid].sits, tables: plan.staff[sid].tables };
   });
   return { tables: plan.tables, people, rules: plan.rules, seats: plan.seats };
 }
-
+// חלוקה לפי גיל / ערבוב / מילוי → שולחן מועדף לכל ילד
+function preferMap() {
+  const m = plan.split.mode;
+  if (m !== 'age' && m !== 'mixed' && m !== 'fill') return {};
+  const kids = plan.childIds.slice();
+  if (m === 'age' || m === 'mixed') kids.sort((a, b) => String((allKids.find(k => k.id === a) || {}).birth)
+    .localeCompare(String((allKids.find(k => k.id === b) || {}).birth)));
+  const T = plan.tables.length, pref = {};
+  kids.forEach((id, i) => {
+    const idx = (m === 'mixed') ? i % T : Math.floor(i / Math.ceil(kids.length / T));
+    pref[id] = plan.tables[Math.min(idx, T - 1)].id;
+  });
+  return pref;
+}
 function buildPlan() {
   const ep = enginePlan();
-  const res = E.solve(ep, tplOf, { split: plan.split, locks: plan.locks });
-  if (!res.ok) { showConflict(res, ep); return; }
+  const res = E.solve(ep, tplOf, { split: plan.split, locks: plan.locks, prefer: preferMap() });
+  if (!res.ok) { showConflict(res); return; }
   plan.seats = res.seats;
-  lastResult = res;
+  if (!Object.keys(plan.layout).length) autoLayout('row', true);
+  built = true;
   document.getElementById('wizard').classList.add('hide');
   document.getElementById('steps').classList.add('hide');
   document.getElementById('board').classList.remove('hide');
-  renderTop(); renderBoard();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  renderTop(); renderBoard(); window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-function showConflict(res, ep) {
+function showConflict(res) {
   const box = document.getElementById('wizard');
   let html = '';
   (res.issues || []).forEach(i => { html += `<div class="conflict"><h4>צריך לשים לב</h4><p>${esc(i.text)}</p></div>`; });
-
   if (res.group) {
-    const nm = id => (allKids.find(k => k.id === id) || {}).name || id;
     const pairs = [];
     for (let i = 0; i < res.group.length; i++)
       for (let j = i + 1; j < res.group.length; j++) pairs.push([res.group[i], res.group[j]]);
     html += `<div class="conflict">
       <h4>מצאתי בעיה — הכללים הנוכחיים לא מאפשרים סידור</h4>
-      <p>הגדרת ש<b>${res.group.map(nm).join(', ')}</b> לא יכולים לשבת יחד — זה ${res.group.length} ילדים
+      <p>הגדרת ש<b>${res.group.map(kidName).join(', ')}</b> לא יכולים לשבת יחד — זה ${res.group.length} ילדים
          שצריכים ${res.group.length} שולחנות שונים, אבל יש רק ${plan.tables.length}.</p>
       <p><b>שאלה אחת תפתור את זה:</b> איזה זוג מתוכם כן יכול לשבת באותו שולחן?</p>
-      <div class="opts">
-        ${pairs.map(p => `<button onclick="resolvePair('${p[0]}','${p[1]}')">${esc(nm(p[0]))} ו${esc(nm(p[1]))}</button>`).join('')}
-      </div></div>`;
+      <div class="opts">${pairs.map(p => `<button onclick="resolvePair('${p[0]}','${p[1]}')">${esc(kidName(p[0]))} ו${esc(kidName(p[1]))}</button>`).join('')}</div></div>`;
   } else if (res.exhausted) {
     html += `<div class="conflict"><h4>לא מצאתי סידור שמקיים את כל הכללים</h4>
-      <p>הכללים לא סותרים זה את זה באופן ישיר, אבל יחד הם לא מותירים אפשרות.
-         אפשר לבטל כלל אחד ולנסות שוב, או להוסיף שולחן.</p>
+      <p>הכללים לא סותרים זה את זה ישירות, אבל יחד הם לא מותירים אפשרות. אפשר לבטל כלל ולנסות שוב, או להוסיף שולחן.</p>
       <div class="opts">${plan.rules.filter(r => r.active !== false).map(r =>
-        `<button onclick="toggleRule('${r.id}');buildPlan()">בטלי: ${esc(E.RULE_TYPES[r.type].label)} — ${esc(ruleText(r))}</button>`).join('')}
-      </div></div>`;
+        `<button onclick="toggleRule('${r.id}');buildPlan()">בטלי: ${esc(E.RULE_TYPES[r.type].label)} — ${esc(ruleText(r))}</button>`).join('')}</div></div>`;
   }
-  box.innerHTML = html + `<div class="nav"><button class="btn ghost" onclick="goStep(4)">← חזרה לכללים</button></div>`;
+  box.innerHTML = html + `<div class="nav"><button class="btn ghost" onclick="goStep(4)">חזרה לכללים</button></div>`;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function resolvePair(a, b) {
-  plan.rules.forEach(r => {
-    if (r.type === 'not_same_table' &&
-        ((r.a === a && r.b === b) || (r.a === b && r.b === a))) r.active = false;
-  });
+  plan.rules.forEach(r => { if (r.type === 'not_same_table' &&
+    ((r.a === a && r.b === b) || (r.a === b && r.b === a))) r.active = false; });
   buildPlan();
+}
+
+/* ---------- פריסת החדר ---------- */
+const S = 58, PAD = 32, GAP = 40;
+function tableBox(t) { const tp = tplOf(t); return { w: tp.w * S + PAD * 2, h: tp.h * S + PAD * 2 }; }
+function autoLayout(kind, silent) {
+  const boxes = plan.tables.map(t => ({ id: t.id, ...tableBox(t) }));
+  const L = {};
+  if (kind === 'row') {
+    let x = 0; boxes.forEach(b => { L[b.id] = { x, y: 0, rot: 0 }; x += b.w + GAP; });
+  } else if (kind === 'two') {
+    const half = Math.ceil(boxes.length / 2);
+    let x = 0, y = 0, maxH = 0;
+    boxes.forEach((b, i) => {
+      if (i === half) { x = 0; y = maxH + GAP; }
+      L[b.id] = { x, y, rot: 0 }; x += b.w + GAP; maxH = Math.max(maxH, (i < half ? b.h : 0));
+    });
+  } else if (kind === 'parallel') {
+    let x = 0; boxes.forEach(b => { L[b.id] = { x, y: 0, rot: 90 }; x += b.h + GAP; });
+  } else if (kind === 'circle') {
+    const R = 150 + boxes.length * 22;
+    boxes.forEach((b, i) => {
+      const a = (i / boxes.length) * Math.PI * 2 - Math.PI / 2;
+      L[b.id] = { x: R + Math.cos(a) * R, y: R + Math.sin(a) * R, rot: 0 };
+    });
+  } else { // grid
+    const cols = Math.ceil(Math.sqrt(boxes.length));
+    const cw = Math.max(...boxes.map(b => b.w)) + GAP, ch = Math.max(...boxes.map(b => b.h)) + GAP;
+    boxes.forEach((b, i) => { L[b.id] = { x: (i % cols) * cw, y: Math.floor(i / cols) * ch, rot: 0 }; });
+  }
+  plan.layout = L;
+  if (!silent) renderBoard();
+}
+function rotateTable(tid) {
+  const l = plan.layout[tid] || { x: 0, y: 0, rot: 0 };
+  l.rot = (l.rot + 45) % 360; plan.layout[tid] = l; renderBoard();
 }
 
 /* ---------- הלוח ---------- */
 function renderBoard() {
   const ep = enginePlan(); ep.seats = plan.seats;
   const viols = E.checkViolations(ep, tplOf);
-  const badPeople = new Set();
-  viols.forEach(v => { const r = plan.rules.find(x => x.id === v.ruleId); if (r) { badPeople.add(r.a); if (r.b) badPeople.add(r.b); } });
+  const bad = new Set();
+  viols.forEach(v => { const r = plan.rules.find(x => x.id === v.ruleId); if (r) { bad.add(r.a); if (r.b) bad.add(r.b); } });
 
-  const S = 60, PAD = 34;
+  let maxX = 0, maxY = 0;
   const tablesHtml = plan.tables.map(t => {
-    const tpl = tplOf(t);
-    const w = tpl.w * S, h = tpl.h * S;
+    const tpl = tplOf(t), box = tableBox(t);
+    const l = plan.layout[t.id] || { x: 0, y: 0, rot: 0 };
+    maxX = Math.max(maxX, l.x + box.w); maxY = Math.max(maxY, l.y + box.h);
     const seats = tpl.seats.map(s => {
-      const k = E.key(t.id, s.id);
-      const pid = plan.seats[k];
-      const p = pid ? ep.people[pid] : null;
+      const k = E.key(t.id, s.id), pid = plan.seats[k], p = pid ? ep.people[pid] : null;
       const cls = ['seat'];
       if (p) cls.push('filled');
       if (p && p.kind === 'staff') cls.push('staff');
-      if (pid && badPeople.has(pid)) cls.push('bad');
+      if (pid && bad.has(pid)) cls.push('bad');
       if (selectedSeat === k) cls.push('sel');
       if (plan.locks[k]) cls.push('lock');
-      return `<div class="${cls.join(' ')}" style="left:${PAD + s.x * S - 28}px;top:${PAD + s.y * S - 28}px"
-        onclick="tapSeat('${k}')" oncontextmenu="event.preventDefault();toggleLock('${k}')"
+      return `<div class="${cls.join(' ')}" style="left:${PAD + s.x * S - 27}px;top:${PAD + s.y * S - 27}px;
+        transform:rotate(${-l.rot}deg)" onclick="tapSeat('${k}')"
+        oncontextmenu="event.preventDefault();toggleLock('${k}')"
         title="${p ? esc(p.name) : 'מקום פנוי'}">${p ? esc(p.name) : ''}</div>`;
     }).join('');
-    const staffBeside = Object.keys(plan.staff)
+    const beside = Object.keys(plan.staff)
       .filter(id => plan.staff[id].sits !== 'seat' && (plan.staff[id].tables || []).includes(t.id))
-      .map(id => (allStaff.find(s => s.id === id) || {}).name).filter(Boolean);
-    return `<div><div class="tlabel">${esc(t.name)}${staffBeside.length ? ' · ' + esc(staffBeside.join(', ')) : ''}</div>
-      <div class="twrap" style="width:${w + PAD * 2}px;height:${h + PAD * 2}px">
-        <div class="tsurface" style="left:${PAD}px;top:${PAD}px;width:${w}px;height:${h}px;
-          ${tpl.shape === 'round' ? 'border-radius:50%;' : 'border-radius:10px;'}"></div>
-        ${seats}</div></div>`;
+      .map(slotName).filter(Boolean);
+    return `<div class="twrap" data-t="${t.id}" style="left:${l.x}px;top:${l.y}px;width:${box.w}px;height:${box.h}px;
+      transform:rotate(${l.rot}deg);transform-origin:center">
+      <div class="tlabel" style="transform:translateX(50%) rotate(${-l.rot}deg)">
+        <span onpointerdown="startDrag(event,'${t.id}')">${esc(t.name)}${beside.length ? ' · ' + esc(beside.join(', ')) : ''}</span>
+        <button class="rot" onclick="rotateTable('${t.id}')">⟳</button></div>
+      <div class="tsurface" onpointerdown="startDrag(event,'${t.id}')"
+        style="left:${PAD}px;top:${PAD}px;width:${tpl.w * S}px;height:${tpl.h * S}px;
+        ${tpl.shape === 'round' ? 'border-radius:50%;' : 'border-radius:10px;'}"></div>
+      ${seats}</div>`;
   }).join('');
 
   document.getElementById('board').innerHTML = `
@@ -462,28 +569,53 @@ function renderBoard() {
       <div><b style="font-size:18px;color:#1F3D34">${esc(plan.name)}</b>
         <span style="color:#9B8E82;font-size:13px"> · ${plan.childIds.length} ילדים · ${plan.tables.length} שולחנות</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn soft" onclick="reSolve()">🔄 סדרי מחדש</button>
-        <button class="btn ghost" onclick="window.print()">🖨️ הדפסה</button>
+        <button class="btn soft" onclick="reSolve()">סדרי מחדש</button>
+        <button class="btn ghost" onclick="window.print()">הדפסה</button>
       </div>
     </div>
     ${viols.length ? `<div class="viol"><h4>${viols.length} הפרות של כללי ישיבה</h4>
       ${viols.map(v => `<div class="v">🔴 ${esc(v.text)}
         <button onclick="killRule('${v.ruleId}')">בטלי את הכלל</button></div>`).join('')}</div>`
       : '<div class="allgood">🟢 הסידור מקיים את כל כללי הישיבה</div>'}
-    <div class="tables">${tablesHtml}</div>
-    <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם ·
-      לחיצה ארוכה או קליק ימני על מקום — נועלת אותו 🔒 כך שסידור מחדש לא יזיז אותו</div>`;
+    <div class="layouts"><span style="font-size:12.5px;color:#9B8E82;font-weight:700">פריסת החדר:</span>
+      <button class="lb" onclick="autoLayout('row')">שורה אחת</button>
+      <button class="lb" onclick="autoLayout('two')">שתי שורות</button>
+      <button class="lb" onclick="autoLayout('parallel')">מקבילים</button>
+      <button class="lb" onclick="autoLayout('grid')">רשת</button>
+      <button class="lb" onclick="autoLayout('circle')">מעגל</button>
+    </div>
+    <div class="room" id="room" style="height:${maxY + 50}px">${tablesHtml}</div>
+    <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
+      גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
 }
 
+/* ---------- גרירה ---------- */
+let drag = null;
+function startDrag(ev, tid) {
+  ev.preventDefault();
+  const l = plan.layout[tid] || { x: 0, y: 0, rot: 0 };
+  drag = { tid, sx: ev.clientX, sy: ev.clientY, ox: l.x, oy: l.y };
+  window.addEventListener('pointermove', onDrag);
+  window.addEventListener('pointerup', endDrag, { once: true });
+}
+function onDrag(ev) {
+  if (!drag) return;
+  const el = document.querySelector('.twrap[data-t="' + drag.tid + '"]');
+  const x = Math.max(0, drag.ox + ev.clientX - drag.sx);
+  const y = Math.max(0, drag.oy + ev.clientY - drag.sy);
+  plan.layout[drag.tid] = Object.assign(plan.layout[drag.tid] || { rot: 0 }, { x, y });
+  if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
+}
+function endDrag() { window.removeEventListener('pointermove', onDrag); drag = null; renderBoard(); }
+
 function tapSeat(k) {
+  if (drag) return;
   if (!selectedSeat) { if (plan.seats[k]) { selectedSeat = k; renderBoard(); } return; }
   if (selectedSeat === k) { selectedSeat = null; renderBoard(); return; }
+  if (plan.locks[selectedSeat] || plan.locks[k]) { showErr('אחד המקומות נעול — קליק ימני משחרר'); selectedSeat = null; renderBoard(); return; }
   const a = plan.seats[selectedSeat], b = plan.seats[k];
-  if (plan.locks[selectedSeat] || plan.locks[k]) { showErr('אחד המקומות נעול — אפשר לשחרר בקליק ימני'); selectedSeat = null; renderBoard(); return; }
   if (b) plan.seats[selectedSeat] = b; else delete plan.seats[selectedSeat];
-  plan.seats[k] = a;
-  selectedSeat = null;
-  renderBoard();
+  plan.seats[k] = a; selectedSeat = null; renderBoard();
 }
 function toggleLock(k) {
   if (!plan.seats[k]) return;
@@ -492,10 +624,9 @@ function toggleLock(k) {
 }
 function killRule(id) { const r = plan.rules.find(x => x.id === id); if (r) r.active = false; renderBoard(); }
 function reSolve() {
-  const ep = enginePlan();
-  const res = E.solve(ep, tplOf, { split: plan.split, locks: plan.locks });
+  const res = E.solve(enginePlan(), tplOf, { split: plan.split, locks: plan.locks, prefer: preferMap() });
   if (!res.ok) { showErr('לא נמצא סידור טוב יותר עם הכללים הנוכחיים'); return; }
-  plan.seats = res.seats; lastResult = res; renderBoard(); showOk('סודר מחדש');
+  plan.seats = res.seats; renderBoard(); showOk('סודר מחדש');
 }
 
 /* ---------- שמירה ---------- */
@@ -518,8 +649,10 @@ async function loadExisting() {
     const idx = parseInt(pick, 10) - 1;
     if (isNaN(idx) || !list[idx]) return;
     plan = Object.assign(newPlan(), list[idx].plan);
+    plan.layout = plan.layout || {};
     if (Object.keys(plan.seats || {}).length) {
-      lastResult = { ok: true };
+      if (!Object.keys(plan.layout).length) autoLayout('row', true);
+      built = true;
       document.getElementById('wizard').classList.add('hide');
       document.getElementById('steps').classList.add('hide');
       document.getElementById('board').classList.remove('hide');
