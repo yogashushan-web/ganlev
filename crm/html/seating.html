@@ -120,9 +120,26 @@
             border:1.5px dashed #e0d7c7; border-radius:16px; transform-origin:top right; }
     .a4note { font-size:11.5px; color:#b3a89a; text-align:left; margin-bottom:4px; }
     .twrap { position:absolute; touch-action:none; }
-    .tlabel { position:absolute; top:-2px; right:50%; transform:translateX(50%); font-size:12px; font-weight:700; color:#1F3D34; white-space:nowrap; background:#fffdf9; padding:1px 7px; border-radius:6px; cursor:grab; z-index:5; }
-    .tlabel:active { cursor:grabbing; }
-    .rot { background:#fff; border:1px solid #e8e4de; border-radius:6px; font-size:10.5px; cursor:pointer; font-family:'Heebo'; padding:0 4px; margin-right:4px; }
+    /* שם השולחן יושב במרכזו, וניתן ללחוץ עליו כדי לשנות */
+    .tlabel { position:absolute; display:flex; align-items:center; gap:4px; font-size:12.5px; font-weight:800;
+              color:#8a7f70; white-space:nowrap; z-index:5; }
+    .tname { cursor:text; padding:2px 8px; border-radius:7px; border:1px dashed transparent; }
+    .tname:hover { border-color:#C4846C; color:#1F3D34; background:rgba(255,255,255,.7); }
+    .tname-input { width:92px; padding:3px 7px; border:1.5px solid #1F3D34; border-radius:7px;
+                   font-family:'Heebo'; font-size:12.5px; font-weight:700; text-align:center; outline:none; }
+    .rot { background:rgba(255,255,255,.8); border:1px solid #e8e4de; border-radius:6px; font-size:10.5px; cursor:pointer; font-family:'Heebo'; padding:1px 5px; }
+
+    /* גרירת ילד: צל שעוקב אחרי האצבע, וכיסא שמואר כשמתקרבים אליו */
+    .ghost { position:fixed; pointer-events:none; z-index:10000; width:54px; height:54px; border-radius:50%;
+             background:#eef5fb; border:2px solid #5f93b8; color:#2c4d66; display:flex; align-items:center;
+             justify-content:center; text-align:center; font-size:11px; font-weight:700; padding:3px;
+             line-height:1.12; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,.2); opacity:.95; }
+    .seat.target { border-color:#1F7a4f !important; background:#e6f4ec !important; transform:scale(1.12); }
+    .parked { position:absolute; width:54px; height:54px; border-radius:50%; border:2px dashed #b3a89a;
+              background:#fff; color:#6f6457; display:flex; align-items:center; justify-content:center;
+              text-align:center; font-size:11px; font-weight:700; padding:3px; line-height:1.12;
+              overflow:hidden; cursor:grab; touch-action:none; z-index:7; }
+    .parked:hover { border-color:#1F3D34; }
     .tsurface { position:absolute; background:#efe6d8; border:2px solid #ddd0bb; cursor:grab; }
     .seat { position:absolute; width:54px; height:54px; border-radius:50%; border:2px dashed #ddd0bb; background:#fff;
       display:flex; align-items:center; justify-content:center; text-align:center; font-size:11px; font-weight:700;
@@ -231,7 +248,7 @@ const STEPS = ['מי אוכל', 'שולחנות', 'צוות', 'כללי ישיב
 
 function newPlan() {
   return { id: uid(), name: 'סידור ארוחה', childIds: [], tables: [], staff: {},
-           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {}, marks: {} };
+           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {}, marks: {}, parked: {} };
 }
 const tplOf = t => E.TEMPLATES[t.templateId] || E.TEMPLATES.rect6_heads;
 const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
@@ -882,6 +899,7 @@ function renderBoard() {
   const bad = new Set();
   viols.forEach(v => { const r = plan.rules.find(x => x.id === v.ruleId); if (r) { bad.add(r.a); if (r.b) bad.add(r.b); } });
 
+  const nParked = Object.keys(plan.parked || {}).length;
   let maxX = 0, maxY = 0;
   const tablesHtml = plan.tables.map(t => {
     const tpl = tplOf(t), box = tableBox(t);
@@ -895,8 +913,9 @@ function renderBoard() {
       if (pid && bad.has(pid)) cls.push('bad');
       if (selectedSeat === k) cls.push('sel');
       if (plan.locks[k]) cls.push('lock');
-      return `<div class="${cls.join(' ')}" style="left:${PAD + s.x * S - 27}px;top:${PAD + s.y * S - 27}px;
-        transform:rotate(${-l.rot}deg)" onclick="tapSeat('${k}')"
+      return `<div class="${cls.join(' ')}" data-k="${k}" style="left:${PAD + s.x * S - 27}px;top:${PAD + s.y * S - 27}px;
+        transform:rotate(${-l.rot}deg)"
+        onpointerdown="startChildDrag(event,'seat','${k}')"
         oncontextmenu="event.preventDefault();toggleLock('${k}')"
         title="${p ? esc(p.name) : 'מקום פנוי'}">${p ? esc(p.name) : ''}</div>`;
     }).join('');
@@ -906,9 +925,9 @@ function renderBoard() {
       .map(sid => `<span class="tdot" style="background:${markColor(sid)}" title="${esc(slotName(sid))}"></span>`).join('');
     return `<div class="twrap" data-t="${t.id}" style="left:${l.x}px;top:${l.y}px;width:${box.w}px;height:${box.h}px;
       transform:rotate(${l.rot}deg);transform-origin:center">
-      <div class="tlabel" style="transform:translateX(50%) rotate(${-l.rot}deg)">
-        <span onpointerdown="startDrag(event,'${t.id}')">${dots}${esc(t.name)}</span>
-        <button class="rot" onclick="rotateTable('${t.id}')">⟳</button></div>
+      <div class="tlabel" style="left:50%;top:50%;transform:translate(-50%,-50%) rotate(${-l.rot}deg)">
+        ${dots}<span class="tname" onclick="renameTable('${t.id}')" title="לחיצה משנה את השם">${esc(t.name)}</span>
+        <button class="rot" onclick="rotateTable('${t.id}')" title="סיבוב">⟳</button></div>
       <div class="tsurface" onpointerdown="startDrag(event,'${t.id}')"
         style="left:${PAD}px;top:${PAD}px;width:${tpl.w * S}px;height:${tpl.h * S}px;
         ${tpl.shape === 'round' ? 'border-radius:50%;' : 'border-radius:10px;'}"></div>
@@ -924,6 +943,8 @@ function renderBoard() {
         <button class="btn ghost" onclick="window.print()">הדפסה</button>
       </div>
     </div>
+    ${nParked ? `<div class="conflict" style="padding:11px 16px"><p style="margin:0">
+        🪑 <b>${nParked} ילדים עדיין בצד</b> ולא על כיסא — אפשר לגרור אותם למקום, או להשאיר כך.</p></div>` : ''}
     ${viols.length ? `<div class="viol"><h4>${viols.length} הפרות של כללי ישיבה</h4>
       ${viols.map(v => `<div class="v">🔴 ${esc(v.text)}
         <button onclick="killRule('${v.ruleId}')">בטלי את הכלל</button></div>`).join('')}</div>`
@@ -937,7 +958,7 @@ function renderBoard() {
       <button class="lb" style="border-color:#C4846C;color:#8a5a44" onclick="tidyLayout()">✨ סדר יפה</button>
     </div>
     <div class="a4note">📄 הדף בגודל A4 לרוחב — מה שנראה כאן הוא בדיוק מה שיודפס</div>
-    <div class="room-outer" id="roomOuter"><div class="room" id="room">${tablesHtml}${markersHtml()}<div id="guides"></div></div></div>
+    <div class="room-outer" id="roomOuter"><div class="room" id="room">${tablesHtml}${markersHtml()}${parkedHtml()}<div id="guides"></div></div></div>
     <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
       גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
   fitRoom();
@@ -1093,6 +1114,129 @@ function tidyLayout() {
   showOk('סודר — שורות ישרות ורווחים שווים');
 }
 
+/* ---------- שינוי שם שולחן ---------- */
+function renameTable(tid) {
+  const t = plan.tables.find(x => x.id === tid); if (!t) return;
+  const el = document.querySelector(`.twrap[data-t="${tid}"] .tname`); if (!el) return;
+  const inp = document.createElement('input');
+  inp.className = 'tname-input'; inp.value = t.name; inp.maxLength = 22;
+  el.replaceWith(inp); inp.focus(); inp.select();
+  let done = false;
+  const finish = save => {
+    if (done) return; done = true;
+    if (save) { const v = inp.value.trim(); if (v) t.name = v; }
+    renderBoard();
+  };
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  inp.addEventListener('blur', () => finish(true));
+  inp.addEventListener('pointerdown', e => e.stopPropagation());
+}
+
+/* ---------- גרירת ילד ---------- */
+// מרכז הכיסא בקואורדינטות החדר, כולל סיבוב השולחן.
+function seatCenter(t, seat) {
+  const l = plan.layout[t.id] || { x: 0, y: 0, rot: 0 };
+  const b = tableBox(t);
+  const dx = (PAD + seat.x * S) - b.w / 2, dy = (PAD + seat.y * S) - b.h / 2;
+  const a = (l.rot || 0) * Math.PI / 180;
+  return { x: l.x + b.w / 2 + dx * Math.cos(a) - dy * Math.sin(a),
+           y: l.y + b.h / 2 + dx * Math.sin(a) + dy * Math.cos(a) };
+}
+function roomPoint(ev) {
+  const room = document.getElementById('room');
+  const r = room.getBoundingClientRect();
+  const sc = (r.width / ROOM_W) || 1;
+  // הדף מוצג מימין לשמאל ומוקטן — ההמרה מתבססת על הקצה הימני
+  return { x: (r.right - ev.clientX) / sc, y: (ev.clientY - r.top) / sc, sc };
+}
+const SEAT_SNAP = 46;    // רדיוס המשיכה לכיסא — לא צריך לדייק
+function nearestSeat(p) {
+  let best = null;
+  plan.tables.forEach(t => {
+    tplOf(t).seats.forEach(s => {
+      const c = seatCenter(t, s);
+      const d = Math.hypot(c.x - p.x, c.y - p.y);
+      if (d <= SEAT_SNAP && (!best || d < best.d)) best = { d, key: E.key(t.id, s.id) };
+    });
+  });
+  return best;
+}
+
+let childDrag = null;
+function startChildDrag(ev, kind, id) {
+  const who = kind === 'seat' ? plan.seats[id] : id;
+  if (!who) { tapSeat(id); return; }          // כיסא ריק — התנהגות הקשה רגילה
+  ev.preventDefault(); ev.stopPropagation();
+  childDrag = { kind, id, who, sx: ev.clientX, sy: ev.clientY, moved: false };
+  window.addEventListener('pointermove', onChildDrag);
+  window.addEventListener('pointerup', endChildDrag, { once: true });
+}
+function onChildDrag(ev) {
+  if (!childDrag) return;
+  if (!childDrag.moved) {
+    if (Math.hypot(ev.clientX - childDrag.sx, ev.clientY - childDrag.sy) < 5) return;
+    childDrag.moved = true;
+    const g = document.createElement('div');
+    g.className = 'ghost'; g.id = 'ghost';
+    g.textContent = (enginePlan().people[childDrag.who] || {}).name || '';
+    document.body.appendChild(g);
+    if (childDrag.kind === 'seat') {
+      const el = document.querySelector(`.seat[data-k="${childDrag.id}"]`);
+      if (el) { el.textContent = ''; el.classList.remove('filled', 'staff'); }
+    }
+  }
+  const g = document.getElementById('ghost');
+  if (g) { g.style.left = (ev.clientX - 27) + 'px'; g.style.top = (ev.clientY - 27) + 'px'; }
+  const near = nearestSeat(roomPoint(ev));
+  document.querySelectorAll('.seat.target').forEach(e => e.classList.remove('target'));
+  if (near) { const el = document.querySelector(`.seat[data-k="${near.key}"]`); if (el) el.classList.add('target'); }
+}
+function endChildDrag(ev) {
+  window.removeEventListener('pointermove', onChildDrag);
+  const g = document.getElementById('ghost'); if (g) g.remove();
+  document.querySelectorAll('.seat.target').forEach(e => e.classList.remove('target'));
+  const d = childDrag; childDrag = null;
+  if (!d) return;
+  if (!d.moved) { if (d.kind === 'seat') tapSeat(d.id); return; }   // לא זז — הקשה
+
+  const p = roomPoint(ev);
+  const near = nearestSeat(p);
+  plan.parked = plan.parked || {};
+
+  // מנתקים מהמקור
+  if (d.kind === 'seat') delete plan.seats[d.id]; else delete plan.parked[d.who];
+
+  if (near) {
+    if (plan.locks[near.key]) { showErr('המקום נעול — קליק ימני משחרר'); }
+    else {
+      const sitting = plan.seats[near.key];
+      if (sitting) {
+        // החלפה: מי שישב שם עובר למקום שממנו באנו, או נשאר בצד
+        if (d.kind === 'seat') plan.seats[d.id] = sitting;
+        else plan.parked[sitting] = { x: Math.round(p.x - 27), y: Math.round(p.y - 27) };
+      }
+      plan.seats[near.key] = d.who;
+      renderBoard(); return;
+    }
+  }
+  // לא ליד כיסא — מניחים בצד
+  plan.parked[d.who] = { x: Math.max(0, Math.round(p.x - 27)), y: Math.max(0, Math.round(p.y - 27)) };
+  renderBoard();
+}
+
+function parkedHtml() {
+  const ep = enginePlan();
+  return Object.keys(plan.parked || {}).map(cid => {
+    const m = plan.parked[cid];
+    return `<div class="parked" style="left:${m.x}px;top:${m.y}px"
+      onpointerdown="startChildDrag(event,'park','${cid}')"
+      title="בצד — לגרור אל כיסא">${esc((ep.people[cid] || {}).name || '')}</div>`;
+  }).join('');
+}
+
 function tapSeat(k) {
   if (drag) return;
   if (!selectedSeat) { if (plan.seats[k]) { selectedSeat = k; renderBoard(); } return; }
@@ -1111,7 +1255,7 @@ function killRule(id) { const r = plan.rules.find(x => x.id === id); if (r) r.ac
 function reSolve() {
   const res = E.solve(enginePlan(), tplOf, { split: plan.split, locks: plan.locks, prefer: preferMap() });
   if (!res.ok) { showErr('לא נמצא סידור טוב יותר עם הכללים הנוכחיים'); return; }
-  plan.seats = res.seats; renderBoard(); showOk('סודר מחדש');
+  plan.seats = res.seats; plan.parked = {}; renderBoard(); showOk('סודר מחדש');
 }
 
 /* ---------- שמירה ---------- */
