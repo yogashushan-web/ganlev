@@ -153,6 +153,23 @@ function buildSeatingPdf(sheet) {
         doc.restore();
       });
 
+      // פריטים בחדר: עמדת הגשה, פינוי, כיור, דלת. נייטרליים בכוונה —
+      // הצבע בדף שמור לאחריות של הצוות.
+      (sheet.items || []).forEach(it => {
+        const x = X(it.x), y = Y(it.y), w = it.w * k, h = it.h * k;
+        if (it.kind === 'door') {                  // דלת = פתח בקיר, לא קופסה
+          doc.moveTo(x, y + h).lineTo(x + w, y + h)
+             .lineWidth(Math.max(1, 3.5 * k)).strokeColor('#9B8E82').stroke();
+        } else {
+          doc.roundedRect(x, y, w, h, 6 * k).fillColor('#f6f2ea').fill();
+          doc.roundedRect(x, y, w, h, 6 * k).lineWidth(Math.max(0.6, 1.4 * k))
+             .dash(3, { space: 2 }).strokeColor('#c9bda9').stroke().undash();
+        }
+        doc.font('heB').fontSize(Math.max(5.6, 11 * k * z)).fillColor('#6f6457');
+        drawCentered(doc, it.name, x + w / 2, it.kind === 'door' ? y + h - 5 * k : y + h / 2,
+                     w * 0.9, 2);
+      });
+
       // הכיסאות — נקודות מוחלטות שהדפדפן כבר חישב, כולל סיבוב
       const r = SEAT_R * k * z;
       (sheet.seats || []).forEach(s => {
@@ -196,6 +213,34 @@ function buildSeatingPdf(sheet) {
         doc.fillColor(m.color || C.brand);
         drawWordsRtl(doc, words, x + w - padX, y + (hh - doc.currentLineHeight()) / 2);
       });
+
+      // מקרא: מה שכל גוון אומר. בלעדיו הדף קריא רק למי שבנתה אותו.
+      const leg = sheet.legend || [];
+      if (leg.length) {
+        doc.font('heB').fontSize(8);
+        const sw = 6, gap = 3.5, pad = 13, yL = PH - M - 20;
+        const widths = leg.map(r => {
+          const n = lineWidth(doc, wordsOf(r.name));
+          doc.font('he');
+          const d = lineWidth(doc, wordsOf(r.tables && r.tables.length ? r.tables.join(' · ') : r.role));
+          doc.font('heB');
+          return sw + gap + n + gap + d;
+        });
+        const total = widths.reduce((a, b) => a + b, 0) + pad * (leg.length - 1);
+        let cur = (PW + total) / 2;                 // ממורכז, ונקרא מימין לשמאל
+        leg.forEach((r, i) => {
+          cur -= widths[i];
+          doc.roundedRect(cur + widths[i] - sw, yL + 1.5, sw, sw, 1.5)
+             .fillColor(r.color || C.brand).fill();
+          doc.font('heB').fillColor(C.ink);
+          const nW = lineWidth(doc, wordsOf(r.name));
+          drawWordsRtl(doc, wordsOf(r.name), cur + widths[i] - sw - gap, yL);
+          doc.font('he').fillColor(C.muted);
+          drawWordsRtl(doc, wordsOf(r.tables && r.tables.length ? r.tables.join(' · ') : r.role),
+                       cur + widths[i] - sw - gap - nW - gap, yL);
+          cur -= pad;
+        });
+      }
 
       // הערת שוליים: מה שנשאר פתוח, כדי שהדף יספר את האמת
       if (sheet.note) {

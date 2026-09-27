@@ -96,9 +96,12 @@
     .staff-row { display:flex; align-items:center; gap:10px; background:#FAF8F4; border-radius:11px; padding:11px 14px; margin-bottom:9px; flex-wrap:wrap; }
     .staff-row select { padding:7px 10px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:12.5px; }
     .swap { background:#fff; border:1px solid #eccfc2; color:#8a4d33; border-radius:999px; padding:5px 12px; font-family:'Heebo'; font-size:12.5px; font-weight:700; cursor:pointer; }
-    /* שתיים במשבצת שאין בה כיסא — לא מתחלפות, שתיהן שם */
+    /* המצב עצמו הוא הכפתור: "יחד" או "⇄ מחליפות", ולחיצה מחליפה ביניהם */
     .both { background:#f4f9f6; border:1px solid #cfe7d9; color:#1F7a4f; border-radius:999px;
-            padding:5px 12px; font-size:12.5px; font-weight:700; white-space:nowrap; }
+            padding:5px 14px; font-size:12.5px; font-weight:700; white-space:nowrap;
+            font-family:'Heebo'; cursor:pointer; }
+    .both:hover { background:#e6f4ec; }
+    .nms { font-size:12.5px; color:#6f6457; font-weight:700; }
     .swap:hover { background:#fbf1ec; }
 
     .rule-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
@@ -225,6 +228,32 @@
     .parked:hover { opacity:1; border-style:solid; }
     /* אותו שם במד למעלה, כדי שיהיה ברור שמדובר באותו ילד */
     .mwho button.onpage { border-style:solid; background:#fdf6f2; }
+    /* ---- מקרא בתחתית הדף ---- */
+    .rlegend { position:absolute; left:0; right:0; bottom:9px; display:flex; flex-wrap:wrap;
+               justify-content:center; gap:7px 16px; padding:0 30px; direction:rtl; }
+    .rlegend .lg { display:inline-flex; align-items:center; gap:6px; font-size:11px; }
+    .rlegend .lg i { width:11px; height:11px; border-radius:3px; display:inline-block; flex:0 0 auto; }
+    .rlegend .lg b { color:#3D3228; font-weight:800; }
+    .rlegend .lg em { color:#9B8E82; font-style:normal; font-weight:600; }
+
+    /* ---- פריטים בחדר: עמדת הגשה, פינוי, כיור, דלת ---- */
+    /* נייטרליים בכוונה — הצבע בדף שמור לאחריות של הצוות, ופריט צבעוני
+       היה נקרא כאילו מישהי אחראית עליו. */
+    .ritem { position:absolute; display:flex; align-items:center; justify-content:center;
+             background:#f6f2ea; border:1.5px dashed #c9bda9; border-radius:9px;
+             color:#6f6457; font-size:12px; font-weight:800; cursor:grab;
+             touch-action:none; z-index:4; text-align:center; padding:2px 6px; }
+    .ritem:active { cursor:grabbing; }
+    .ritem.door { background:#fff; border-style:solid; border-width:0 0 4px 0;
+                  border-color:#9B8E82; border-radius:0; font-size:11px; align-items:flex-end; }
+    .ritem .inm { cursor:text; padding:1px 4px; border-radius:5px; border:1px dashed transparent; }
+    .ritem .inm:hover { border-color:#C4846C; background:rgba(255,255,255,.75); }
+    .ritem .idel { position:absolute; top:-9px; left:-6px; background:#fff; border:1px solid #e8e1d6;
+                   color:#8a7f70; border-radius:7px; padding:1px 6px; font-size:10px; font-weight:700;
+                   font-family:'Heebo'; cursor:pointer; opacity:0; transition:opacity .12s; }
+    .ritem:hover .idel { opacity:1; }
+    .ritem .idel:hover { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
+
     .tsurface { position:absolute; background:#efe6d8; border:2px solid #ddd0bb; cursor:grab; }
     .seat { position:absolute; width:54px; height:54px; border-radius:50%; border:2px dashed #ddd0bb; background:#fff;
       display:flex; align-items:center; justify-content:center; text-align:center; font-size:11px; font-weight:700;
@@ -321,7 +350,7 @@
       /* ילד ממתין לא מודפס: עיגול מרחף באמצע דף שתלוי על הקיר הוא רעש.
          שמו מופיע בשורת "לא יושבים" בתחתית ה-PDF במקום. */
       .header, .steps, .board-top, .layouts, .legend, .viol, .allgood, .a4note,
-      .meter, .okd, .undo, .parked, .rot, .rhandle, .rot-tag, .err, .ok, .ov,
+      .meter, .okd, .undo, .parked, .rot, .rhandle, .rot-tag, .err, .ok, .ov, .idel,
       #crmSidebar, #crmMenuBtn, #trashFab, #error, #success { display:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
       .room { transform:none !important; border:none !important; border-radius:0 !important;
@@ -368,7 +397,7 @@ const STEPS = ['מי אוכל', 'שולחנות', 'צוות', 'כללי ישיב
 
 function newPlan() {
   return { id: uid(), name: 'סידור ארוחה', childIds: [], tables: [], staff: {},
-           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {}, marks: {}, parked: {}, zoom: 1 };
+           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {}, marks: {}, parked: {}, items: [], zoom: 1 };
 }
 const tplOf = t => E.TEMPLATES[t.templateId] || E.TEMPLATES.rect6_heads;
 const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
@@ -382,11 +411,18 @@ const slotName = sid => {
 // כיסא, ולכן משבצת שיושבת בתוך שולחן מציגה את הפעילה בלבד ומתחלפת ב-⇄.
 // סמן של השגחה או ישיבה ליד השולחן הוא לא כיסא: אם שתיהן רשומות שם,
 // שתיהן באמת עומדות שם יחד, ולכן שתיהן מופיעות.
+// alt=true פירושו "מחליפות" — אחת במקום השנייה, ולכן רק אחת מוצגת.
+// בכיסא זה תמיד כך, כי אי אפשר לשבת שתיים על אותו כיסא.
 const slotLabel = sid => {
   const s = plan.staff[sid]; if (!s) return '';
-  if (s.sits === 'seat' || s.members.length < 2) return slotName(sid);
+  if (s.sits === 'seat' || s.alt || s.members.length < 2) return slotName(sid);
   return s.members.map(staffName).filter(Boolean).join(' · ');
 };
+function toggleAlt(sid) {
+  const s = plan.staff[sid]; if (!s) return;
+  s.alt = !s.alt; s.active = s.active || 0;
+  renderStep(); if (built) renderBoard();
+}
 
 /* ---------- טעינה ---------- */
 async function boot() {
@@ -592,13 +628,16 @@ function stepStaff() {
         const free = allStaff.filter(s => !used.has(s.id));
         return `<div class="staff-row">
           <b style="color:#1F3D34;min-width:88px">${esc(slotLabel(sid))}</b>
-          ${cfg.members.length > 1
-            ? (cfg.sits === 'seat'
-                ? `<button class="swap" onclick="flipSlot('${sid}')" title="על כיסא אחד יושבת אחת — לחיצה מחליפה">⇄ ${esc(cfg.members.map(staffName).join(' / '))}</button>`
-                : `<span class="both">${esc(cfg.members.map(staffName).join(' · '))} · שתיהן מופיעות</span>`)
-            : ''}
+          ${cfg.members.length > 1 ? (cfg.sits === 'seat'
+            ? `<button class="swap" onclick="flipSlot('${sid}')" title="על כיסא אחד יושבת אחת">⇄ היום: ${esc(slotName(sid))}</button>`
+            : `<button class="${cfg.alt ? 'swap' : 'both'}" onclick="toggleAlt('${sid}')"
+                 title="${cfg.alt ? 'לחיצה: שתיהן נמצאות יחד' : 'לחיצה: הן מחליפות זו את זו'}"
+                 >${cfg.alt ? '⇄ מחליפות' : 'יחד'}</button>
+               ${cfg.alt
+                 ? `<button class="swap" onclick="flipSlot('${sid}')">היום: ${esc(slotName(sid))}</button>`
+                 : `<span class="nms">${esc(cfg.members.map(staffName).join(' · '))}</span>`}`) : ''}
           ${free.length ? `<select onchange="if(this.value)addAlt('${sid}',this.value)">
-               <option value="">${cfg.sits === 'seat' ? '+ מחליפה…' : '+ עוד אחת…'}</option>
+               <option value="">+ מחליפה…</option>
                ${free.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>` : ''}
           <select onchange="plan.staff['${sid}'].sits=this.value;renderStep()">
             <option value="seat"   ${cfg.sits === 'seat' ? 'selected' : ''}>יושבת במקום בשולחן</option>
@@ -1181,8 +1220,12 @@ function sheetData() {
   const d = new Date();
   const dd = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
 
+  const items = (plan.items || []).map(it => ({
+    x: Math.round(ZX(it.x)), y: Math.round(ZY(it.y)),
+    w: it.w * z, h: it.h * z, name: it.name, kind: it.kind,
+  }));
   return {
-    name: plan.name, tables, seats, marks, zoom: z,
+    name: plan.name, tables, seats, marks, items, zoom: z, legend: legendRows(),
     meta: `${dd}  ·  ${plan.childIds.length - out.length}/${plan.childIds.length}`,
     // ילדים ממתינים לא מצויירים על הדף, אבל שמם חייב להופיע — אחרת
     // הדף על הקיר משמיט ילדים בשקט
@@ -1412,12 +1455,125 @@ function renderBoard() {
         <button class="lb" onclick="fitToPage()" title="ממלא את הדף בלי לחרוג משוליו">התאם לדף</button>
       </div>
     </div>
+    <div class="layouts">
+      <span style="font-size:12.5px;color:#9B8E82;font-weight:700">פריטים בחדר:</span>
+      ${ITEM_KINDS.map(k => `<button class="lb" onclick="addItem('${k.id}')">${k.ico} ${esc(k.name)}</button>`).join('')}
+    </div>
     <div class="a4note">📄 הדף בגודל A4 לרוחב — מה שנראה כאן הוא בדיוק מה שיודפס</div>
     <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">
-      <div class="rscale" id="rscale" style="transform:scale(${zoomOf()})">${tablesHtml}${markersHtml()}${parkedHtml()}<div id="guides"></div></div></div></div>
+      <div class="rscale" id="rscale" style="transform:scale(${zoomOf()})">${tablesHtml}${itemsHtml()}${markersHtml()}${parkedHtml()}<div id="guides"></div></div>${legendHtml()}</div></div>
     <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
       גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
   fitRoom();
+}
+
+/* ---------- מקרא ---------- */
+// מאז שהורדנו את הקווים המחברים, הצבע לבדו נושא את האחריות — וזה עובד
+// רק למי שהייתה בחדר כשבנו את הסידור. גננת מחליפה שרואה את הדף על הקיר
+// לא יודעת שהוורוד הוא נעה. המקרא הוא מה שהופך את הדף לקריא בלעדינו.
+// הוא יושב מחוץ ל-rscale, כדי שלא יקטן יחד עם התוכן.
+const LEGEND_H = 30;
+function legendRows() {
+  return allSlots().map(sid => {
+    const cfg = plan.staff[sid];
+    const tbls = (cfg.tables || []).map(tid => {
+      const t = plan.tables.find(x => x.id === tid); return t ? t.name : '';
+    }).filter(Boolean);
+    const role = cfg.sits === 'seat' ? 'יושבת בשולחן'
+      : cfg.sits === 'beside' ? 'יושבת ליד' : 'משגיחה';
+    return { color: markColor(sid), name: slotLabel(sid), role, tables: tbls };
+  }).filter(r => r.name);
+}
+function legendHtml() {
+  const rows = legendRows();
+  if (!rows.length) return '';
+  return `<div class="rlegend">${rows.map(r => `<span class="lg">
+    <i style="background:${r.color}"></i><b>${esc(r.name)}</b>
+    <em>${esc(r.tables.length ? r.tables.join(' · ') : r.role)}</em></span>`).join('')}</div>`;
+}
+
+/* ---------- פריטים בחדר ---------- */
+// דברים שאינם שולחן ואין בהם כיסאות, אבל הם חלק מהחדר ולכן חלק מהדף:
+// עמדת הגשה, עמדת פינוי, כיור, דלת. הם לא משפיעים על שום כלל ישיבה —
+// הם רק עוזרים לגננת לדמיין את התנועה בחדר בזמן הארוחה.
+// בפלטה יש אמוג'י כדי שקל יהיה לבחור, אבל הפריט עצמו נושא רק את שמו,
+// כדי שמה שעל המסך יהיה בדיוק מה שיוצא מהמדפסת.
+const ITEM_KINDS = [
+  { id: 'serve',   ico: '🍲', name: 'עמדת הגשה', w: 160, h: 62 },
+  { id: 'clear',   ico: '🧽', name: 'עמדת פינוי', w: 150, h: 62 },
+  { id: 'sink',    ico: '🚰', name: 'כיור',       w: 112, h: 56 },
+  { id: 'cart',    ico: '🛒', name: 'עגלה',       w: 96,  h: 52 },
+  { id: 'cabinet', ico: '🗄️', name: 'ארון',       w: 132, h: 46 },
+  { id: 'door',    ico: '🚪', name: 'דלת',        w: 96,  h: 24 },
+];
+const itemKind = k => ITEM_KINDS.find(x => x.id === k) || ITEM_KINDS[0];
+
+function addItem(kind) {
+  pushUndo();
+  const k = itemKind(kind);
+  plan.items = plan.items || [];
+  const n = plan.items.length;
+  plan.items.push({ id: 'i' + Date.now().toString(36), kind, name: k.name,
+                    w: k.w, h: k.h,
+                    x: Math.round(CX - k.w / 2 + (n % 4) * 26),
+                    y: Math.round(ROOM_H - 130 + (n % 3) * 14) });
+  renderBoard();
+}
+function removeItem(id) {
+  pushUndo();
+  plan.items = (plan.items || []).filter(i => i.id !== id);
+  renderBoard();
+}
+function itemsHtml() {
+  return (plan.items || []).map(it => `
+    <div class="ritem ${it.kind}" data-i="${it.id}"
+      style="left:${it.x}px;top:${it.y}px;width:${it.w}px;height:${it.h}px"
+      onpointerdown="startItemDrag(event,'${it.id}')">
+      <span class="inm" onclick="event.stopPropagation();renameItem('${it.id}')"
+        title="לחיצה משנה את השם">${esc(it.name)}</span>
+      <button class="idel" onclick="event.stopPropagation();removeItem('${it.id}')"
+        onpointerdown="event.stopPropagation()">הסר</button>
+    </div>`).join('');
+}
+function renameItem(id) {
+  const it = (plan.items || []).find(x => x.id === id); if (!it) return;
+  const el = document.querySelector(`.ritem[data-i="${id}"] .inm`); if (!el) return;
+  const inp = document.createElement('input');
+  inp.className = 'tname-input'; inp.value = it.name; inp.maxLength = 22;
+  el.replaceWith(inp); inp.focus(); inp.select();
+  let done = false;
+  const finish = save => {
+    if (done) return; done = true;
+    if (save) { const v = inp.value.trim(); if (v && v !== it.name) { pushUndo(); it.name = v; } }
+    renderBoard();
+  };
+  inp.addEventListener('blur', () => finish(true));
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') finish(true);
+    if (e.key === 'Escape') finish(false);
+  });
+}
+let itemDrag = null;
+function startItemDrag(ev, id) {
+  const it = (plan.items || []).find(x => x.id === id); if (!it) return;
+  ev.preventDefault(); ev.stopPropagation();
+  pushUndo();
+  itemDrag = { id, sx: ev.clientX, sy: ev.clientY, ox: it.x, oy: it.y };
+  try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+  window.addEventListener('pointermove', onItemDrag);
+  window.addEventListener('pointerup', () => {
+    window.removeEventListener('pointermove', onItemDrag);
+    itemDrag = null; renderBoard();
+  }, { once: true });
+}
+function onItemDrag(ev) {
+  if (!itemDrag) return;
+  const { k } = roomScale();
+  const it = plan.items.find(x => x.id === itemDrag.id); if (!it) return;
+  it.x = Math.max(0, Math.round(itemDrag.ox + (ev.clientX - itemDrag.sx) / k));
+  it.y = Math.max(0, Math.round(itemDrag.oy + (ev.clientY - itemDrag.sy) / k));
+  const el = document.querySelector(`.ritem[data-i="${it.id}"]`);
+  if (el) { el.style.left = it.x + 'px'; el.style.top = it.y + 'px'; }
 }
 
 /* ---------- גודל התוכן על הדף ---------- */
@@ -1449,14 +1605,15 @@ function fitToPage() {
   });
   offSlots().forEach(sid => { const m = plan.marks[sid]; add(m.x, m.y, 150, 32); });
   Object.keys(plan.parked || {}).forEach(c => { const m = plan.parked[c]; add(m.x, m.y, 54, 54); });
+  (plan.items || []).forEach(it => add(it.x, it.y, it.w, it.h));
   if (minX > maxX) return;
 
-  const M = 34;   // שוליים בתוך הדף
+  const M = 34, MB = M + (legendRows().length ? LEGEND_H : 0);   // שוליים, ומקום למקרא
   const z = Math.max(0.5, Math.min(2,
-    Math.min((ROOM_W - M * 2) / (maxX - minX), (ROOM_H - M * 2) / (maxY - minY))));
+    Math.min((ROOM_W - M * 2) / (maxX - minX), (ROOM_H - M - MB) / (maxY - minY))));
 
   // ההגדלה מתבצעת סביב מרכז הדף, ולכן קודם מזיזים את הכל למרכז
-  const dx = CX - (minX + maxX) / 2, dy = CY - (minY + maxY) / 2;
+  const dx = CX - (minX + maxX) / 2, dy = (M + (ROOM_H - MB)) / 2 - (minY + maxY) / 2;
   plan.tables.forEach(t => {
     const l = plan.layout[t.id]; if (!l) return;
     l.x = Math.round(l.x + dx); l.y = Math.round(l.y + dy);
@@ -1467,6 +1624,7 @@ function fitToPage() {
   Object.keys(plan.parked || {}).forEach(c => {
     const m = plan.parked[c]; m.x = Math.round(m.x + dx); m.y = Math.round(m.y + dy);
   });
+  (plan.items || []).forEach(it => { it.x = Math.round(it.x + dx); it.y = Math.round(it.y + dy); });
   plan.zoom = Math.round(z * 100) / 100;
   renderBoard();
   showOk(`הותאם לדף · ${Math.round(plan.zoom * 100)}%`);
@@ -1822,7 +1980,7 @@ let undoStack = [], undoTimer = null;
 function snapshot() {
   return JSON.stringify({
     seats: plan.seats, parked: plan.parked || {}, layout: plan.layout, zoom: zoomOf(),
-    marks: plan.marks || {}, okRules: plan.okRules || {},
+    marks: plan.marks || {}, okRules: plan.okRules || {}, items: plan.items || [],
     names: plan.tables.map(t => t.name),
   });
 }
@@ -1845,7 +2003,7 @@ function undoMove() {
   const s = undoStack.pop(); if (!s) return;
   const p = JSON.parse(s);
   plan.seats = p.seats; plan.parked = p.parked; plan.layout = p.layout; plan.zoom = p.zoom || 1;
-  plan.marks = p.marks; plan.okRules = p.okRules;
+  plan.marks = p.marks; plan.okRules = p.okRules; plan.items = p.items || [];
   (p.names || []).forEach((n, i) => { if (plan.tables[i]) plan.tables[i].name = n; });
   selectedSeat = null;
   const b = document.getElementById('undoBar'); if (b) b.remove();
