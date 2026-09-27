@@ -302,14 +302,30 @@
     .plan-row .rm:hover { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
     .empty-note { color:#9B8E82; font-size:13.5px; line-height:1.7; }
 
+    /* ---- הדפסה: הדף על המסך והדף במדפסת חייבים להיות אותו דף ----
+       שלוש מלכודות שנפלנו לתוכן, וכל אחת שוברת את הזהות הזו:
+       1. שוליים ב-@page מקטינים את השטח מתחת ל-1123×794 והתוכן גלש לעמוד שני.
+          לכן margin:0, והחדר מעט מתחת ל-A4 כדי לספוג עיגול של דפדפן.
+       2. דפדפנים לא מדפיסים צבעי רקע כברירת מחדל — משטחי השולחנות יצאו
+          לבנים. print-color-adjust:exact מכריח אותם.
+       3. media (hover:none) מתקיים בהדפסה, ולכן כפתור ה-⟳ שמיועד לנייד
+          חזר והופיע על כל שולחן. */
     @media print {
-      @page { size: A4 landscape; margin: 8mm; }
-      body { background:#fff; padding:0 !important; }
+      @page { size: A4 landscape; margin: 0; }
+      html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+          box-shadow:none !important; }
       /* ילד ממתין לא מודפס: עיגול מרחף באמצע דף שתלוי על הקיר הוא רעש.
          שמו מופיע בשורת "לא יושבים" בתחתית ה-PDF במקום. */
-      .header,.steps,.board-top,.layouts,.legend,.viol,.allgood,.a4note,.meter,.okd,.undo,.parked,#crmSidebar,#crmMenuBtn { display:none !important; }
-      .room-outer { overflow:visible; }
-      .room { transform:none !important; border:none; width:1123px; height:794px; }
+      .header, .steps, .board-top, .layouts, .legend, .viol, .allgood, .a4note,
+      .meter, .okd, .undo, .parked, .rot, .rhandle, .rot-tag, .err, .ok, .ov,
+      #crmSidebar, #crmMenuBtn, #trashFab, #error, #success { display:none !important; }
+      .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
+      .room { transform:none !important; border:none !important; border-radius:0 !important;
+              width:1120px !important; height:790px !important; overflow:hidden !important;
+              background:#fff !important; }
+      /* .rscale נשאר 1123×794 עם אותו transform-origin, כדי שההגדלה
+         תיפול בדיוק באותו מקום כמו על המסך. החדר חותך 3 פיקסלים בקצה. */
     }
   </style>
 </head>
