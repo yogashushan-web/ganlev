@@ -172,20 +172,6 @@
     /* שם האחראית מתחת לשולחן בסקיצה, בצבע שלה */
     .sk-who { font-size:10.5px; font-weight:800; text-align:center; margin-top:4px; }
 
-    /* ---- מד שלמות: כמה יושבים ומי לא ---- */
-    .meter { background:#FAF8F4; border:1px solid #e8e4de; border-radius:14px; padding:12px 16px 13px; margin-bottom:12px; }
-    .meter.done { background:#f1f8f3; border-color:#cfe6d7; }
-    .mtop { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
-    .mtop b { font-size:15px; color:#1F3D34; }
-    .mtop span { font-size:12.5px; color:#9B8E82; font-weight:700; }
-    .mbar { height:7px; border-radius:99px; background:#e8e2d8; overflow:hidden; margin-top:8px; }
-    .mbar i { display:block; height:100%; border-radius:99px; background:#C4846C; transition:width .25s ease; }
-    .meter.done .mbar i { background:#1F7a4f; }
-    .mwho { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:10px; }
-    .mwho button { background:#fff; border:1.5px dashed #C4846C; color:#8a5a44; border-radius:999px;
-                   padding:5px 13px; font-family:'Heebo'; font-size:12.5px; font-weight:800; cursor:pointer; }
-    .mwho button:hover { background:#C4846C; color:#fff; border-style:solid; }
-    .mhint { font-size:11.5px; color:#9B8E82; }
 
     /* גרירת ילד: צל שעוקב אחרי האצבע, וכיסא שמואר כשמתקרבים אליו */
     .dragghost { position:fixed; pointer-events:none; z-index:10000; width:54px; height:54px; border-radius:50%;
@@ -227,7 +213,6 @@
                      letter-spacing:.3px; white-space:nowrap; }
     .parked:hover { opacity:1; border-style:solid; }
     /* אותו שם במד למעלה, כדי שיהיה ברור שמדובר באותו ילד */
-    .mwho button.onpage { border-style:solid; background:#fdf6f2; }
     /* ---- אלרגיה על הכיסא ---- */
     /* תג קטן מתחת לכיסא. אדום כי זה הדבר היחיד בדף שקריאתו דחופה. */
     .seat .alg { position:absolute; bottom:-8px; left:50%; transform:translateX(-50%);
@@ -320,9 +305,37 @@
     .gap-tag { position:absolute; background:#C4846C; color:#fff; font-size:10px; font-weight:800;
                border-radius:5px; padding:1px 6px; transform:translate(50%,-50%); }
 
-    .layouts { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
-    .layouts .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px; padding:7px 13px; font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#1F3D34; cursor:pointer; }
-    .layouts .lb:hover { border-color:#1F3D34; background:#f4f9f6; }
+    /* ---- סרגל הכלים שמעל הדף: רק מה שמשמש ליצירה ---- */
+    .toolbar, .layouts { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+    .toolbar .lb, .layouts .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px;
+      padding:0 14px; height:34px; display:inline-flex; align-items:center; gap:6px;
+      font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#1F3D34; cursor:pointer; }
+    .toolbar .lb:hover, .layouts .lb:hover { border-color:#1F3D34; background:#f4f9f6; }
+
+    /* ---- רצועת בקרה מתחת לדף ---- */
+    /* נמוכה בכוונה: היא עונה על "סיימתי?" ולא על "מה עכשיו", ולכן אסור
+       לה לתפוס את המקום של הסידור עצמו. */
+    .status { margin:10px 0 4px; }
+    .srow { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+    .srow.wait { margin-top:8px; }
+    .chip { display:inline-flex; align-items:center; border-radius:999px; padding:4px 12px;
+            font-size:12px; font-weight:800; font-family:'Heebo'; border:1px solid transparent; }
+    .chip.good { background:#e6f4ec; border-color:#cfe7d9; color:#1F7a4f; }
+    .chip.warn { background:#fdf6e9; border-color:#e8c88a; color:#b8801f; }
+    .chip.bad  { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; cursor:pointer; }
+    .chip.quiet { background:#FAF8F4; border-color:#e8e4de; color:#9B8E82; cursor:pointer; }
+    .sbar { flex:1; min-width:70px; max-width:180px; height:4px; border-radius:99px;
+            background:#e8e2d8; overflow:hidden; }
+    .sbar i { display:block; height:100%; border-radius:99px; background:#1F7a4f; transition:width .25s; }
+    .smuted { font-size:12px; color:#9B8E82; font-weight:700; }
+    .wchip { background:#fff; border:1.5px dashed #C4846C; color:#8a5a44; border-radius:999px;
+             padding:4px 12px; font-family:'Heebo'; font-size:12px; font-weight:800; cursor:pointer; }
+    .wchip:hover { background:#C4846C; color:#fff; border-style:solid; }
+    .wchip.onpage { border-style:solid; background:#fdf6f2; }
+    .status .viol { margin-top:10px; }
+    .ipick button span b { display:block; }
+    .ipick button span em { display:block; font-style:normal; font-size:11.5px;
+                            color:#9B8E82; font-weight:600; margin-top:1px; }
     .legend { font-size:12.5px; color:#9B8E82; text-align:center; margin:4px 0 16px; line-height:1.7; }
 
     .viol { background:#fdf0ef; border:1px solid #f3cfc9; border-radius:12px; padding:14px 16px; margin-bottom:14px; }
@@ -341,7 +354,6 @@
                 border-radius:999px; padding:4px 6px 4px 13px; font-size:12px; color:#6f6457; font-weight:700; }
     .okd button { background:none; border:0; color:#9B8E82; font-family:'Heebo'; font-size:11.5px;
                   font-weight:700; cursor:pointer; text-decoration:underline; padding:0 4px; }
-    .allgood { background:#e6f4ec; border:1px solid #cfe7d9; color:#1F7a4f; border-radius:12px; padding:13px 16px; margin-bottom:14px; font-weight:700; font-size:14px; }
     .conflict { background:#fdf6e9; border:1px solid #e8c88a; border-radius:12px; padding:16px 18px; margin-bottom:14px; }
     .conflict h4 { color:#b8801f; margin-bottom:8px; font-size:15px; }
     .conflict p { font-size:13.5px; color:#8a6a23; line-height:1.7; margin-bottom:12px; }
@@ -384,8 +396,9 @@
           box-shadow:none !important; }
       /* ילד ממתין לא מודפס: עיגול מרחף באמצע דף שתלוי על הקיר הוא רעש.
          שמו מופיע בשורת "לא יושבים" בתחתית ה-PDF במקום. */
-      .header, .steps, .board-top, .layouts, .legend, .viol, .allgood, .a4note,
-      .meter, .okd, .undo, .parked, .rot, .rhandle, .rot-tag, .err, .ok, .ov, .idel,
+      .header, .steps, .board-top, .layouts, .legend, .viol, .a4note,
+      .undo, .parked, .rot, .rhandle, .rot-tag, .err, .ok, .ov, .idel,
+      .toolbar, .status,
       #crmSidebar, #crmMenuBtn, #trashFab, #error, #success { display:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
       .room { transform:none !important; border:none !important; border-radius:0 !important;
@@ -1364,18 +1377,76 @@ function seatedMeter() {
   const freeTxt = free === 0 ? 'כל המקומות תפוסים'
     : free === 1 ? 'מקום אחד פנוי' : `${free} מקומות פנויים`;
 
-  return `<div class="meter ${done ? 'done' : ''}">
-    <div class="mtop">
-      <b>${done ? `כל ${n} הילדים יושבים` : `${sat} מתוך ${n} ילדים יושבים`}</b>
-      <span>${done ? freeTxt : `${wait === 1 ? 'אחד ממתין' : wait + ' ממתינים'} · ${freeTxt}`}</span>
+  return { done, n, sat, wait, pct, out, staffOut, parked, freeTxt };
+}
+
+// רצועת בקרה מתחת לדף. היא עונה על "סיימתי?" ולא על "מה לעשות עכשיו",
+// ולכן מקומה אחרי הסידור ולא לפניו, והיא שורה אחת ולא שלושה בלוקים.
+function statusStrip(viols, okd) {
+  const m = seatedMeter();
+  const rules = viols.length
+    ? `<button class="chip bad" onclick="document.getElementById('violBox').scrollIntoView({behavior:'smooth'})">
+        ${viols.length === 1 ? 'כלל אחד לא מתקיים' : `${viols.length} כללים לא מתקיימים`}</button>`
+    : `<span class="chip good">כל הכללים מתקיימים${okd.length ? ` · ${okd.length} אושרו` : ''}</span>`;
+
+  return `<div class="status">
+    <div class="srow">
+      <span class="chip ${m.done ? 'good' : 'warn'}">
+        ${m.done ? `כל ${m.n} הילדים יושבים` : `${m.sat}/${m.n} יושבים`}</span>
+      <div class="sbar" title="${m.pct}%"><i style="width:${m.pct}%"></i></div>
+      <span class="smuted">${m.freeTxt}</span>
+      ${rules}
+      ${okd.length ? `<button class="chip quiet" onclick="openAccepted()">חריגות שאושרו</button>` : ''}
     </div>
-    <div class="mbar"><i style="width:${pct}%"></i></div>
-    ${done ? '' : `<div class="mwho">
-      ${out.map(c => `<button onclick="seatChild('${c}')"
-          ${parked[c] ? 'class="onpage" title="מחכה על הדף — לחיצה מושיבה"' : ''}>${esc(nameOf(c))}</button>`).join('')}
-      ${staffOut.map(s => `<button onclick="seatChild('${s}')">${esc(nameOf(s))} · צוות</button>`).join('')}
-      <span class="mhint">לחיצה על שם מושיבה במקום הפנוי הראשון · ממתינים לא מודפסים</span></div>`}
+    ${m.done ? '' : `<div class="srow wait">
+      <span class="smuted">ממתינים:</span>
+      ${m.out.map(c => `<button class="wchip${m.parked[c] ? ' onpage' : ''}" onclick="seatChild('${c}')"
+          title="לחיצה מושיבה במקום הפנוי הראשון">${esc(nameOf(c))}</button>`).join('')}
+      ${m.staffOut.map(s => `<button class="wchip" onclick="seatChild('${s}')">${esc(nameOf(s))} · צוות</button>`).join('')}
+    </div>`}
+    ${viols.length ? `<div class="viol" id="violBox">
+      ${viols.map(v => {
+        const r = plan.rules.find(x => x.id === v.ruleId) || {};
+        const why = whyImpossible(r);
+        return `<div class="v ${why ? 'stuck' : ''}">
+          <div><b>${why ? '⚠️' : '🔴'} ${esc(v.text)}</b>
+          ${why ? `<div class="wh">הכלל לא ניתן לקיום: ${esc(why)}. שום שינוי בישיבה לא יפתור אותו.</div>` : ''}</div>
+          <div class="vbtns">
+            <button onclick="acceptViol('${v.ruleId}')">בסדר, השאירי כך</button>
+            <button onclick="killRule('${v.ruleId}')">בטלי את הכלל</button>
+          </div></div>`;
+      }).join('')}</div>` : ''}
   </div>`;
+}
+
+// החריגות שאושרו יורדות לחלון — הן מידע שנדרש לעיתים רחוקות
+function openAccepted() {
+  const all = E.checkViolations(Object.assign(enginePlan(), { seats: plan.seats }), tplOf);
+  const okd = all.filter(v => (plan.okRules || {})[v.ruleId]);
+  openModal('חריגות שאושרו', 'כללים שבחרת להשאיר כמו שהם. הסידור נחשב גמור למרות שהם לא מתקיימים.',
+    okd.length ? okd.map(v => `<div class="alrow"><b>${esc(v.text)}</b>
+        <button class="btn ghost" style="margin-right:auto" onclick="unacceptViol('${v.ruleId}');closeModal()">החזירי לבדיקה</button></div>`).join('')
+      : '<div class="empty-note">אין חריגות מאושרות.</div>',
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
+}
+
+// פריסות החדר עברו לחלון — הן נבחרות פעם אחת ולא צריכות שורה קבועה
+function openLayouts() {
+  const opts = [
+    { k: 'row', ico: '▭▭▭', t: 'שורה אחת', d: 'כל השולחנות בקו ישר' },
+    { k: 'two', ico: '▭▭', t: 'שתי שורות', d: 'שתי שורות זו מעל זו' },
+    { k: 'parallel', ico: '▯▯', t: 'מקבילים', d: 'מסובבים ב-90°, זה לצד זה' },
+    { k: 'grid', ico: '▦', t: 'רשת', d: 'מסודרים בריבוע' },
+    { k: 'circle', ico: '◍', t: 'מעגל', d: 'סביב מרכז החדר' },
+  ];
+  openModal('פריסת החדר', 'סידור אוטומטי של השולחנות על הדף. תמיד אפשר לגרור אחר כך ביד.',
+    `<div class="ipick">${opts.map(o => `
+      <button onclick="autoLayout('${o.k}');closeModal()">
+        <span class="e">${o.ico}</span><span><b>${o.t}</b><em>${o.d}</em></span></button>`).join('')}
+      <button onclick="tidyLayout();closeModal()" style="border-color:#C4846C">
+        <span class="e">✨</span><span><b>סדר יפה</b><em>מיישר ומשווה רווחים</em></span></button>
+    </div>`,
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
 }
 
 // הושבה מהמד — המקום הפנוי הראשון, כדי שלא צריך לגרור כשרק אחד נשכח
@@ -1464,29 +1535,10 @@ function renderBoard() {
         <button class="btn ghost" onclick="window.print()">הדפסה</button>
       </div>
     </div>
-    ${seatedMeter()}
-    ${viols.length ? `<div class="viol"><h4>${viols.length === 1 ? 'כלל ישיבה אחד לא מתקיים' : `${viols.length} כללי ישיבה לא מתקיימים`}</h4>
-      ${viols.map(v => {
-        const r = plan.rules.find(x => x.id === v.ruleId) || {};
-        const why = whyImpossible(r);
-        return `<div class="v ${why ? 'stuck' : ''}">
-          <div><b>${why ? '⚠️' : '🔴'} ${esc(v.text)}</b>
-          ${why ? `<div class="wh">הכלל לא ניתן לקיום: ${esc(why)}. שום שינוי בישיבה לא יפתור אותו.</div>` : ''}</div>
-          <div class="vbtns">
-            <button onclick="acceptViol('${v.ruleId}')">בסדר, השאירי כך</button>
-            <button onclick="killRule('${v.ruleId}')">בטלי את הכלל</button>
-          </div></div>`;
-      }).join('')}</div>`
-      : `<div class="allgood">🟢 הסידור מקיים את כל כללי הישיבה${okd.length ? ` · ${okd.length} ${okd.length === 1 ? 'חריגה אושרה' : 'חריגות אושרו'}` : ''}</div>`}
-    ${okd.length ? `<div class="okd">${okd.map(v => `<span>✓ ${esc(v.text)}
-        <button onclick="unacceptViol('${v.ruleId}')">החזירי לבדיקה</button></span>`).join('')}</div>` : ''}
-    <div class="layouts"><span style="font-size:12.5px;color:#9B8E82;font-weight:700">פריסת החדר:</span>
-      <button class="lb" onclick="autoLayout('row')">שורה אחת</button>
-      <button class="lb" onclick="autoLayout('two')">שתי שורות</button>
-      <button class="lb" onclick="autoLayout('parallel')">מקבילים</button>
-      <button class="lb" onclick="autoLayout('grid')">רשת</button>
-      <button class="lb" onclick="autoLayout('circle')">מעגל</button>
-      <button class="lb" style="border-color:#C4846C;color:#8a5a44" onclick="tidyLayout()">✨ סדר יפה</button>
+    <div class="toolbar">
+      <button class="lb" onclick="openLayouts()">▦ פריסת החדר</button>
+      <button class="lb" onclick="openItems()">🍲 פריטים בחדר</button>
+      <button class="lb" onclick="openAllergies()">⚠️ אלרגיות</button>
       <div class="zoombar">
         <input type="range" id="zoomR" min="50" max="200" step="1" value="${Math.round(zoomOf() * 100)}"
           aria-label="גודל התוכן על הדף"
@@ -1495,11 +1547,10 @@ function renderBoard() {
         <button class="lb" onclick="fitToPage()" title="ממלא את הדף בלי לחרוג משוליו">התאם לדף</button>
       </div>
     </div>
-      <button class="lb" onclick="openItems()">🍲 פריטים בחדר</button>
-      <button class="lb" onclick="openAllergies()">⚠️ אלרגיות</button>
     <div class="a4note">📄 הדף בגודל A4 לרוחב — מה שנראה כאן הוא בדיוק מה שיודפס</div>
     <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">
       <div class="rscale" id="rscale" style="transform:scale(${zoomOf()})">${tablesHtml}${itemsHtml()}${markersHtml()}${parkedHtml()}<div id="guides"></div></div>${legendHtml()}</div></div>
+    ${statusStrip(viols, okd)}
     <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
       גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
   fitRoom();
