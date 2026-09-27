@@ -96,6 +96,9 @@
     .staff-row { display:flex; align-items:center; gap:10px; background:#FAF8F4; border-radius:11px; padding:11px 14px; margin-bottom:9px; flex-wrap:wrap; }
     .staff-row select { padding:7px 10px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:12.5px; }
     .swap { background:#fff; border:1px solid #eccfc2; color:#8a4d33; border-radius:999px; padding:5px 12px; font-family:'Heebo'; font-size:12.5px; font-weight:700; cursor:pointer; }
+    /* שתיים במשבצת שאין בה כיסא — לא מתחלפות, שתיהן שם */
+    .both { background:#f4f9f6; border:1px solid #cfe7d9; color:#1F7a4f; border-radius:999px;
+            padding:5px 12px; font-size:12.5px; font-weight:700; white-space:nowrap; }
     .swap:hover { background:#fbf1ec; }
 
     .rule-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
@@ -375,6 +378,15 @@ const slotName = sid => {
   const s = plan.staff[sid]; if (!s) return '';
   return staffName(s.members[s.active || 0]);
 };
+// מה שמוצג על הסידור. כיסא מחזיק אדם אחד — אי אפשר לשבת שתיים על אותו
+// כיסא, ולכן משבצת שיושבת בתוך שולחן מציגה את הפעילה בלבד ומתחלפת ב-⇄.
+// סמן של השגחה או ישיבה ליד השולחן הוא לא כיסא: אם שתיהן רשומות שם,
+// שתיהן באמת עומדות שם יחד, ולכן שתיהן מופיעות.
+const slotLabel = sid => {
+  const s = plan.staff[sid]; if (!s) return '';
+  if (s.sits === 'seat' || s.members.length < 2) return slotName(sid);
+  return s.members.map(staffName).filter(Boolean).join(' · ');
+};
 
 /* ---------- טעינה ---------- */
 async function boot() {
@@ -568,7 +580,8 @@ function stepStaff() {
   return `<div class="card">
     <h2>אנשי הצוות בארוחה</h2>
     <div class="sub">בחרי מי נמצאת, ואיך. מי שיושבת בתוך השולחן תופסת מקום ויכולה להיות "ליד" ילד.
-      אם שתיים מתחלפות ביניהן בסידור השבועי — אפשר לצרף אותן למשבצת אחת ולהחליף בלחיצה.</div>
+      על כיסא אחד יושבת אחת, ולכן שתיים שמתחלפות ביניהן נכנסות למשבצת אחת ומתחלפות ב-⇄.
+      במשבצת של השגחה או ישיבה ליד השולחן אין כיסא — שם שתיהן יופיעו יחד על הסידור.</div>
     ${planSketch()}
     <div class="pick">
       ${allStaff.map(s => `<button class="p staff ${used.has(s.id) ? 'on' : ''}" onclick="toggleStaff('${s.id}')">${esc(s.name)}</button>`).join('')}
@@ -578,12 +591,15 @@ function stepStaff() {
         const cfg = plan.staff[sid];
         const free = allStaff.filter(s => !used.has(s.id));
         return `<div class="staff-row">
-          <b style="color:#1F3D34;min-width:88px">${esc(slotName(sid))}</b>
+          <b style="color:#1F3D34;min-width:88px">${esc(slotLabel(sid))}</b>
           ${cfg.members.length > 1
-            ? `<button class="swap" onclick="flipSlot('${sid}')">⇄ ${esc(cfg.members.map(staffName).join(' / '))}</button>`
-            : (free.length ? `<select onchange="if(this.value)addAlt('${sid}',this.value)">
-                 <option value="">+ מחליפה…</option>
-                 ${free.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>` : '')}
+            ? (cfg.sits === 'seat'
+                ? `<button class="swap" onclick="flipSlot('${sid}')" title="על כיסא אחד יושבת אחת — לחיצה מחליפה">⇄ ${esc(cfg.members.map(staffName).join(' / '))}</button>`
+                : `<span class="both">${esc(cfg.members.map(staffName).join(' · '))} · שתיהן מופיעות</span>`)
+            : ''}
+          ${free.length ? `<select onchange="if(this.value)addAlt('${sid}',this.value)">
+               <option value="">${cfg.sits === 'seat' ? '+ מחליפה…' : '+ עוד אחת…'}</option>
+               ${free.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>` : ''}
           <select onchange="plan.staff['${sid}'].sits=this.value;renderStep()">
             <option value="seat"   ${cfg.sits === 'seat' ? 'selected' : ''}>יושבת במקום בשולחן</option>
             <option value="beside" ${cfg.sits === 'beside' ? 'selected' : ''}>יושבת ליד השולחן</option>
@@ -652,7 +668,7 @@ function planSketch(mode) {
         ${interactive ? click : ''} title="${s.role === 'head' ? 'ראש השולחן' : s.role === 'middle' ? 'אמצע הצלע' : 'קצה'}">${lbl}</div>`;
     }).join('');
     // השולחן נצבע בגוון של מי שאחראית עליו — נקלט מיד, בלי מקרא ובלי קווים
-    const sk = tableSkin(t.id), who = tableStaff(t.id).map(slotName).join(' · ');
+    const sk = tableSkin(t.id), who = tableStaff(t.id).map(slotLabel).join(' · ');
     return `<div class="sk-one"><div class="nm">${esc(t.name)}</div>
       <div class="sk-wrap" style="width:${tpl.w * SK + P * 2}px;height:${tpl.h * SK + P * 2}px">
         <div class="sk-surface" title="${esc(who)}" style="left:${P}px;top:${P}px;width:${tpl.w * SK}px;height:${tpl.h * SK}px;
@@ -801,7 +817,7 @@ function enginePlan() {
   const people = {};
   plan.childIds.forEach(id => { people[id] = { name: kidName(id), kind: 'child' }; });
   Object.keys(plan.staff).forEach(sid => {
-    people[sid] = { name: slotName(sid), kind: 'staff', sits: plan.staff[sid].sits, tables: plan.staff[sid].tables };
+    people[sid] = { name: slotLabel(sid), kind: 'staff', sits: plan.staff[sid].sits, tables: plan.staff[sid].tables };
   });
   return { tables: plan.tables, people, rules: plan.rules, seats: plan.seats };
 }
@@ -981,7 +997,7 @@ function markersHtml() {
       box-shadow:0 0 0 4px ${mix('#ffffff', c, 0.16)},0 2px 8px rgba(0,0,0,.10)"
       onpointerdown="startDragMark(event,'${sid}')"
       title="${ttl}${tables.length ? ' · ' + esc(tables.join(', ')) : ''}">
-      <span class="ico">${ico}</span>${esc(slotName(sid))}</div>`;
+      <span class="ico">${ico}</span>${esc(slotLabel(sid))}</div>`;
   }).join('');
 }
 
@@ -1155,7 +1171,7 @@ function sheetData() {
   ensureMarkers();
   const marks = offSlots().map(sid => ({
     x: Math.round(ZX(plan.marks[sid].x)), y: Math.round(ZY(plan.marks[sid].y)),
-    label: slotName(sid), color: markColor(sid),
+    label: slotLabel(sid), color: markColor(sid),
     // 🪑 / 👀 מצויירים ב-PDF כווקטור, כי ל-Heebo אין גליפים לאמוג'י
     icon: plan.staff[sid].sits === 'beside' ? 'chair' : 'watch',
   }));
@@ -1221,7 +1237,7 @@ function whyImpossible(r) {
   const seated = new Set(Object.values(plan.seats));
 
   if (r.type === 'near_staff' || r.type === 'staff_table') {
-    if (r.b && !sits(r.b)) return `${slotName(r.b)} לא יושבת בשולחן, אלא מסתובבת בחדר`;
+    if (r.b && !sits(r.b)) return `${slotLabel(r.b)} לא יושבת בשולחן, אלא מסתובבת בחדר`;
     if (!r.b && !anyStaffSits) return 'אף איש צוות לא יושב בשולחן בסידור הזה';
   }
   if ((r.type === 'adjacent' || r.type === 'same_table') && r.b && !seated.has(r.b)) {
@@ -1338,7 +1354,7 @@ function renderBoard() {
     }).join('');
     // אין יותר נקודות צבע ליד השם — הן דרכו על הכיסא הסמוך. הצבע עבר
     // למשטח השולחן עצמו, שם יש לו מקום והוא נקלט מרחוק.
-    const sk = tableSkin(t.id), who = tableStaff(t.id).map(slotName).join(' · ');
+    const sk = tableSkin(t.id), who = tableStaff(t.id).map(slotLabel).join(' · ');
     return `<div class="twrap" data-t="${t.id}" style="left:${l.x}px;top:${l.y}px;width:${box.w}px;height:${box.h}px;
       transform:rotate(${l.rot}deg);transform-origin:center">
       <div class="tlabel" style="left:50%;top:50%;transform:translate(-50%,-50%) rotate(${-l.rot}deg)">
