@@ -293,6 +293,23 @@
         `אבל בשולחן כזה לכל מושב יש ${maxN} שכנים בלבד.` });
     });
 
+    // קבוצה שחייבת לשבת יחד וגדולה מהשולחן הגדול ביותר. "חייבים יחד"
+    // הוא יחס מעבר: אם א' עם ב' וב' עם ג', שלושתם באותו שולחן.
+    const big = Math.max(0, ...plan.tables.map(t => tplOf(t).seats.length));
+    const same = active.filter(r => r.type === 'same_table' && r.a && r.b);
+    if (same.length && big) {
+      const parent = {};
+      const find = x => (parent[x] === undefined || parent[x] === x) ? (parent[x] = x) : (parent[x] = find(parent[x]));
+      same.forEach(r => { parent[find(r.a)] = find(r.b); });
+      const groups = {};
+      Object.keys(parent).forEach(x => { (groups[find(x)] = groups[find(x)] || []).push(x); });
+      Object.values(groups).forEach(g => {
+        if (g.length > big) issues.push({ kind: 'group_too_big', text:
+          `${g.length} ילדים חייבים לשבת באותו שולחן (${g.map(p => nameOf(plan, p)).join(', ')}), ` +
+          `אבל בשולחן הגדול ביותר יש ${big} מקומות.` });
+      });
+    }
+
     return issues;
   }
 

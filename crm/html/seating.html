@@ -311,6 +311,42 @@
     .gap-tag { position:absolute; background:#C4846C; color:#fff; font-size:10px; font-weight:800;
                border-radius:5px; padding:1px 6px; transform:translate(50%,-50%); }
 
+    /* ---- עמוד הפתיחה ---- */
+    .welcome { text-align:center; }
+    .wtitle { font-size:25px; color:#1F3D34; margin-bottom:10px; }
+    .wlead { font-size:14.5px; color:#6f6457; line-height:1.85; max-width:480px;
+             margin:0 auto 26px; }
+    .wdemo { background:#FAF8F4; border:1px solid #efe9e0; border-radius:16px;
+             padding:20px 18px 14px; margin-bottom:26px; display:flex;
+             flex-wrap:wrap; justify-content:center; gap:18px; }
+    .wt { flex:0 1 210px; }
+    .wtn { font-size:12.5px; font-weight:800; margin-bottom:7px; }
+    .wts { border:2px solid; border-radius:12px; padding:13px 10px; display:flex;
+           flex-wrap:wrap; gap:6px; justify-content:center; }
+    .wts span { background:#fff; border:1.5px solid #e2ecf3; color:#2c4d66; border-radius:999px;
+                padding:5px 13px; font-size:12px; font-weight:800; }
+    .wcap { flex:1 0 100%; font-size:11.5px; color:#9B8E82; font-weight:700; margin-top:2px; }
+    .whow { display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+            gap:12px; text-align:right; margin-bottom:8px; }
+    .wstep { display:flex; gap:11px; align-items:flex-start; background:#fff;
+             border:1px solid #efe9e0; border-radius:13px; padding:13px 14px; }
+    .wn { flex:0 0 25px; height:25px; border-radius:50%; background:#1F3D34; color:#fff;
+          font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+    .wstep b { display:block; color:#1F3D34; font-size:13.5px; margin-bottom:2px; }
+    .wstep em { font-style:normal; font-size:12px; color:#9B8E82; line-height:1.55; }
+    .wnav { justify-content:center; }
+    .btn.big { font-size:15px; padding:13px 34px; }
+
+    /* ---- חסם מעבר: בעיה מבנית שלא תיפתר בשום סידור ---- */
+    .blockers { margin:16px 0 4px; display:flex; flex-direction:column; gap:9px; }
+    .bk { background:#fdf6e9; border:1px solid #e8c88a; border-radius:12px; padding:13px 16px; }
+    .bk b { color:#b8801f; font-size:14px; }
+    .bk p { font-size:13px; color:#8a6a23; line-height:1.7; margin-top:4px; }
+    .bkx { margin-top:9px; background:#fff; border:1px solid #e8c88a; color:#8a6a23;
+           border-radius:9px; padding:6px 13px; font-family:'Heebo'; font-size:12.5px;
+           font-weight:700; cursor:pointer; }
+    .btn:disabled { opacity:.42; cursor:not-allowed; }
+
     /* ---- סרגל הכלים שמעל הדף: רק מה שמשמש ליצירה ---- */
     .toolbar, .layouts { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
     .toolbar .lb, .layouts .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px;
@@ -440,7 +476,7 @@
 
 <script src="js/common.js?v=20"></script>
 <script src="js/api.js?v=21"></script>
-<script src="js/seating-engine.js?v=3"></script>
+<script src="js/seating-engine.js?v=4"></script>
 <script>
 const E = SeatingEngine;
 const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -448,6 +484,7 @@ const uid = () => 's' + Math.random().toString(36).slice(2, 9);
 
 let allKids = [], allStaff = [], step = 1, plan = null, selectedSeat = null, built = false, kidFilter = '';
 const STEPS = ['מי אוכל', 'שולחנות', 'צוות', 'כללי ישיבה', 'חלוקה'];
+const WELCOME = 0;   // עמוד הפתיחה — לפני שלב 1
 
 function newPlan() {
   return { id: uid(), name: 'סידור ארוחה', childIds: [], tables: [], staff: {},
@@ -509,6 +546,9 @@ async function boot() {
       showOk('שוחזרה הטיוטה האחרונה');
     }
   } catch (e) {}
+  // בלי טיוטה מתחילים בעמוד הפתיחה, שמסביר מה הכלי הזה עושה
+  if (!plan.childIds.length) step = WELCOME;
+  document.getElementById('steps').classList.toggle('hide', step === WELCOME);
   renderTop(); renderSteps(); renderStep();
 }
 function currentSchoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
@@ -532,7 +572,7 @@ function goStep(n) {
   step = n; built = false;
   document.getElementById('board').classList.add('hide');
   document.getElementById('wizard').classList.remove('hide');
-  document.getElementById('steps').classList.remove('hide');
+  document.getElementById('steps').classList.toggle('hide', n === WELCOME);
   renderTop(); renderSteps(); renderStep(); window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function backToWizard() { goStep(1); }
@@ -544,9 +584,102 @@ const DRAFT = 'gl_seating_draft';
 function saveDraft() { try { localStorage.setItem(DRAFT, JSON.stringify({ plan, step })); } catch (e) {} }
 function clearDraft() { try { localStorage.removeItem(DRAFT); } catch (e) {} }
 
+/* ---------- עמוד הפתיחה ---------- */
+// מי שנכנסת לכאן בפעם הראשונה לא יודעת מה הכלי הזה עושה. במקום להתחיל
+// ברשימת ילדים בלי הקשר, מסבירים בארבע שורות ומראים דוגמה של התוצאה —
+// כי תמונה של שולחן מסודר אומרת יותר מכל משפט.
+const HOW = [
+  { n: 1, t: 'בוחרים מי אוכל',    d: 'מסמנים את הילדים שיושבים לארוחה היום.' },
+  { n: 2, t: 'מגדירים שולחנות',  d: 'כמה שולחנות, ובאיזו צורה — כמה מקומות בכל אחד.' },
+  { n: 3, t: 'מוסיפים כללים',     d: '"דני לא ליד לב", "אייה בראש השולחן". רק מה שחשוב.' },
+  { n: 4, t: 'מקבלים סידור מוכן', d: 'דף A4 להדפסה ולתלייה על הקיר, עם מי יושב איפה.' },
+];
+const DEMO = [
+  { t: 'שולחן 1', c: '#5f93b8', kids: ['יעל', 'דני', 'מאיה', 'תום'] },
+  { t: 'שולחן 2', c: '#C4846C', kids: ['רותם', 'נועה', 'עומר', 'לי'] },
+];
+function stepWelcome() {
+  return `<div class="card welcome">
+    <h2 class="wtitle">ברוכים הבאים לסידור השולחנות 🌿</h2>
+    <p class="wlead">בואו נסדר יחד את מקומות הישיבה בארוחה.<br>
+      המערכת תבנה סידור מאוזן שמתחשב במספר המקומות, בהרכב הילדים
+      ובכללים שלכם — ותתריע אם משהו לא מסתדר.</p>
+
+    <div class="wdemo">
+      ${DEMO.map(d => `<div class="wt">
+        <div class="wtn" style="color:${d.c}">${d.t}</div>
+        <div class="wts" style="border-color:${d.c}33;background:${d.c}14">
+          ${d.kids.map(k => `<span>${k}</span>`).join('')}
+        </div></div>`).join('')}
+      <div class="wcap">כך נראה הסידור בסוף</div>
+    </div>
+
+    <div class="whow">
+      ${HOW.map(h => `<div class="wstep">
+        <span class="wn">${h.n}</span>
+        <div><b>${h.t}</b><em>${h.d}</em></div></div>`).join('')}
+    </div>
+
+    <div class="nav wnav">
+      <button class="btn big" onclick="goStep(1)">בואו נתחיל</button>
+      <button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
+    </div></div>`;
+}
+
+/* ---------- בדיקת היתכנות לפני מעבר לשלב הבא ---------- */
+// שני סוגי בעיות שונים, ורק אחד מהם עצר עד היום:
+//   1. הפרת כלל — הסידור אפשרי, פשוט לא נעים. מתריעים בסוף.
+//   2. בעיה מבנית — הסידור בלתי אפשרי. 7 ילדים לשולחן של 6 לא ייפתר
+//      בשום סידור, ולכן אסור לתת להמשיך ולגלות את זה שלושה שלבים אחר כך.
+// כל חסם אומר מה הבעיה במספרים, ומה בדיוק לעשות כדי לפתור.
+function stepBlockers(n) {
+  const out = [];
+  const kids = plan.childIds.length;
+  const seatedStaff = Object.keys(plan.staff).filter(s => plan.staff[s].sits === 'seat').length;
+  const cap = plan.tables.reduce((s, t) => s + tplOf(t).seats.length, 0);
+
+  if (n === 1 && !kids) {
+    out.push({ t: 'עוד לא נבחרו ילדים', d: 'לחצי על שם כדי לצרף אותו לארוחה.' });
+  }
+  if (n === 2) {
+    if (!plan.tables.length) out.push({ t: 'עוד לא נוספו שולחנות', d: 'לחצי על צורה כדי להוסיף שולחן.' });
+    else if (cap < kids) out.push({
+      t: 'אין מספיק מקומות',
+      d: `יש ${cap} מקומות בסך הכול, אבל ${kids} ילדים אוכלים. חסרים ${kids - cap} מקומות — ` +
+         `אפשר להוסיף שולחן, או להחליף שולחן בצורה עם יותר מקומות.` });
+  }
+  if (n === 3 && cap < kids + seatedStaff) out.push({
+    t: 'אין מספיק מקומות לילדים ולצוות',
+    d: `${kids} ילדים ועוד ${seatedStaff} מ${seatedStaff === 1 ? 'הצוות שיושבת' : 'הצוות שיושבות'} בשולחן — ` +
+       `סה"כ ${kids + seatedStaff}, ויש ${cap} מקומות. חסרים ${kids + seatedStaff - cap}. ` +
+       `אפשר להוסיף שולחן, או להגדיר מישהי כ"יושבת ליד" במקום "יושבת בשולחן".` });
+  if (n === 4) {
+    E.preflight(enginePlan(), tplOf).forEach(i => {
+      if (i.kind === 'capacity') return;          // כבר נבדק בשלבים קודמים
+      out.push({ t: 'הכללים סותרים זה את זה', d: i.text, rules: i.rules });
+    });
+    const grp = E.blockingGroup(enginePlan());
+    if (grp && grp.length > plan.tables.length) out.push({
+      t: 'אי אפשר להפריד ביניהם',
+      d: `${grp.map(nameOf).join(', ')} — כולם מוגדרים "לא באותו שולחן" זה עם זה, ` +
+         `כלומר צריך ${grp.length} שולחנות נפרדים, ויש ${plan.tables.length}.` });
+  }
+  return out;
+}
+function blockerHtml(n) {
+  const b = stepBlockers(n);
+  if (!b.length) return '';
+  return `<div class="blockers">${b.map(x => `<div class="bk">
+    <b>⚠️ ${esc(x.t)}</b><p>${esc(x.d)}</p>
+    ${(x.rules || []).length ? `<button class="bkx" onclick="${x.rules.map(r => `killRule('${r}')`).join(';')}">בטלי את הכלל</button>` : ''}
+  </div>`).join('')}</div>`;
+}
+const canAdvance = n => !stepBlockers(n).length;
+
 function renderStep() {
   saveDraft();
   const w = document.getElementById('wizard');
+  if (step === WELCOME) w.innerHTML = stepWelcome();
   if (step === 1) w.innerHTML = stepChildren();
   if (step === 2) w.innerHTML = stepTables();
   if (step === 3) w.innerHTML = stepStaff();
@@ -574,7 +707,8 @@ function stepChildren() {
     <div class="nav">
       <button class="btn soft" onclick="allKidsOn()">בחרי את כולם</button>
       <button class="btn ghost" onclick="plan.childIds=[];renderStep()">נקי בחירה</button>
-      <button class="btn" onclick="goStep(2)" ${plan.childIds.length ? '' : 'disabled'}>המשך</button>
+      <button class="btn ghost" onclick="goStep(0)">חזרה</button>
+      <button class="btn" ${canAdvance(1) ? "" : "disabled"} onclick="goStep(2)">המשך</button>
     </div></div>`;
 }
 function toggleKid(id) {
@@ -632,9 +766,10 @@ function stepTables() {
                : '<b>' + (cap - need - seated) + ' מקומות פנויים</b> ✓')}</div>
       </div>` : '<div class="count-line" style="margin-top:14px">עוד לא נוספו שולחנות.</div>'}
 
+    ${blockerHtml(2)}
     <div class="nav">
       <button class="btn ghost" onclick="goStep(1)">חזרה</button>
-      <button class="btn" onclick="goStep(3)" ${plan.tables.length ? '' : 'disabled'}>המשך</button>
+      <button class="btn" ${canAdvance(2) ? "" : "disabled"} onclick="goStep(3)" >המשך</button>
     </div></div>`;
 }
 function addTable(tid) {
@@ -706,9 +841,10 @@ function stepStaff() {
             onclick="delSlot('${sid}')">הסר</button>
         </div>`;
       }).join('')}</div>` : '<div class="count-line">אפשר גם בלי אנשי צוות בסידור.</div>'}
+    ${blockerHtml(3)}
     <div class="nav">
       <button class="btn ghost" onclick="goStep(2)">חזרה</button>
-      <button class="btn" onclick="goStep(4)">המשך</button>
+      <button class="btn" ${canAdvance(3) ? "" : "disabled"} onclick="goStep(4)">המשך</button>
     </div></div>`;
 }
 function toggleStaff(id) {
@@ -810,9 +946,10 @@ function stepRules() {
       <button class="btn" onclick="addRule()">הוסף כלל</button>
     </div>
     <div class="rule-list">${plan.rules.map(ruleHtml).join('') || '<div class="count-line">עוד לא הוגדרו כללים.</div>'}</div>
+    ${blockerHtml(4)}
     <div class="nav">
       <button class="btn ghost" onclick="goStep(3)">חזרה</button>
-      <button class="btn" onclick="goStep(5)">המשך</button>
+      <button class="btn" ${canAdvance(4) ? "" : "disabled"} onclick="goStep(5)">המשך</button>
     </div></div>`;
 }
 function renderRuleRow() {
@@ -1234,7 +1371,7 @@ function startFresh() {
     `<button class="btn" onclick="doFresh()">התחלה מחדש</button>
      <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
 }
-function doFresh() { closeModal(); clearDraft(); plan = newPlan(); built = false; goStep(1); }
+function doFresh() { closeModal(); clearDraft(); plan = newPlan(); built = false; goStep(WELCOME); }
 
 // ---- הורדה ל-PDF ----
 // הדפדפן הוא המקור היחיד לגאומטריה: הוא שולח מרכזי מושבים מוחלטים, אחרי
