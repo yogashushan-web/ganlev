@@ -1038,10 +1038,11 @@ function equalGap(tid, x, r) {
 function drawGuides(list) {
   const g = document.getElementById('guides');
   if (!g) return;
+  // הכל נמדד מהקצה השמאלי, כמו מיקום השולחנות והמושבים
   g.innerHTML = (list || []).map(a => {
-    if (a.dir === 'v') return `<div class="gline v" style="right:${ROOM_W - a.at}px"></div>`;
+    if (a.dir === 'v') return `<div class="gline v" style="left:${a.at}px"></div>`;
     if (a.dir === 'h') return `<div class="gline h" style="top:${a.at}px"></div>`;
-    return `<div class="gap-tag" style="right:${ROOM_W - a.at}px;top:${a.y}px">${esc(a.text)}</div>`;
+    return `<div class="gap-tag" style="left:${a.at}px;top:${a.y}px">${esc(a.text)}</div>`;
   }).join('');
 }
 
@@ -1145,12 +1146,13 @@ function seatCenter(t, seat) {
   return { x: l.x + b.w / 2 + dx * Math.cos(a) - dy * Math.sin(a),
            y: l.y + b.h / 2 + dx * Math.sin(a) + dy * Math.cos(a) };
 }
+// המרת מיקום העכבר לקואורדינטות הדף.
+// המושבים ממוקמים ב-CSS לפי left, כלומר מהקצה השמאלי — גם כשהאתר
+// מימין לשמאל. מדידה מהקצה הימני מהפכת את הציר וגורמת לנחיתה בצד ההפוך.
 function roomPoint(ev) {
-  const room = document.getElementById('room');
-  const r = room.getBoundingClientRect();
+  const r = document.getElementById('room').getBoundingClientRect();
   const sc = (r.width / ROOM_W) || 1;
-  // הדף מוצג מימין לשמאל ומוקטן — ההמרה מתבססת על הקצה הימני
-  return { x: (r.right - ev.clientX) / sc, y: (ev.clientY - r.top) / sc, sc };
+  return { x: (ev.clientX - r.left) / sc, y: (ev.clientY - r.top) / sc, sc };
 }
 const SEAT_SNAP = 46;    // רדיוס המשיכה לכיסא — לא צריך לדייק
 function nearestSeat(p) {
