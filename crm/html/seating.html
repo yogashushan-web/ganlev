@@ -309,7 +309,7 @@
   </div>
 
 <script src="js/common.js?v=19"></script>
-<script src="js/api.js?v=19"></script>
+<script src="js/api.js?v=20"></script>
 <script src="js/seating-engine.js?v=3"></script>
 <script>
 const E = SeatingEngine;
@@ -369,6 +369,7 @@ function currentSchoolYear() { const d = new Date(), y = d.getFullYear(); const 
 function renderTop() {
   document.getElementById('topActions').innerHTML = built
     ? `<button class="btn ghost" onclick="backToWizard()">שינוי הגדרות</button>
+       <button class="btn ghost" onclick="openVersions()">גרסאות שמורות</button>
        <button class="btn soft" onclick="saveVersion()">שמור גרסה</button>
        <button class="btn" onclick="savePlan()">שמירה</button>`
     : `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
@@ -1755,7 +1756,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 
 function saveVersion() {
   const def = 'גרסה מ-' + new Date().toLocaleDateString('he-IL');
-  openModal('שמירת גרסה', 'הגרסה נשמרת בנפרד, ואפשר לחזור אליה בכל זמן.',
+  openModal('שמירת גרסה', 'נשמרת בצד ולא דורסת כלום. תמצאי אותה בכפתור "גרסאות שמורות", ואפשר לפתוח אותה כבסיס לסידור חדש.',
     `<input type="text" id="verName" value="${esc(def)}">`,
     `<button class="btn" onclick="doSaveVersion()">שמירה</button>
      <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
@@ -1765,8 +1766,68 @@ async function doSaveVersion() {
   const note = (document.getElementById('verName') || {}).value || '';
   if (!note.trim()) { showErr('צריך לתת שם לגרסה'); return; }
   closeModal();
-  try { await api.saveSeatingPlan(plan); await api.saveSeatingVersion(plan, note.trim()); showOk('נשמרה גרסה'); }
-  catch (e) { showErr('שמירת הגרסה נכשלה: ' + e.message); }
+  try {
+    await api.saveSeatingPlan(plan);
+    await api.saveSeatingVersion(plan, note.trim());
+    showOk(`נשמרה הגרסה "${note.trim()}" · נמצאת בכפתור "גרסאות שמורות"`);
+  } catch (e) { showErr('שמירת הגרסה נכשלה: ' + e.message); }
+}
+
+/* ---------- גרסאות שמורות ---------- */
+// כל "שמור גרסה" מוסיף צילום נפרד של הסידור. כאן רואים את כולן ואפשר
+// לפתוח אחת כבסיס לעבודה חדשה — למשל לפתוח את ספטמבר ולבנות ממנה
+// את נובמבר, בלי לדרוס את ספטמבר.
+let savedVers = [];
+async function openVersions() {
+  openModal('גרסאות שמורות', `כל גרסה היא צילום של "${plan.name}" ברגע שבו נשמרה.`,
+    '<div class="empty-note">טוען…</div>',
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
+  try {
+    const r = await api.getSeatingPlan(plan.id);
+    savedVers = (r && r.versions) || [];
+    renderVerList();
+  } catch (e) {
+    document.getElementById('modalBody').innerHTML =
+      `<div class="empty-note">הטעינה נכשלה: ${esc(e.message)}</div>`;
+  }
+}
+function renderVerList() {
+  const body = savedVers.length
+    ? savedVers.map((v, i) => {
+        const sc = Object.keys((v.plan && v.plan.seats) || {}).length;
+        const when = (v.date || '').split('-').reverse().join('.');
+        return `<div class="plan-row" onclick="openVersion(${i})" title="פתיחה לעריכה">
+          <div><div class="nm">${esc(v.note)}</div>
+            <div class="meta">${when}${sc ? ' · ' + sc + ' יושבים' : ''}</div></div>
+          <button class="rm" onclick="event.stopPropagation();removeVersion(${i})">הסר</button>
+        </div>`;
+      }).join('')
+    : `<div class="empty-note">עוד לא נשמרה אף גרסה.<br>
+        סגרי את החלון ולחצי "שמור גרסה" — הסידור שעל המסך יישמר בצד,
+        ותמיד אפשר יהיה לחזור אליו.</div>`;
+  document.getElementById('modalBody').innerHTML = body;
+}
+function openVersion(i) {
+  const v = savedVers[i]; if (!v || !v.plan) return;
+  closeModal();
+  plan = Object.assign(newPlan(), v.plan);
+  plan.layout = plan.layout || {};
+  plan.okRules = plan.okRules || {};
+  undoStack = []; selectedSeat = null;
+  if (!Object.keys(plan.layout).length) autoLayout('row', true);
+  built = true;
+  document.getElementById('wizard').classList.add('hide');
+  document.getElementById('steps').classList.add('hide');
+  document.getElementById('board').classList.remove('hide');
+  renderTop(); renderBoard();
+  showOk(`נפתחה "${v.note}" לעריכה · "שמור גרסה" ייצור גרסה חדשה ולא ידרוס אותה`);
+}
+// מחיקה בלי שאלה — הגרסה עוברת לפח וניתנת לשחזור
+async function removeVersion(i) {
+  const v = savedVers[i]; if (!v) return;
+  savedVers.splice(i, 1); renderVerList();
+  try { await api.deleteSeatingVersion(v.id); showOk('הוסרה · ניתן לשחזור מהפח'); }
+  catch (e) { showErr('ההסרה נכשלה: ' + e.message); }
 }
 
 let savedPlans = [];

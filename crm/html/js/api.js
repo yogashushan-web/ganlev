@@ -83,6 +83,7 @@ const api = {
   getSeatingPlan: (id) => apiCall(`/seating?garden_id=${getGardenId()}&id=${encodeURIComponent(id)}`),
   saveSeatingPlan: (plan) => apiCall(`/seating?garden_id=${getGardenId()}`, 'POST', { action: 'save', plan }),
   saveSeatingVersion: (plan, note) => apiCall(`/seating?garden_id=${getGardenId()}`, 'POST', { action: 'version', plan, note }),
+  deleteSeatingVersion: (version_id) => apiCall(`/seating?garden_id=${getGardenId()}`, 'POST', { action: 'del-version', version_id }),
   deleteSeatingPlan: (id) => apiCall(`/seating/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 
   // Staff

@@ -92,6 +92,19 @@ const handler = withAuth(async (event) => {
         return json(200, { success: true });
       }
 
+      // הסרת גרסה בודדת. עד עכשיו אפשר היה למחוק רק סידור שלם על כל
+      // גרסאותיו, ולכן גרסה שנשמרה בטעות נתקעה ברשימה.
+      if (b.action === 'del-version') {
+        if (!b.version_id) return json(400, { success: false, error: 'חסר מזהה גרסה' });
+        const { data: rec } = await supabase.from('events')
+          .select('*').eq('garden_id', garden_id).eq('calendar', CAL_VER).eq('id', b.version_id).limit(1);
+        if (rec && rec.length) {
+          await moveToTrash('events', rec[0], garden_id);
+          await supabase.from('events').delete().eq('id', rec[0].id);
+        }
+        return json(200, { success: true });
+      }
+
       return json(400, { success: false, error: 'פעולה לא ידועה' });
     }
 
