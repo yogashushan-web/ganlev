@@ -168,7 +168,13 @@
                border:1.5px solid #e8e4de; border-radius:999px; padding:3px 11px; font-size:12px;
                font-weight:800; box-shadow:0 3px 10px rgba(0,0,0,.14); white-space:nowrap; }
     .rot-tag.snap { color:#8a5a44; border-color:#C4846C; background:#fdf6f2; }
-    .undo-btn:disabled { opacity:.4; cursor:default; }
+    /* כפתור הביטול אומר מה הוא מבטל: "⟲ בטל הזזת שולחן". החץ לבדו,
+       ובעיקר המילה "ביטול" לבדה, נקראים בעברית כ-Cancel. */
+    .undo-btn { display:inline-flex; align-items:center; gap:6px; }
+    .undo-btn b { font-weight:800; }
+    .undo-btn .ua { font-size:15px; line-height:1; transform:translateY(1px); }
+    .undo-btn:not(:disabled):hover { border-color:#1F3D34; background:#f4f9f6; }
+    .undo-btn:disabled { opacity:.45; cursor:default; }
     /* שם האחראית מתחת לשולחן בסקיצה, בצבע שלה */
     .sk-who { font-size:10.5px; font-weight:800; text-align:center; margin-top:4px; }
 
@@ -988,7 +994,7 @@ function centerLayout(L) {
 }
 
 function autoLayout(kind, silent) {
-  if (!silent && built) pushUndo();
+  if (!silent && built) pushUndo('פריסת החדר');
   const boxes = plan.tables.map(t => ({ id: t.id, ...tableBox(t) }));
   const L = {};
   if (kind === 'row') {
@@ -1103,7 +1109,7 @@ function moveMarksWithTable(tid, dx, dy) {
 let dragMark = null;
 function startDragMark(ev, sid) {
   ev.preventDefault(); ev.stopPropagation();
-  if (built) pushUndo();
+  if (built) pushUndo('הזזת סמן צוות');
   const m = plan.marks[sid];
   dragMark = { sid, sx: ev.clientX, sy: ev.clientY, ox: m.x, oy: m.y };
   window.addEventListener('pointermove', onDragMark);
@@ -1131,13 +1137,13 @@ function fitRoom() {
 window.addEventListener('resize', fitRoom);
 // כפתור ה-⟳ נשאר למסך צר, שם אין לאן לגרור ידית קטנה באצבע
 function rotateTable(tid) {
-  pushUndo();
+  pushUndo('סיבוב שולחן');
   const l = plan.layout[tid] || { x: 0, y: 0, rot: 0 };
   l.rot = (l.rot + 45) % 360; plan.layout[tid] = l; renderBoard();
 }
 function resetRot(tid) {
   const l = plan.layout[tid]; if (!l || !l.rot) return;
-  pushUndo();
+  pushUndo('יישור שולחן');
   l.rot = 0; renderBoard();
 }
 
@@ -1170,7 +1176,7 @@ function snapAngle(tid, deg, free) {
 
 function startRotate(ev, tid) {
   ev.preventDefault(); ev.stopPropagation();
-  pushUndo();
+  pushUndo('סיבוב שולחן');
   const wrap = document.querySelector(`.twrap[data-t="${tid}"]`);
   const r = wrap.getBoundingClientRect();
   rotDrag = { tid, cx: r.left + r.width / 2, cy: r.top + r.height / 2,
@@ -1353,8 +1359,8 @@ function whyImpossible(r) {
 
 // "בסדר, ככה זה טוב" — החריגה מאושרת, האדום נעלם, והסידור נחשב גמור.
 // תמיד הפיך, ותמיד נספר בגלוי כדי שלא ייעלם מידע בשקט.
-function acceptViol(id) { pushUndo(); plan.okRules[id] = true; renderBoard(); }
-function unacceptViol(id) { pushUndo(); delete plan.okRules[id]; renderBoard(); }
+function acceptViol(id) { pushUndo('אישור חריגה'); plan.okRules[id] = true; renderBoard(); }
+function unacceptViol(id) { pushUndo('החזרת חריגה לבדיקה'); delete plan.okRules[id]; renderBoard(); }
 
 // מד שלמות: כמה ילדים באמת יושבים, ומי לא. תמיד מול העיניים, כדי שלא
 // ייגמר סידור עם שני ילדים שנשכחו בצד או שלא הגיעו לשום כיסא.
@@ -1455,7 +1461,7 @@ function seatChild(cid) {
     for (const s of tplOf(t).seats) {
       const k = E.key(t.id, s.id);
       if (plan.seats[k] || plan.locks[k]) continue;
-      pushUndo();
+      pushUndo('הושבת ילד');
       if (plan.parked) delete plan.parked[cid];
       plan.seats[k] = cid;
       renderBoard();
@@ -1529,7 +1535,9 @@ function renderBoard() {
         <span style="color:#9B8E82;font-size:13px"> · ${plan.childIds.length} ילדים · ${plan.tables.length} שולחנות</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn ghost undo-btn" onclick="undoMove()" ${undoStack.length ? '' : 'disabled'}
-          title="${undoStack.length ? 'ביטול הפעולה האחרונה' : 'אין מה לבטל'}">↶ ביטול</button>
+          title="${undoStack.length ? 'מחזיר את המצב שלפני הפעולה · Ctrl+Z' : 'עוד לא בוצעה פעולה שאפשר להחזיר'}">
+          <span class="ua">⟲</span>${undoStack.length
+            ? `בטל <b>${esc(undoLabel())}</b>` : 'אין מה לבטל'}</button>
         <button class="btn soft" onclick="reSolve()">סדרי מחדש</button>
         <button class="btn ghost" id="pdfBtn" onclick="downloadPdf()">📄 הורדה ל-PDF</button>
         <button class="btn ghost" onclick="window.print()">הדפסה</button>
@@ -1542,7 +1550,7 @@ function renderBoard() {
       <div class="zoombar">
         <input type="range" id="zoomR" min="50" max="200" step="1" value="${Math.round(zoomOf() * 100)}"
           aria-label="גודל התוכן על הדף"
-          onpointerdown="pushUndo()" oninput="liveZoom(this.value)" onchange="renderBoard()">
+          onpointerdown="pushUndo('שינוי גודל')" oninput="liveZoom(this.value)" onchange="renderBoard()">
         <span class="zv" id="zoomV">${Math.round(zoomOf() * 100)}%</span>
         <button class="lb" onclick="fitToPage()" title="ממלא את הדף בלי לחרוג משוליו">התאם לדף</button>
       </div>
@@ -1672,7 +1680,7 @@ const ITEM_KINDS = [
 const itemKind = k => ITEM_KINDS.find(x => x.id === k) || ITEM_KINDS[0];
 
 function addItem(kind) {
-  pushUndo();
+  pushUndo('הוספת פריט');
   const k = itemKind(kind);
   plan.items = plan.items || [];
   const n = plan.items.length;
@@ -1683,7 +1691,7 @@ function addItem(kind) {
   renderBoard();
 }
 function removeItem(id) {
-  pushUndo();
+  pushUndo('הסרת פריט');
   plan.items = (plan.items || []).filter(i => i.id !== id);
   renderBoard();
 }
@@ -1717,7 +1725,7 @@ function renameItem(id) {
   let done = false;
   const finish = save => {
     if (done) return; done = true;
-    if (save) { const v = inp.value.trim(); if (v && v !== it.name) { pushUndo(); it.name = v; } }
+    if (save) { const v = inp.value.trim(); if (v && v !== it.name) { pushUndo('שינוי שם פריט'); it.name = v; } }
     renderBoard();
   };
   inp.addEventListener('blur', () => finish(true));
@@ -1730,7 +1738,7 @@ let itemDrag = null;
 function startItemDrag(ev, id) {
   const it = (plan.items || []).find(x => x.id === id); if (!it) return;
   ev.preventDefault(); ev.stopPropagation();
-  pushUndo();
+  pushUndo('הזזת פריט');
   itemDrag = { id, sx: ev.clientX, sy: ev.clientY, ox: it.x, oy: it.y };
   try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
   window.addEventListener('pointermove', onItemDrag);
@@ -1765,7 +1773,7 @@ function liveZoom(v) {
 // שני השלבים חייבים לקרות יחד — הגדלה בלי מרכוז מוציאה תוכן מהדף.
 function fitToPage() {
   if (!plan.tables.length) return;
-  pushUndo();
+  pushUndo('התאמה לדף');
   ensureMarkers();
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   const add = (x, y, w, h) => {
@@ -1888,7 +1896,7 @@ function drawGuides(list) {
 let drag = null;
 function startDrag(ev, tid) {
   ev.preventDefault();
-  if (built) pushUndo();
+  if (built) pushUndo('הזזת שולחן');
   const l = plan.layout[tid] || { x: 0, y: 0, rot: 0 };
   drag = { tid, sx: ev.clientX, sy: ev.clientY, ox: l.x, oy: l.y };
   window.addEventListener('pointermove', onDrag);
@@ -1916,7 +1924,7 @@ function endDrag() { window.removeEventListener('pointermove', onDrag); drag = n
 // הכוונה של הגננת נשמרת — רק הדיוק מתווסף.
 function tidyLayout() {
   if (plan.tables.length < 2) return;
-  pushUndo();
+  pushUndo('סידור השולחנות');
   const items = plan.tables.map(t => ({ t, l: plan.layout[t.id] || { x: 0, y: 0, rot: 0 } }))
     .map(o => ({ ...o, r: tableRect(o.t, o.l) }));
 
@@ -1965,7 +1973,7 @@ function renameTable(tid) {
   let done = false;
   const finish = save => {
     if (done) return; done = true;
-    if (save) { const v = inp.value.trim(); if (v && v !== t.name) { pushUndo(); t.name = v; } }
+    if (save) { const v = inp.value.trim(); if (v && v !== t.name) { pushUndo('שינוי שם שולחן'); t.name = v; } }
     renderBoard();
   };
   inp.addEventListener('keydown', e => {
@@ -2116,7 +2124,7 @@ function endChildDrag(ev) {
   const key = d.target;
   if (key && plan.locks[key]) { showErr('המקום נעול — קליק ימני משחרר'); renderBoard(); return; }
 
-  pushUndo();
+  pushUndo('שינוי גודל');
   const p = roomPoint(ev);
   plan.parked = plan.parked || {};
   if (d.kind === 'seat') delete plan.seats[d.id]; else delete plan.parked[d.who];
@@ -2157,31 +2165,46 @@ function snapshot() {
     names: plan.tables.map(t => t.name),
   });
 }
-function pushUndo() {
+// כל צעד נושא את שמו, כדי שהכפתור יוכל לומר *מה* הוא מבטל ולא רק
+// "ביטול" — שבעברית נקרא בדרך כלל כ"Cancel" ולא כ"בטל את מה שעשיתי".
+function pushUndo(label) {
   const s = snapshot();
-  if (undoStack[undoStack.length - 1] === s) return;   // בלי כפילויות
-  undoStack.push(s);
+  const top = undoStack[undoStack.length - 1];
+  if (top && top.s === s) return;                      // בלי כפילויות
+  undoStack.push({ s, label: label || 'הפעולה האחרונה' });
   if (undoStack.length > 40) undoStack.shift();
 }
+const undoLabel = () => (undoStack[undoStack.length - 1] || {}).label || '';
 function showUndo(msg) {
   const old = document.getElementById('undoBar'); if (old) old.remove();
   clearTimeout(undoTimer);
   const b = document.createElement('div');
   b.className = 'undo'; b.id = 'undoBar';
-  b.innerHTML = `<span>${esc(msg)}</span><button onclick="undoMove()">ביטול</button>`;
+  b.innerHTML = `<span>${esc(msg)}</span><button onclick="undoMove()">⟲ בטל</button>`;
   document.body.appendChild(b);
   undoTimer = setTimeout(() => b.remove(), 6000);
 }
 function undoMove() {
-  const s = undoStack.pop(); if (!s) return;
-  const p = JSON.parse(s);
+  const e = undoStack.pop(); if (!e) return;
+  const p = JSON.parse(e.s);
   plan.seats = p.seats; plan.parked = p.parked; plan.layout = p.layout; plan.zoom = p.zoom || 1;
   plan.marks = p.marks; plan.okRules = p.okRules; plan.items = p.items || [];
   (p.names || []).forEach((n, i) => { if (plan.tables[i]) plan.tables[i].name = n; });
   selectedSeat = null;
   const b = document.getElementById('undoBar'); if (b) b.remove();
   renderBoard();
+  showOk(`בוטל: ${e.label}`);
 }
+
+// Ctrl+Z / ⌘Z — מה שכל אחד מנסה קודם
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+    const t = e.target;
+    if (t && /^(INPUT|TEXTAREA)$/.test(t.tagName)) return;   // עריכת שם — לדפדפן
+    if (!built || !undoStack.length) return;
+    e.preventDefault(); undoMove();
+  }
+});
 
 function parkedHtml() {
   const ep = enginePlan();
@@ -2205,7 +2228,7 @@ function tapSeat(k) {
   if (!selectedSeat) { if (plan.seats[k]) { selectedSeat = k; renderBoard(); } return; }
   if (selectedSeat === k) { selectedSeat = null; renderBoard(); return; }
   if (plan.locks[selectedSeat] || plan.locks[k]) { showErr('אחד המקומות נעול — קליק ימני משחרר'); selectedSeat = null; renderBoard(); return; }
-  pushUndo();
+  pushUndo('החלפת מקומות');
   const a = plan.seats[selectedSeat], b = plan.seats[k];
   if (b) plan.seats[selectedSeat] = b; else delete plan.seats[selectedSeat];
   plan.seats[k] = a; selectedSeat = null; renderBoard();
@@ -2213,13 +2236,13 @@ function tapSeat(k) {
 }
 function toggleLock(k) {
   if (!plan.seats[k]) return;
-  pushUndo();
+  pushUndo('נעילת מקום');
   if (plan.locks[k]) delete plan.locks[k]; else plan.locks[k] = plan.seats[k];
   renderBoard();
 }
 function killRule(id) { const r = plan.rules.find(x => x.id === id); if (r) r.active = false; renderBoard(); }
 function reSolve() {
-  pushUndo();
+  pushUndo('סידור מחדש');
   const res = E.solve(enginePlan(), tplOf, { split: plan.split, locks: plan.locks, prefer: preferMap() });
   if (!res.ok) { showErr('לא נמצא סידור טוב יותר עם הכללים הנוכחיים'); return; }
   plan.seats = res.seats; plan.parked = {}; renderBoard(); showOk('סודר מחדש');
