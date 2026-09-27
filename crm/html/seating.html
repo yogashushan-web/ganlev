@@ -228,6 +228,40 @@
     .parked:hover { opacity:1; border-style:solid; }
     /* אותו שם במד למעלה, כדי שיהיה ברור שמדובר באותו ילד */
     .mwho button.onpage { border-style:solid; background:#fdf6f2; }
+    /* ---- אלרגיה על הכיסא ---- */
+    /* תג קטן מתחת לכיסא. אדום כי זה הדבר היחיד בדף שקריאתו דחופה. */
+    .seat .alg { position:absolute; bottom:-8px; left:50%; transform:translateX(-50%);
+                 background:#c94147; color:#fff; border-radius:999px; padding:1px 7px;
+                 font-size:9px; font-weight:800; white-space:nowrap; letter-spacing:.2px;
+                 max-width:104px; overflow:hidden; text-overflow:ellipsis; }
+    .seat { overflow:visible; }
+    /* בחירת פריט בחלון */
+    .ipick { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
+    .ipick button { display:flex; align-items:center; gap:9px; background:#FAF8F4;
+                    border:1px solid #efe9e0; border-radius:12px; padding:12px 14px;
+                    font-family:'Heebo'; font-size:13.5px; font-weight:700; color:#1F3D34;
+                    cursor:pointer; text-align:right; }
+    .ipick button:hover { border-color:#1F3D34; background:#f4f9f6; }
+    .ipick .e { font-size:20px; }
+    /* רשימת האלרגיות */
+    .alrow { display:flex; align-items:center; gap:10px; padding:9px 2px;
+             border-bottom:1px solid #f1ece4; flex-wrap:wrap; }
+    .alrow > b { color:#1F3D34; font-size:13.5px; min-width:110px; }
+    .alrow .bub { display:flex; gap:5px; flex-wrap:wrap; flex:1; }
+    .alrow .none { color:#c4bbb0; font-size:12px; font-weight:700; }
+    .alrow .al { background:#fdf0ef; border:1px solid #f3cfc9; color:#c94147; border-radius:999px;
+                 padding:3px 10px; font-size:11.5px; font-weight:800; font-family:'Heebo'; cursor:pointer; }
+    .alrow .al:hover { background:#c94147; color:#fff; border-color:#c94147; }
+    .alrow select { border:1px solid #e8e4de; border-radius:8px; padding:5px 8px;
+                    font-family:'Heebo'; font-size:12px; color:#6f6457; }
+    .hint-box { background:#fdf6e9; border:1px solid #e8c88a; border-radius:12px;
+                padding:13px 15px; margin-bottom:14px; }
+    .hint-box b { color:#b8801f; font-size:13.5px; }
+    .hint-box p { font-size:12px; color:#8a6a23; line-height:1.65; margin:4px 0 9px; }
+    .hint-box .hb { background:#fff; border:1px solid #e8c88a; color:#8a6a23; border-radius:999px;
+                    padding:5px 12px; font-size:12px; font-weight:700; font-family:'Heebo';
+                    cursor:pointer; margin:0 0 5px 5px; }
+
     /* ---- מקרא בתחתית הדף ---- */
     .rlegend { position:absolute; left:0; right:0; bottom:9px; display:flex; flex-wrap:wrap;
                justify-content:center; gap:7px 16px; padding:0 30px; direction:rtl; }
@@ -246,6 +280,7 @@
     .ritem:active { cursor:grabbing; }
     .ritem.door { background:#fff; border-style:solid; border-width:0 0 4px 0;
                   border-color:#9B8E82; border-radius:0; font-size:11px; align-items:flex-end; }
+    .ritem .iico { font-size:15px; margin-left:5px; }
     .ritem .inm { cursor:text; padding:1px 4px; border-radius:5px; border:1px dashed transparent; }
     .ritem .inm:hover { border-color:#C4846C; background:rgba(255,255,255,.75); }
     .ritem .idel { position:absolute; top:-9px; left:-6px; background:#fff; border:1px solid #e8e1d6;
@@ -385,7 +420,7 @@
   </div>
 
 <script src="js/common.js?v=20"></script>
-<script src="js/api.js?v=20"></script>
+<script src="js/api.js?v=21"></script>
 <script src="js/seating-engine.js?v=3"></script>
 <script>
 const E = SeatingEngine;
@@ -428,6 +463,7 @@ function toggleAlt(sid) {
 async function boot() {
   try {
     const [rc, rs] = await Promise.all([api.getChildren(), api.getStaff()]);
+  loadHealth();   // ברקע — הדף לא מחכה לזה
     const year = currentSchoolYear();
     allKids = ((rc && rc.data) || [])
       .filter(c => (c.school_year || year) === year && c.status === 'active')
@@ -1205,7 +1241,8 @@ function sheetData() {
     const c = seatCenter(t, s), pid = plan.seats[E.key(t.id, s.id)];
     const p = pid ? ep.people[pid] : null;
     seats.push({ x: Math.round(ZX(c.x)), y: Math.round(ZY(c.y)),
-                 label: p ? p.name : '', kind: p ? p.kind : 'empty' });
+                 label: p ? p.name : '', kind: p ? p.kind : 'empty',
+                 allergy: pid ? allergiesOf(pid).map(allergenName).join(' · ') : '' });
   }));
   ensureMarkers();
   const marks = offSlots().map(sid => ({
@@ -1393,7 +1430,10 @@ function renderBoard() {
         transform:rotate(${-l.rot}deg)"
         onpointerdown="startChildDrag(event,'seat','${k}')"
         oncontextmenu="event.preventDefault();toggleLock('${k}')"
-        title="${p ? esc(p.name) : 'מקום פנוי'}">${p ? esc(p.name) : ''}</div>`;
+        title="${p ? esc(p.name) : 'מקום פנוי'}">${p ? esc(p.name) : ''}${
+          pid && allergiesOf(pid).length
+            ? `<span class="alg" title="${esc(allergiesOf(pid).map(allergenName).join(' · '))}">${
+                esc(allergiesOf(pid).map(allergenName).join(' · '))}</span>` : ''}</div>`;
     }).join('');
     // אין יותר נקודות צבע ליד השם — הן דרכו על הכיסא הסמוך. הצבע עבר
     // למשטח השולחן עצמו, שם יש לו מקום והוא נקלט מרחוק.
@@ -1455,16 +1495,88 @@ function renderBoard() {
         <button class="lb" onclick="fitToPage()" title="ממלא את הדף בלי לחרוג משוליו">התאם לדף</button>
       </div>
     </div>
-    <div class="layouts">
-      <span style="font-size:12.5px;color:#9B8E82;font-weight:700">פריטים בחדר:</span>
-      ${ITEM_KINDS.map(k => `<button class="lb" onclick="addItem('${k.id}')">${k.ico} ${esc(k.name)}</button>`).join('')}
-    </div>
+      <button class="lb" onclick="openItems()">🍲 פריטים בחדר</button>
+      <button class="lb" onclick="openAllergies()">⚠️ אלרגיות</button>
     <div class="a4note">📄 הדף בגודל A4 לרוחב — מה שנראה כאן הוא בדיוק מה שיודפס</div>
     <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">
       <div class="rscale" id="rscale" style="transform:scale(${zoomOf()})">${tablesHtml}${itemsHtml()}${markersHtml()}${parkedHtml()}<div id="guides"></div></div>${legendHtml()}</div></div>
     <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
       גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
   fitRoom();
+}
+
+/* ---------- אלרגיות ---------- */
+// הדף הזה נקרא בזמן הגשת אוכל, ולכן זה המקום היחיד שבו הסימון הזה
+// באמת עובד. האלרגיות שמורות על הילד ולא על הסידור — הן נכונות בכל
+// סידור, וגם אחרי שמוחקים את זה ובונים חדש.
+const ALLERGENS = [
+  { code: 'milk',   name: 'חלב' },   { code: 'egg',    name: 'ביצים' },
+  { code: 'peanut', name: 'בוטנים' }, { code: 'nuts',   name: 'אגוזים' },
+  { code: 'sesame', name: 'שומשום' }, { code: 'gluten', name: 'גלוטן' },
+];
+const allergenName = c => (ALLERGENS.find(a => a.code === c) || {}).name || c;
+let health = {}, healthHints = {};
+
+async function loadHealth() {
+  try {
+    const r = await api.getChildHealth();
+    health = (r && r.health) || {};
+    healthHints = (r && r.hints) || {};
+  } catch (e) { health = {}; healthHints = {}; }
+}
+const allergiesOf = cid => health[cid] || [];
+
+async function setAllergies(cid, list) {
+  health[cid] = list;
+  renderAllergyList(); if (built) renderBoard();
+  try { await api.setChildAllergies(cid, list); }
+  catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+// לחיצה על בועה מסירה אותה — בגיל הזה אלרגיות חולפות במהלך השנה,
+// וההסרה היא פעולה שגרתית ולא חריגה שצריך לאשר.
+function dropAllergy(cid, code) { setAllergies(cid, allergiesOf(cid).filter(c => c !== code)); }
+function addAllergy(cid, code) {
+  if (!code || allergiesOf(cid).includes(code)) return;
+  setAllergies(cid, allergiesOf(cid).concat([code]));
+}
+
+function openAllergies() {
+  openModal('אלרגיות ורגישויות', 'נשמר על הילד, ומופיע על כל סידור ועל הדף המודפס. לחיצה על בועה מסירה אותה.',
+    '<div class="empty-note">טוען…</div>',
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
+  loadHealth().then(renderAllergyList);
+}
+function renderAllergyList() {
+  const box = document.getElementById('modalBody');
+  if (!box || !document.getElementById('modalOv').classList.contains('show')) return;
+
+  // ילדים עם רמז מהכרטיס האישי שעוד לא אושר — מוצעים למעלה
+  const pend = plan.childIds.filter(c =>
+    (healthHints[c] || []).some(code => !allergiesOf(c).includes(code)));
+
+  const rows = plan.childIds.map(c => {
+    const have = allergiesOf(c);
+    const free = ALLERGENS.filter(a => !have.includes(a.code));
+    return `<div class="alrow">
+      <b>${esc(nameOf(c))}</b>
+      <div class="bub">${have.map(code =>
+        `<button class="al" onclick="dropAllergy('${c}','${code}')" title="לחיצה מסירה">${esc(allergenName(code))} ✕</button>`).join('')
+        || '<span class="none">אין</span>'}</div>
+      ${free.length ? `<select onchange="addAllergy('${c}',this.value);this.value=''">
+        <option value="">+ הוספה…</option>
+        ${free.map(a => `<option value="${a.code}">${esc(a.name)}</option>`).join('')}</select>` : ''}
+    </div>`;
+  }).join('');
+
+  box.innerHTML = `${pend.length ? `<div class="hint-box">
+      <b>ההורים כבר כתבו על רגישויות</b>
+      <p>נמצאו רמזים בטקסט החופשי שבכרטיס האישי. זו סריקת מילים בלבד —
+        היא לא מבינה משפט כמו "אין אלרגיה לבוטנים", ולכן צריך לאשר כל אחת.</p>
+      ${pend.map(c => (healthHints[c] || []).filter(code => !allergiesOf(c).includes(code))
+        .map(code => `<button class="hb" onclick="addAllergy('${c}','${code}')">
+          + ${esc(nameOf(c))} · ${esc(allergenName(code))}</button>`).join('')).join('')}
+    </div>` : ''}
+    ${rows || '<div class="empty-note">אין ילדים בסידור.</div>'}`;
 }
 
 /* ---------- מקרא ---------- */
@@ -1529,11 +1641,21 @@ function itemsHtml() {
     <div class="ritem ${it.kind}" data-i="${it.id}"
       style="left:${it.x}px;top:${it.y}px;width:${it.w}px;height:${it.h}px"
       onpointerdown="startItemDrag(event,'${it.id}')">
+      ${it.kind === 'door' ? '' : `<span class="iico">${itemKind(it.kind).ico}</span>`}
       <span class="inm" onclick="event.stopPropagation();renameItem('${it.id}')"
         title="לחיצה משנה את השם">${esc(it.name)}</span>
       <button class="idel" onclick="event.stopPropagation();removeItem('${it.id}')"
         onpointerdown="event.stopPropagation()">הסר</button>
     </div>`).join('');
+}
+
+// חלון בחירה במקום שורה ארוכה של כפתורים
+function openItems() {
+  openModal('פריטים בחדר', 'דברים שאינם שולחן אבל הם חלק מהארוחה. אפשר לגרור אותם למקומם ולשנות את השם.',
+    `<div class="ipick">${ITEM_KINDS.map(k => `
+      <button onclick="addItem('${k.id}');closeModal()">
+        <span class="e">${k.ico}</span><span>${esc(k.name)}</span></button>`).join('')}</div>`,
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
 }
 function renameItem(id) {
   const it = (plan.items || []).find(x => x.id === id); if (!it) return;

@@ -84,6 +84,10 @@ const api = {
   saveSeatingPlan: (plan) => apiCall(`/seating?garden_id=${getGardenId()}`, 'POST', { action: 'save', plan }),
   saveSeatingVersion: (plan, note) => apiCall(`/seating?garden_id=${getGardenId()}`, 'POST', { action: 'version', plan, note }),
   deleteSeatingVersion: (version_id) => apiCall(`/seating?garden_id=${getGardenId()}`, 'POST', { action: 'del-version', version_id }),
+
+  // Food allergies per child (stored as JSON in events, calendar='child-health')
+  getChildHealth: () => apiCall(`/child-health?garden_id=${getGardenId()}`),
+  setChildAllergies: (child_id, allergies) => apiCall(`/child-health?garden_id=${getGardenId()}`, 'POST', { child_id, allergies }),
   deleteSeatingPlan: (id) => apiCall(`/seating/${id}?garden_id=${getGardenId()}`, 'DELETE'),
 
   // Staff

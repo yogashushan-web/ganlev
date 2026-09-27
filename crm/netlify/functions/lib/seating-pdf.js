@@ -75,6 +75,42 @@ function drawMarkIcon(doc, kind, x, y, s, color) {
   doc.restore();
 }
 
+// אותם אמוג'י שעל המסך, כווקטור — כדי שהדף המודפס יהיה זהה לו.
+// צורות פשוטות בכוונה: בגודל 12 נקודות ציור מפורט נמרח לכתם.
+function drawItemIcon(doc, kind, x, y, s, color) {
+  doc.save();
+  doc.lineWidth(Math.max(0.4, s * 0.09)).strokeColor(color).fillColor(color)
+     .lineJoin('round').lineCap('round');
+  const cx = x + s / 2;
+  if (kind === 'serve') {                       // קערה עם אדים
+    doc.moveTo(x + s * 0.12, y + s * 0.5).lineTo(x + s * 0.88, y + s * 0.5)
+       .quadraticCurveTo(cx, y + s * 0.98, x + s * 0.12, y + s * 0.5).stroke();
+    doc.moveTo(cx - s * 0.16, y + s * 0.3).lineTo(cx - s * 0.16, y + s * 0.12).stroke();
+    doc.moveTo(cx + s * 0.16, y + s * 0.3).lineTo(cx + s * 0.16, y + s * 0.12).stroke();
+  } else if (kind === 'clear') {                // ערימת צלחות
+    [0.42, 0.62, 0.82].forEach(f =>
+      doc.moveTo(x + s * 0.14, y + s * f).lineTo(x + s * 0.86, y + s * f).stroke());
+    doc.ellipse(cx, y + s * 0.26, s * 0.34, s * 0.13).stroke();
+  } else if (kind === 'sink') {                 // ברז מעל אגן
+    doc.moveTo(x + s * 0.14, y + s * 0.6).lineTo(x + s * 0.86, y + s * 0.6)
+       .lineTo(x + s * 0.72, y + s * 0.92).lineTo(x + s * 0.28, y + s * 0.92).closePath().stroke();
+    doc.moveTo(cx, y + s * 0.6).lineTo(cx, y + s * 0.28)
+       .lineTo(x + s * 0.76, y + s * 0.28).stroke();
+  } else if (kind === 'cart') {                 // עגלה עם גלגלים
+    doc.moveTo(x + s * 0.1, y + s * 0.2).lineTo(x + s * 0.28, y + s * 0.2)
+       .lineTo(x + s * 0.46, y + s * 0.66).lineTo(x + s * 0.88, y + s * 0.66)
+       .lineTo(x + s * 0.94, y + s * 0.3).lineTo(x + s * 0.32, y + s * 0.3).stroke();
+    doc.circle(x + s * 0.52, y + s * 0.86, s * 0.09).fill();
+    doc.circle(x + s * 0.84, y + s * 0.86, s * 0.09).fill();
+  } else {                                      // ארון: שתי דלתות וידיות
+    doc.rect(x + s * 0.14, y + s * 0.1, s * 0.72, s * 0.8).stroke();
+    doc.moveTo(cx, y + s * 0.1).lineTo(cx, y + s * 0.9).stroke();
+    doc.circle(cx - s * 0.1, y + s * 0.5, s * 0.055).fill();
+    doc.circle(cx + s * 0.1, y + s * 0.5, s * 0.055).fill();
+  }
+  doc.restore();
+}
+
 function fontPath(name) {
   const tries = [
     path.join(__dirname, '..', 'assets', name),
@@ -166,8 +202,15 @@ function buildSeatingPdf(sheet) {
              .dash(3, { space: 2 }).strokeColor('#c9bda9').stroke().undash();
         }
         doc.font('heB').fontSize(Math.max(5.6, 11 * k * z)).fillColor('#6f6457');
-        drawCentered(doc, it.name, x + w / 2, it.kind === 'door' ? y + h - 5 * k : y + h / 2,
-                     w * 0.9, 2);
+        if (it.kind === 'door') { drawCentered(doc, it.name, x + w / 2, y + h - 5 * k, w * 0.9, 1); }
+        else {
+          // הסמל מימין לשם, כמו על המסך
+          const ic = Math.min(h * 0.5, 15 * k * z);
+          const tw = lineWidth(doc, wordsOf(it.name));
+          const tot = ic + ic * 0.35 + tw, sx = x + (w - tot) / 2;
+          drawItemIcon(doc, it.kind, sx + tot - ic, y + (h - ic) / 2, ic, '#8a7f70');
+          drawWordsRtl(doc, wordsOf(it.name), sx + tw, y + (h - doc.currentLineHeight()) / 2);
+        }
       });
 
       // הכיסאות — נקודות מוחלטות שהדפדפן כבר חישב, כולל סיבוב
@@ -188,6 +231,16 @@ function buildSeatingPdf(sheet) {
         doc.font('heB').fontSize(Math.max(5.6, 10.5 * k * z))
            .fillColor(s.kind === 'staff' ? C.staffInk : C.childInk);
         drawCentered(doc, s.label, cx, cy, r * 1.85, 3);
+
+        // אלרגיה: הדבר היחיד על הדף שקריאתו דחופה, ולכן אדום ומתחת לשם
+        if (!s.allergy) return;
+        doc.font('heB').fontSize(Math.max(5, 8.5 * k * z));
+        const aw = lineWidth(doc, wordsOf(s.allergy));
+        const ah = doc.currentLineHeight(), pad = 3.5 * k * z;
+        const bx = cx - (aw + pad * 2) / 2, by = cy + r - ah * 0.25;
+        doc.roundedRect(bx, by, aw + pad * 2, ah + 1, (ah + 1) / 2).fillColor('#c94147').fill();
+        doc.fillColor('#ffffff');
+        drawWordsRtl(doc, wordsOf(s.allergy), bx + aw + pad, by + 0.5);
       });
 
       // שם השולחן במרכזו, תמיד זקוף גם כששולחן מסובב — ואחרי הכיסאות,
