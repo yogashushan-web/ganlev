@@ -145,7 +145,7 @@
     .mhint { font-size:11.5px; color:#9B8E82; }
 
     /* גרירת ילד: צל שעוקב אחרי האצבע, וכיסא שמואר כשמתקרבים אליו */
-    .ghost { position:fixed; pointer-events:none; z-index:10000; width:54px; height:54px; border-radius:50%;
+    .dragghost { position:fixed; pointer-events:none; z-index:10000; width:54px; height:54px; border-radius:50%;
              background:#eef5fb; border:2px solid #5f93b8; color:#2c4d66; display:flex; align-items:center;
              justify-content:center; text-align:center; font-size:11px; font-weight:700; padding:3px;
              line-height:1.12; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,.2); opacity:.95; }
@@ -943,6 +943,64 @@ function startFresh() {
 }
 function doFresh() { closeModal(); clearDraft(); plan = newPlan(); built = false; goStep(1); }
 
+// ---- הורדה ל-PDF ----
+// הדפדפן הוא המקור היחיד לגאומטריה: הוא שולח מרכזי מושבים מוחלטים, אחרי
+// שהסיבוב כבר חושב. כך הדף המודפס לא יכול להתרחק ממה שרואים על המסך.
+function sheetData() {
+  const ep = enginePlan();
+  const tables = plan.tables.map(t => {
+    const l = plan.layout[t.id] || { x: 0, y: 0, rot: 0 }, b = tableBox(t), tp = tplOf(t);
+    return { name: t.name, shape: tp.shape === 'round' ? 'round' : 'rect', rot: l.rot || 0,
+             x: l.x + PAD, y: l.y + PAD, w: tp.w * S, h: tp.h * S };
+  });
+  const seats = [];
+  plan.tables.forEach(t => tplOf(t).seats.forEach(s => {
+    const c = seatCenter(t, s), pid = plan.seats[E.key(t.id, s.id)];
+    const p = pid ? ep.people[pid] : null;
+    seats.push({ x: Math.round(c.x), y: Math.round(c.y),
+                 label: p ? p.name : '', kind: p ? p.kind : 'empty' });
+  }));
+  ensureMarkers();
+  const marks = offSlots().map(sid => ({
+    x: plan.marks[sid].x, y: plan.marks[sid].y,
+    label: slotName(sid), color: markColor(sid),
+  }));
+
+  const taken = new Set(Object.values(plan.seats));
+  const out = plan.childIds.filter(c => !taken.has(c));
+  const d = new Date();
+  const dd = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+
+  return {
+    name: plan.name, tables, seats, marks,
+    meta: `${dd}  ·  ${plan.childIds.length - out.length}/${plan.childIds.length}`,
+    note: out.length ? `לא יושבים: ${out.map(nameOf).join(', ')}` : '',
+  };
+}
+
+async function downloadPdf() {
+  const btn = document.getElementById('pdfBtn');
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'מכין…';
+  try {
+    const res = await fetch('/.netlify/functions/seating-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json',
+                 'Authorization': 'Bearer ' + localStorage.getItem('crm_token') },
+      body: JSON.stringify({ sheet: sheetData() }),
+    });
+    if (!res.ok) throw new Error('סטטוס ' + res.status);
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `סידור ישיבה — ${plan.name}.pdf`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch (e) {
+    showErr('ההורדה נכשלה: ' + e.message + ' — אפשר בינתיים דרך הדפסה ושמירה כ-PDF');
+  } finally { btn.disabled = false; btn.textContent = label; }
+}
+
 // האם הכלל בכלל ניתן לקיום בסידור הזה? חריגה שנובעת מכלל שבור היא לא
 // בעיה בישיבה — אין שום גרירה שתפתור אותה, ולכן אסור להציג אותה כאילו
 // המשתמש עוד לא סיים. מחזיר טקסט הסבר, או null אם הכלל בר-קיום.
@@ -1078,6 +1136,7 @@ function renderBoard() {
         <span style="color:#9B8E82;font-size:13px"> · ${plan.childIds.length} ילדים · ${plan.tables.length} שולחנות</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn soft" onclick="reSolve()">סדרי מחדש</button>
+        <button class="btn ghost" id="pdfBtn" onclick="downloadPdf()">📄 הורדה ל-PDF</button>
         <button class="btn ghost" onclick="window.print()">הדפסה</button>
       </div>
     </div>
@@ -1358,7 +1417,7 @@ function onChildDrag(ev) {
     selectedSeat = null;      // גרירה מבטלת בחירה קודמת, אחרת נשאר עיגול תקוע
     document.getElementById('room').classList.add('drag-live');
     const g = document.createElement('div');
-    g.className = 'ghost'; g.id = 'ghost';
+    g.className = 'dragghost'; g.id = 'dragghost';
     g.textContent = nameOf(childDrag.who);
     document.body.appendChild(g);
     // המקור נשאר חצי-שקוף כדי שיהיה ברור מאיפה באנו
@@ -1371,7 +1430,7 @@ function onChildDrag(ev) {
       if (!plan.seats[el.dataset.k] && !plan.locks[el.dataset.k]) el.classList.add('open');
     });
   }
-  const g = document.getElementById('ghost');
+  const g = document.getElementById('dragghost');
   if (g) { g.style.left = (ev.clientX - 27) + 'px'; g.style.top = (ev.clientY - 27) + 'px'; }
 
   // המושב הקרוב, עם השהיה בשחרור כדי שהסימון לא יהבהב על הגבול
@@ -1398,7 +1457,7 @@ function clearTarget() {
 
 function endChildDrag(ev) {
   window.removeEventListener('pointermove', onChildDrag);
-  const g = document.getElementById('ghost'); if (g) g.remove();
+  const g = document.getElementById('dragghost'); if (g) g.remove();
   const room = document.getElementById('room');
   if (room) room.classList.remove('drag-live');
   clearTarget();
