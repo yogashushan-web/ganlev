@@ -221,11 +221,11 @@
     /* אותו שם במד למעלה, כדי שיהיה ברור שמדובר באותו ילד */
     /* ---- אלרגיה על הכיסא ---- */
     /* תג קטן מתחת לכיסא. אדום כי זה הדבר היחיד בדף שקריאתו דחופה. */
-    .seat .alg { position:absolute; bottom:-8px; left:50%; transform:translateX(-50%);
-                 background:#c94147; color:#fff; border-radius:999px; padding:1px 7px;
-                 font-size:9px; font-weight:800; white-space:nowrap; letter-spacing:.2px;
-                 max-width:104px; overflow:hidden; text-overflow:ellipsis; }
-    .seat { overflow:visible; }
+    .algw { position:absolute; width:54px; height:54px; pointer-events:none; z-index:9; }
+    .algw .alg { position:absolute; top:45px; left:50%; transform:translateX(-50%);
+                 background:#c94147; color:#fff; border-radius:999px; padding:1.5px 8px;
+                 font-size:9.5px; font-weight:800; white-space:nowrap; letter-spacing:.2px;
+                 box-shadow:0 1px 4px rgba(0,0,0,.18); }
     /* בחירת פריט בחלון */
     .ipick { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
     .ipick button { display:flex; align-items:center; gap:9px; background:#FAF8F4;
@@ -1507,10 +1507,19 @@ function renderBoard() {
         transform:rotate(${-l.rot}deg)"
         onpointerdown="startChildDrag(event,'seat','${k}')"
         oncontextmenu="event.preventDefault();toggleLock('${k}')"
-        title="${p ? esc(p.name) : 'מקום פנוי'}">${p ? esc(p.name) : ''}${
-          pid && allergiesOf(pid).length
-            ? `<span class="alg" title="${esc(allergiesOf(pid).map(allergenName).join(' · '))}">${
-                esc(allergiesOf(pid).map(allergenName).join(' · '))}</span>` : ''}</div>`;
+        title="${p ? esc(p.name) : 'מקום פנוי'}">${p ? esc(p.name) : ''}</div>`;
+    }).join('');
+
+    // תגי האלרגיה מצויירים כאחים של הכיסא ולא בתוכו: העיגול הוא
+    // overflow:hidden עם border-radius:50%, וכל מה שחורג ממנו נחתך.
+    // העטיפה זהה בגודלה לכיסא ומסתובבת איתו, והתג תלוי מתחתיה.
+    const algs = tpl.seats.map(s => {
+      const pid = plan.seats[E.key(t.id, s.id)];
+      if (!pid) return '';
+      const txt = allergiesOf(pid).map(allergenName).join(' · ');
+      if (!txt) return '';
+      return `<div class="algw" style="left:${PAD + s.x * S - 27}px;top:${PAD + s.y * S - 27}px;
+        transform:rotate(${-l.rot}deg)"><span class="alg" title="${esc(txt)}">${esc(txt)}</span></div>`;
     }).join('');
     // אין יותר נקודות צבע ליד השם — הן דרכו על הכיסא הסמוך. הצבע עבר
     // למשטח השולחן עצמו, שם יש לו מקום והוא נקלט מרחוק.
@@ -1526,7 +1535,7 @@ function renderBoard() {
         ${tpl.shape === 'round' ? 'border-radius:50%;' : 'border-radius:10px;'}"></div>
       <div class="rhandle" onpointerdown="startRotate(event,'${t.id}')" ondblclick="resetRot('${t.id}')"
         title="גרירה מסובבת · לחיצה כפולה מיישרת"><span></span></div>
-      ${seats}</div>`;
+      ${seats}${algs}</div>`;
   }).join('');
 
   document.getElementById('board').innerHTML = `
