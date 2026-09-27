@@ -181,7 +181,11 @@
       color:#8a7f70; cursor:pointer; line-height:1.12; padding:3px; overflow:hidden; }
     .seat.filled { border-style:solid; border-color:#cfe0ec; background:#eef5fb; color:#2c4d66; }
     .seat.staff { border-color:#eccfc2; background:#fbf1ec; color:#8a4d33; }
+    /* בחירה = פעולה שממתינה, לא סימון קבוע. ⇄ אומר מה יקרה בלחיצה הבאה */
     .seat.sel { outline:3px solid #1F3D34; outline-offset:2px; }
+    .seat.sel::before { content:'⇄'; position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+                        background:#1F3D34; color:#fff; border-radius:999px; width:17px; height:17px;
+                        font-size:11px; line-height:17px; text-align:center; }
     .seat.bad { border-color:#e0837a; background:#fdf0ef; color:#a33; }
     .seat.lock::after { content:'🔒'; position:absolute; top:-1px; left:2px; font-size:10px; }
     /* ---- סמן איש צוות שלא יושב בתוך השולחן ---- */
@@ -208,8 +212,20 @@
 
     .viol { background:#fdf0ef; border:1px solid #f3cfc9; border-radius:12px; padding:14px 16px; margin-bottom:14px; }
     .viol h4 { color:#c94147; font-size:14.5px; margin-bottom:8px; }
-    .viol .v { display:flex; align-items:center; gap:10px; font-size:13.5px; color:#8a3b34; padding:5px 0; flex-wrap:wrap; }
-    .viol .v button { background:#fff; border:1px solid #f3cfc9; color:#c94147; border-radius:8px; padding:4px 10px; font-family:'Heebo'; font-size:12px; font-weight:700; cursor:pointer; }
+    .viol .v { display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:13.5px;
+               color:#8a3b34; padding:7px 0; flex-wrap:wrap; border-top:1px solid #f6dedb; }
+    .viol .v:first-of-type { border-top:0; }
+    .vbtns { display:flex; gap:6px; }
+    .viol .v button { background:#fff; border:1px solid #f3cfc9; color:#c94147; border-radius:8px; padding:4px 10px; font-family:'Heebo'; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .viol .v button:first-child { border-color:#cfe7d9; color:#1F7a4f; }
+    /* כלל שבור — לא באשמת הסידור, ולכן לא בצבע של שגיאה */
+    .viol .v.stuck { color:#8a5a44; }
+    .viol .v.stuck .wh { font-size:12px; color:#9B8E82; font-weight:600; margin-top:2px; }
+    .okd { display:flex; flex-wrap:wrap; gap:8px; margin:-6px 0 14px; }
+    .okd span { display:inline-flex; align-items:center; gap:7px; background:#FAF8F4; border:1px solid #e8e4de;
+                border-radius:999px; padding:4px 6px 4px 13px; font-size:12px; color:#6f6457; font-weight:700; }
+    .okd button { background:none; border:0; color:#9B8E82; font-family:'Heebo'; font-size:11.5px;
+                  font-weight:700; cursor:pointer; text-decoration:underline; padding:0 4px; }
     .allgood { background:#e6f4ec; border:1px solid #cfe7d9; color:#1F7a4f; border-radius:12px; padding:13px 16px; margin-bottom:14px; font-weight:700; font-size:14px; }
     .conflict { background:#fdf6e9; border:1px solid #e8c88a; border-radius:12px; padding:16px 18px; margin-bottom:14px; }
     .conflict h4 { color:#b8801f; margin-bottom:8px; font-size:15px; }
@@ -241,7 +257,7 @@
     @media print {
       @page { size: A4 landscape; margin: 8mm; }
       body { background:#fff; padding:0 !important; }
-      .header,.steps,.board-top,.layouts,.legend,.viol,.allgood,.a4note,.meter,.undo,#crmSidebar,#crmMenuBtn { display:none !important; }
+      .header,.steps,.board-top,.layouts,.legend,.viol,.allgood,.a4note,.meter,.okd,.undo,#crmSidebar,#crmMenuBtn { display:none !important; }
       .room-outer { overflow:visible; }
       .room { transform:none !important; border:none; width:1123px; height:794px; }
     }
@@ -927,6 +943,34 @@ function startFresh() {
 }
 function doFresh() { closeModal(); clearDraft(); plan = newPlan(); built = false; goStep(1); }
 
+// האם הכלל בכלל ניתן לקיום בסידור הזה? חריגה שנובעת מכלל שבור היא לא
+// בעיה בישיבה — אין שום גרירה שתפתור אותה, ולכן אסור להציג אותה כאילו
+// המשתמש עוד לא סיים. מחזיר טקסט הסבר, או null אם הכלל בר-קיום.
+function whyImpossible(r) {
+  const sits = sid => plan.staff[sid] && plan.staff[sid].active && plan.staff[sid].sits;
+  const anyStaffSits = Object.keys(plan.staff).some(sits);
+  const seated = new Set(Object.values(plan.seats));
+
+  if (r.type === 'near_staff' || r.type === 'staff_table') {
+    if (r.b && !sits(r.b)) return `${slotName(r.b)} לא יושבת בשולחן, אלא מסתובבת בחדר`;
+    if (!r.b && !anyStaffSits) return 'אף איש צוות לא יושב בשולחן בסידור הזה';
+  }
+  if ((r.type === 'adjacent' || r.type === 'same_table') && r.b && !seated.has(r.b)) {
+    return `${nameOf(r.b)} לא יושב/ת באף מקום`;
+  }
+  if (r.type === 'adjacent' && r.a && r.b) {
+    // שני ילדים שחייבים לשבת זה ליד זה — צריך שולחן עם לפחות שני מקומות
+    const maxSeats = Math.max(0, ...plan.tables.map(t => tplOf(t).seats.length));
+    if (maxSeats < 2) return 'אין שולחן עם שני מקומות סמוכים';
+  }
+  return null;
+}
+
+// "בסדר, ככה זה טוב" — החריגה מאושרת, האדום נעלם, והסידור נחשב גמור.
+// תמיד הפיך, ותמיד נספר בגלוי כדי שלא ייעלם מידע בשקט.
+function acceptViol(id) { plan.okRules[id] = true; renderBoard(); }
+function unacceptViol(id) { delete plan.okRules[id]; renderBoard(); }
+
 // מד שלמות: כמה ילדים באמת יושבים, ומי לא. תמיד מול העיניים, כדי שלא
 // ייגמר סידור עם שני ילדים שנשכחו בצד או שלא הגיעו לשום כיסא.
 function seatedMeter() {
@@ -981,9 +1025,18 @@ function seatChild(cid) {
 function renderBoard() {
   saveDraft();
   const ep = enginePlan(); ep.seats = plan.seats;
-  const viols = E.checkViolations(ep, tplOf);
+  plan.okRules = plan.okRules || {};
+  const all = E.checkViolations(ep, tplOf);
+  const viols = all.filter(v => !plan.okRules[v.ruleId]);   // חריגות שאושרו לא צובעות באדום
+  const okd = all.filter(v => plan.okRules[v.ruleId]);
+  // אדום על ילד אומר "הזיזי אותו". כלל שלא ניתן לקיום לא זוכה לאדום,
+  // כי שום הזזה לא תפתור אותו — הוא מוצג כאזהרה בפאנל בלבד.
   const bad = new Set();
-  viols.forEach(v => { const r = plan.rules.find(x => x.id === v.ruleId); if (r) { bad.add(r.a); if (r.b) bad.add(r.b); } });
+  viols.forEach(v => {
+    const r = plan.rules.find(x => x.id === v.ruleId);
+    if (!r || whyImpossible(r)) return;
+    bad.add(r.a); if (r.b) bad.add(r.b);
+  });
 
   let maxX = 0, maxY = 0;
   const tablesHtml = plan.tables.map(t => {
@@ -1029,10 +1082,21 @@ function renderBoard() {
       </div>
     </div>
     ${seatedMeter()}
-    ${viols.length ? `<div class="viol"><h4>${viols.length} הפרות של כללי ישיבה</h4>
-      ${viols.map(v => `<div class="v">🔴 ${esc(v.text)}
-        <button onclick="killRule('${v.ruleId}')">בטלי את הכלל</button></div>`).join('')}</div>`
-      : '<div class="allgood">🟢 הסידור מקיים את כל כללי הישיבה</div>'}
+    ${viols.length ? `<div class="viol"><h4>${viols.length === 1 ? 'כלל ישיבה אחד לא מתקיים' : `${viols.length} כללי ישיבה לא מתקיימים`}</h4>
+      ${viols.map(v => {
+        const r = plan.rules.find(x => x.id === v.ruleId) || {};
+        const why = whyImpossible(r);
+        return `<div class="v ${why ? 'stuck' : ''}">
+          <div><b>${why ? '⚠️' : '🔴'} ${esc(v.text)}</b>
+          ${why ? `<div class="wh">הכלל לא ניתן לקיום: ${esc(why)}. שום שינוי בישיבה לא יפתור אותו.</div>` : ''}</div>
+          <div class="vbtns">
+            <button onclick="acceptViol('${v.ruleId}')">בסדר, השאירי כך</button>
+            <button onclick="killRule('${v.ruleId}')">בטלי את הכלל</button>
+          </div></div>`;
+      }).join('')}</div>`
+      : `<div class="allgood">🟢 הסידור מקיים את כל כללי הישיבה${okd.length ? ` · ${okd.length} ${okd.length === 1 ? 'חריגה אושרה' : 'חריגות אושרו'}` : ''}</div>`}
+    ${okd.length ? `<div class="okd">${okd.map(v => `<span>✓ ${esc(v.text)}
+        <button onclick="unacceptViol('${v.ruleId}')">החזירי לבדיקה</button></span>`).join('')}</div>` : ''}
     <div class="layouts"><span style="font-size:12.5px;color:#9B8E82;font-weight:700">פריסת החדר:</span>
       <button class="lb" onclick="autoLayout('row')">שורה אחת</button>
       <button class="lb" onclick="autoLayout('two')">שתי שורות</button>
@@ -1042,7 +1106,7 @@ function renderBoard() {
       <button class="lb" style="border-color:#C4846C;color:#8a5a44" onclick="tidyLayout()">✨ סדר יפה</button>
     </div>
     <div class="a4note">📄 הדף בגודל A4 לרוחב — מה שנראה כאן הוא בדיוק מה שיודפס</div>
-    <div class="room-outer" id="roomOuter"><div class="room" id="room">${tablesHtml}${markersHtml()}${parkedHtml()}<div id="guides"></div></div></div>
+    <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">${tablesHtml}${markersHtml()}${parkedHtml()}<div id="guides"></div></div></div>
     <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
       גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
   fitRoom();
@@ -1291,6 +1355,7 @@ function onChildDrag(ev) {
     if (dist < childDrag.slop) return;
     if (childDrag.touch && Date.now() - childDrag.t0 < 200) { childDrag = null; return; }
     childDrag.moved = true;
+    selectedSeat = null;      // גרירה מבטלת בחירה קודמת, אחרת נשאר עיגול תקוע
     document.getElementById('room').classList.add('drag-live');
     const g = document.createElement('div');
     g.className = 'ghost'; g.id = 'ghost';
@@ -1406,6 +1471,13 @@ function parkedHtml() {
       onpointerdown="startChildDrag(event,'park','${cid}')"
       title="בצד — לגרור אל כיסא">${esc((ep.people[cid] || {}).name || '')}</div>`;
   }).join('');
+}
+
+// לחיצה על רקע החדר משחררת בחירה תקועה — אין דרך להישאר "באמצע פעולה"
+function clearSel(ev) {
+  if (!selectedSeat) return;
+  if (ev.target.closest && ev.target.closest('.seat,.parked,.pmark,.tlabel')) return;
+  selectedSeat = null; renderBoard();
 }
 
 function tapSeat(k) {
