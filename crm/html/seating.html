@@ -426,6 +426,7 @@ function stepStaff() {
     <h2>אנשי הצוות בארוחה</h2>
     <div class="sub">בחרי מי נמצאת, ואיך. מי שיושבת בתוך השולחן תופסת מקום ויכולה להיות "ליד" ילד.
       אם שתיים מתחלפות ביניהן בסידור השבועי — אפשר לצרף אותן למשבצת אחת ולהחליף בלחיצה.</div>
+    ${planSketch()}
     <div class="pick">
       ${allStaff.map(s => `<button class="p staff ${used.has(s.id) ? 'on' : ''}" onclick="toggleStaff('${s.id}')">${esc(s.name)}</button>`).join('')}
     </div>
@@ -484,11 +485,13 @@ function peopleOptions(kind) {
   return list.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
 }
 
-// סקיצה חיה של השולחנות שהוגדרו. לחיצה על מושב מדגישה את שכניו —
-// כך רואים בדיוק מה נחשב "ליד" לפני שמגדירים כלל.
+// סקיצה חיה של מה שנבנה עד כה — מוצגת בכל שלב מהשולחנות והלאה,
+// כדי שאפשר יהיה לדמיין את החדר בזמן ההחלטות ולא רק בסוף.
+// mode='rules' מוסיף לחיצה על מושב שמדגישה את שכניו.
 let sketchSel = null;
-function rulesSketch() {
+function planSketch(mode) {
   if (!plan.tables.length) return '';
+  const interactive = mode === 'rules';
   const SK = 32, P = 20;
   const tables = plan.tables.map(t => {
     const tpl = tplOf(t), nb = E.neighborMap(tpl);
@@ -496,31 +499,45 @@ function rulesSketch() {
     const neigh = selHere ? (nb[selHere] || []) : [];
     const seats = tpl.seats.map(s => {
       const cls = ['sk-seat'];
-      if (s.id === selHere) cls.push('sel');
-      else if (neigh.indexOf(s.id) >= 0) cls.push('nb');
+      if (interactive && s.id === selHere) cls.push('sel');
+      else if (interactive && neigh.indexOf(s.id) >= 0) cls.push('nb');
       const lbl = s.role === 'head' ? 'ראש' : s.role === 'middle' ? 'אמצע' : '';
-      return `<div class="${cls.join(' ')}" style="left:${P + s.x * SK - 15}px;top:${P + s.y * SK - 15}px"
-        onclick="sketchSel={t:'${t.id}',s:'${s.id}'};renderStep()" title="${s.role === 'head' ? 'ראש השולחן' : s.role === 'middle' ? 'אמצע הצלע' : 'קצה'}">${lbl}</div>`;
+      const click = interactive ? `onclick="sketchSel={t:'${t.id}',s:'${s.id}'};renderStep()"` : 'style2';
+      return `<div class="${cls.join(' ')}" style="left:${P + s.x * SK - 15}px;top:${P + s.y * SK - 15}px${interactive ? '' : ';cursor:default'}"
+        ${interactive ? click : ''} title="${s.role === 'head' ? 'ראש השולחן' : s.role === 'middle' ? 'אמצע הצלע' : 'קצה'}">${lbl}</div>`;
     }).join('');
-    return `<div class="sk-one"><div class="nm">${esc(t.name)}</div>
+    // נקודת צבע לכל איש צוות שאחראי על השולחן — מופיעה מיד עם הסימון
+    const dots = offSlots().filter(sid => (plan.staff[sid].tables || []).includes(t.id))
+      .map(sid => `<span class="tdot" style="background:${markColor(sid)}" title="${esc(slotName(sid))}"></span>`).join('');
+    return `<div class="sk-one"><div class="nm">${dots}${esc(t.name)}</div>
       <div class="sk-wrap" style="width:${tpl.w * SK + P * 2}px;height:${tpl.h * SK + P * 2}px">
         <div class="sk-surface" style="left:${P}px;top:${P}px;width:${tpl.w * SK}px;height:${tpl.h * SK}px;
           ${tpl.shape === 'round' ? 'border-radius:50%' : 'border-radius:8px'}"></div>${seats}</div></div>`;
   }).join('');
-  const sel = sketchSel ? (() => {
-    const t = plan.tables.find(x => x.id === sketchSel.t);
-    if (!t) return '';
-    const n = (E.neighborMap(tplOf(t))[sketchSel.s] || []).length;
-    return `<b style="color:#1F3D34">למושב הזה יש ${n} שכנים</b> — רק הם נחשבים "יושבים לידו".`;
-  })() : 'לחצי על מושב כדי לראות מי נחשב יושב לידו 👇';
-  return `<div class="sketch">
-    <div class="sk-hint">${sel}</div>
-    <div class="sk-tables">${tables}</div>
-    <div class="sk-legend">
+  const cap = plan.tables.reduce((s, t) => s + tplOf(t).seats.length, 0);
+  const seated = Object.keys(plan.staff).filter(k => plan.staff[k].sits === 'seat').length;
+  const head = `👧 ${plan.childIds.length} ילדים · 🪑 ${plan.tables.length} שולחנות · ${cap} מקומות`
+    + (seated ? ` · 🧑‍🏫 ${seated} צוות בשולחן` : '');
+
+  const hint = interactive
+    ? (sketchSel ? (() => {
+        const t = plan.tables.find(x => x.id === sketchSel.t);
+        if (!t) return head;
+        const n = (E.neighborMap(tplOf(t))[sketchSel.s] || []).length;
+        return `<b style="color:#1F3D34">למושב הזה יש ${n} שכנים</b> — רק הם נחשבים "יושבים לידו".`;
+      })() : 'לחצי על מושב כדי לראות מי נחשב יושב לידו 👇')
+    : head;
+
+  const legend = interactive ? `<div class="sk-legend">
       <span><i style="background:#1F7a4f"></i>המושב שנבחר</span>
       <span><i style="background:#fdf1e3;border:1.5px solid #C4846C"></i>השכנים שלו</span>
       <span style="color:#b3a89a">מי שיושב מולו לא נחשב "ליד"</span>
-    </div></div>`;
+    </div>` : '';
+
+  return `<div class="sketch">
+    <div class="sk-hint">${hint}</div>
+    <div class="sk-tables">${tables}</div>
+    ${legend}</div>`;
 }
 
 function stepRules() {
@@ -528,7 +545,7 @@ function stepRules() {
     <h2>כללי ישיבה</h2>
     <div class="sub">שימי לב להבדל: <b>"לא באותו שולחן"</b> מרחיק לגמרי,
       ואילו <b>"לא אחד ליד השני"</b> מאפשר אותו שולחן ובלבד שלא במושבים צמודים.</div>
-    ${rulesSketch()}
+    ${planSketch('rules')}
     <div class="rule-row">
       <select id="rType" onchange="renderRuleRow()">
         ${Object.keys(E.RULE_TYPES).map(k => `<option value="${k}">${E.RULE_TYPES[k].label}</option>`).join('')}
@@ -607,6 +624,7 @@ function stepSplit() {
   return `<div class="card">
     <h2>איך לחלק את הילדים?</h2>
     <div class="sub">כל נקודה היא ילד/ה — גודל הנקודה מסמן גיל.</div>
+    ${planSketch()}
     <div class="splits">
       ${SPLITS.map(s => `<button class="sp ${m === s.id ? 'on' : ''}" onclick="setSplit('${s.id}')">
         <div class="mini">${s.fig}</div>
