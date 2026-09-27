@@ -323,6 +323,15 @@ async function renderGardenSwitcher() {
     localStorage.setItem('crm_garden_id', active);
   }
 
+  // The active garden's NAME, for pages that name a downloaded file after it
+  // (a PDF called "… - גן לב"). Kept in localStorage so it survives a reload
+  // before this fetch returns.
+  var activeGarden = gardens.find(function (g) { return g.id === active; });
+  if (activeGarden && activeGarden.name) {
+    window.crmGardenName = activeGarden.name;
+    try { localStorage.setItem('crm_garden_name', activeGarden.name); } catch (e) {}
+  }
+
   // Styles for the in-sidebar garden switcher (tuned for the dark sidebar)
   if (!document.getElementById('gv-switcher-style')) {
     const st = document.createElement('style');

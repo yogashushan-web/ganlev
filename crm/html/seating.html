@@ -118,6 +118,22 @@
     .room-outer { overflow:hidden; margin:6px 0 14px; }
     .room { position:relative; width:1123px; height:794px; background:#fffdf9;
             border:1.5px dashed #e0d7c7; border-radius:16px; transform-origin:top right; }
+    /* שכבת גודל התוכן. היא בתוך הדף ולכן נצרבת גם בהדפסה, בניגוד
+       להקטנה של .room שקיימת רק כדי שהדף ייכנס למסך. */
+    .rscale { position:absolute; left:0; top:0; width:1123px; height:794px;
+              transform-origin:561.5px 397px; }
+    .zoombar { display:flex; align-items:center; gap:9px; margin-right:6px;
+               padding-right:12px; border-right:1px solid #e8e4de; }
+    .zoombar .zv { font-size:12.5px; color:#1F3D34; font-weight:800; min-width:40px;
+                   font-variant-numeric:tabular-nums; }
+    #zoomR { -webkit-appearance:none; appearance:none; width:132px; height:3px; border-radius:99px;
+             background:#e0d7c7; outline:none; cursor:ew-resize; }
+    #zoomR::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:14px; height:14px;
+             border-radius:50%; background:#fff; border:2px solid #C4846C;
+             box-shadow:0 1px 4px rgba(0,0,0,.18); cursor:grab; }
+    #zoomR::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:#fff;
+             border:2px solid #C4846C; box-shadow:0 1px 4px rgba(0,0,0,.18); cursor:grab; }
+    #zoomR:focus-visible { outline:2px solid #1F3D34; outline-offset:4px; }
     .a4note { font-size:11.5px; color:#b3a89a; text-align:left; margin-bottom:4px; }
     .twrap { position:absolute; touch-action:none; }
     /* שם השולחן יושב במרכזו, וניתן ללחוץ עליו כדי לשנות */
@@ -191,11 +207,21 @@
             box-shadow:0 6px 20px rgba(0,0,0,.22); }
     .undo button { background:#fff; color:#1F3D34; border:0; border-radius:999px; padding:5px 13px;
                    font-family:'Heebo'; font-size:12px; font-weight:800; cursor:pointer; }
-    .parked { position:absolute; width:54px; height:54px; border-radius:50%; border:2px dashed #b3a89a;
-              background:#fff; color:#6f6457; display:flex; align-items:center; justify-content:center;
+    /* ילד שהוצא מכיסא נשאר בדיוק איפה שהונח — המיקום הוא מידע ("שם הוא
+       אמור לשבת"). אבל המצב חייב להיות חד-משמעי: קו מקווקו, גוון דהוי,
+       ותווית "ממתין". והוא לא מודפס — ראו @media print למטה. */
+    .parked { position:absolute; width:54px; height:54px; border-radius:50%;
+              border:2px dashed #C4846C; background:#fdf6f2; color:#8a5a44;
+              display:flex; align-items:center; justify-content:center;
               text-align:center; font-size:11px; font-weight:700; padding:3px; line-height:1.12;
-              overflow:hidden; cursor:grab; touch-action:none; z-index:7; }
-    .parked:hover { border-color:#1F3D34; }
+              overflow:visible; cursor:grab; touch-action:none; z-index:7; opacity:.9; }
+    .parked::after { content:'ממתין'; position:absolute; bottom:-9px; left:50%;
+                     transform:translateX(-50%); background:#C4846C; color:#fff;
+                     border-radius:999px; padding:1px 7px; font-size:9px; font-weight:800;
+                     letter-spacing:.3px; white-space:nowrap; }
+    .parked:hover { opacity:1; border-style:solid; }
+    /* אותו שם במד למעלה, כדי שיהיה ברור שמדובר באותו ילד */
+    .mwho button.onpage { border-style:solid; background:#fdf6f2; }
     .tsurface { position:absolute; background:#efe6d8; border:2px solid #ddd0bb; cursor:grab; }
     .seat { position:absolute; width:54px; height:54px; border-radius:50%; border:2px dashed #ddd0bb; background:#fff;
       display:flex; align-items:center; justify-content:center; text-align:center; font-size:11px; font-weight:700;
@@ -279,7 +305,9 @@
     @media print {
       @page { size: A4 landscape; margin: 8mm; }
       body { background:#fff; padding:0 !important; }
-      .header,.steps,.board-top,.layouts,.legend,.viol,.allgood,.a4note,.meter,.okd,.undo,#crmSidebar,#crmMenuBtn { display:none !important; }
+      /* ילד ממתין לא מודפס: עיגול מרחף באמצע דף שתלוי על הקיר הוא רעש.
+         שמו מופיע בשורת "לא יושבים" בתחתית ה-PDF במקום. */
+      .header,.steps,.board-top,.layouts,.legend,.viol,.allgood,.a4note,.meter,.okd,.undo,.parked,#crmSidebar,#crmMenuBtn { display:none !important; }
       .room-outer { overflow:visible; }
       .room { transform:none !important; border:none; width:1123px; height:794px; }
     }
@@ -308,7 +336,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=19"></script>
+<script src="js/common.js?v=20"></script>
 <script src="js/api.js?v=20"></script>
 <script src="js/seating-engine.js?v=3"></script>
 <script>
@@ -321,7 +349,7 @@ const STEPS = ['מי אוכל', 'שולחנות', 'צוות', 'כללי ישיב
 
 function newPlan() {
   return { id: uid(), name: 'סידור ארוחה', childIds: [], tables: [], staff: {},
-           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {}, marks: {}, parked: {} };
+           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {}, marks: {}, parked: {}, zoom: 1 };
 }
 const tplOf = t => E.TEMPLATES[t.templateId] || E.TEMPLATES.rect6_heads;
 const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
@@ -963,11 +991,10 @@ function startDragMark(ev, sid) {
 }
 function onDragMark(ev) {
   if (!dragMark) return;
-  const room = document.getElementById('room');
-  const sc = room ? (room.getBoundingClientRect().width / ROOM_W) || 1 : 1;
+  const { k } = roomScale();
   const m = plan.marks[dragMark.sid];
-  m.x = Math.max(0, Math.round(dragMark.ox + (ev.clientX - dragMark.sx) / sc));
-  m.y = Math.max(0, Math.round(dragMark.oy + (ev.clientY - dragMark.sy) / sc));
+  m.x = Math.max(0, Math.round(dragMark.ox + (ev.clientX - dragMark.sx) / k));
+  m.y = Math.max(0, Math.round(dragMark.oy + (ev.clientY - dragMark.sy) / k));
   const el = [...document.querySelectorAll('.pmark')][offSlots().indexOf(dragMark.sid)];
   if (el) { el.style.left = m.x + 'px'; el.style.top = m.y + 'px'; }
 }
@@ -1088,12 +1115,17 @@ function doFresh() { closeModal(); clearDraft(); plan = newPlan(); built = false
 // שהסיבוב כבר חושב. כך הדף המודפס לא יכול להתרחק ממה שרואים על המסך.
 function sheetData() {
   const ep = enginePlan();
+  // גודל התוכן נצרב לתוך הקואורדינטות, סביב מרכז הדף — בדיוק כמו
+  // ה-transform על .rscale, כך שהדף המודפס זהה למה שעל המסך.
+  const z = zoomOf();
+  const ZX = x => CX + (x - CX) * z, ZY = y => CY + (y - CY) * z;
+
   const tables = plan.tables.map(t => {
     const l = plan.layout[t.id] || { x: 0, y: 0, rot: 0 }, tp = tplOf(t);
     // הגוונים של האחראיות עוברים לדף המודפס — שם זו הדרך היחידה לדעת
     const cols = tableStaff(t.id).map(markColor);
     return { name: t.name, shape: tp.shape === 'round' ? 'round' : 'rect', rot: l.rot || 0,
-             x: l.x + PAD, y: l.y + PAD, w: tp.w * S, h: tp.h * S,
+             x: ZX(l.x + PAD), y: ZY(l.y + PAD), w: tp.w * S * z, h: tp.h * S * z,
              fills: cols.length ? cols.map(c => mix('#efe6d8', c, 0.22)) : null,
              line: cols.length ? mix('#ddd0bb', cols[0], 0.6) : null };
   });
@@ -1101,13 +1133,15 @@ function sheetData() {
   plan.tables.forEach(t => tplOf(t).seats.forEach(s => {
     const c = seatCenter(t, s), pid = plan.seats[E.key(t.id, s.id)];
     const p = pid ? ep.people[pid] : null;
-    seats.push({ x: Math.round(c.x), y: Math.round(c.y),
+    seats.push({ x: Math.round(ZX(c.x)), y: Math.round(ZY(c.y)),
                  label: p ? p.name : '', kind: p ? p.kind : 'empty' });
   }));
   ensureMarkers();
   const marks = offSlots().map(sid => ({
-    x: plan.marks[sid].x, y: plan.marks[sid].y,
+    x: Math.round(ZX(plan.marks[sid].x)), y: Math.round(ZY(plan.marks[sid].y)),
     label: slotName(sid), color: markColor(sid),
+    // 🪑 / 👀 מצויירים ב-PDF כווקטור, כי ל-Heebo אין גליפים לאמוג'י
+    icon: plan.staff[sid].sits === 'beside' ? 'chair' : 'watch',
   }));
 
   const taken = new Set(Object.values(plan.seats));
@@ -1116,10 +1150,25 @@ function sheetData() {
   const dd = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
 
   return {
-    name: plan.name, tables, seats, marks,
+    name: plan.name, tables, seats, marks, zoom: z,
     meta: `${dd}  ·  ${plan.childIds.length - out.length}/${plan.childIds.length}`,
+    // ילדים ממתינים לא מצויירים על הדף, אבל שמם חייב להופיע — אחרת
+    // הדף על הקיר משמיט ילדים בשקט
     note: out.length ? `לא יושבים: ${out.map(nameOf).join(', ')}` : '',
   };
+}
+
+// שם הקובץ: "סידור ישיבה - ספטמבר 26 - גן לב". שם הגן נלקח מהגן הפעיל,
+// כך שכל גן מקבל את שמו שלו ולא את "גן לב" קבוע.
+const HE_MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+                   'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+function sheetFileName() {
+  const d = new Date();
+  let gan = window.crmGardenName || localStorage.getItem('crm_garden_name') || '';
+  gan = String(gan).trim();
+  const base = `סידור ישיבה - ${HE_MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+  // תווים שמערכות קבצים לא אוהבות
+  return (gan ? `${base} - ${gan}` : base).replace(/[\\/:*?"<>|]/g, '');
 }
 
 async function downloadPdf() {
@@ -1137,7 +1186,7 @@ async function downloadPdf() {
     const url = URL.createObjectURL(await res.blob());
     const a = document.createElement('a');
     a.href = url;
-    a.download = `סידור ישיבה — ${plan.name}.pdf`;
+    a.download = sheetFileName() + '.pdf';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 4000);
   } catch (e) {
@@ -1193,24 +1242,27 @@ function seatedMeter() {
   const free = seatsTotal - Object.keys(plan.seats).length;
   const pct = n ? Math.round(sat / n * 100) : 100;
 
-  // אנשי צוות שהוגדר שהם יושבים בשולחן אבל אין להם כיסא
+  // אנשי צוות שהוגדר שהם יושבים בשולחן אבל אין להם כיסא.
+  // sits === 'seat' ולא .active — active הוא אינדקס לחברה הפעילה במשבצת.
   const staffOut = Object.keys(plan.staff)
-    .filter(sid => plan.staff[sid].active && plan.staff[sid].sits && !taken.has(sid));
+    .filter(sid => plan.staff[sid].sits === 'seat' && !taken.has(sid));
 
   const done = !out.length && !staffOut.length;
+  const wait = out.length + staffOut.length;
   const freeTxt = free === 0 ? 'כל המקומות תפוסים'
     : free === 1 ? 'מקום אחד פנוי' : `${free} מקומות פנויים`;
 
   return `<div class="meter ${done ? 'done' : ''}">
     <div class="mtop">
       <b>${done ? `כל ${n} הילדים יושבים` : `${sat} מתוך ${n} ילדים יושבים`}</b>
-      <span>${freeTxt}</span>
+      <span>${done ? freeTxt : `${wait === 1 ? 'אחד ממתין' : wait + ' ממתינים'} · ${freeTxt}`}</span>
     </div>
     <div class="mbar"><i style="width:${pct}%"></i></div>
     ${done ? '' : `<div class="mwho">
-      ${out.map(c => `<button onclick="seatChild('${c}')">${esc(nameOf(c))}${parked[c] ? ' · בצד' : ''}</button>`).join('')}
+      ${out.map(c => `<button onclick="seatChild('${c}')"
+          ${parked[c] ? 'class="onpage" title="מחכה על הדף — לחיצה מושיבה"' : ''}>${esc(nameOf(c))}</button>`).join('')}
       ${staffOut.map(s => `<button onclick="seatChild('${s}')">${esc(nameOf(s))} · צוות</button>`).join('')}
-      <span class="mhint">לחיצה על שם מושיבה במקום הפנוי הראשון</span></div>`}
+      <span class="mhint">לחיצה על שם מושיבה במקום הפנוי הראשון · ממתינים לא מודפסים</span></div>`}
   </div>`;
 }
 
@@ -1320,12 +1372,72 @@ function renderBoard() {
       <button class="lb" onclick="autoLayout('grid')">רשת</button>
       <button class="lb" onclick="autoLayout('circle')">מעגל</button>
       <button class="lb" style="border-color:#C4846C;color:#8a5a44" onclick="tidyLayout()">✨ סדר יפה</button>
+      <div class="zoombar">
+        <input type="range" id="zoomR" min="50" max="200" step="1" value="${Math.round(zoomOf() * 100)}"
+          aria-label="גודל התוכן על הדף"
+          onpointerdown="pushUndo()" oninput="liveZoom(this.value)" onchange="renderBoard()">
+        <span class="zv" id="zoomV">${Math.round(zoomOf() * 100)}%</span>
+        <button class="lb" onclick="fitToPage()" title="ממלא את הדף בלי לחרוג משוליו">התאם לדף</button>
+      </div>
     </div>
     <div class="a4note">📄 הדף בגודל A4 לרוחב — מה שנראה כאן הוא בדיוק מה שיודפס</div>
-    <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">${tablesHtml}${markersHtml()}${parkedHtml()}<div id="guides"></div></div></div>
+    <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">
+      <div class="rscale" id="rscale" style="transform:scale(${zoomOf()})">${tablesHtml}${markersHtml()}${parkedHtml()}<div id="guides"></div></div></div></div>
     <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
       גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
   fitRoom();
+}
+
+/* ---------- גודל התוכן על הדף ---------- */
+// המד רציף. בזמן הגרירה רק הטרנספורם זז, בלי לבנות את הלוח מחדש, כדי
+// שהתנועה תהיה חלקה; הבנייה המלאה קורית כשמשחררים.
+function liveZoom(v) {
+  plan.zoom = Math.round(Number(v)) / 100;
+  const el = document.getElementById('rscale');
+  if (el) el.style.transform = `scale(${plan.zoom})`;
+  const out = document.getElementById('zoomV');
+  if (out) out.textContent = Math.round(plan.zoom * 100) + '%';
+  saveDraft();
+}
+
+// "התאם לדף": מרכז את כל מה שיש ומגדיל עד שהוא ממלא את הדף עם שוליים.
+// שני השלבים חייבים לקרות יחד — הגדלה בלי מרכוז מוציאה תוכן מהדף.
+function fitToPage() {
+  if (!plan.tables.length) return;
+  pushUndo();
+  ensureMarkers();
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const add = (x, y, w, h) => {
+    minX = Math.min(minX, x); minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + w); maxY = Math.max(maxY, y + h);
+  };
+  plan.tables.forEach(t => {
+    const l = plan.layout[t.id] || { x: 0, y: 0, rot: 0 }, r = tableRect(t, l);
+    add(r.x, r.y, r.w, r.h);
+  });
+  offSlots().forEach(sid => { const m = plan.marks[sid]; add(m.x, m.y, 150, 32); });
+  Object.keys(plan.parked || {}).forEach(c => { const m = plan.parked[c]; add(m.x, m.y, 54, 54); });
+  if (minX > maxX) return;
+
+  const M = 34;   // שוליים בתוך הדף
+  const z = Math.max(0.5, Math.min(2,
+    Math.min((ROOM_W - M * 2) / (maxX - minX), (ROOM_H - M * 2) / (maxY - minY))));
+
+  // ההגדלה מתבצעת סביב מרכז הדף, ולכן קודם מזיזים את הכל למרכז
+  const dx = CX - (minX + maxX) / 2, dy = CY - (minY + maxY) / 2;
+  plan.tables.forEach(t => {
+    const l = plan.layout[t.id]; if (!l) return;
+    l.x = Math.round(l.x + dx); l.y = Math.round(l.y + dy);
+  });
+  offSlots().forEach(sid => {
+    const m = plan.marks[sid]; m.x = Math.round(m.x + dx); m.y = Math.round(m.y + dy);
+  });
+  Object.keys(plan.parked || {}).forEach(c => {
+    const m = plan.parked[c]; m.x = Math.round(m.x + dx); m.y = Math.round(m.y + dy);
+  });
+  plan.zoom = Math.round(z * 100) / 100;
+  renderBoard();
+  showOk(`הותאם לדף · ${Math.round(plan.zoom * 100)}%`);
 }
 
 /* ---------- גרירה עם קווי עזר ---------- */
@@ -1422,11 +1534,10 @@ function startDrag(ev, tid) {
 function onDrag(ev) {
   if (!drag) return;
   const el = document.querySelector('.twrap[data-t="' + drag.tid + '"]');
-  // המסך מציג את הדף מוקטן, אז מרחק העכבר מחולק ביחס ההקטנה
-  const room = document.getElementById('room');
-  const sc = room ? (room.getBoundingClientRect().width / ROOM_W) || 1 : 1;
-  let x = Math.max(0, drag.ox + (ev.clientX - drag.sx) / sc);
-  let y = Math.max(0, drag.oy + (ev.clientY - drag.sy) / sc);
+  // המסך מציג את הדף מוקטן ובגודל תוכן נבחר — המרחק מחולק בשניהם
+  const { k } = roomScale();
+  let x = Math.max(0, drag.ox + (ev.clientX - drag.sx) / k);
+  let y = Math.max(0, drag.oy + (ev.clientY - drag.sy) / k);
   const snapped = snapDrag(drag.tid, x, y);            // הצמדה לקווי יישור
   x = snapped.x; y = snapped.y;
   drawGuides(snapped.guides);
@@ -1516,11 +1627,24 @@ function seatCenter(t, seat) {
 // המושבים ממוקמים ב-CSS לפי left — מהקצה השמאלי — גם כשהאתר מימין לשמאל,
 // כי getBoundingClientRect מחזיר תמיד קופסה פיזית. יחס ההקטנה נגזר מהמדידה
 // עצמה ולא ממשתנה, כדי שיעבוד גם אם הדפדפן מוסיף זום משלו.
+// שני קנה-מידה שונים פועלים כאן: sc הוא ההקטנה של הדף כדי שייכנס למסך
+// (לא משנה כלום בהדפסה), ו-z הוא גודל התוכן שהמשתמשת בחרה — הוא כן נצרב
+// בדף המודפס. הקואורדינטות ב-plan נשמרות תמיד ללא z, והוא מוחל בתצוגה.
+const CX = ROOM_W / 2, CY = ROOM_H / 2;
+const zoomOf = () => (plan && plan.zoom) || 1;
+function roomScale() {
+  const room = document.getElementById('room');
+  const sc = room ? (room.getBoundingClientRect().width / ROOM_W) || 1 : 1;
+  const z = zoomOf();
+  return { sc, z, k: sc * z };
+}
 function roomPoint(ev) {
   const room = document.getElementById('room');
   const r = room.getBoundingClientRect();
   const sc = (r.width / (room.offsetWidth || ROOM_W)) || 1;
-  return { x: (ev.clientX - r.left) / sc, y: (ev.clientY - r.top) / sc, sc };
+  const z = zoomOf();
+  const vx = (ev.clientX - r.left) / sc, vy = (ev.clientY - r.top) / sc;
+  return { x: CX + (vx - CX) / z, y: CY + (vy - CY) / z, sc };
 }
 
 // זיהוי הכיסא: קודם מה שנמצא ממש מתחת לסמן (חסין להקטנה ולכיווניות),
@@ -1665,7 +1789,7 @@ function endChildDrag(ev) {
 let undoStack = [], undoTimer = null;
 function snapshot() {
   return JSON.stringify({
-    seats: plan.seats, parked: plan.parked || {}, layout: plan.layout,
+    seats: plan.seats, parked: plan.parked || {}, layout: plan.layout, zoom: zoomOf(),
     marks: plan.marks || {}, okRules: plan.okRules || {},
     names: plan.tables.map(t => t.name),
   });
@@ -1688,7 +1812,7 @@ function showUndo(msg) {
 function undoMove() {
   const s = undoStack.pop(); if (!s) return;
   const p = JSON.parse(s);
-  plan.seats = p.seats; plan.parked = p.parked; plan.layout = p.layout;
+  plan.seats = p.seats; plan.parked = p.parked; plan.layout = p.layout; plan.zoom = p.zoom || 1;
   plan.marks = p.marks; plan.okRules = p.okRules;
   (p.names || []).forEach((n, i) => { if (plan.tables[i]) plan.tables[i].name = n; });
   selectedSeat = null;

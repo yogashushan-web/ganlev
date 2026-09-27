@@ -52,6 +52,29 @@ function drawCentered(doc, text, cx, cy, maxW, maxLines) {
   use.forEach((ws, i) => drawWordsRtl(doc, ws, cx + lineWidth(doc, ws) / 2, top + i * lh));
 }
 
+// הסמלים 🪑 ו-👀 שעל הגלולות במסך — אין להם גליף ב-Heebo, ופונט אמוג'י
+// שוקל עשרות מגה ונשבר ב-fontkit. שתי צורות וקטוריות קצרות עושות את
+// אותו דבר, מודפסות חד גם בשחור-לבן, וגדלות עם הדף.
+function drawMarkIcon(doc, kind, x, y, s, color) {
+  doc.save();
+  doc.lineWidth(Math.max(0.45, s * 0.1)).strokeColor(color).fillColor(color)
+     .lineJoin('round').lineCap('round');
+  if (kind === 'chair') {                      // כיסא מהצד: גב, מושב, רגליים
+    doc.moveTo(x + s * 0.26, y + s * 0.05)
+       .lineTo(x + s * 0.26, y + s * 0.60)
+       .lineTo(x + s * 0.86, y + s * 0.60).stroke();
+    doc.moveTo(x + s * 0.32, y + s * 0.60).lineTo(x + s * 0.32, y + s * 0.95).stroke();
+    doc.moveTo(x + s * 0.80, y + s * 0.60).lineTo(x + s * 0.80, y + s * 0.95).stroke();
+  } else {                                     // עין: שתי קשתות ואישון
+    const cx = x + s / 2, cy = y + s / 2, rw = s * 0.46, rh = s * 0.30;
+    doc.moveTo(cx - rw, cy)
+       .quadraticCurveTo(cx, cy - rh * 1.9, cx + rw, cy)
+       .quadraticCurveTo(cx, cy + rh * 1.9, cx - rw, cy).stroke();
+    doc.circle(cx, cy, s * 0.15).fill();
+  }
+  doc.restore();
+}
+
 function fontPath(name) {
   const tries = [
     path.join(__dirname, '..', 'assets', name),
@@ -102,6 +125,9 @@ function buildSeatingPdf(sheet) {
       const ox = M + (availW - ROOM_W * k) / 2;
       const oy = M + HEAD + (availH - ROOM_H * k) / 2;
       const X = px => ox + px * k, Y = py => oy + py * k;
+      // גודל התוכן שנבחר במסך — הקואורדינטות כבר מגיעות מוגדלות, אבל
+      // רדיוס הכיסא וגודל הכתב נגזרים כאן ולכן צריכים אותו במפורש
+      const z = sheet.zoom || 1;
 
       // משטחי השולחנות, בגוון של מי שאחראית עליהם. שתי אחראיות — חצי-חצי,
       // שכל מחצית נחתכת מהמלבן המסובב (clip) כדי שהחלוקה תסתובב עם השולחן.
@@ -128,7 +154,7 @@ function buildSeatingPdf(sheet) {
       });
 
       // הכיסאות — נקודות מוחלטות שהדפדפן כבר חישב, כולל סיבוב
-      const r = SEAT_R * k;
+      const r = SEAT_R * k * z;
       (sheet.seats || []).forEach(s => {
         const cx = X(s.x), cy = Y(s.y);
         doc.circle(cx, cy, r);
@@ -142,27 +168,31 @@ function buildSeatingPdf(sheet) {
         else doc.dash(3, { space: 2 }).strokeColor(C.emptyLine).stroke().undash();
 
         if (!s.label) return;
-        doc.font('heB').fontSize(Math.max(5.6, 10.5 * k))
+        doc.font('heB').fontSize(Math.max(5.6, 10.5 * k * z))
            .fillColor(s.kind === 'staff' ? C.staffInk : C.childInk);
         drawCentered(doc, s.label, cx, cy, r * 1.85, 3);
       });
 
       // שם השולחן במרכזו, תמיד זקוף גם כששולחן מסובב — ואחרי הכיסאות,
       // כדי שעיגול שנוגע במרכז לא יחתוך אותיות מהשם
-      doc.font('heB').fontSize(Math.max(7, 12 * k)).fillColor(C.muted);
+      doc.font('heB').fontSize(Math.max(7, 12 * k * z)).fillColor(C.muted);
       (sheet.tables || []).forEach(t => {
         drawCentered(doc, t.name, X(t.x + t.w / 2), Y(t.y + t.h / 2), t.w * k * 0.8, 2);
       });
 
       // סמני צוות שלא יושבים בתוך שולחן — גלולה בצבע של אותה גננת
       (sheet.marks || []).forEach(m => {
-        doc.font('heB').fontSize(Math.max(6, 10.5 * k));
+        doc.font('heB').fontSize(Math.max(6, 10.5 * k * z));
         const words = wordsOf(m.label);
         const tw = lineWidth(doc, words);
-        const padX = 9 * k, hh = 20 * k, w = tw + padX * 2, x = X(m.x), y = Y(m.y);
+        const padX = 9 * k * z, hh = 20 * k * z;
+        const ic = hh * 0.62, gap = ic * 0.45;               // הסמל יושב משמאל, כמו במסך
+        const w = tw + padX * 2 + ic + gap, x = X(m.x), y = Y(m.y);
         doc.roundedRect(x, y, w, hh, hh / 2).fillColor('#ffffff').fill();
         doc.roundedRect(x, y, w, hh, hh / 2).lineWidth(Math.max(0.7, 1.6 * k))
            .strokeColor(m.color || C.brand).stroke();
+        drawMarkIcon(doc, m.icon === 'chair' ? 'chair' : 'watch',
+                     x + padX, y + (hh - ic) / 2, ic, m.color || C.brand);
         doc.fillColor(m.color || C.brand);
         drawWordsRtl(doc, words, x + w - padX, y + (hh - doc.currentLineHeight()) / 2);
       });
