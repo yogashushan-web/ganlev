@@ -132,6 +132,15 @@
     .seat.sel { outline:3px solid #1F3D34; outline-offset:2px; }
     .seat.bad { border-color:#e0837a; background:#fdf0ef; color:#a33; }
     .seat.lock::after { content:'🔒'; position:absolute; top:-1px; left:2px; font-size:10px; }
+    /* ---- סמן איש צוות שלא יושב בתוך השולחן ---- */
+    .pmark { position:absolute; display:flex; align-items:center; gap:5px; background:#fff;
+             border:2px solid #C4846C; border-radius:999px; padding:5px 12px 5px 9px;
+             font-size:11.5px; font-weight:800; white-space:nowrap; cursor:grab;
+             box-shadow:0 2px 8px rgba(0,0,0,.10); touch-action:none; z-index:6; }
+    .pmark:active { cursor:grabbing; }
+    .pmark .ico { font-size:13px; }
+    .tdot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:3px; vertical-align:0; }
+
     .layouts { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
     .layouts .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px; padding:7px 13px; font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#1F3D34; cursor:pointer; }
     .layouts .lb:hover { border-color:#1F3D34; background:#f4f9f6; }
@@ -214,7 +223,7 @@ const STEPS = ['מי אוכל', 'שולחנות', 'צוות', 'כללי ישיב
 
 function newPlan() {
   return { id: uid(), name: 'סידור ארוחה', childIds: [], tables: [], staff: {},
-           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {} };
+           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {}, marks: {} };
 }
 const tplOf = t => E.TEMPLATES[t.templateId] || E.TEMPLATES.rect6_heads;
 const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
@@ -744,6 +753,77 @@ function autoLayout(kind, silent) {
   if (!silent) renderBoard();
 }
 
+/* ---------- סמני אנשי צוות שלא יושבים בשולחן ---------- */
+// צבע לכל משבצת, כדי שהסמן שלה והנקודה ליד שם השולחן יהיו באותו צבע.
+const MARK_COLORS = ['#C4846C', '#5f93b8', '#7a54a8', '#1F7a4f', '#b8801f', '#a0526d'];
+const offSlots = () => Object.keys(plan.staff).filter(id => plan.staff[id].sits !== 'seat');
+const markColor = sid => MARK_COLORS[offSlots().indexOf(sid) % MARK_COLORS.length];
+
+// מיקום התחלתי: "יושבת ליד" — צמוד לשולחן שבאחריותה; "משגיחה" — בשוליים.
+function ensureMarkers() {
+  plan.marks = plan.marks || {};
+  offSlots().forEach((sid, i) => {
+    if (plan.marks[sid]) return;
+    const cfg = plan.staff[sid];
+    const tid = (cfg.tables || [])[0];
+    const l = tid ? plan.layout[tid] : null;
+    if (cfg.sits === 'beside' && l) {
+      const b = tableBox(plan.tables.find(t => t.id === tid));
+      plan.marks[sid] = { x: Math.round(l.x + b.w / 2 - 40), y: Math.round(l.y + b.h + 4) };
+    } else {
+      plan.marks[sid] = { x: 30, y: 30 + i * 40 };
+    }
+  });
+  Object.keys(plan.marks).forEach(sid => { if (!plan.staff[sid]) delete plan.marks[sid]; });
+}
+
+function markersHtml() {
+  ensureMarkers();
+  return offSlots().map(sid => {
+    const cfg = plan.staff[sid], m = plan.marks[sid], c = markColor(sid);
+    const tables = (cfg.tables || []).map(tid => {
+      const t = plan.tables.find(x => x.id === tid); return t ? t.name : '';
+    }).filter(Boolean);
+    const ico = cfg.sits === 'beside' ? '🪑' : '👀';
+    const ttl = cfg.sits === 'beside' ? 'יושבת ליד השולחן' : 'משגיחה';
+    return `<div class="pmark" style="left:${m.x}px;top:${m.y}px;border-color:${c};color:${c}"
+      onpointerdown="startDragMark(event,'${sid}')"
+      title="${ttl}${tables.length ? ' · ' + esc(tables.join(', ')) : ''}">
+      <span class="ico">${ico}</span>${esc(slotName(sid))}</div>`;
+  }).join('');
+}
+
+// הסמן של "יושבת ליד" נוסע עם השולחן שלה כשגוררים אותו.
+function moveMarksWithTable(tid, dx, dy) {
+  offSlots().forEach(sid => {
+    const cfg = plan.staff[sid];
+    if (cfg.sits !== 'beside') return;
+    if ((cfg.tables || [])[0] !== tid) return;
+    const m = plan.marks && plan.marks[sid]; if (!m) return;
+    m.x = Math.round(m.x + dx); m.y = Math.round(m.y + dy);
+  });
+}
+
+let dragMark = null;
+function startDragMark(ev, sid) {
+  ev.preventDefault(); ev.stopPropagation();
+  const m = plan.marks[sid];
+  dragMark = { sid, sx: ev.clientX, sy: ev.clientY, ox: m.x, oy: m.y };
+  window.addEventListener('pointermove', onDragMark);
+  window.addEventListener('pointerup', endDragMark, { once: true });
+}
+function onDragMark(ev) {
+  if (!dragMark) return;
+  const room = document.getElementById('room');
+  const sc = room ? (room.getBoundingClientRect().width / ROOM_W) || 1 : 1;
+  const m = plan.marks[dragMark.sid];
+  m.x = Math.max(0, Math.round(dragMark.ox + (ev.clientX - dragMark.sx) / sc));
+  m.y = Math.max(0, Math.round(dragMark.oy + (ev.clientY - dragMark.sy) / sc));
+  const el = [...document.querySelectorAll('.pmark')][offSlots().indexOf(dragMark.sid)];
+  if (el) { el.style.left = m.x + 'px'; el.style.top = m.y + 'px'; }
+}
+function endDragMark() { window.removeEventListener('pointermove', onDragMark); dragMark = null; renderBoard(); }
+
 // הקטנת הדף כך שייכנס לרוחב המסך, בלי לשנות את הפריסה עצמה.
 function fitRoom() {
   const outer = document.getElementById('roomOuter'), room = document.getElementById('room');
@@ -794,13 +874,14 @@ function renderBoard() {
         oncontextmenu="event.preventDefault();toggleLock('${k}')"
         title="${p ? esc(p.name) : 'מקום פנוי'}">${p ? esc(p.name) : ''}</div>`;
     }).join('');
-    const beside = Object.keys(plan.staff)
-      .filter(id => plan.staff[id].sits !== 'seat' && (plan.staff[id].tables || []).includes(t.id))
-      .map(slotName).filter(Boolean);
+    // נקודת צבע לכל איש צוות שאחראי על השולחן, בצבע הסמן שלו
+    const dots = offSlots()
+      .filter(sid => (plan.staff[sid].tables || []).includes(t.id))
+      .map(sid => `<span class="tdot" style="background:${markColor(sid)}" title="${esc(slotName(sid))}"></span>`).join('');
     return `<div class="twrap" data-t="${t.id}" style="left:${l.x}px;top:${l.y}px;width:${box.w}px;height:${box.h}px;
       transform:rotate(${l.rot}deg);transform-origin:center">
       <div class="tlabel" style="transform:translateX(50%) rotate(${-l.rot}deg)">
-        <span onpointerdown="startDrag(event,'${t.id}')">${esc(t.name)}${beside.length ? ' · ' + esc(beside.join(', ')) : ''}</span>
+        <span onpointerdown="startDrag(event,'${t.id}')">${dots}${esc(t.name)}</span>
         <button class="rot" onclick="rotateTable('${t.id}')">⟳</button></div>
       <div class="tsurface" onpointerdown="startDrag(event,'${t.id}')"
         style="left:${PAD}px;top:${PAD}px;width:${tpl.w * S}px;height:${tpl.h * S}px;
@@ -829,7 +910,7 @@ function renderBoard() {
       <button class="lb" onclick="autoLayout('circle')">מעגל</button>
     </div>
     <div class="a4note">📄 הדף בגודל A4 לרוחב — מה שנראה כאן הוא בדיוק מה שיודפס</div>
-    <div class="room-outer" id="roomOuter"><div class="room" id="room">${tablesHtml}</div></div>
+    <div class="room-outer" id="roomOuter"><div class="room" id="room">${tablesHtml}${markersHtml()}</div></div>
     <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
       גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
   fitRoom();
@@ -852,7 +933,9 @@ function onDrag(ev) {
   const sc = room ? (room.getBoundingClientRect().width / ROOM_W) || 1 : 1;
   const x = Math.max(0, drag.ox + (ev.clientX - drag.sx) / sc);
   const y = Math.max(0, drag.oy + (ev.clientY - drag.sy) / sc);
-  plan.layout[drag.tid] = Object.assign(plan.layout[drag.tid] || { rot: 0 }, { x, y });
+  const cur = plan.layout[drag.tid] || { x: 0, y: 0, rot: 0 };
+  moveMarksWithTable(drag.tid, x - cur.x, y - cur.y);   // הסמן נוסע עם השולחן
+  plan.layout[drag.tid] = Object.assign(cur, { x, y });
   if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
 }
 function endDrag() { window.removeEventListener('pointermove', onDrag); drag = null; renderBoard(); }
