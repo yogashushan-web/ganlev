@@ -147,6 +147,28 @@
     .conflict p { font-size:13.5px; color:#8a6a23; line-height:1.7; margin-bottom:12px; }
     .conflict .opts { display:flex; gap:8px; flex-wrap:wrap; }
     .conflict .opts button { background:#fff; border:1px solid #e8c88a; color:#8a6a23; border-radius:9px; padding:8px 13px; font-family:'Heebo'; font-size:13px; font-weight:700; cursor:pointer; }
+    /* ---- חלון בתוך העמוד, במקום חלונות הדפדפן ---- */
+    .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none;
+          align-items:center; justify-content:center; z-index:9999; padding:18px; }
+    .ov.show { display:flex; }
+    .modal { background:#fff; border-radius:18px; padding:24px 26px; width:100%; max-width:460px;
+             max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .modal h3 { color:#1F3D34; font-size:19px; margin-bottom:4px; }
+    .modal .msub { color:#9B8E82; font-size:13px; margin-bottom:16px; line-height:1.6; }
+    .modal input[type=text] { width:100%; padding:11px 13px; border:1.5px solid #e8e4de;
+             border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .modal input[type=text]:focus { border-color:#1F3D34; }
+    .m-actions { display:flex; gap:9px; margin-top:18px; flex-wrap:wrap; }
+    .plan-row { display:flex; align-items:center; gap:10px; background:#FAF8F4; border:1px solid #efe9e0;
+             border-radius:12px; padding:12px 14px; margin-bottom:8px; cursor:pointer; }
+    .plan-row:hover { border-color:#1F3D34; background:#f4f9f6; }
+    .plan-row .nm { font-weight:800; color:#1F3D34; font-size:14.5px; }
+    .plan-row .meta { font-size:12px; color:#9B8E82; }
+    .plan-row .rm { margin-right:auto; background:#f6f2ec; border:1px solid #e8e1d6; color:#8a7f70;
+             border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Heebo'; }
+    .plan-row .rm:hover { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
+    .empty-note { color:#9B8E82; font-size:13.5px; line-height:1.7; }
+
     @media print {
       @page { size: A4 landscape; margin: 8mm; }
       body { background:#fff; padding:0 !important; }
@@ -169,6 +191,15 @@
   <div class="steps" id="steps"></div>
   <div id="wizard"></div>
   <div id="board" class="hide"></div>
+
+  <div class="ov" id="modalOv" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h3 id="modalTitle"></h3>
+      <div class="msub" id="modalSub"></div>
+      <div id="modalBody"></div>
+      <div class="m-actions" id="modalActions"></div>
+    </div>
+  </div>
 
 <script src="js/common.js?v=19"></script>
 <script src="js/api.js?v=19"></script>
@@ -729,9 +760,14 @@ function rotateTable(tid) {
 
 /* ---------- הלוח ---------- */
 function startFresh() {
-  if (plan.childIds.length && !confirm('להתחיל סידור חדש? מה שלא נשמר יימחק.')) return;
-  clearDraft(); plan = newPlan(); built = false; goStep(1);
+  // הטיוטה הנוכחית אינה שמורה בשרת, ולכן כאן כן מתריעים לפני שמאבדים אותה.
+  if (!plan.childIds.length) { doFresh(); return; }
+  openModal('סידור חדש', 'הטיוטה הנוכחית תימחק. אם רוצים לשמור אותה — סגרי ולחצי "שמירה" קודם.',
+    `<div class="empty-note"><b>${esc(plan.name)}</b> · ${plan.childIds.length} ילדים · ${plan.tables.length} שולחנות</div>`,
+    `<button class="btn" onclick="doFresh()">התחלה מחדש</button>
+     <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
 }
+function doFresh() { closeModal(); clearDraft(); plan = newPlan(); built = false; goStep(1); }
 
 function renderBoard() {
   saveDraft();
@@ -847,32 +883,81 @@ async function savePlan() {
   try { await api.saveSeatingPlan(plan); showOk('הסידור נשמר'); }
   catch (e) { showErr('השמירה נכשלה: ' + e.message); }
 }
-async function saveVersion() {
-  const note = prompt('שם לגרסה:', 'גרסה מ-' + new Date().toLocaleDateString('he-IL'));
-  if (note === null) return;
-  try { await api.saveSeatingPlan(plan); await api.saveSeatingVersion(plan, note); showOk('נשמרה גרסה'); }
+/* ---------- חלון בתוך העמוד ---------- */
+function openModal(title, sub, body, actions) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSub').textContent = sub || '';
+  document.getElementById('modalBody').innerHTML = body || '';
+  document.getElementById('modalActions').innerHTML = actions || '';
+  document.getElementById('modalOv').classList.add('show');
+}
+function closeModal() { document.getElementById('modalOv').classList.remove('show'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function saveVersion() {
+  const def = 'גרסה מ-' + new Date().toLocaleDateString('he-IL');
+  openModal('שמירת גרסה', 'הגרסה נשמרת בנפרד, ואפשר לחזור אליה בכל זמן.',
+    `<input type="text" id="verName" value="${esc(def)}">`,
+    `<button class="btn" onclick="doSaveVersion()">שמירה</button>
+     <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
+  setTimeout(() => { const el = document.getElementById('verName'); if (el) { el.focus(); el.select(); } }, 60);
+}
+async function doSaveVersion() {
+  const note = (document.getElementById('verName') || {}).value || '';
+  if (!note.trim()) { showErr('צריך לתת שם לגרסה'); return; }
+  closeModal();
+  try { await api.saveSeatingPlan(plan); await api.saveSeatingVersion(plan, note.trim()); showOk('נשמרה גרסה'); }
   catch (e) { showErr('שמירת הגרסה נכשלה: ' + e.message); }
 }
+
+let savedPlans = [];
 async function loadExisting() {
+  openModal('סידורים שמורים', '', '<div class="empty-note">טוען…</div>',
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
   try {
     const r = await api.getSeatingPlans();
-    const list = (r && r.plans) || [];
-    if (!list.length) { showErr('אין עדיין סידורים שמורים'); return; }
-    const pick = prompt('איזה סידור לפתוח?\n\n' + list.map((p, i) => (i + 1) + '. ' + p.name).join('\n'), '1');
-    const idx = parseInt(pick, 10) - 1;
-    if (isNaN(idx) || !list[idx]) return;
-    plan = Object.assign(newPlan(), list[idx].plan);
-    plan.layout = plan.layout || {};
-    if (Object.keys(plan.seats || {}).length) {
-      if (!Object.keys(plan.layout).length) autoLayout('row', true);
-      built = true;
-      document.getElementById('wizard').classList.add('hide');
-      document.getElementById('steps').classList.add('hide');
-      document.getElementById('board').classList.remove('hide');
-      renderTop(); renderBoard();
-    } else { renderTop(); goStep(1); }
-    showOk('נטען: ' + plan.name);
-  } catch (e) { showErr('הטעינה נכשלה: ' + e.message); }
+    savedPlans = (r && r.plans) || [];
+    renderPlanList();
+  } catch (e) {
+    document.getElementById('modalBody').innerHTML =
+      `<div class="empty-note">הטעינה נכשלה: ${esc(e.message)}</div>`;
+  }
+}
+function renderPlanList() {
+  const body = savedPlans.length
+    ? savedPlans.map((p, i) => {
+        const seats = Object.keys((p.plan && p.plan.seats) || {}).length;
+        const when = (p.updated || '').slice(0, 10).split('-').reverse().join('.');
+        return `<div class="plan-row" onclick="openPlan(${i})">
+          <div><div class="nm">${esc(p.name)}</div>
+            <div class="meta">${seats ? seats + ' מקומות' : 'טרם נוצר סידור'}${when ? ' · ' + when : ''}</div></div>
+          <button class="rm" onclick="event.stopPropagation();removePlan(${i})">הסר</button>
+        </div>`;
+      }).join('')
+    : `<div class="empty-note">אין עדיין סידורים שמורים.<br>סגרי את החלון, בני סידור ולחצי "שמירה".</div>`;
+  document.getElementById('modalBody').innerHTML = body;
+}
+function openPlan(i) {
+  const p = savedPlans[i]; if (!p) return;
+  closeModal();
+  plan = Object.assign(newPlan(), p.plan);
+  plan.layout = plan.layout || {};
+  if (Object.keys(plan.seats || {}).length) {
+    if (!Object.keys(plan.layout).length) autoLayout('row', true);
+    built = true;
+    document.getElementById('wizard').classList.add('hide');
+    document.getElementById('steps').classList.add('hide');
+    document.getElementById('board').classList.remove('hide');
+    renderTop(); renderBoard();
+  } else { built = false; renderTop(); goStep(1); }
+  showOk('נטען: ' + plan.name);
+}
+// מחיקה בלי שאלה — הסידור עובר לפח וניתן לשחזור.
+async function removePlan(i) {
+  const p = savedPlans[i]; if (!p) return;
+  savedPlans.splice(i, 1); renderPlanList();
+  try { await api.deleteSeatingPlan(p.id); showOk('הוסר · ניתן לשחזור מהפח'); }
+  catch (e) { showErr('ההסרה נכשלה: ' + e.message); }
 }
 
 function showErr(m) { const el = document.getElementById('error'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 5000); }
