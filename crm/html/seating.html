@@ -141,6 +141,14 @@
     .pmark .ico { font-size:13px; }
     .tdot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:3px; vertical-align:0; }
 
+    /* ---- קווי עזר ליישור בזמן גרירה ---- */
+    #guides { position:absolute; inset:0; pointer-events:none; z-index:8; }
+    .gline { position:absolute; }
+    .gline.v { top:0; bottom:0; width:0; border-right:1.5px dashed #C4846C; }
+    .gline.h { left:0; right:0; height:0; border-bottom:1.5px dashed #C4846C; }
+    .gap-tag { position:absolute; background:#C4846C; color:#fff; font-size:10px; font-weight:800;
+               border-radius:5px; padding:1px 6px; transform:translate(50%,-50%); }
+
     .layouts { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
     .layouts .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px; padding:7px 13px; font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#1F3D34; cursor:pointer; }
     .layouts .lb:hover { border-color:#1F3D34; background:#f4f9f6; }
@@ -926,15 +934,96 @@ function renderBoard() {
       <button class="lb" onclick="autoLayout('parallel')">מקבילים</button>
       <button class="lb" onclick="autoLayout('grid')">רשת</button>
       <button class="lb" onclick="autoLayout('circle')">מעגל</button>
+      <button class="lb" style="border-color:#C4846C;color:#8a5a44" onclick="tidyLayout()">✨ סדר יפה</button>
     </div>
     <div class="a4note">📄 הדף בגודל A4 לרוחב — מה שנראה כאן הוא בדיוק מה שיודפס</div>
-    <div class="room-outer" id="roomOuter"><div class="room" id="room">${tablesHtml}${markersHtml()}</div></div>
+    <div class="room-outer" id="roomOuter"><div class="room" id="room">${tablesHtml}${markersHtml()}<div id="guides"></div></div></div>
     <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
       גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
   fitRoom();
 }
 
-/* ---------- גרירה ---------- */
+/* ---------- גרירה עם קווי עזר ---------- */
+const SNAP = 9;   // מרחק בפיקסלים שבו השולחן "נתפס" לקו יישור
+
+// תיבת השולחן בחדר, בהתחשב בסיבוב
+function tableRect(t, l) {
+  const b = tableBox(t);
+  const rot = (((l.rot || 0) % 180) + 180) % 180;
+  const w = rot === 90 ? b.h : b.w, h = rot === 90 ? b.w : b.h;
+  return { x: l.x, y: l.y, w, h };
+}
+
+// יישור לשולחנות האחרים: קצוות ומרכזים, ועוד מרכז החדר.
+// מחזיר גם את הקווים לציור וגם את ההיסט שצריך להחיל.
+function snapDrag(tid, x, y) {
+  const me = plan.tables.find(t => t.id === tid);
+  const r = tableRect(me, { x, y, rot: (plan.layout[tid] || {}).rot });
+  const xs = [], ys = [];
+  plan.tables.forEach(t => {
+    if (t.id === tid) return;
+    const l = plan.layout[t.id]; if (!l) return;
+    const o = tableRect(t, l);
+    xs.push(o.x, o.x + o.w / 2, o.x + o.w);
+    ys.push(o.y, o.y + o.h / 2, o.y + o.h);
+  });
+  xs.push(ROOM_W / 2); ys.push(ROOM_H / 2);
+
+  const guides = [];
+  let bx = null, by = null;
+  [[r.x, 0], [r.x + r.w / 2, r.w / 2], [r.x + r.w, r.w]].forEach(([edge, off]) => {
+    xs.forEach(v => {
+      const d = Math.abs(edge - v);
+      if (d <= SNAP && (bx === null || d < bx.d)) bx = { d, x: v - off, line: v };
+    });
+  });
+  [[r.y, 0], [r.y + r.h / 2, r.h / 2], [r.y + r.h, r.h]].forEach(([edge, off]) => {
+    ys.forEach(v => {
+      const d = Math.abs(edge - v);
+      if (d <= SNAP && (by === null || d < by.d)) by = { d, y: v - off, line: v };
+    });
+  });
+  if (bx) { x = Math.round(bx.x); guides.push({ dir: 'v', at: bx.line }); }
+  if (by) { y = Math.round(by.y); guides.push({ dir: 'h', at: by.line }); }
+
+  // רווחים שווים: אם המרווח לשכן הקרוב שווה למרווח קיים אחר — נתפס אליו
+  const eq = equalGap(tid, x, r);
+  if (eq !== null) { x = eq.x; guides.push({ dir: 'gap', at: eq.mid, y: eq.y, text: eq.gap + 'px' }); }
+  return { x, y, guides };
+}
+
+// מרווחים אופקיים בין השולחנות האחרים — מנסים לשמור על אותו רווח
+function equalGap(tid, x, r) {
+  const others = plan.tables.filter(t => t.id !== tid && plan.layout[t.id])
+    .map(t => tableRect(t, plan.layout[t.id])).sort((a, b) => a.x - b.x);
+  if (others.length < 2) return null;
+  const gaps = [];
+  for (let i = 1; i < others.length; i++) gaps.push(Math.round(others[i].x - (others[i - 1].x + others[i - 1].w)));
+  const common = gaps.filter(g => g > 0).sort((a, b) => a - b)[0];
+  if (!common) return null;
+  for (const o of others) {
+    const right = o.x + o.w + common;          // ממוקם מימין לשולחן קיים
+    const left = o.x - common - r.w;           // או משמאלו
+    for (const cand of [right, left]) {
+      if (Math.abs(x - cand) <= SNAP) {
+        const midX = cand > o.x ? o.x + o.w + common / 2 : cand + r.w + common / 2;
+        return { x: Math.round(cand), mid: midX, y: o.y + o.h / 2, gap: common };
+      }
+    }
+  }
+  return null;
+}
+
+function drawGuides(list) {
+  const g = document.getElementById('guides');
+  if (!g) return;
+  g.innerHTML = (list || []).map(a => {
+    if (a.dir === 'v') return `<div class="gline v" style="right:${ROOM_W - a.at}px"></div>`;
+    if (a.dir === 'h') return `<div class="gline h" style="top:${a.at}px"></div>`;
+    return `<div class="gap-tag" style="right:${ROOM_W - a.at}px;top:${a.y}px">${esc(a.text)}</div>`;
+  }).join('');
+}
+
 let drag = null;
 function startDrag(ev, tid) {
   ev.preventDefault();
@@ -949,14 +1038,60 @@ function onDrag(ev) {
   // המסך מציג את הדף מוקטן, אז מרחק העכבר מחולק ביחס ההקטנה
   const room = document.getElementById('room');
   const sc = room ? (room.getBoundingClientRect().width / ROOM_W) || 1 : 1;
-  const x = Math.max(0, drag.ox + (ev.clientX - drag.sx) / sc);
-  const y = Math.max(0, drag.oy + (ev.clientY - drag.sy) / sc);
+  let x = Math.max(0, drag.ox + (ev.clientX - drag.sx) / sc);
+  let y = Math.max(0, drag.oy + (ev.clientY - drag.sy) / sc);
+  const snapped = snapDrag(drag.tid, x, y);            // הצמדה לקווי יישור
+  x = snapped.x; y = snapped.y;
+  drawGuides(snapped.guides);
   const cur = plan.layout[drag.tid] || { x: 0, y: 0, rot: 0 };
   moveMarksWithTable(drag.tid, x - cur.x, y - cur.y);   // הסמן נוסע עם השולחן
   plan.layout[drag.tid] = Object.assign(cur, { x, y });
   if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
 }
-function endDrag() { window.removeEventListener('pointermove', onDrag); drag = null; renderBoard(); }
+function endDrag() { window.removeEventListener('pointermove', onDrag); drag = null; drawGuides([]); renderBoard(); }
+
+// "סדר יפה": לוקח את הסידור הידני כמו שהוא, מקבץ שולחנות לשורות לפי
+// הגובה שלהם, מיישר כל שורה לאותו קו, מפזר ברווחים שווים וממרכז בדף.
+// הכוונה של הגננת נשמרת — רק הדיוק מתווסף.
+function tidyLayout() {
+  if (plan.tables.length < 2) return;
+  const items = plan.tables.map(t => ({ t, l: plan.layout[t.id] || { x: 0, y: 0, rot: 0 } }))
+    .map(o => ({ ...o, r: tableRect(o.t, o.l) }));
+
+  // קיבוץ לשורות: שולחנות שמרכזיהם קרובים אנכית שייכים לאותה שורה
+  const byY = items.slice().sort((a, b) => (a.r.y + a.r.h / 2) - (b.r.y + b.r.h / 2));
+  const rows = [];
+  byY.forEach(o => {
+    const cy = o.r.y + o.r.h / 2;
+    const row = rows.find(rw => Math.abs(rw.cy - cy) < Math.max(70, o.r.h * 0.6));
+    if (row) { row.items.push(o); row.cy = (row.cy * (row.items.length - 1) + cy) / row.items.length; }
+    else rows.push({ cy, items: [o] });
+  });
+
+  // כל שורה: מסודרת לפי X, רווח אחיד, ומיושרת למרכז אנכי משותף
+  const GAPX = 30, GAPY = 34;
+  const rowSizes = rows.map(rw => ({
+    w: rw.items.reduce((s, o) => s + o.r.w, 0) + GAPX * (rw.items.length - 1),
+    h: Math.max(...rw.items.map(o => o.r.h)),
+  }));
+  const totalH = rowSizes.reduce((s, r) => s + r.h, 0) + GAPY * (rows.length - 1);
+  let y = Math.max(0, Math.round((ROOM_H - totalH) / 2));
+
+  rows.forEach((rw, i) => {
+    rw.items.sort((a, b) => a.r.x - b.r.x);
+    let x = Math.max(0, Math.round((ROOM_W - rowSizes[i].w) / 2));
+    const rowH = rowSizes[i].h;
+    rw.items.forEach(o => {
+      const nx = Math.round(x), ny = Math.round(y + (rowH - o.r.h) / 2);
+      moveMarksWithTable(o.t.id, nx - o.l.x, ny - o.l.y);
+      plan.layout[o.t.id] = Object.assign(o.l, { x: nx, y: ny });
+      x += o.r.w + GAPX;
+    });
+    y += rowH + GAPY;
+  });
+  renderBoard();
+  showOk('סודר — שורות ישרות ורווחים שווים');
+}
 
 function tapSeat(k) {
   if (drag) return;
