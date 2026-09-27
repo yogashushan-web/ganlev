@@ -103,14 +103,27 @@ function buildSeatingPdf(sheet) {
       const oy = M + HEAD + (availH - ROOM_H * k) / 2;
       const X = px => ox + px * k, Y = py => oy + py * k;
 
-      // משטחי השולחנות
+      // משטחי השולחנות, בגוון של מי שאחראית עליהם. שתי אחראיות — חצי-חצי,
+      // שכל מחצית נחתכת מהמלבן המסובב (clip) כדי שהחלוקה תסתובב עם השולחן.
       (sheet.tables || []).forEach(t => {
         const x = X(t.x), y = Y(t.y), w = t.w * k, h = t.h * k;
+        const fills = (t.fills && t.fills.length) ? t.fills : [C.surface];
+        const shape = () => {
+          if (t.shape === 'round') doc.ellipse(x + w / 2, y + h / 2, w / 2, h / 2);
+          else doc.roundedRect(x, y, w, h, 7 * k);
+        };
         doc.save();
         if (t.rot) doc.rotate(t.rot, { origin: [x + w / 2, y + h / 2] });
-        if (t.shape === 'round') doc.ellipse(x + w / 2, y + h / 2, w / 2, h / 2);
-        else doc.roundedRect(x, y, w, h, 7 * k);
-        doc.fillColor(C.surface).fill();
+        if (fills.length === 1) { shape(); doc.fillColor(fills[0]).fill(); }
+        else {
+          const bw = w / fills.length;
+          fills.forEach((f, i) => {
+            doc.save(); shape(); doc.clip();
+            doc.rect(x + i * bw, y, bw, h).fillColor(f).fill();
+            doc.restore();
+          });
+        }
+        if (t.line) { shape(); doc.lineWidth(Math.max(0.8, 2 * k)).strokeColor(t.line).stroke(); }
         doc.restore();
       });
 

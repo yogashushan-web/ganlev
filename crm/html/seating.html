@@ -127,7 +127,28 @@
     .tname:hover { border-color:#C4846C; color:#1F3D34; background:rgba(255,255,255,.7); }
     .tname-input { width:92px; padding:3px 7px; border:1.5px solid #1F3D34; border-radius:7px;
                    font-family:'Heebo'; font-size:12.5px; font-weight:700; text-align:center; outline:none; }
-    .rot { background:rgba(255,255,255,.8); border:1px solid #e8e4de; border-radius:6px; font-size:10.5px; cursor:pointer; font-family:'Heebo'; padding:1px 5px; }
+    /* ⟳ מסובב ברבע סיבוב — נשאר רק למסך צר, שם אין לאן לגרור ידית באצבע */
+    .rot { display:none; background:rgba(255,255,255,.8); border:1px solid #e8e4de; border-radius:6px; font-size:10.5px; cursor:pointer; font-family:'Heebo'; padding:1px 5px; }
+    @media (max-width: 760px), (hover: none) { .rot { display:inline-block; } .rhandle { display:none; } }
+
+    /* ידית הסיבוב: עיגול על גבעול קצר מראש השולחן, כמו בכל כלי גרפי */
+    .rhandle { position:absolute; left:50%; top:-16px; transform:translateX(-50%);
+               width:26px; height:26px; cursor:grab; z-index:8; opacity:0; transition:opacity .12s; }
+    .twrap:hover .rhandle, .rhandle:active { opacity:1; }
+    .rhandle::before { content:''; position:absolute; left:50%; top:13px; width:1.5px; height:15px;
+                       background:#C4846C; transform:translateX(-50%); }
+    .rhandle span { position:absolute; left:50%; top:2px; transform:translateX(-50%);
+                    width:13px; height:13px; border-radius:50%; background:#fff;
+                    border:2px solid #C4846C; box-shadow:0 1px 4px rgba(0,0,0,.15); display:block; }
+    .rhandle:active { cursor:grabbing; }
+    /* מספר המעלות החי ליד האצבע */
+    .rot-tag { position:fixed; z-index:10002; pointer-events:none; background:#fff; color:#9B8E82;
+               border:1.5px solid #e8e4de; border-radius:999px; padding:3px 11px; font-size:12px;
+               font-weight:800; box-shadow:0 3px 10px rgba(0,0,0,.14); white-space:nowrap; }
+    .rot-tag.snap { color:#8a5a44; border-color:#C4846C; background:#fdf6f2; }
+    .undo-btn:disabled { opacity:.4; cursor:default; }
+    /* שם האחראית מתחת לשולחן בסקיצה, בצבע שלה */
+    .sk-who { font-size:10.5px; font-weight:800; text-align:center; margin-top:4px; }
 
     /* ---- מד שלמות: כמה יושבים ומי לא ---- */
     .meter { background:#FAF8F4; border:1px solid #e8e4de; border-radius:14px; padding:12px 16px 13px; margin-bottom:12px; }
@@ -189,13 +210,14 @@
     .seat.bad { border-color:#e0837a; background:#fdf0ef; color:#a33; }
     .seat.lock::after { content:'🔒'; position:absolute; top:-1px; left:2px; font-size:10px; }
     /* ---- סמן איש צוות שלא יושב בתוך השולחן ---- */
+    /* גלולת הצוות: מסגרת עבה והילה באותו צבע, כדי שהקשר לשולחן שצבוע
+       באותו גוון ייקלט בלי קו מחבר ובלי מקרא */
     .pmark { position:absolute; display:flex; align-items:center; gap:5px; background:#fff;
-             border:2px solid #C4846C; border-radius:999px; padding:5px 12px 5px 9px;
-             font-size:11.5px; font-weight:800; white-space:nowrap; cursor:grab;
+             border:3px solid #C4846C; border-radius:999px; padding:6px 14px 6px 10px;
+             font-size:12px; font-weight:800; white-space:nowrap; cursor:grab;
              box-shadow:0 2px 8px rgba(0,0,0,.10); touch-action:none; z-index:6; }
     .pmark:active { cursor:grabbing; }
     .pmark .ico { font-size:13px; }
-    .tdot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:3px; vertical-align:0; }
 
     /* ---- קווי עזר ליישור בזמן גרירה ---- */
     #guides { position:absolute; inset:0; pointer-events:none; z-index:8; }
@@ -582,13 +604,14 @@ function planSketch(mode) {
       return `<div class="${cls.join(' ')}" style="left:${P + s.x * SK - 15}px;top:${P + s.y * SK - 15}px${interactive ? '' : ';cursor:default'}"
         ${interactive ? click : ''} title="${s.role === 'head' ? 'ראש השולחן' : s.role === 'middle' ? 'אמצע הצלע' : 'קצה'}">${lbl}</div>`;
     }).join('');
-    // נקודת צבע לכל איש צוות שאחראי על השולחן — מופיעה מיד עם הסימון
-    const dots = offSlots().filter(sid => (plan.staff[sid].tables || []).includes(t.id))
-      .map(sid => `<span class="tdot" style="background:${markColor(sid)}" title="${esc(slotName(sid))}"></span>`).join('');
-    return `<div class="sk-one"><div class="nm">${dots}${esc(t.name)}</div>
+    // השולחן נצבע בגוון של מי שאחראית עליו — נקלט מיד, בלי מקרא ובלי קווים
+    const sk = tableSkin(t.id), who = tableStaff(t.id).map(slotName).join(' · ');
+    return `<div class="sk-one"><div class="nm">${esc(t.name)}</div>
       <div class="sk-wrap" style="width:${tpl.w * SK + P * 2}px;height:${tpl.h * SK + P * 2}px">
-        <div class="sk-surface" style="left:${P}px;top:${P}px;width:${tpl.w * SK}px;height:${tpl.h * SK}px;
-          ${tpl.shape === 'round' ? 'border-radius:50%' : 'border-radius:8px'}"></div>${seats}</div></div>`;
+        <div class="sk-surface" title="${esc(who)}" style="left:${P}px;top:${P}px;width:${tpl.w * SK}px;height:${tpl.h * SK}px;
+          background:${sk.fill};border-color:${sk.line};
+          ${tpl.shape === 'round' ? 'border-radius:50%' : 'border-radius:8px'}"></div>${seats}</div>
+      ${who ? `<div class="sk-who" style="color:${markColor(tableStaff(t.id)[0])}">${esc(who)}</div>` : ''}</div>`;
   }).join('');
   const cap = plan.tables.reduce((s, t) => s + tplOf(t).seats.length, 0);
   const seated = Object.keys(plan.staff).filter(k => plan.staff[k].sits === 'seat').length;
@@ -814,6 +837,7 @@ function centerLayout(L) {
 }
 
 function autoLayout(kind, silent) {
+  if (!silent && built) pushUndo();
   const boxes = plan.tables.map(t => ({ id: t.id, ...tableBox(t) }));
   const L = {};
   if (kind === 'row') {
@@ -847,11 +871,37 @@ function autoLayout(kind, silent) {
   if (!silent) renderBoard();
 }
 
-/* ---------- סמני אנשי צוות שלא יושבים בשולחן ---------- */
-// צבע לכל משבצת, כדי שהסמן שלה והנקודה ליד שם השולחן יהיו באותו צבע.
+/* ---------- צבע לכל אשת צוות ---------- */
+// צבע אחד לכל משבצת, שנושא את כל המידע על אחריות: הוא צובע את השולחנות
+// שבאחריותה ואת הגלולה עם שמה. בלי קווים מחברים — קו לכל שולחן הופך
+// תרשים נקי לרשת של חוטים, והצבע אומר את אותו דבר בלי רעש.
 const MARK_COLORS = ['#C4846C', '#5f93b8', '#7a54a8', '#1F7a4f', '#b8801f', '#a0526d'];
-const offSlots = () => Object.keys(plan.staff).filter(id => plan.staff[id].sits !== 'seat');
-const markColor = sid => MARK_COLORS[offSlots().indexOf(sid) % MARK_COLORS.length];
+const allSlots = () => Object.keys(plan.staff);
+const offSlots = () => allSlots().filter(id => plan.staff[id].sits !== 'seat');
+const markColor = sid => MARK_COLORS[allSlots().indexOf(sid) % MARK_COLORS.length];
+
+// מי אחראית על השולחן הזה
+const tableStaff = tid => allSlots().filter(sid => (plan.staff[sid].tables || []).includes(tid));
+
+const rgbOf = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+function mix(a, b, t) {                       // t=0 מחזיר את a, t=1 את b
+  const A = rgbOf(a), B = rgbOf(b);
+  return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+const SURF = '#efe6d8', SURF_LINE = '#ddd0bb';
+
+// משטח השולחן בגוון של האחראית. שתי אחראיות — חצי-חצי, בלי מעבר מטושטש,
+// כדי שיהיה ברור שאלו שתיים ולא צבע שלישי חדש.
+function tableSkin(tid) {
+  const cols = tableStaff(tid).map(markColor);
+  if (!cols.length) return { fill: SURF, line: SURF_LINE };
+  const fills = cols.map(c => mix(SURF, c, 0.22));
+  const line = mix(SURF_LINE, cols[0], 0.6);
+  if (fills.length === 1) return { fill: fills[0], line };
+  const step = 100 / fills.length;
+  const stops = fills.map((f, i) => `${f} ${i * step}% ${(i + 1) * step}%`).join(',');
+  return { fill: `linear-gradient(90deg, ${stops})`, line };
+}
 
 // מיקום התחלתי: "יושבת ליד" — צמוד לשולחן שבאחריותה; "משגיחה" — בשוליים.
 function ensureMarkers() {
@@ -880,7 +930,8 @@ function markersHtml() {
     }).filter(Boolean);
     const ico = cfg.sits === 'beside' ? '🪑' : '👀';
     const ttl = cfg.sits === 'beside' ? 'יושבת ליד השולחן' : 'משגיחה';
-    return `<div class="pmark" style="left:${m.x}px;top:${m.y}px;border-color:${c};color:${c}"
+    return `<div class="pmark" style="left:${m.x}px;top:${m.y}px;border-color:${c};color:${c};
+      box-shadow:0 0 0 4px ${mix('#ffffff', c, 0.16)},0 2px 8px rgba(0,0,0,.10)"
       onpointerdown="startDragMark(event,'${sid}')"
       title="${ttl}${tables.length ? ' · ' + esc(tables.join(', ')) : ''}">
       <span class="ico">${ico}</span>${esc(slotName(sid))}</div>`;
@@ -901,6 +952,7 @@ function moveMarksWithTable(tid, dx, dy) {
 let dragMark = null;
 function startDragMark(ev, sid) {
   ev.preventDefault(); ev.stopPropagation();
+  if (built) pushUndo();
   const m = plan.marks[sid];
   dragMark = { sid, sx: ev.clientX, sy: ev.clientY, ox: m.x, oy: m.y };
   window.addEventListener('pointermove', onDragMark);
@@ -927,9 +979,94 @@ function fitRoom() {
   outer.style.height = (ROOM_H * scale) + 'px';
 }
 window.addEventListener('resize', fitRoom);
+// כפתור ה-⟳ נשאר למסך צר, שם אין לאן לגרור ידית קטנה באצבע
 function rotateTable(tid) {
+  pushUndo();
   const l = plan.layout[tid] || { x: 0, y: 0, rot: 0 };
   l.rot = (l.rot + 45) % 360; plan.layout[tid] = l; renderBoard();
+}
+function resetRot(tid) {
+  const l = plan.layout[tid]; if (!l || !l.rot) return;
+  pushUndo();
+  l.rot = 0; renderBoard();
+}
+
+/* ---------- סיבוב ידני בגרירה ---------- */
+// מגנט כל 22.5° — כלומר 0, 22.5, 45, 67.5, 90 וכן הלאה — ובנוסף לזווית של
+// כל שולחן אחר בחדר, כי חדר נראה מסודר כששולחנות מקבילים זה לזה ולא דווקא
+// כשהם על זוויות עגולות. Alt בזמן הגרירה מבטל את המגנט.
+const ROT_STEP = 22.5, ROT_PULL = 5;
+let rotDrag = null;
+
+function snapAngle(tid, deg, free) {
+  const norm = a => ((a % 360) + 360) % 360;
+  deg = norm(deg);
+  if (free) return { deg: Math.round(deg * 10) / 10, hit: null };
+  const cands = [];
+  for (let a = 0; a < 360; a += ROT_STEP) cands.push({ a, why: null });
+  plan.tables.forEach(t => {
+    if (t.id === tid) return;
+    const r = norm((plan.layout[t.id] || {}).rot || 0);
+    cands.push({ a: r, why: t.name });
+  });
+  let best = null;
+  cands.forEach(c => {
+    let d = Math.abs(norm(deg - c.a));
+    if (d > 180) d = 360 - d;
+    if (d <= ROT_PULL && (!best || d < best.d)) best = { d, a: c.a, why: c.why };
+  });
+  return best ? { deg: best.a, hit: best.why || 'step' } : { deg: Math.round(deg * 10) / 10, hit: null };
+}
+
+function startRotate(ev, tid) {
+  ev.preventDefault(); ev.stopPropagation();
+  pushUndo();
+  const wrap = document.querySelector(`.twrap[data-t="${tid}"]`);
+  const r = wrap.getBoundingClientRect();
+  rotDrag = { tid, cx: r.left + r.width / 2, cy: r.top + r.height / 2,
+              start: (plan.layout[tid] || {}).rot || 0 };
+  // הזווית שבה האצבע נמצאת ברגע התפיסה, כדי שהשולחן לא יקפוץ
+  rotDrag.grab = Math.atan2(ev.clientY - rotDrag.cy, ev.clientX - rotDrag.cx) * 180 / Math.PI;
+  try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+  window.addEventListener('pointermove', onRotate);
+  window.addEventListener('pointerup', endRotate, { once: true });
+}
+
+function onRotate(ev) {
+  if (!rotDrag) return;
+  const now = Math.atan2(ev.clientY - rotDrag.cy, ev.clientX - rotDrag.cx) * 180 / Math.PI;
+  const res = snapAngle(rotDrag.tid, rotDrag.start + (now - rotDrag.grab), ev.altKey);
+  const l = plan.layout[rotDrag.tid] || (plan.layout[rotDrag.tid] = { x: 0, y: 0, rot: 0 });
+  l.rot = res.deg;
+
+  // סיבוב חי בלי לבנות מחדש את הלוח — רק הטרנספורמים זזים
+  const wrap = document.querySelector(`.twrap[data-t="${rotDrag.tid}"]`);
+  if (wrap) {
+    wrap.style.transform = `rotate(${l.rot}deg)`;
+    wrap.querySelectorAll('.seat').forEach(s => { s.style.transform = `rotate(${-l.rot}deg)`; });
+    const lb = wrap.querySelector('.tlabel');
+    if (lb) lb.style.transform = `translate(-50%,-50%) rotate(${-l.rot}deg)`;
+  }
+  showAngle(res, ev);
+}
+
+// מספר המעלות ליד האצבע — כתום כשהמגנט תפס, אפור כשחופשי
+function showAngle(res, ev) {
+  let tag = document.getElementById('rotTag');
+  if (!tag) { tag = document.createElement('div'); tag.id = 'rotTag'; tag.className = 'rot-tag'; document.body.appendChild(tag); }
+  const txt = Number.isInteger(res.deg) ? `${res.deg}°` : `${res.deg.toFixed(1)}°`;
+  tag.textContent = res.hit && res.hit !== 'step' ? `${txt} · כמו ${res.hit}` : txt;
+  tag.classList.toggle('snap', !!res.hit);
+  tag.style.left = (ev.clientX + 16) + 'px';
+  tag.style.top = (ev.clientY - 30) + 'px';
+}
+
+function endRotate() {
+  window.removeEventListener('pointermove', onRotate);
+  const tag = document.getElementById('rotTag'); if (tag) tag.remove();
+  if (!rotDrag) return;
+  rotDrag = null;
+  renderBoard();
 }
 
 /* ---------- הלוח ---------- */
@@ -949,9 +1086,13 @@ function doFresh() { closeModal(); clearDraft(); plan = newPlan(); built = false
 function sheetData() {
   const ep = enginePlan();
   const tables = plan.tables.map(t => {
-    const l = plan.layout[t.id] || { x: 0, y: 0, rot: 0 }, b = tableBox(t), tp = tplOf(t);
+    const l = plan.layout[t.id] || { x: 0, y: 0, rot: 0 }, tp = tplOf(t);
+    // הגוונים של האחראיות עוברים לדף המודפס — שם זו הדרך היחידה לדעת
+    const cols = tableStaff(t.id).map(markColor);
     return { name: t.name, shape: tp.shape === 'round' ? 'round' : 'rect', rot: l.rot || 0,
-             x: l.x + PAD, y: l.y + PAD, w: tp.w * S, h: tp.h * S };
+             x: l.x + PAD, y: l.y + PAD, w: tp.w * S, h: tp.h * S,
+             fills: cols.length ? cols.map(c => mix('#efe6d8', c, 0.22)) : null,
+             line: cols.length ? mix('#ddd0bb', cols[0], 0.6) : null };
   });
   const seats = [];
   plan.tables.forEach(t => tplOf(t).seats.forEach(s => {
@@ -1005,7 +1146,9 @@ async function downloadPdf() {
 // בעיה בישיבה — אין שום גרירה שתפתור אותה, ולכן אסור להציג אותה כאילו
 // המשתמש עוד לא סיים. מחזיר טקסט הסבר, או null אם הכלל בר-קיום.
 function whyImpossible(r) {
-  const sits = sid => plan.staff[sid] && plan.staff[sid].active && plan.staff[sid].sits;
+  // שימו לב: staff[sid].active הוא אינדקס לחברה הפעילה במשבצת, לא דגל כן/לא.
+  // "יושבת בשולחן" נקבע לפי sits === 'seat' בלבד.
+  const sits = sid => plan.staff[sid] && plan.staff[sid].sits === 'seat';
   const anyStaffSits = Object.keys(plan.staff).some(sits);
   const seated = new Set(Object.values(plan.seats));
 
@@ -1026,8 +1169,8 @@ function whyImpossible(r) {
 
 // "בסדר, ככה זה טוב" — החריגה מאושרת, האדום נעלם, והסידור נחשב גמור.
 // תמיד הפיך, ותמיד נספר בגלוי כדי שלא ייעלם מידע בשקט.
-function acceptViol(id) { plan.okRules[id] = true; renderBoard(); }
-function unacceptViol(id) { delete plan.okRules[id]; renderBoard(); }
+function acceptViol(id) { pushUndo(); plan.okRules[id] = true; renderBoard(); }
+function unacceptViol(id) { pushUndo(); delete plan.okRules[id]; renderBoard(); }
 
 // מד שלמות: כמה ילדים באמת יושבים, ומי לא. תמיד מול העיניים, כדי שלא
 // ייגמר סידור עם שני ילדים שנשכחו בצד או שלא הגיעו לשום כיסא.
@@ -1115,18 +1258,20 @@ function renderBoard() {
         oncontextmenu="event.preventDefault();toggleLock('${k}')"
         title="${p ? esc(p.name) : 'מקום פנוי'}">${p ? esc(p.name) : ''}</div>`;
     }).join('');
-    // נקודת צבע לכל איש צוות שאחראי על השולחן, בצבע הסמן שלו
-    const dots = offSlots()
-      .filter(sid => (plan.staff[sid].tables || []).includes(t.id))
-      .map(sid => `<span class="tdot" style="background:${markColor(sid)}" title="${esc(slotName(sid))}"></span>`).join('');
+    // אין יותר נקודות צבע ליד השם — הן דרכו על הכיסא הסמוך. הצבע עבר
+    // למשטח השולחן עצמו, שם יש לו מקום והוא נקלט מרחוק.
+    const sk = tableSkin(t.id), who = tableStaff(t.id).map(slotName).join(' · ');
     return `<div class="twrap" data-t="${t.id}" style="left:${l.x}px;top:${l.y}px;width:${box.w}px;height:${box.h}px;
       transform:rotate(${l.rot}deg);transform-origin:center">
       <div class="tlabel" style="left:50%;top:50%;transform:translate(-50%,-50%) rotate(${-l.rot}deg)">
-        ${dots}<span class="tname" onclick="renameTable('${t.id}')" title="לחיצה משנה את השם">${esc(t.name)}</span>
-        <button class="rot" onclick="rotateTable('${t.id}')" title="סיבוב">⟳</button></div>
-      <div class="tsurface" onpointerdown="startDrag(event,'${t.id}')"
+        <span class="tname" onclick="renameTable('${t.id}')" title="לחיצה משנה את השם">${esc(t.name)}</span>
+        <button class="rot" onclick="rotateTable('${t.id}')" title="סיבוב ברבע סיבוב">⟳</button></div>
+      <div class="tsurface" onpointerdown="startDrag(event,'${t.id}')" title="${esc(who)}"
         style="left:${PAD}px;top:${PAD}px;width:${tpl.w * S}px;height:${tpl.h * S}px;
+        background:${sk.fill};border-color:${sk.line};
         ${tpl.shape === 'round' ? 'border-radius:50%;' : 'border-radius:10px;'}"></div>
+      <div class="rhandle" onpointerdown="startRotate(event,'${t.id}')" ondblclick="resetRot('${t.id}')"
+        title="גרירה מסובבת · לחיצה כפולה מיישרת"><span></span></div>
       ${seats}</div>`;
   }).join('');
 
@@ -1135,6 +1280,8 @@ function renderBoard() {
       <div><b style="font-size:18px;color:#1F3D34">${esc(plan.name)}</b>
         <span style="color:#9B8E82;font-size:13px"> · ${plan.childIds.length} ילדים · ${plan.tables.length} שולחנות</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost undo-btn" onclick="undoMove()" ${undoStack.length ? '' : 'disabled'}
+          title="${undoStack.length ? 'ביטול הפעולה האחרונה' : 'אין מה לבטל'}">↶ ביטול</button>
         <button class="btn soft" onclick="reSolve()">סדרי מחדש</button>
         <button class="btn ghost" id="pdfBtn" onclick="downloadPdf()">📄 הורדה ל-PDF</button>
         <button class="btn ghost" onclick="window.print()">הדפסה</button>
@@ -1256,6 +1403,7 @@ function drawGuides(list) {
 let drag = null;
 function startDrag(ev, tid) {
   ev.preventDefault();
+  if (built) pushUndo();
   const l = plan.layout[tid] || { x: 0, y: 0, rot: 0 };
   drag = { tid, sx: ev.clientX, sy: ev.clientY, ox: l.x, oy: l.y };
   window.addEventListener('pointermove', onDrag);
@@ -1284,6 +1432,7 @@ function endDrag() { window.removeEventListener('pointermove', onDrag); drag = n
 // הכוונה של הגננת נשמרת — רק הדיוק מתווסף.
 function tidyLayout() {
   if (plan.tables.length < 2) return;
+  pushUndo();
   const items = plan.tables.map(t => ({ t, l: plan.layout[t.id] || { x: 0, y: 0, rot: 0 } }))
     .map(o => ({ ...o, r: tableRect(o.t, o.l) }));
 
@@ -1332,7 +1481,7 @@ function renameTable(tid) {
   let done = false;
   const finish = save => {
     if (done) return; done = true;
-    if (save) { const v = inp.value.trim(); if (v) t.name = v; }
+    if (save) { const v = inp.value.trim(); if (v && v !== t.name) { pushUndo(); t.name = v; } }
     renderBoard();
   };
   inp.addEventListener('keydown', e => {
@@ -1499,11 +1648,23 @@ function endChildDrag(ev) {
   showUndo(msg);
 }
 
-// ---- ביטול: כל העברה נשמרת, והודעה מציעה להחזיר ----
+// ---- ביטול ----
+// צילום של כל מה שאפשר לשנות ביד: מי יושב איפה, מי בצד, איפה השולחנות
+// ובאיזו זווית, איפה הסמנים, השמות, ואילו חריגות אושרו. כך החץ מבטל את
+// הפעולה האחרונה יהיה אשר תהיה, ולא רק העברת ילד.
 let undoStack = [], undoTimer = null;
+function snapshot() {
+  return JSON.stringify({
+    seats: plan.seats, parked: plan.parked || {}, layout: plan.layout,
+    marks: plan.marks || {}, okRules: plan.okRules || {},
+    names: plan.tables.map(t => t.name),
+  });
+}
 function pushUndo() {
-  undoStack.push(JSON.stringify({ seats: plan.seats, parked: plan.parked || {} }));
-  if (undoStack.length > 30) undoStack.shift();
+  const s = snapshot();
+  if (undoStack[undoStack.length - 1] === s) return;   // בלי כפילויות
+  undoStack.push(s);
+  if (undoStack.length > 40) undoStack.shift();
 }
 function showUndo(msg) {
   const old = document.getElementById('undoBar'); if (old) old.remove();
@@ -1516,8 +1677,11 @@ function showUndo(msg) {
 }
 function undoMove() {
   const s = undoStack.pop(); if (!s) return;
-  const prev = JSON.parse(s);
-  plan.seats = prev.seats; plan.parked = prev.parked;
+  const p = JSON.parse(s);
+  plan.seats = p.seats; plan.parked = p.parked; plan.layout = p.layout;
+  plan.marks = p.marks; plan.okRules = p.okRules;
+  (p.names || []).forEach((n, i) => { if (plan.tables[i]) plan.tables[i].name = n; });
+  selectedSeat = null;
   const b = document.getElementById('undoBar'); if (b) b.remove();
   renderBoard();
 }
@@ -1552,11 +1716,13 @@ function tapSeat(k) {
 }
 function toggleLock(k) {
   if (!plan.seats[k]) return;
+  pushUndo();
   if (plan.locks[k]) delete plan.locks[k]; else plan.locks[k] = plan.seats[k];
   renderBoard();
 }
 function killRule(id) { const r = plan.rules.find(x => x.id === id); if (r) r.active = false; renderBoard(); }
 function reSolve() {
+  pushUndo();
   const res = E.solve(enginePlan(), tplOf, { split: plan.split, locks: plan.locks, prefer: preferMap() });
   if (!res.ok) { showErr('לא נמצא סידור טוב יותר עם הכללים הנוכחיים'); return; }
   plan.seats = res.seats; plan.parked = {}; renderBoard(); showOk('סודר מחדש');
