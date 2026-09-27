@@ -134,7 +134,27 @@
              background:#eef5fb; border:2px solid #5f93b8; color:#2c4d66; display:flex; align-items:center;
              justify-content:center; text-align:center; font-size:11px; font-weight:700; padding:3px;
              line-height:1.12; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,.2); opacity:.95; }
-    .seat.target { border-color:#1F7a4f !important; background:#e6f4ec !important; transform:scale(1.12); }
+    .seat.target { border-color:#1F7a4f !important; background:#e6f4ec !important;
+                   box-shadow:0 0 0 4px rgba(31,122,79,.18); transform:scale(1.1); }
+    /* בזמן גרירה כל הכיסאות הפנויים מסומנים בעדינות, כדי שיהיה ברור לאן אפשר */
+    .seat.open { border-color:#9dc4ad; background:#f4faf6; }
+    .seat.from { opacity:.34; }                       /* המקור נשאר חצי-שקוף, לא מתרוקן */
+    .seat .preview { opacity:.5; font-style:italic; } /* שם הילד מוצג בתוך הכיסא היעד */
+    .seat.swap::before { content:'⇄'; position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+                         background:#1F7a4f; color:#fff; border-radius:999px; width:17px; height:17px;
+                         font-size:11px; line-height:17px; text-align:center; }
+    .room { direction:ltr; }                          /* מיקום פיזי — ראו roomPoint */
+    .seat, .parked, .pmark, .tlabel, .gap-tag { direction:rtl; }
+    .drag-live .seat, .drag-live .parked { transition:none; }
+    .seat.landed { animation:land .12s ease-out; }
+    @keyframes land { from { transform:scale(1.18); } to { transform:scale(1); } }
+    /* הודעת ביטול אחרי כל העברה */
+    .undo { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:10001;
+            background:#1F3D34; color:#fff; border-radius:999px; padding:9px 10px 9px 18px;
+            font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:10px;
+            box-shadow:0 6px 20px rgba(0,0,0,.22); }
+    .undo button { background:#fff; color:#1F3D34; border:0; border-radius:999px; padding:5px 13px;
+                   font-family:'Heebo'; font-size:12px; font-weight:800; cursor:pointer; }
     .parked { position:absolute; width:54px; height:54px; border-radius:50%; border:2px dashed #b3a89a;
               background:#fff; color:#6f6457; display:flex; align-items:center; justify-content:center;
               text-align:center; font-size:11px; font-weight:700; padding:3px; line-height:1.12;
@@ -1147,85 +1167,170 @@ function seatCenter(t, seat) {
            y: l.y + b.h / 2 + dx * Math.sin(a) + dy * Math.cos(a) };
 }
 // המרת מיקום העכבר לקואורדינטות הדף.
-// המושבים ממוקמים ב-CSS לפי left, כלומר מהקצה השמאלי — גם כשהאתר
-// מימין לשמאל. מדידה מהקצה הימני מהפכת את הציר וגורמת לנחיתה בצד ההפוך.
+// המושבים ממוקמים ב-CSS לפי left — מהקצה השמאלי — גם כשהאתר מימין לשמאל,
+// כי getBoundingClientRect מחזיר תמיד קופסה פיזית. יחס ההקטנה נגזר מהמדידה
+// עצמה ולא ממשתנה, כדי שיעבוד גם אם הדפדפן מוסיף זום משלו.
 function roomPoint(ev) {
-  const r = document.getElementById('room').getBoundingClientRect();
-  const sc = (r.width / ROOM_W) || 1;
+  const room = document.getElementById('room');
+  const r = room.getBoundingClientRect();
+  const sc = (r.width / (room.offsetWidth || ROOM_W)) || 1;
   return { x: (ev.clientX - r.left) / sc, y: (ev.clientY - r.top) / sc, sc };
 }
-const SEAT_SNAP = 46;    // רדיוס המשיכה לכיסא — לא צריך לדייק
-function nearestSeat(p) {
+
+// זיהוי הכיסא: קודם מה שנמצא ממש מתחת לסמן (חסין להקטנה ולכיווניות),
+// ואם אין — הכיסא הקרוב ביותר ברדיוס משיכה. שני רדיוסים שונים לתפיסה
+// ולשחרור, כדי שהסימון לא יהבהב כשהיד רועדת על הגבול.
+const SNAP_GRAB = 38, SNAP_RELEASE = 52;
+function seatAt(ev, current) {
+  const el = document.elementFromPoint(ev.clientX, ev.clientY);
+  const hit = el && el.closest ? el.closest('.seat') : null;
+  if (hit && hit.dataset.k) return hit.dataset.k;
+
+  const p = roomPoint(ev);
   let best = null;
   plan.tables.forEach(t => {
     tplOf(t).seats.forEach(s => {
       const c = seatCenter(t, s);
       const d = Math.hypot(c.x - p.x, c.y - p.y);
-      if (d <= SEAT_SNAP && (!best || d < best.d)) best = { d, key: E.key(t.id, s.id) };
+      const limit = (current === E.key(t.id, s.id)) ? SNAP_RELEASE : SNAP_GRAB;
+      if (d <= limit && (!best || d < best.d)) best = { d, key: E.key(t.id, s.id) };
     });
   });
-  return best;
+  return best ? best.key : null;
 }
 
 let childDrag = null;
+function nameOf(cid) { return (enginePlan().people[cid] || {}).name || ''; }
+
 function startChildDrag(ev, kind, id) {
   const who = kind === 'seat' ? plan.seats[id] : id;
   if (!who) { tapSeat(id); return; }          // כיסא ריק — התנהגות הקשה רגילה
   ev.preventDefault(); ev.stopPropagation();
-  childDrag = { kind, id, who, sx: ev.clientX, sy: ev.clientY, moved: false };
+  // תפיסת הסמן: הגרירה נשארת שלנו גם אם האצבע יוצאת מהאלמנט או מהחלון
+  try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+  childDrag = {
+    kind, id, who, pid: ev.pointerId, sx: ev.clientX, sy: ev.clientY,
+    moved: false, target: null,
+    // באצבע צריך שהיית-מגע כדי שגלילה של העמוד לא תיהפך בטעות לגרירה
+    slop: ev.pointerType === 'touch' ? 10 : 5,
+    t0: Date.now(), touch: ev.pointerType === 'touch'
+  };
   window.addEventListener('pointermove', onChildDrag);
   window.addEventListener('pointerup', endChildDrag, { once: true });
+  window.addEventListener('pointercancel', endChildDrag, { once: true });
 }
+
 function onChildDrag(ev) {
-  if (!childDrag) return;
+  if (!childDrag || ev.pointerId !== childDrag.pid) return;
+  const dist = Math.hypot(ev.clientX - childDrag.sx, ev.clientY - childDrag.sy);
   if (!childDrag.moved) {
-    if (Math.hypot(ev.clientX - childDrag.sx, ev.clientY - childDrag.sy) < 5) return;
+    if (dist < childDrag.slop) return;
+    if (childDrag.touch && Date.now() - childDrag.t0 < 200) { childDrag = null; return; }
     childDrag.moved = true;
+    document.getElementById('room').classList.add('drag-live');
     const g = document.createElement('div');
     g.className = 'ghost'; g.id = 'ghost';
-    g.textContent = (enginePlan().people[childDrag.who] || {}).name || '';
+    g.textContent = nameOf(childDrag.who);
     document.body.appendChild(g);
+    // המקור נשאר חצי-שקוף כדי שיהיה ברור מאיפה באנו
     if (childDrag.kind === 'seat') {
       const el = document.querySelector(`.seat[data-k="${childDrag.id}"]`);
-      if (el) { el.textContent = ''; el.classList.remove('filled', 'staff'); }
+      if (el) el.classList.add('from');
     }
+    // כל הכיסאות הפנויים מסומנים — רואים מיד לאן אפשר להניח
+    document.querySelectorAll('.seat').forEach(el => {
+      if (!plan.seats[el.dataset.k] && !plan.locks[el.dataset.k]) el.classList.add('open');
+    });
   }
   const g = document.getElementById('ghost');
   if (g) { g.style.left = (ev.clientX - 27) + 'px'; g.style.top = (ev.clientY - 27) + 'px'; }
-  const near = nearestSeat(roomPoint(ev));
-  document.querySelectorAll('.seat.target').forEach(e => e.classList.remove('target'));
-  if (near) { const el = document.querySelector(`.seat[data-k="${near.key}"]`); if (el) el.classList.add('target'); }
+
+  // המושב הקרוב, עם השהיה בשחרור כדי שהסימון לא יהבהב על הגבול
+  const key = seatAt(ev, childDrag.target);
+  if (key === childDrag.target) return;
+  clearTarget();
+  childDrag.target = key;
+  if (!key) return;
+  const el = document.querySelector(`.seat[data-k="${key}"]`);
+  if (!el) return;
+  el.classList.add('target');
+  if (plan.seats[key] && plan.seats[key] !== childDrag.who) el.classList.add('swap');
+  else if (!plan.seats[key]) {
+    // תצוגה מקדימה של השם בתוך הכיסא, כדי שהתוצאה תיראה לפני השחרור
+    el.innerHTML = `<span class="preview">${esc(nameOf(childDrag.who))}</span>`;
+  }
 }
+function clearTarget() {
+  document.querySelectorAll('.seat.target').forEach(el => {
+    el.classList.remove('target', 'swap');
+    const pv = el.querySelector('.preview'); if (pv) pv.remove();
+  });
+}
+
 function endChildDrag(ev) {
   window.removeEventListener('pointermove', onChildDrag);
   const g = document.getElementById('ghost'); if (g) g.remove();
-  document.querySelectorAll('.seat.target').forEach(e => e.classList.remove('target'));
+  const room = document.getElementById('room');
+  if (room) room.classList.remove('drag-live');
+  clearTarget();
+  document.querySelectorAll('.seat.open,.seat.from').forEach(el => el.classList.remove('open', 'from'));
   const d = childDrag; childDrag = null;
   if (!d) return;
   if (!d.moved) { if (d.kind === 'seat') tapSeat(d.id); return; }   // לא זז — הקשה
+  if (ev.type === 'pointercancel') { renderBoard(); return; }
 
+  const key = d.target;
+  if (key && plan.locks[key]) { showErr('המקום נעול — קליק ימני משחרר'); renderBoard(); return; }
+
+  pushUndo();
   const p = roomPoint(ev);
-  const near = nearestSeat(p);
   plan.parked = plan.parked || {};
-
-  // מנתקים מהמקור
   if (d.kind === 'seat') delete plan.seats[d.id]; else delete plan.parked[d.who];
 
-  if (near) {
-    if (plan.locks[near.key]) { showErr('המקום נעול — קליק ימני משחרר'); }
-    else {
-      const sitting = plan.seats[near.key];
-      if (sitting) {
-        // החלפה: מי שישב שם עובר למקום שממנו באנו, או נשאר בצד
-        if (d.kind === 'seat') plan.seats[d.id] = sitting;
-        else plan.parked[sitting] = { x: Math.round(p.x - 27), y: Math.round(p.y - 27) };
-      }
-      plan.seats[near.key] = d.who;
-      renderBoard(); return;
+  let msg;
+  if (key) {
+    const sitting = plan.seats[key];
+    if (sitting && sitting !== d.who) {
+      // החלפה הדדית — מי שישב שם עובר למקום שהתפנה, ולא נדחק הלאה
+      if (d.kind === 'seat') plan.seats[d.id] = sitting;
+      else plan.parked[sitting] = { x: Math.round(p.x - 27), y: Math.round(p.y - 27) };
+      msg = `${nameOf(d.who)} ו${nameOf(sitting)} התחלפו`;
+    } else {
+      msg = `${nameOf(d.who)} הושב`;
     }
+    plan.seats[key] = d.who;
+  } else {
+    plan.parked[d.who] = { x: Math.max(0, Math.round(p.x - 27)), y: Math.max(0, Math.round(p.y - 27)) };
+    msg = `${nameOf(d.who)} מחכה בצד`;
   }
-  // לא ליד כיסא — מניחים בצד
-  plan.parked[d.who] = { x: Math.max(0, Math.round(p.x - 27)), y: Math.max(0, Math.round(p.y - 27)) };
+  renderBoard();
+  if (key) {
+    const el = document.querySelector(`.seat[data-k="${key}"]`);
+    if (el) el.classList.add('landed');
+  }
+  showUndo(msg);
+}
+
+// ---- ביטול: כל העברה נשמרת, והודעה מציעה להחזיר ----
+let undoStack = [], undoTimer = null;
+function pushUndo() {
+  undoStack.push(JSON.stringify({ seats: plan.seats, parked: plan.parked || {} }));
+  if (undoStack.length > 30) undoStack.shift();
+}
+function showUndo(msg) {
+  const old = document.getElementById('undoBar'); if (old) old.remove();
+  clearTimeout(undoTimer);
+  const b = document.createElement('div');
+  b.className = 'undo'; b.id = 'undoBar';
+  b.innerHTML = `<span>${esc(msg)}</span><button onclick="undoMove()">ביטול</button>`;
+  document.body.appendChild(b);
+  undoTimer = setTimeout(() => b.remove(), 6000);
+}
+function undoMove() {
+  const s = undoStack.pop(); if (!s) return;
+  const prev = JSON.parse(s);
+  plan.seats = prev.seats; plan.parked = prev.parked;
+  const b = document.getElementById('undoBar'); if (b) b.remove();
   renderBoard();
 }
 
@@ -1244,9 +1349,11 @@ function tapSeat(k) {
   if (!selectedSeat) { if (plan.seats[k]) { selectedSeat = k; renderBoard(); } return; }
   if (selectedSeat === k) { selectedSeat = null; renderBoard(); return; }
   if (plan.locks[selectedSeat] || plan.locks[k]) { showErr('אחד המקומות נעול — קליק ימני משחרר'); selectedSeat = null; renderBoard(); return; }
+  pushUndo();
   const a = plan.seats[selectedSeat], b = plan.seats[k];
   if (b) plan.seats[selectedSeat] = b; else delete plan.seats[selectedSeat];
   plan.seats[k] = a; selectedSeat = null; renderBoard();
+  showUndo(b ? `${nameOf(a)} ו${nameOf(b)} התחלפו` : `${nameOf(a)} הושב`);
 }
 function toggleLock(k) {
   if (!plan.seats[k]) return;

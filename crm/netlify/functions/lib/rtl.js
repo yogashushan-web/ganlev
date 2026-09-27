@@ -1,44 +1,63 @@
 // Hebrew text for PDFKit.
 //
-// PDFKit draws glyphs in the order it receives them and does no bidi reordering,
-// so Hebrew comes out backwards. Hebrew needs no contextual shaping (unlike
-// Arabic), which means a visual-order reversal is enough and is exactly what
-// the PDF should contain.
+// PDFKit renders a SINGLE Hebrew word correctly — fontkit reverses the glyphs for
+// right-to-left scripts on its own. What it does not do is lay several words out
+// right-to-left: it places each word left-to-right, so a whole sentence comes out
+// with its words in reverse order, and the spaces between them land unpredictably.
 //
-// The rule, for a right-to-left paragraph: reverse the order of the runs, then
-// reverse the characters inside Hebrew runs while leaving numbers and Latin
-// alone (so "050-1234567" and "Gan Lev" stay readable).
+// So we do the line layout ourselves: measure each word, then place the words from
+// the right edge leftwards. Every word is still handed to PDFKit in logical order,
+// which keeps the letters (and any digits inside a word) correct.
 
-const HEB = /[֐-׿יִ-ﭏ]/;
-const LTR = /[A-Za-z0-9@]/;
-const MIRROR = { '(': ')', ')': '(', '[': ']', ']': '[', '{': '}', '}': '{', '<': '>', '>': '<' };
+const WS = /\s+/;
 
-function classify(ch) {
-  if (HEB.test(ch)) return 'rtl';
-  if (LTR.test(ch)) return 'ltr';
-  return 'neutral';
+function wordsOf(text) {
+  const s = String(text == null ? '' : text).trim();
+  return s ? s.split(WS) : [];
 }
 
-// Split into maximal runs of one class. Neutrals attach to whatever follows them
-// so that "פינסקר 7" keeps its space with the number rather than stranding it.
-function runs(s) {
-  const out = [];
-  for (const ch of s) {
-    const cls = classify(ch);
-    const last = out[out.length - 1];
-    if (last && last.cls === cls) last.text += ch;
-    else out.push({ cls, text: ch });
+// Width of a line laid out by drawRtl, at the font/size currently set on `doc`.
+function measureRtl(doc, text) {
+  const words = wordsOf(text);
+  if (!words.length) return 0;
+  const space = doc.widthOfString(' ');
+  return words.reduce((sum, w) => sum + doc.widthOfString(w), 0) + space * (words.length - 1);
+}
+
+// Draw one line right-to-left inside [x, x + width], with the given font size.
+// `align` is 'right' (default) or 'left' — 'left' is for phone numbers and other
+// left-to-right values, which PDFKit already places correctly on their own.
+function drawRtl(doc, text, x, y, width, opts = {}) {
+  const words = wordsOf(text);
+  if (!words.length) return;
+
+  // Every doc.text() advances PDFKit's internal cursor, and once it runs past the
+  // bottom margin PDFKit starts a new page. We place each word absolutely, so put
+  // the cursor back where it was after each one.
+  const sx = doc.x, sy = doc.y;
+  const restore = () => { doc.x = sx; doc.y = sy; };
+
+  // No `align` or `width` on these calls: alignment makes PDFKit run its line
+  // wrapper, which starts new pages behind our back. We position every word
+  // ourselves, so plain absolute draws are both correct and cheaper.
+  if (opts.align === 'left') {
+    doc.text(words.join(' '), x, y, { lineBreak: false });
+    restore();
+    return;
   }
-  return out;
+
+  const space = doc.widthOfString(' ');
+  const total = measureRtl(doc, text);
+  // Start at the right edge of the box (or at the end of the text when it overflows).
+  let cursor = x + Math.max(width, total);
+
+  for (const word of words) {
+    const w = doc.widthOfString(word);
+    cursor -= w;
+    doc.text(word, cursor, y, { lineBreak: false });
+    restore();
+    cursor -= space;
+  }
 }
 
-const reverse = s => Array.from(s).reverse().map(c => MIRROR[c] || c).join('');
-
-// Convert one logical-order line into the visual order PDFKit should draw.
-function visual(str) {
-  const s = String(str == null ? '' : str);
-  if (!s || !HEB.test(s)) return s;      // pure Latin/number lines are already visual
-  return runs(s).reverse().map(r => (r.cls === 'ltr' ? r.text : reverse(r.text))).join('');
-}
-
-module.exports = { visual };
+module.exports = { drawRtl, measureRtl, wordsOf };

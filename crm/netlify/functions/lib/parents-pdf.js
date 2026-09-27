@@ -1,10 +1,10 @@
 // Renders the parent contact roster as a PDF (A4 landscape).
-// Hebrew is written in visual order — see lib/rtl.js for why.
+// Hebrew line layout is done by lib/rtl.js — see the note there for why.
 
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
-const { visual: V } = require('./rtl');
+const { drawRtl, measureRtl } = require('./rtl');
 
 // The bundler flattens the function, so __dirname is not where the fonts land.
 // Netlify copies `included_files` in relative to the repo root — try both.
@@ -19,19 +19,16 @@ function fontPath(name) {
   return hit;
 }
 
-const REG = () => fontPath('Heebo-Regular.ttf');
-const BOLD = () => fontPath('Heebo-Bold.ttf');
-
 const INK = '#2b2b2b', MUTED = '#9B8E82', BRAND = '#1F3D34', LINE = '#e6dfd4', BAND = '#faf7f2';
 
 // Right-to-left: the first column starts at the right edge and walks left.
 const COLS = [
   { key: 'child',   title: 'שם הילד/ה', w: 132, bold: true },
-  { key: 'parent1', title: 'הורה',       w: 116 },
-  { key: 'phone1',  title: 'טלפון',      w: 100, ltr: true },
-  { key: 'parent2', title: 'הורה',       w: 116 },
-  { key: 'phone2',  title: 'טלפון',      w: 100, ltr: true },
-  { key: 'address', title: 'כתובת',      w: 218 },
+  { key: 'parent1', title: 'הורה',      w: 116 },
+  { key: 'phone1',  title: 'טלפון',     w: 100, ltr: true },
+  { key: 'parent2', title: 'הורה',      w: 116 },
+  { key: 'phone2',  title: 'טלפון',     w: 100, ltr: true },
+  { key: 'address', title: 'כתובת',     w: 218 },
 ];
 
 const M = 28;
@@ -43,34 +40,33 @@ function hebDate(d) {
   return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
 }
 
-// Draw one cell's text, right-aligned inside its box (or left-aligned for phones).
-// An unusually long name or address shrinks a little rather than getting clipped.
+// One cell of text. Long values shrink a little rather than getting clipped.
 function cell(doc, text, x, y, w, opts = {}) {
-  const t = (opts.ltr ? String(text || '') : V(text)) || (opts.ltr ? '' : V('—'));
+  const value = (text == null ? '' : String(text)).trim() || (opts.ltr ? '' : '—');
+  if (!value) return;
+
   const font = opts.bold ? 'bold' : 'reg';
+  const base = opts.size || 10.5;
   const inner = w - 12;
 
-  let size = opts.size || 10.5;
+  let size = base;
   doc.font(font).fontSize(size);
-  while (size > 7 && doc.widthOfString(t) > inner) {
+  const fits = () => (opts.ltr ? doc.widthOfString(value) : measureRtl(doc, value)) <= inner;
+  while (size > 7 && !fits()) {
     size -= 0.5;
     doc.fontSize(size);
   }
 
   doc.fillColor(opts.color || INK);
-  doc.text(t, x + 6, y + (opts.dy == null ? 7 : opts.dy) + (((opts.size || 10.5) - size) / 2), {
-    width: inner,
-    align: opts.ltr ? 'left' : 'right',
-    lineBreak: false,
-    ellipsis: true,
-  });
+  const dy = (opts.dy == null ? 7 : opts.dy) + (base - size) / 2;
+  drawRtl(doc, value, x + 6, y + dy, inner, { align: opts.ltr ? 'left' : 'right' });
 }
 
-function header(doc, pageW, generatedAt, total) {
-  doc.font('bold').fontSize(19).fillColor(BRAND)
-    .text(V('רשימת קשר - גן לב'), M, M, { width: pageW - M * 2, align: 'right' });
-  doc.font('reg').fontSize(10).fillColor(MUTED)
-    .text(V(`${total} משפחות · עודכן ${generatedAt}`), M, M + 25, { width: pageW - M * 2, align: 'right' });
+function header(doc, pageW, stamp, total) {
+  doc.font('bold').fontSize(19).fillColor(BRAND);
+  drawRtl(doc, 'רשימת קשר - גן לב', M, M, pageW - M * 2);
+  doc.font('reg').fontSize(10).fillColor(MUTED);
+  drawRtl(doc, `${total} משפחות · עודכן ${stamp}`, M, M + 26, pageW - M * 2);
 }
 
 function tableHead(doc, pageW, y) {
@@ -86,8 +82,8 @@ function tableHead(doc, pageW, y) {
 function buildPdf(rows) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: M, autoFirstPage: false });
-    doc.registerFont('reg', REG());
-    doc.registerFont('bold', BOLD());
+    doc.registerFont('reg', fontPath('Heebo-Regular.ttf'));
+    doc.registerFont('bold', fontPath('Heebo-Bold.ttf'));
 
     const chunks = [];
     doc.on('data', c => chunks.push(c));
@@ -120,9 +116,9 @@ function buildPdf(rows) {
     const range = doc.bufferedPageRange();
     for (let i = 0; i < range.count; i++) {
       doc.switchToPage(range.start + i);
-      doc.font('reg').fontSize(8.5).fillColor(MUTED)
-        .text(V('גן לב · הרשימה מתעדכנת אונליין — הקובץ הזה הוא צילום מצב מתאריך ' + stamp),
-          M, pageH - M + 2, { width: pageW - M * 2, align: 'right', lineBreak: false });
+      doc.font('reg').fontSize(8.5).fillColor(MUTED);
+      drawRtl(doc, 'גן לב · הרשימה מתעדכנת אונליין — הקובץ הזה הוא צילום מצב מתאריך ' + stamp,
+        M, pageH - M + 2, pageW - M * 2);
     }
 
     doc.end();
