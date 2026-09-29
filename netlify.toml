@@ -81,6 +81,11 @@
 
 # Short link for the public "שנת הצהריים" nap-ritual form (share with parents).
 [[redirects]]
+  from = "/mats"
+  to = "/crm/html/nap-layout.html"
+  status = 200
+
+[[redirects]]
   from = "/nap"
   to = "/crm/html/nap.html"
   status = 200

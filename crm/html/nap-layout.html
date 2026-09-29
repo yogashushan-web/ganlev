@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>סידור מזרונים — גן לב</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .wrap { max-width:1180px; margin:0 auto; padding:26px 20px 60px; }
+
+    .header { display:flex; justify-content:space-between; align-items:center; gap:14px;
+              flex-wrap:wrap; margin-bottom:18px; }
+    .header h1 { font-size:23px; color:#1F3D34; }
+    .btn { background:#1F3D34; color:#fff; border:0; border-radius:10px; padding:10px 20px;
+           font-family:'Heebo'; font-size:13.5px; font-weight:700; cursor:pointer; }
+    .btn.ghost { background:#efe9e0; color:#6f6457; }
+    .btn.soft { background:#C4846C; }
+    .btn.big { font-size:15px; padding:13px 34px; }
+    .btn:disabled { opacity:.42; cursor:not-allowed; }
+    .card { background:#fff; border-radius:18px; padding:24px 26px; box-shadow:0 2px 12px rgba(0,0,0,.05); }
+    .card h2 { font-size:19px; color:#1F3D34; margin-bottom:5px; }
+    .sub { font-size:13.5px; color:#9B8E82; line-height:1.75; margin-bottom:18px; }
+    .nav { display:flex; gap:9px; margin-top:22px; flex-wrap:wrap; }
+
+    .steps { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:16px; }
+    .step-pill { background:#fff; border:1px solid #e8e4de; border-radius:999px; padding:7px 15px;
+                 font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#9B8E82; cursor:pointer; }
+    .step-pill.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
+    .step-pill.done { color:#1F7a4f; border-color:#cfe7d9; }
+
+    /* ---- עמוד פתיחה ---- */
+    .welcome { text-align:center; }
+    .wtitle { font-size:25px; color:#1F3D34; margin-bottom:10px; }
+    .wlead { font-size:14.5px; color:#6f6457; line-height:1.85; max-width:500px; margin:0 auto 26px; }
+    .wdemo { background:#FAF8F4; border:1px solid #efe9e0; border-radius:16px; padding:20px 18px 14px;
+             margin-bottom:26px; }
+    .wgrid { display:flex; flex-wrap:wrap; gap:7px; justify-content:center; }
+    .wm { width:104px; height:52px; border-radius:7px; border:2px solid #cfe0ec; background:#eef5fb;
+          display:flex; flex-direction:column; align-items:center; justify-content:center;
+          font-size:11px; font-weight:800; color:#2c4d66; }
+    .wm em { font-style:normal; font-size:9px; color:#7c93a6; font-weight:700; margin-top:1px; }
+    .wcap { font-size:11.5px; color:#9B8E82; font-weight:700; margin-top:11px; }
+    .whow { display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:12px; text-align:right; }
+    .wstep { display:flex; gap:11px; align-items:flex-start; background:#fff; border:1px solid #efe9e0;
+             border-radius:13px; padding:13px 14px; }
+    .wn { flex:0 0 25px; height:25px; border-radius:50%; background:#1F3D34; color:#fff; font-size:13px;
+          font-weight:800; display:flex; align-items:center; justify-content:center; }
+    .wstep b { display:block; color:#1F3D34; font-size:13.5px; margin-bottom:2px; }
+    .wstep em { font-style:normal; font-size:12px; color:#9B8E82; line-height:1.55; }
+    .wnav { justify-content:center; }
+
+    /* ---- בחירת ילדים ---- */
+    .search { width:100%; padding:11px 14px; border:1.5px solid #e8e4de; border-radius:11px;
+              font-family:'Heebo'; font-size:14px; outline:none; margin-bottom:12px; }
+    .search:focus { border-color:#1F3D34; }
+    .pick { display:flex; flex-wrap:wrap; gap:7px; }
+    .p { background:#fff; border:1.5px solid #e8e4de; border-radius:999px; padding:8px 15px;
+         font-family:'Heebo'; font-size:13px; font-weight:700; color:#6f6457; cursor:pointer; }
+    .p.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
+    .p.staff.on { background:#C4846C; border-color:#C4846C; }
+    .count-line { font-size:13px; color:#9B8E82; font-weight:700; margin-top:14px; }
+
+    /* ---- המזרונים ---- */
+    .msizes { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .msize { background:#fff; border:1.5px solid #e8e4de; border-radius:13px; padding:13px 16px;
+             cursor:pointer; text-align:center; font-family:'Heebo'; }
+    .msize.on { border-color:#1F3D34; background:#f4f9f6; }
+    .msize b { display:block; font-size:13.5px; color:#1F3D34; }
+    .msize em { font-style:normal; font-size:11.5px; color:#9B8E82; }
+    .dims { display:flex; gap:9px; align-items:center; flex-wrap:wrap; }
+    .dims input { width:88px; padding:9px 11px; border:1.5px solid #e8e4de; border-radius:9px;
+                  font-family:'Heebo'; font-size:13.5px; outline:none; text-align:center; }
+    .dims input:focus { border-color:#1F3D34; }
+    .dims span { font-size:12.5px; color:#9B8E82; font-weight:700; }
+
+    /* ---- הדף ---- */
+    .toolbar { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+    .toolbar .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px; padding:0 14px; height:34px;
+                   display:inline-flex; align-items:center; gap:6px; font-family:'Heebo'; font-size:12.5px;
+                   font-weight:700; color:#1F3D34; cursor:pointer; }
+    .toolbar .lb:hover { border-color:#1F3D34; background:#f4f9f6; }
+    .a4note { font-size:12px; color:#9B8E82; text-align:center; padding:7px 0; border-top:1px dashed #e0d7c7;
+              border-bottom:1px dashed #e0d7c7; margin-bottom:8px; }
+    .room-outer { overflow:hidden; margin:6px 0 14px; }
+    .room { position:relative; width:1123px; height:794px; background:#fffdf9; border:1.5px dashed #e0d7c7;
+            border-radius:16px; transform-origin:top right; direction:ltr; }
+    .rscale { position:absolute; left:0; top:0; width:1123px; height:794px; transform-origin:561.5px 397px; }
+
+    /* המזרן: מלבן פיזי. השם גדול, וטקס ההירדמות מתחתיו בכתב קטן. */
+    .mat { position:absolute; border:2px solid #cfe0ec; background:#eef5fb; border-radius:9px;
+           display:flex; flex-direction:column; align-items:center; justify-content:center;
+           cursor:grab; touch-action:none; direction:rtl; overflow:hidden; padding:4px; z-index:5; }
+    .mat:active { cursor:grabbing; }
+    .mat .nm { font-size:13px; font-weight:800; color:#2c4d66; line-height:1.15; text-align:center; }
+    .mat .rt { font-size:10px; font-weight:700; color:#7c93a6; line-height:1.3; text-align:center;
+               margin-top:3px; cursor:pointer; border-radius:5px; padding:1px 5px;
+               border:1px dashed transparent; }
+    .mat .rt:hover { border-color:#C4846C; background:rgba(255,255,255,.75); color:#8a5a44; }
+    .mat .rt.empty { color:#b9c6d0; font-style:italic; }
+    /* מזרן גמילה — אותה מידה, חומר אחר, ולכן סימון ולא צורה אחרת */
+    .mat.potty { border-color:#e0c08a; background:#fdf6e9; border-style:dashed; }
+    .mat.potty .nm { color:#8a6a23; }
+    .mat.potty .rt { color:#b8801f; }
+    .mat.sel { outline:3px solid #1F3D34; outline-offset:2px; }
+    .mat.bad { border-color:#e0837a; background:#fdf0ef; }
+    .mat.unreach::after { content:'אין גישה'; position:absolute; top:2px; left:4px; font-size:8.5px;
+                          font-weight:800; color:#c94147; }
+    .mat.from { opacity:.34; }
+    .mat.target { border-color:#1F7a4f !important; background:#e6f4ec !important; }
+
+    .obst { position:absolute; background:#e7e0d4; border:2px solid #c9bda9; border-radius:6px;
+            display:flex; align-items:center; justify-content:center; direction:rtl;
+            font-size:11.5px; font-weight:800; color:#6f6457; cursor:grab; touch-action:none; z-index:4; }
+    .obst .odel, .pmark .odel { position:absolute; top:-9px; left:-6px; background:#fff; border:1px solid #e8e1d6;
+            color:#8a7f70; border-radius:7px; padding:1px 6px; font-size:10px; font-weight:700;
+            font-family:'Heebo'; cursor:pointer; opacity:0; transition:opacity .12s; }
+    .obst:hover .odel, .pmark:hover .odel { opacity:1; }
+    .pmark { position:absolute; display:flex; align-items:center; gap:5px; background:#fff;
+             border:3px solid #C4846C; border-radius:999px; padding:6px 14px 6px 10px; direction:rtl;
+             font-size:12px; font-weight:800; white-space:nowrap; cursor:grab; touch-action:none; z-index:6; }
+
+    .ghostm { position:fixed; pointer-events:none; z-index:10000; border-radius:9px; background:#eef5fb;
+              border:2px solid #5f93b8; color:#2c4d66; display:flex; align-items:center; justify-content:center;
+              font-size:12px; font-weight:800; box-shadow:0 6px 18px rgba(0,0,0,.2); opacity:.95; }
+
+    #guides { position:absolute; inset:0; pointer-events:none; z-index:8; }
+    .gline { position:absolute; }
+    .gline.v { top:0; bottom:0; width:0; border-right:1.5px dashed #C4846C; }
+    .gline.h { left:0; right:0; height:0; border-bottom:1.5px dashed #C4846C; }
+
+    .rlegend { position:absolute; left:0; right:0; bottom:9px; display:flex; flex-wrap:wrap;
+               justify-content:center; gap:7px 16px; padding:0 30px; direction:rtl; }
+    .rlegend .lg { display:inline-flex; align-items:center; gap:6px; font-size:11px; }
+    .rlegend .lg i { width:11px; height:11px; border-radius:3px; display:inline-block; flex:0 0 auto; }
+    .rlegend .lg b { color:#3D3228; font-weight:800; }
+    .rlegend .lg em { color:#9B8E82; font-style:normal; font-weight:600; }
+    .scalebar { position:absolute; right:30px; bottom:30px; display:flex; align-items:center; gap:7px;
+                direction:rtl; font-size:10.5px; color:#9B8E82; font-weight:700; }
+    .scalebar i { display:block; height:7px; border:1.5px solid #9B8E82; border-top:0; }
+
+    /* ---- פריסות מוצעות ---- */
+    .props { display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:11px; }
+    .prop { background:#fff; border:1.5px solid #e8e4de; border-radius:14px; padding:13px; cursor:pointer;
+            text-align:center; font-family:'Heebo'; }
+    .prop:hover { border-color:#1F3D34; background:#f4f9f6; }
+    .prop b { display:block; font-size:13.5px; color:#1F3D34; margin-bottom:2px; }
+    .prop em { font-style:normal; font-size:11.5px; color:#9B8E82; display:block; }
+    .prop .sz { font-size:11.5px; color:#C4846C; font-weight:800; margin-top:6px; display:block; }
+    .mini { display:block; margin:9px auto 0; }
+
+    /* ---- רצועת בקרה ---- */
+    .status { margin:10px 0 4px; }
+    .srow { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+    .srow.wait { margin-top:8px; }
+    .chip { display:inline-flex; align-items:center; border-radius:999px; padding:4px 12px; font-size:12px;
+            font-weight:800; font-family:'Heebo'; border:1px solid transparent; }
+    .chip.good { background:#e6f4ec; border-color:#cfe7d9; color:#1F7a4f; }
+    .chip.warn { background:#fdf6e9; border-color:#e8c88a; color:#b8801f; }
+    .chip.bad  { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
+    .smuted { font-size:12px; color:#9B8E82; font-weight:700; }
+    .wchip { background:#fff; border:1.5px dashed #C4846C; color:#8a5a44; border-radius:999px;
+             padding:4px 12px; font-family:'Heebo'; font-size:12px; font-weight:800; cursor:pointer; }
+    .wchip:hover { background:#C4846C; color:#fff; border-style:solid; }
+    .viol { background:#fdf0ef; border:1px solid #f3cfc9; border-radius:12px; padding:12px 16px; margin-top:10px; }
+    .viol .v { display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:13.5px;
+               color:#8a3b34; padding:6px 0; flex-wrap:wrap; border-top:1px solid #f6dedb; }
+    .viol .v:first-child { border-top:0; }
+    .viol .v button { background:#fff; border:1px solid #f3cfc9; color:#c94147; border-radius:8px;
+                      padding:4px 10px; font-family:'Heebo'; font-size:12px; font-weight:700; cursor:pointer; }
+    .blockers { margin:16px 0 4px; display:flex; flex-direction:column; gap:9px; }
+    .bk { background:#fdf6e9; border:1px solid #e8c88a; border-radius:12px; padding:13px 16px; }
+    .bk b { color:#b8801f; font-size:14px; }
+    .bk p { font-size:13px; color:#8a6a23; line-height:1.7; margin-top:4px; }
+
+    /* ---- כללים ---- */
+    .rule-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+    .rule-row select { padding:9px 11px; border:1.5px solid #e8e4de; border-radius:9px;
+                       font-family:'Heebo'; font-size:13px; color:#3D3228; background:#fff; }
+    .rule { display:flex; align-items:center; gap:9px; background:#FAF8F4; border:1px solid #efe9e0;
+            border-radius:11px; padding:10px 14px; margin-bottom:7px; font-size:13.5px; flex-wrap:wrap; }
+    .rule.off { opacity:.5; }
+    .rule .state { font-size:11.5px; font-weight:800; color:#1F7a4f; cursor:pointer; }
+    .rule.off .state { color:#9B8E82; }
+    .rule .x { margin-right:auto; background:none; border:0; color:#c94147; cursor:pointer;
+               font-family:'Heebo'; font-size:12.5px; }
+
+    /* ---- חלון ---- */
+    .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center;
+          justify-content:center; z-index:9999; padding:18px; }
+    .ov.show { display:flex; }
+    .modal { background:#fff; border-radius:18px; padding:24px 26px; width:100%; max-width:480px;
+             max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .modal h3 { color:#1F3D34; font-size:19px; margin-bottom:4px; }
+    .modal .msub { color:#9B8E82; font-size:13px; margin-bottom:16px; line-height:1.6; }
+    .modal input[type=text], .modal textarea { width:100%; padding:11px 13px; border:1.5px solid #e8e4de;
+             border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; resize:vertical; }
+    .modal input:focus, .modal textarea:focus { border-color:#1F3D34; }
+    .m-actions { display:flex; gap:9px; margin-top:18px; flex-wrap:wrap; }
+    .needs { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px; }
+    .need { background:#fff; border:1.5px solid #e8e4de; border-radius:999px; padding:7px 14px;
+            font-family:'Heebo'; font-size:13px; font-weight:700; color:#6f6457; cursor:pointer; }
+    .need.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
+    .flab { font-size:12.5px; color:#9B8E82; font-weight:700; margin:12px 0 5px; }
+    .plan-row { display:flex; align-items:center; gap:10px; background:#FAF8F4; border:1px solid #efe9e0;
+                border-radius:12px; padding:12px 14px; margin-bottom:8px; cursor:pointer; }
+    .plan-row:hover { border-color:#1F3D34; background:#f4f9f6; }
+    .plan-row .nm { font-weight:800; color:#1F3D34; font-size:14.5px; }
+    .plan-row .meta { font-size:12px; color:#9B8E82; }
+    .plan-row .rm { margin-right:auto; background:#f6f2ec; border:1px solid #e8e1d6; color:#8a7f70;
+                    border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700;
+                    cursor:pointer; font-family:'Heebo'; }
+    .empty-note { color:#9B8E82; font-size:13.5px; line-height:1.7; }
+    .ipick { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
+    .ipick button { display:flex; align-items:center; gap:9px; background:#FAF8F4; border:1px solid #efe9e0;
+                    border-radius:12px; padding:12px 14px; font-family:'Heebo'; font-size:13.5px;
+                    font-weight:700; color:#1F3D34; cursor:pointer; text-align:right; }
+    .ipick button:hover { border-color:#1F3D34; background:#f4f9f6; }
+    .ipick .e { font-size:20px; }
+
+    .err, .ok { padding:11px 16px; border-radius:11px; margin-bottom:12px; font-size:13.5px;
+                font-weight:700; display:none; }
+    .err.show, .ok.show { display:block; }
+    .err { background:#fdf0ef; color:#c94147; }
+    .ok { background:#e6f4ec; color:#1F7a4f; }
+    .hide { display:none !important; }
+
+    @media print {
+      @page { size: A4 landscape; margin: 0; }
+      html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+          box-shadow:none !important; }
+      .header, .steps, .toolbar, .status, .a4note, .err, .ok, .ov, .odel, .blockers, .viol,
+      #crmSidebar, #crmMenuBtn, #trashFab { display:none !important; }
+      .wrap { padding:0 !important; max-width:none !important; }
+      .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
+      .room { transform:none !important; border:none !important; border-radius:0 !important;
+              width:1120px !important; height:790px !important; background:#fff !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>🛏️ סידור מזרונים</h1>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="topActions"></div>
+    </div>
+    <div id="error" class="err"></div>
+    <div id="success" class="ok"></div>
+    <div class="steps" id="steps"></div>
+    <div id="wizard"></div>
+    <div id="board" class="hide"></div>
+  </div>
+
+  <div class="ov" id="modalOv">
+    <div class="modal">
+      <h3 id="modalTitle"></h3>
+      <div class="msub" id="modalSub"></div>
+      <div id="modalBody"></div>
+      <div class="m-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+<script src="js/common.js?v=20"></script>
+<script src="js/api.js?v=21"></script>
+<script src="js/nap-engine.js?v=1"></script>
+<script>
+const E = window.NapEngine;
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+// הדף בגודל A4 לרוחב. PX_CM הוא כמה פיקסלים שווה סנטימטר אחד —
+// כל הגאומטריה נשמרת בסנטימטרים, והמרה לפיקסלים קורית רק בתצוגה.
+const ROOM_W = 1123, ROOM_H = 794, CX = ROOM_W / 2, CY = ROOM_H / 2;
+const STEPS = ['מי ישן', 'המזרונים', 'כללי שינה', 'הסידור'];
+const WELCOME = 0;
+const DRAFT = 'nap_layout_draft';
+
+const NEEDS = [
+  { v:'בקבוק', ic:'🍼' }, { v:'מוצץ', ic:'👶' }, { v:'דובי / בובה', ic:'🧸' },
+  { v:'שמיכה', ic:'☁️' }, { v:'חיתול', ic:'🤍' }, { v:'הנקה', ic:'🤱' },
+];
+const needIcon = v => (NEEDS.find(n => n.v === v) || {}).ic || '';
+
+const SPOT_KINDS = [
+  { id:'door',   ico:'🚪', name:'דלת',    w:90,  h:20 },
+  { id:'window', ico:'🪟', name:'חלון',   w:140, h:20 },
+  { id:'pillar', ico:'⬛', name:'עמוד',   w:40,  h:40 },
+  { id:'closet', ico:'🗄️', name:'ארון',   w:120, h:55 },
+  { id:'rad',    ico:'♨️', name:'רדיאטור', w:90,  h:20 },
+  { id:'ac',     ico:'❄️', name:'מזגן',   w:100, h:20 },
+];
+const spotKind = k => SPOT_KINDS.find(x => x.id === k) || SPOT_KINDS[0];
+
+let allKids = [], allStaff = [], rituals = {}, step = WELCOME, plan = null, built = false, kidFilter = '';
+let selMat = null, undoStack = [];
+
+function newPlan() {
+  return { id: 'np' + Date.now().toString(36), name: 'סידור מזרונים ' + schoolYear(),
+           childIds: [], mat: { w: 120, h: 60, kind: 'naamat' }, potty: {},
+           mats: [], who: {}, obstacles: [], staff: [], rules: [], zoom: 1, okRules: {} };
+}
+function schoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
+const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
+const nameOf = id => kidName(id) || (allStaff.find(s => s.id === id) || {}).name || '';
+
+/* ---------- טעינה ---------- */
+async function boot() {
+  try {
+    const [rc, rs] = await Promise.all([api.getChildren(), api.getStaff()]);
+    const year = schoolYear();
+    allKids = ((rc && rc.data) || [])
+      .filter(c => (c.school_year || year) === year && c.status === 'active')
+      .map(c => ({ id: c.id, name: (c.first_name_he + ' ' + (c.last_name_he || '')).trim() }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'he'));
+    allStaff = ((rs && rs.data) || []).filter(s => s.status === 'active')
+      .map(s => ({ id: s.id, name: s.full_name_he })).sort((a, b) => a.name.localeCompare(b.name, 'he'));
+  } catch (e) { showErr('שגיאה בטעינת הילדים והצוות: ' + e.message); }
+
+  api.getNapPlans().then(r => { rituals = (r && r.rituals) || {}; if (built) renderBoard(); }).catch(() => {});
+
+  plan = newPlan();
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT) || 'null');
+    if (d && d.plan && (d.plan.childIds || []).length) {
+      plan = Object.assign(newPlan(), d.plan);
+      step = d.step || 1;
+      if ((plan.mats || []).length) {
+        built = true;
+        document.getElementById('wizard').classList.add('hide');
+        document.getElementById('steps').classList.add('hide');
+        document.getElementById('board').classList.remove('hide');
+        renderTop(); renderBoard(); return;
+      }
+      showOk('שוחזרה הטיוטה האחרונה');
+    }
+  } catch (e) {}
+  if (!plan.childIds.length) step = WELCOME;
+  document.getElementById('steps').classList.toggle('hide', step === WELCOME);
+  renderTop(); renderSteps(); renderStep();
+}
+function saveDraft() { try { localStorage.setItem(DRAFT, JSON.stringify({ plan, step })); } catch (e) {} }
+function clearDraft() { try { localStorage.removeItem(DRAFT); } catch (e) {} }
+
+function renderTop() {
+  document.getElementById('topActions').innerHTML = built
+    ? `<button class="btn ghost" onclick="goStep(1)">שינוי הגדרות</button>
+       <button class="btn ghost" onclick="openVersions()">גרסאות שמורות</button>
+       <button class="btn soft" onclick="saveVersion()">שמור גרסה</button>
+       <button class="btn" onclick="savePlan()">שמירה</button>`
+    : `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
+       <button class="btn ghost" onclick="startFresh()">סידור חדש</button>`;
+}
+function renderSteps() {
+  document.getElementById('steps').innerHTML = STEPS.map((s, i) => {
+    const n = i + 1;
+    return `<button class="step-pill ${n === step ? 'on' : n < step ? 'done' : ''}" onclick="goStep(${n})">${n}. ${s}</button>`;
+  }).join('');
+}
+function goStep(n) {
+  step = n; built = false;
+  document.getElementById('board').classList.add('hide');
+  document.getElementById('wizard').classList.remove('hide');
+  document.getElementById('steps').classList.toggle('hide', n === WELCOME);
+  renderTop(); renderSteps(); renderStep(); window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function renderStep() {
+  saveDraft();
+  const w = document.getElementById('wizard');
+  if (step === WELCOME) w.innerHTML = stepWelcome();
+  if (step === 1) w.innerHTML = stepChildren();
+  if (step === 2) w.innerHTML = stepMats();
+  if (step === 3) w.innerHTML = stepRules();
+  if (step === 4) w.innerHTML = stepBuild();
+  renderSteps();
+}
+
+/* ---------- עמוד פתיחה ---------- */
+const HOW = [
+  { n:1, t:'בוחרים מי ישן',   d:'לא כל הילדים ישנים, ולא בכל יום אותו הרכב.' },
+  { n:2, t:'מגדירים מזרן',    d:'נעמ"ת 120×60 או כל מידה אחרת. מסמנים מזרני גמילה.' },
+  { n:3, t:'מוסיפים כללי שינה', d:'"דני לא ליד לב", "אייה צריכה להיות נגישה".' },
+  { n:4, t:'בוחרים פריסה',    d:'המערכת מציעה כמה, וכל אחת אומרת כמה חדר היא דורשת.' },
+];
+function stepWelcome() {
+  const demo = [
+    { n:'יעל', r:'🧸 דובי' }, { n:'דני', r:'👶 מוצץ' },
+    { n:'מאיה', r:'☁️ שמיכה' }, { n:'תום', r:'' },
+  ];
+  return `<div class="card welcome">
+    <h2 class="wtitle">סידור המזרונים בחדר השינה 🛏️</h2>
+    <p class="wlead">בואו נסדר את המזרונים כך שכל ילד יישן טוב וכל ילד יהיה נגיש.<br>
+      על כל מזרן יופיע השם ומה שההורים סיפרו שעוזר להירדם — כדי שגם מי
+      שלא הייתה כאן אתמול תדע מה לתת למי.</p>
+    <div class="wdemo">
+      <div class="wgrid">${demo.map(d => `<div class="wm">${d.n}${d.r ? `<em>${d.r}</em>` : ''}</div>`).join('')}</div>
+      <div class="wcap">כך נראה המזרן על הדף</div>
+    </div>
+    <div class="whow">${HOW.map(h => `<div class="wstep"><span class="wn">${h.n}</span>
+      <div><b>${h.t}</b><em>${h.d}</em></div></div>`).join('')}</div>
+    <div class="nav wnav">
+      <button class="btn big" onclick="goStep(1)">בואו נתחיל</button>
+      <button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
+    </div></div>`;
+}
+
+/* ---------- 1. מי ישן ---------- */
+function stepChildren() {
+  const f = kidFilter.trim();
+  const shown = f ? allKids.filter(k => k.name.includes(f)) : allKids;
+  const on = new Set(plan.childIds);
+  return `<div class="card">
+    <h2>מי ישן</h2>
+    <div class="sub">לא כל הילדים ישנים צהריים. מסמנים רק את מי שמשכיבים.</div>
+    <input class="search" id="kf" placeholder="חיפוש שם…" value="${esc(kidFilter)}"
+      oninput="kidFilter=this.value;renderStep();setTimeout(()=>{const e=document.getElementById('kf');e.focus();e.setSelectionRange(e.value.length,e.value.length)},0)">
+    <div class="pick">${shown.map(k => `<button class="p ${on.has(k.id) ? 'on' : ''}" onclick="toggleKid('${k.id}')">${esc(k.name)}</button>`).join('')
+      || '<div class="empty-note">לא נמצא ילד בשם הזה.</div>'}</div>
+    <div class="count-line">👧 ${plan.childIds.length} ילדים ישנים${plan.childIds.length ? ` · ${plan.childIds.length} מזרונים` : ''}</div>
+    ${plan.childIds.length ? `<div style="margin-top:10px"><button class="p" onclick="plan.childIds=[];renderStep()">נקי בחירה</button>
+      <button class="p" onclick="plan.childIds=allKids.map(k=>k.id);renderStep()">כולם</button></div>` : ''}
+    ${blockerHtml(1)}
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(0)">חזרה</button>
+      <button class="btn" ${canAdvance(1) ? '' : 'disabled'} onclick="goStep(2)">המשך</button>
+    </div></div>`;
+}
+function toggleKid(id) {
+  const i = plan.childIds.indexOf(id);
+  if (i >= 0) plan.childIds.splice(i, 1); else plan.childIds.push(id);
+  renderStep();
+}
+
+/* ---------- 2. המזרונים ---------- */
+function stepMats() {
+  const m = plan.mat;
+  return `<div class="card">
+    <h2>המזרונים</h2>
+    <div class="sub">כל המזרונים באותה מידה. מזרן גמילה עשוי מחומר אחר ולכן מסומן אחרת על הדף —
+      אותה מידה, סימון שונה.</div>
+    <div class="msizes">
+      ${E.MAT_KINDS.map(k => `<button class="msize ${m.kind === k.id ? 'on' : ''}" onclick="setMat('${k.id}')">
+        <b>${esc(k.name.split(' · ')[0])}</b><em>${k.w}×${k.h} ס"מ</em></button>`).join('')}
+      <button class="msize ${m.kind === 'custom' ? 'on' : ''}" onclick="setMat('custom')">
+        <b>מידה שלי</b><em>להזנה ידנית</em></button>
+    </div>
+    ${m.kind === 'custom' ? `<div class="dims">
+      <span>אורך</span><input type="number" id="mw" value="${m.w}" onchange="plan.mat.w=Math.max(40,+this.value||120);renderStep()">
+      <span>ס"מ · רוחב</span><input type="number" id="mh" value="${m.h}" onchange="plan.mat.h=Math.max(30,+this.value||60);renderStep()">
+      <span>ס"מ</span></div>` : ''}
+
+    <div class="flab" style="margin-top:20px">מזרן גמילה — לחיצה על שם מסמנת</div>
+    <div class="pick">${plan.childIds.map(c => `<button class="p ${plan.potty[c] ? 'on' : ''}"
+      style="${plan.potty[c] ? 'background:#C4846C;border-color:#C4846C' : ''}"
+      onclick="plan.potty['${c}']=!plan.potty['${c}'];renderStep()">${esc(kidName(c))}</button>`).join('')}</div>
+    <div class="count-line">🛏️ ${plan.childIds.length} מזרונים ${m.w}×${m.h} ס"מ ·
+      ${Object.values(plan.potty).filter(Boolean).length} מזרני גמילה ·
+      שטח מזרונים ${((plan.childIds.length * m.w * m.h) / 10000).toFixed(1)} מ"ר</div>
+    ${blockerHtml(2)}
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(1)">חזרה</button>
+      <button class="btn" ${canAdvance(2) ? '' : 'disabled'} onclick="goStep(3)">המשך</button>
+    </div></div>`;
+}
+function setMat(kind) {
+  if (kind === 'custom') { plan.mat.kind = 'custom'; }
+  else { const k = E.MAT_KINDS.find(x => x.id === kind); plan.mat = { kind, w: k.w, h: k.h }; }
+  renderStep();
+}
+
+/* ---------- 3. כללים ---------- */
+const RULES = [
+  { id:'not_near', label:'לא זה ליד זה', two:true },
+  { id:'near',     label:'כן זה ליד זה', two:true },
+  { id:'reachable',label:'צריך להיות נגיש', two:false },
+];
+function stepRules() {
+  const ids = plan.childIds;
+  const opts = ids.map(c => `<option value="${c}">${esc(kidName(c))}</option>`).join('');
+  return `<div class="card">
+    <h2>כללי שינה</h2>
+    <div class="sub">"ליד" פירושו צלע ארוכה מול צלע ארוכה — ילד ששוכב לצד ילד.
+      מגע ראש־ברגליים קרוב פיזית אבל אינו נחשב "ליד", וזה משחרר מקום בסידור.</div>
+    <div class="rule-row">
+      <select id="rt" onchange="renderStep()">${RULES.map(r => `<option value="${r.id}">${r.label}</option>`).join('')}</select>
+      <select id="ra">${opts}</select>
+      <select id="rb">${opts}</select>
+      <button class="btn" onclick="addRule()">הוספה</button>
+    </div>
+    ${plan.rules.length ? plan.rules.map(r => `<div class="rule ${r.active === false ? 'off' : ''}">
+        <span class="state" onclick="toggleRule('${r.id}')">${r.active === false ? 'מבוטל' : 'פעיל'}</span>
+        <span>${esc(ruleText(r))}</span>
+        <button class="x" onclick="delRule('${r.id}')">הסר</button></div>`).join('')
+      : '<div class="empty-note">אין עדיין כללים. אפשר גם בלי — המערכת תסדר לפי המקום.</div>'}
+    ${blockerHtml(3)}
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(2)">חזרה</button>
+      <button class="btn" ${canAdvance(3) ? '' : 'disabled'} onclick="goStep(4)">המשך</button>
+    </div></div>`;
+}
+function ruleText(r) {
+  const R = RULES.find(x => x.id === r.type) || {};
+  return r.b ? `${kidName(r.a)} ${R.label} ${kidName(r.b)}` : `${kidName(r.a)} — ${R.label}`;
+}
+function addRule() {
+  const t = document.getElementById('rt').value;
+  const a = document.getElementById('ra').value;
+  const b = document.getElementById('rb').value;
+  const two = (RULES.find(x => x.id === t) || {}).two;
+  if (two && a === b) { showErr('צריך לבחור שני ילדים שונים'); return; }
+  plan.rules.push({ id: uid(), type: t, a, b: two ? b : null, active: true });
+  renderStep();
+}
+function toggleRule(id) { const r = plan.rules.find(x => x.id === id); r.active = r.active === false; renderStep(); }
+function delRule(id) { plan.rules = plan.rules.filter(r => r.id !== id); renderStep(); }
+function killRule(id) { const r = plan.rules.find(x => x.id === id); if (r) r.active = false; renderBoard(); }
+
+/* ---------- 4. בחירת פריסה ---------- */
+let props = [];
+function stepBuild() {
+  const n = plan.childIds.length;
+  props = E.proposals(n, plan.mat, { aisle: 60 });
+  return `<div class="card">
+    <h2>בחרי פריסה</h2>
+    <div class="sub">כל פריסה אומרת כמה חדר היא דורשת. אחרי הבחירה אפשר לגרור כל מזרן ביד —
+      קווי יישור יעזרו ליישר שורות ולשמור רווחים שווים.</div>
+    <div class="props">${props.map((p, i) => `<button class="prop" onclick="useProp(${i})">
+      <b>${esc(p.name)}</b><em>${esc(p.hint)}</em>
+      ${miniSvg(p)}
+      <span class="sz">${(p.room.w / 100).toFixed(1)} × ${(p.room.h / 100).toFixed(1)} מ'</span></button>`).join('')}</div>
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(3)">חזרה</button>
+    </div></div>`;
+}
+function miniSvg(p) {
+  const W = 132, H = 74, pad = 3;
+  const s = Math.min((W - pad * 2) / p.room.w, (H - pad * 2) / p.room.h);
+  const ox = (W - p.room.w * s) / 2 - p.room.x * s, oy = (H - p.room.h * s) / 2 - p.room.y * s;
+  return `<svg class="mini" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    ${p.mats.map(m => {
+      const r = E.rectOf(m);
+      return `<rect x="${(ox + r.x * s).toFixed(1)}" y="${(oy + r.y * s).toFixed(1)}"
+        width="${Math.max(1.5, r.w * s).toFixed(1)}" height="${Math.max(1.5, r.h * s).toFixed(1)}"
+        rx="1.2" fill="#eef5fb" stroke="#9dbdd6" stroke-width="0.7"/>`;
+    }).join('')}</svg>`;
+}
+function useProp(i) {
+  const p = props[i]; if (!p) return;
+  // מזיזים את הפריסה כך שתתחיל ב-0,0 — הדף מתמרכז עליה בהמשך
+  const r = E.requiredRoom(p.mats, [], 0);
+  plan.mats = p.mats.map(m => ({ id: m.id, x: m.x - r.x, y: m.y - r.y, rot: m.rot,
+                                 w: plan.mat.w, h: plan.mat.h }));
+  plan.layoutName = p.name;
+  // שיבוץ ראשוני: לפי סדר, ואז מתקנים לפי הכללים
+  plan.who = {};
+  plan.childIds.forEach((c, k) => { if (plan.mats[k]) plan.who[plan.mats[k].id] = c; });
+  solveRules();
+  built = true; undoStack = [];
+  document.getElementById('wizard').classList.add('hide');
+  document.getElementById('steps').classList.add('hide');
+  document.getElementById('board').classList.remove('hide');
+  centerMats();
+  renderTop(); renderBoard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// שיבוץ פשוט: החלפות חמדניות עד שאין שיפור. 19 ילדים נפתרים במילישניות,
+// ואין טעם בפותר כבד כשהגננת ממילא תגרור ידנית אחר כך.
+function solveRules() {
+  const score = () => E.checkViolations(enginePlan(), { aisle: plan.aisle || 45 }).length;
+  let cur = score();
+  for (let pass = 0; pass < 40 && cur > 0; pass++) {
+    let moved = false;
+    for (let i = 0; i < plan.mats.length && cur > 0; i++) {
+      for (let j = i + 1; j < plan.mats.length; j++) {
+        const a = plan.mats[i].id, b = plan.mats[j].id;
+        const t = plan.who[a]; plan.who[a] = plan.who[b]; plan.who[b] = t;
+        const s = score();
+        if (s < cur) { cur = s; moved = true; }
+        else { const t2 = plan.who[a]; plan.who[a] = plan.who[b]; plan.who[b] = t2; }
+      }
+    }
+    if (!moved) break;
+  }
+  return cur;
+}
+function enginePlan() {
+  const people = {};
+  plan.childIds.forEach(c => { people[c] = { name: kidName(c) }; });
+  const spots = (plan.obstacles || []).map(o => ({ id: o.id, name: o.name, x: o.x + o.w / 2, y: o.y + o.h / 2 }));
+  return { mats: plan.mats, who: plan.who, people, rules: plan.rules, spots, obstacles: plan.obstacles,
+           room: plan.room, margin: 40 };
+}
+
+/* ---------- חסמים ---------- */
+function stepBlockers(n) {
+  const out = [];
+  if (n === 1 && !plan.childIds.length) out.push({ t:'עוד לא נבחרו ילדים', d:'לחצי על שם כדי לצרף אותו לשינה.' });
+  if (n === 2) {
+    if (plan.mat.w < 40 || plan.mat.h < 30) out.push({ t:'מידת מזרן לא סבירה', d:'אורך לפחות 40 ס"מ ורוחב לפחות 30.' });
+  }
+  if (n === 3) {
+    const seen = {};
+    plan.rules.filter(r => r.active !== false && r.b).forEach(r => {
+      const k = [r.a, r.b].sort().join('|');
+      if (seen[k] && seen[k] !== r.type) out.push({ t:'שני כללים סותרים',
+        d:`על ${kidName(r.a)} ו${kidName(r.b)} הוגדר גם "ליד" וגם "לא ליד". שום סידור לא יקיים את שניהם.` });
+      seen[k] = r.type;
+    });
+  }
+  return out;
+}
+function blockerHtml(n) {
+  const b = stepBlockers(n);
+  if (!b.length) return '';
+  return `<div class="blockers">${b.map(x => `<div class="bk"><b>⚠️ ${esc(x.t)}</b><p>${esc(x.d)}</p></div>`).join('')}</div>`;
+}
+const canAdvance = n => !stepBlockers(n).length;
+
+/* ---------- הדף ---------- */
+// PX לכל סנטימטר, כך שהפריסה תמלא את הדף בלי לחרוג ממנו
+function pxPerCm() {
+  const r = E.requiredRoom(plan.mats, plan.obstacles, 40);
+  const useW = plan.room && plan.room.w ? plan.room.w : r.w;
+  const useH = plan.room && plan.room.h ? plan.room.h : r.h;
+  if (!useW || !useH) return 1;
+  return Math.min((ROOM_W - 60) / useW, (ROOM_H - 90) / useH);
+}
+function originCm() {
+  const r = E.requiredRoom(plan.mats, plan.obstacles, 40);
+  const s = pxPerCm();
+  const w = (plan.room && plan.room.w) || r.w, h = (plan.room && plan.room.h) || r.h;
+  return { x: r.x - ((w - r.w) / 2), y: r.y - ((h - r.h) / 2), s };
+}
+const toPx = (cm, o) => (cm - o) * pxPerCm();
+
+function centerMats() {
+  const r = E.requiredRoom(plan.mats, plan.obstacles, 0);
+  if (!plan.mats.length) return;
+  const dx = -r.x, dy = -r.y;
+  plan.mats.forEach(m => { m.x += dx; m.y += dy; });
+  (plan.obstacles || []).forEach(o => { o.x += dx; o.y += dy; });
+  (plan.staff || []).forEach(s => { s.x += dx; s.y += dy; });
+}
+
+function ritualOf(cid) { return rituals[cid] || null; }
+function ritualText(cid) {
+  const r = ritualOf(cid);
+  if (!r) return '';
+  const parts = (r.needs || []).map(n => needIcon(n) + ' ' + n);
+  if (r.needs_other) parts.push(r.needs_other);
+  return parts.join(' · ');
+}
+
+function renderBoard() {
+  saveDraft();
+  const o = originCm(), s = pxPerCm();
+  const viols = E.checkViolations(enginePlan(), { aisle: plan.aisle || 45 })
+                 .filter(v => !(plan.okRules || {})[v.ruleId]);
+  const phys = E.physical(enginePlan());
+  const bad = new Set();
+  viols.forEach(v => { const r = plan.rules.find(x => x.id === v.ruleId); if (r) { bad.add(r.a); if (r.b) bad.add(r.b); } });
+  const reach = E.reachable(plan.mats, plan.aisle || 45);
+
+  const matsHtml = plan.mats.map(m => {
+    const r = E.rectOf(m), cid = plan.who[m.id];
+    const cls = ['mat'];
+    if (cid && plan.potty[cid]) cls.push('potty');
+    if (cid && bad.has(cid)) cls.push('bad');
+    if (selMat === m.id) cls.push('sel');
+    if (!reach[m.id]) cls.push('unreach');
+    const rt = cid ? ritualText(cid) : '';
+    return `<div class="${cls.join(' ')}" data-m="${m.id}"
+      style="left:${toPx(r.x, o.x)}px;top:${toPx(r.y, o.y)}px;width:${r.w * s}px;height:${r.h * s}px"
+      onpointerdown="startMatDrag(event,'${m.id}')">
+      <span class="nm">${esc(cid ? kidName(cid) : '—')}</span>
+      ${cid ? `<span class="rt ${rt ? '' : 'empty'}" onpointerdown="event.stopPropagation()"
+        onclick="event.stopPropagation();openRitual('${cid}')"
+        title="לחיצה עורכת את טקס ההירדמות">${esc(rt || 'להוספת טקס הירדמות')}</span>` : ''}
+    </div>`;
+  }).join('');
+
+  const obsHtml = (plan.obstacles || []).map(ob => `<div class="obst" data-o="${ob.id}"
+      style="left:${toPx(ob.x, o.x)}px;top:${toPx(ob.y, o.y)}px;width:${ob.w * s}px;height:${ob.h * s}px"
+      onpointerdown="startObsDrag(event,'${ob.id}')">${spotKind(ob.kind).ico} ${esc(ob.name)}
+      <button class="odel" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();delObs('${ob.id}')">הסר</button></div>`).join('');
+
+  const staffHtml = (plan.staff || []).map(st => `<div class="pmark" data-s="${st.id}"
+      style="left:${toPx(st.x, o.x)}px;top:${toPx(st.y, o.y)}px"
+      onpointerdown="startStaffDrag(event,'${st.id}')">👩‍🏫 ${esc(st.name)}
+      <button class="odel" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();delStaff('${st.id}')">הסר</button></div>`).join('');
+
+  const need = E.requiredRoom(plan.mats, plan.obstacles, 40);
+  const unreach = Object.values(reach).filter(x => !x).length;
+
+  document.getElementById('board').innerHTML = `
+    <div class="header" style="margin-bottom:10px">
+      <div><b style="font-size:18px;color:#1F3D34">${esc(plan.name)}</b>
+        <span style="color:#9B8E82;font-size:13px"> · ${plan.childIds.length} מזרונים${plan.layoutName ? ' · ' + esc(plan.layoutName) : ''}</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost undo-btn" onclick="undoMove()" ${undoStack.length ? '' : 'disabled'}>⟲ ${undoStack.length ? 'בטל ' + esc(undoStack[undoStack.length - 1].label) : 'אין מה לבטל'}</button>
+        <button class="btn soft" onclick="reflow()">סדרי מחדש</button>
+        <button class="btn ghost" onclick="window.print()">הדפסה</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="lb" onclick="goStep(4)">▦ פריסה אחרת</button>
+      <button class="lb" onclick="openSpots()">🚪 קבוע בחדר</button>
+      <button class="lb" onclick="openStaffPick()">👩‍🏫 צוות בחדר</button>
+      <button class="lb" onclick="tidy()">✨ סדר יפה</button>
+    </div>
+    <div class="a4note">📄 הדף בגודל A4 לרוחב · הסידור דורש חדר של
+      <b>${(need.w / 100).toFixed(2)} × ${(need.h / 100).toFixed(2)} מטר</b></div>
+    <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">
+      <div class="rscale" id="rscale">${matsHtml}${obsHtml}${staffHtml}<div id="guides"></div></div>
+      ${legendHtml()}${scaleBar()}</div></div>
+    ${statusStrip(viols, phys, unreach)}
+    <div style="font-size:12.5px;color:#9B8E82;text-align:center;margin:4px 0 16px;line-height:1.7">
+      גרירת מזרן מחליפה בין שני ילדים · לחיצה על טקס ההירדמות עורכת אותו ·
+      גרירה לשטח ריק מזיזה את המזרן עצמו</div>`;
+  fitRoom();
+}
+
+function legendHtml() {
+  const potty = Object.values(plan.potty).filter(Boolean).length;
+  const rows = [
+    { c:'#cfe0ec', b:'מזרן רגיל', e:`${plan.mat.w}×${plan.mat.h} ס"מ` },
+  ];
+  if (potty) rows.push({ c:'#e0c08a', b:'מזרן גמילה', e:`${potty} ילדים` });
+  (plan.staff || []).forEach(s => rows.push({ c:'#C4846C', b:s.name, e:'צוות בחדר' }));
+  return `<div class="rlegend">${rows.map(r => `<span class="lg">
+    <i style="background:${r.c}"></i><b>${esc(r.b)}</b><em>${esc(r.e)}</em></span>`).join('')}</div>`;
+}
+function scaleBar() {
+  const s = pxPerCm();
+  const px = 100 * s;                       // מטר אחד
+  return `<div class="scalebar"><i style="width:${px}px"></i><span>1 מטר</span></div>`;
+}
+function fitRoom() {
+  const outer = document.getElementById('roomOuter'), room = document.getElementById('room');
+  if (!outer || !room) return;
+  const sc = Math.min(1, outer.clientWidth / ROOM_W);
+  room.style.transform = 'scale(' + sc + ')';
+  outer.style.height = (ROOM_H * sc) + 'px';
+}
+window.addEventListener('resize', () => { if (built) fitRoom(); });
+
+function statusStrip(viols, phys, unreach) {
+  const n = plan.childIds.length, placed = Object.values(plan.who).filter(Boolean).length;
+  const done = placed >= n && !viols.length && !phys.length && !unreach;
+  const out = plan.childIds.filter(c => !Object.values(plan.who).includes(c));
+  return `<div class="status">
+    <div class="srow">
+      <span class="chip ${placed >= n ? 'good' : 'warn'}">${placed}/${n} שוכבים</span>
+      ${unreach ? `<span class="chip bad">${unreach} מזרונים בלי גישה</span>`
+                : '<span class="chip good">אפשר להגיע לכולם</span>'}
+      ${phys.length ? `<span class="chip bad">${phys.length === 1 ? 'חפיפה אחת' : phys.length + ' חפיפות'}</span>` : ''}
+      ${viols.length ? `<span class="chip bad">${viols.length === 1 ? 'כלל אחד לא מתקיים' : viols.length + ' כללים לא מתקיימים'}</span>`
+                     : '<span class="chip good">כל הכללים מתקיימים</span>'}
+    </div>
+    ${out.length ? `<div class="srow wait"><span class="smuted">בלי מזרן:</span>
+      ${out.map(c => `<span class="wchip">${esc(kidName(c))}</span>`).join('')}</div>` : ''}
+    ${phys.length ? `<div class="viol">${phys.map(p => `<div class="v"><b>🔴 ${esc(p.text)}</b></div>`).join('')}</div>` : ''}
+    ${viols.length ? `<div class="viol">${viols.map(v => `<div class="v">
+      <b>🔴 ${esc(v.text)}</b>
+      <span><button onclick="acceptViol('${v.ruleId}')">בסדר, השאירי כך</button>
+      <button onclick="killRule('${v.ruleId}')">בטלי את הכלל</button></span></div>`).join('')}</div>` : ''}
+  </div>`;
+}
+function acceptViol(id) { pushUndo('אישור חריגה'); plan.okRules = plan.okRules || {}; plan.okRules[id] = true; renderBoard(); }
+
+/* ---------- גרירה ---------- */
+function roomScale() {
+  const room = document.getElementById('room');
+  const sc = room ? (room.getBoundingClientRect().width / ROOM_W) || 1 : 1;
+  return { sc, cm: sc * pxPerCm() };     // פיקסלים על המסך לכל סנטימטר
+}
+let drag = null;
+const SNAP = 8;   // ס"מ — הצמדה לקצה של מזרן אחר
+
+function startMatDrag(ev, id) {
+  ev.preventDefault(); ev.stopPropagation();
+  const m = plan.mats.find(x => x.id === id); if (!m) return;
+  pushUndo('הזזת מזרן');
+  drag = { id, sx: ev.clientX, sy: ev.clientY, ox: m.x, oy: m.y, moved: false };
+  try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+  window.addEventListener('pointermove', onMatDrag);
+  window.addEventListener('pointerup', endMatDrag, { once: true });
+}
+function onMatDrag(ev) {
+  if (!drag) return;
+  if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) < 5) return;
+  drag.moved = true;
+  const { cm } = roomScale();
+  const m = plan.mats.find(x => x.id === drag.id);
+  let x = drag.ox + (ev.clientX - drag.sx) / cm;
+  let y = drag.oy + (ev.clientY - drag.sy) / cm;
+  const sn = snapTo(m, x, y);
+  m.x = Math.round(sn.x); m.y = Math.round(sn.y);
+  const o = originCm(), s = pxPerCm();
+  const el = document.querySelector(`.mat[data-m="${m.id}"]`);
+  if (el) { el.style.left = toPx(m.x, o.x) + 'px'; el.style.top = toPx(m.y, o.y) + 'px'; }
+  drawGuides(sn.lines);
+  // סימון המזרן שמתחת לסמן, להחלפת ילדים
+  document.querySelectorAll('.mat.target').forEach(e => e.classList.remove('target'));
+  const t = matUnder(ev, m.id);
+  if (t) { const te = document.querySelector(`.mat[data-m="${t}"]`); if (te) te.classList.add('target'); }
+}
+function endMatDrag(ev) {
+  window.removeEventListener('pointermove', onMatDrag);
+  document.querySelectorAll('.mat.target').forEach(e => e.classList.remove('target'));
+  drawGuides([]);
+  const d = drag; drag = null;
+  if (!d) return;
+  if (!d.moved) { tapMat(d.id); return; }
+  const t = matUnder(ev, d.id);
+  if (t) {
+    // נחת על מזרן אחר — מחליפים ילדים, והמזרן חוזר למקומו
+    const m = plan.mats.find(x => x.id === d.id);
+    m.x = d.ox; m.y = d.oy;
+    const a = plan.who[d.id], b = plan.who[t];
+    plan.who[d.id] = b; plan.who[t] = a;
+    showOk(`${nameOf(a) || '—'} ו${nameOf(b) || '—'} התחלפו`);
+  }
+  renderBoard();
+}
+function matUnder(ev, selfId) {
+  const el = document.elementFromPoint(ev.clientX, ev.clientY);
+  const hit = el && el.closest ? el.closest('.mat') : null;
+  if (hit && hit.dataset.m && hit.dataset.m !== selfId) return hit.dataset.m;
+  return null;
+}
+function tapMat(id) {
+  if (!selMat) { selMat = id; renderBoard(); return; }
+  if (selMat === id) { selMat = null; renderBoard(); return; }
+  pushUndo('החלפת מקומות');
+  const a = plan.who[selMat], b = plan.who[id];
+  plan.who[selMat] = b; plan.who[id] = a;
+  selMat = null; renderBoard();
+}
+function clearSel(ev) {
+  if (!selMat) return;
+  if (ev.target.closest && ev.target.closest('.mat,.obst,.pmark')) return;
+  selMat = null; renderBoard();
+}
+
+// הצמדה לקצוות של מזרונים אחרים — מה שגורם לשורות להיראות ישרות
+function snapTo(me, x, y) {
+  const w = me.rot === 90 ? me.h : me.w, h = me.rot === 90 ? me.w : me.h;
+  const lines = [];
+  let bx = null, by = null;
+  plan.mats.forEach(o => {
+    if (o.id === me.id) return;
+    const r = E.rectOf(o);
+    [[r.x, 0], [r.x2, 0], [r.x + (r.w - w) / 2, 1]].forEach(([v]) => {
+      [[x, 0], [x + w, w], [x + w / 2, w / 2]].forEach(([p, off]) => {
+        if (Math.abs(p - v) <= SNAP && (bx === null || Math.abs(p - v) < Math.abs(bx.d))) {
+          bx = { d: p - v, at: v };
+        }
+      });
+    });
+    [[r.y, 0], [r.y2, 0]].forEach(([v]) => {
+      [[y, 0], [y + h, h]].forEach(([p, off]) => {
+        if (Math.abs(p - v) <= SNAP && (by === null || Math.abs(p - v) < Math.abs(by.d))) {
+          by = { d: p - v, at: v };
+        }
+      });
+    });
+  });
+  if (bx) { x -= bx.d; lines.push({ dir: 'v', at: bx.at }); }
+  if (by) { y -= by.d; lines.push({ dir: 'h', at: by.at }); }
+  return { x, y, lines };
+}
+function drawGuides(lines) {
+  const g = document.getElementById('guides'); if (!g) return;
+  const o = originCm();
+  g.innerHTML = (lines || []).map(l => l.dir === 'v'
+    ? `<div class="gline v" style="left:${toPx(l.at, o.x)}px"></div>`
+    : `<div class="gline h" style="top:${toPx(l.at, o.y)}px"></div>`).join('');
+}
+
+function startObsDrag(ev, id) { genericDrag(ev, id, plan.obstacles, 'obst', 'data-o', 'הזזת פריט'); }
+function startStaffDrag(ev, id) { genericDrag(ev, id, plan.staff, 'pmark', 'data-s', 'הזזת צוות'); }
+function genericDrag(ev, id, arr, cls, attr, label) {
+  ev.preventDefault(); ev.stopPropagation();
+  const it = (arr || []).find(x => x.id === id); if (!it) return;
+  pushUndo(label);
+  const st = { sx: ev.clientX, sy: ev.clientY, ox: it.x, oy: it.y };
+  try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+  const move = e => {
+    const { cm } = roomScale();
+    it.x = Math.round(st.ox + (e.clientX - st.sx) / cm);
+    it.y = Math.round(st.oy + (e.clientY - st.sy) / cm);
+    const o = originCm();
+    const el = document.querySelector(`.${cls}[${attr}="${id}"]`);
+    if (el) { el.style.left = toPx(it.x, o.x) + 'px'; el.style.top = toPx(it.y, o.y) + 'px'; }
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', () => {
+    window.removeEventListener('pointermove', move); renderBoard();
+  }, { once: true });
+}
+
+/* ---------- פריטים קבועים וצוות ---------- */
+function openSpots() {
+  openModal('קבוע בחדר', 'דברים שלא זזים ושאי אפשר לשים עליהם מזרן. אפשר לגרור אותם למקומם.',
+    `<div class="ipick">${SPOT_KINDS.map(k => `<button onclick="addSpot('${k.id}');closeModal()">
+      <span class="e">${k.ico}</span><span>${esc(k.name)}</span></button>`).join('')}</div>`,
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
+}
+function addSpot(kind) {
+  pushUndo('הוספת פריט');
+  const k = spotKind(kind);
+  const r = E.requiredRoom(plan.mats, plan.obstacles, 40);
+  plan.obstacles = plan.obstacles || [];
+  plan.obstacles.push({ id: uid(), kind, name: k.name, w: k.w, h: k.h,
+                        x: Math.round(r.x + 20), y: Math.round(r.y + 20 + plan.obstacles.length * 30) });
+  renderBoard();
+}
+function delObs(id) { pushUndo('הסרת פריט'); plan.obstacles = plan.obstacles.filter(o => o.id !== id); renderBoard(); }
+function openStaffPick() {
+  const on = new Set((plan.staff || []).map(s => s.sid));
+  openModal('צוות בחדר', 'מי נמצאת בחדר בזמן השינה. אפשר לגרור את הסמן למקום שבו היא יושבת.',
+    `<div class="pick">${allStaff.map(s => `<button class="p staff ${on.has(s.id) ? 'on' : ''}"
+      onclick="toggleStaff('${s.id}')">${esc(s.name)}</button>`).join('')}</div>`,
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
+}
+function toggleStaff(sid) {
+  pushUndo('שינוי צוות');
+  plan.staff = plan.staff || [];
+  const i = plan.staff.findIndex(s => s.sid === sid);
+  if (i >= 0) plan.staff.splice(i, 1);
+  else {
+    const st = allStaff.find(s => s.id === sid);
+    const r = E.requiredRoom(plan.mats, plan.obstacles, 40);
+    plan.staff.push({ id: uid(), sid, name: st.name, x: Math.round(r.x + 20), y: Math.round(r.y + r.h - 50) });
+  }
+  openStaffPick(); renderBoard();
+}
+function delStaff(id) { pushUndo('הסרת צוות'); plan.staff = plan.staff.filter(s => s.id !== id); renderBoard(); }
+
+/* ---------- טקס ההירדמות ---------- */
+let ritualFor = null, ritualPicks = new Set();
+function openRitual(cid) {
+  ritualFor = cid;
+  const r = ritualOf(cid) || { needs: [], needs_other: '', ritual: '', notes: '' };
+  ritualPicks = new Set(r.needs || []);
+  openModal(`ככה ${kidName(cid)} נרדם/ת`,
+    'זה מה שההורים מילאו בטופס. עריכה כאן נשמרת לאותו מקום, כך שאין שתי אמיתות.',
+    `<div class="needs" id="needsBox">${NEEDS.map(n => `<button class="need ${ritualPicks.has(n.v) ? 'on' : ''}"
+       data-v="${esc(n.v)}" onclick="toggleNeed(this)">${n.ic} ${esc(n.v)}</button>`).join('')}</div>
+     <div class="flab">עוד משהו שעוזר להירדם</div>
+     <input type="text" id="rOther" value="${esc(r.needs_other || '')}" placeholder="למשל: מוזיקה שקטה">
+     <div class="flab">איך הוא/היא נרדם/ת בדרך כלל</div>
+     <textarea id="rRit" rows="3" placeholder="מחזיקים יד? מלטפים את הראש? משפט קבוע?">${esc(r.ritual || '')}</textarea>
+     <div class="flab">משהו נוסף שחשוב שנדע</div>
+     <textarea id="rNotes" rows="2">${esc(r.notes || '')}</textarea>`,
+    `<button class="btn" onclick="saveRitual()">שמירה</button>
+     <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
+}
+function toggleNeed(btn) {
+  const v = btn.dataset.v;
+  if (ritualPicks.has(v)) { ritualPicks.delete(v); btn.classList.remove('on'); }
+  else { ritualPicks.add(v); btn.classList.add('on'); }
+}
+async function saveRitual() {
+  const cid = ritualFor; if (!cid) return;
+  const data = {
+    child_id: cid, child_name: kidName(cid),
+    needs: [...ritualPicks],
+    needs_other: (document.getElementById('rOther') || {}).value || '',
+    ritual: (document.getElementById('rRit') || {}).value || '',
+    notes: (document.getElementById('rNotes') || {}).value || '',
+  };
+  rituals[cid] = { needs: data.needs, needs_other: data.needs_other, ritual: data.ritual, notes: data.notes };
+  closeModal(); renderBoard();
+  try { await api.saveNapRitual(data); showOk('נשמר'); }
+  catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+
+/* ---------- סידור מחדש ויישור ---------- */
+function reflow() { pushUndo('סידור מחדש'); const left = solveRules(); renderBoard();
+  showOk(left ? `סודר מחדש · נותרו ${left} חריגות` : 'סודר מחדש · כל הכללים מתקיימים'); }
+// יישור: מצמיד מזרונים לרשת של מידת המזרן, כך שהשורות יוצאות ישרות
+function tidy() {
+  pushUndo('סדר יפה');
+  const gx = plan.mat.w, gy = plan.mat.h;
+  const r = E.requiredRoom(plan.mats, [], 0);
+  plan.mats.forEach(m => {
+    m.x = r.x + Math.round((m.x - r.x) / gx) * gx;
+    m.y = r.y + Math.round((m.y - r.y) / gy) * gy;
+  });
+  centerMats(); renderBoard();
+}
+
+/* ---------- ביטול ---------- */
+function snapshot() { return JSON.stringify({ mats: plan.mats, who: plan.who,
+  obstacles: plan.obstacles || [], staff: plan.staff || [], okRules: plan.okRules || {} }); }
+function pushUndo(label) {
+  const s = snapshot();
+  const top = undoStack[undoStack.length - 1];
+  if (top && top.s === s) return;
+  undoStack.push({ s, label: label || 'הפעולה האחרונה' });
+  if (undoStack.length > 40) undoStack.shift();
+}
+function undoMove() {
+  const e = undoStack.pop(); if (!e) return;
+  const p = JSON.parse(e.s);
+  plan.mats = p.mats; plan.who = p.who; plan.obstacles = p.obstacles;
+  plan.staff = p.staff; plan.okRules = p.okRules;
+  selMat = null; renderBoard(); showOk('בוטל: ' + e.label);
+}
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+    const t = e.target;
+    if (t && /^(INPUT|TEXTAREA)$/.test(t.tagName)) return;
+    if (!built || !undoStack.length) return;
+    e.preventDefault(); undoMove();
+  }
+});
+
+/* ---------- שמירה ---------- */
+function openModal(title, sub, body, actions) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSub').textContent = sub || '';
+  document.getElementById('modalBody').innerHTML = body || '';
+  document.getElementById('modalActions').innerHTML = actions || '';
+  document.getElementById('modalOv').classList.add('show');
+}
+function closeModal() { document.getElementById('modalOv').classList.remove('show'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+async function savePlan() {
+  try { await api.saveNapPlan(plan); showOk('הסידור נשמר'); }
+  catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+function saveVersion() {
+  const def = 'גרסה מ-' + new Date().toLocaleDateString('he-IL');
+  openModal('שמירת גרסה', 'נשמרת בצד ולא דורסת כלום. תמצאי אותה בכפתור "גרסאות שמורות".',
+    `<input type="text" id="verName" value="${esc(def)}">`,
+    `<button class="btn" onclick="doSaveVersion()">שמירה</button>
+     <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
+  setTimeout(() => { const el = document.getElementById('verName'); if (el) { el.focus(); el.select(); } }, 60);
+}
+async function doSaveVersion() {
+  const note = (document.getElementById('verName') || {}).value || '';
+  if (!note.trim()) { showErr('צריך לתת שם לגרסה'); return; }
+  closeModal();
+  try { await api.saveNapPlan(plan); await api.saveNapVersion(plan, note.trim());
+        showOk(`נשמרה הגרסה "${note.trim()}"`); }
+  catch (e) { showErr('שמירת הגרסה נכשלה: ' + e.message); }
+}
+let savedPlans = [], savedVers = [];
+async function loadExisting() {
+  openModal('סידורים שמורים', '', '<div class="empty-note">טוען…</div>',
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
+  try {
+    const r = await api.getNapPlans();
+    savedPlans = (r && r.plans) || []; rituals = (r && r.rituals) || rituals;
+    document.getElementById('modalBody').innerHTML = savedPlans.length
+      ? savedPlans.map((p, i) => `<div class="plan-row" onclick="openPlan(${i})">
+          <div><div class="nm">${esc(p.name)}</div>
+          <div class="meta">${(p.plan.mats || []).length} מזרונים · ${(p.updated || '').slice(0, 10).split('-').reverse().join('.')}</div></div>
+          <button class="rm" onclick="event.stopPropagation();removePlan(${i})">הסר</button></div>`).join('')
+      : '<div class="empty-note">אין עדיין סידורים שמורים.<br>סגרי את החלון ובני סידור ראשון.</div>';
+  } catch (e) {
+    document.getElementById('modalBody').innerHTML = `<div class="empty-note">הטעינה נכשלה: ${esc(e.message)}</div>`;
+  }
+}
+function openPlan(i) {
+  const p = savedPlans[i]; if (!p) return;
+  closeModal(); plan = Object.assign(newPlan(), p.plan); undoStack = [];
+  if ((plan.mats || []).length) {
+    built = true;
+    document.getElementById('wizard').classList.add('hide');
+    document.getElementById('steps').classList.add('hide');
+    document.getElementById('board').classList.remove('hide');
+    renderTop(); renderBoard();
+  } else { built = false; renderTop(); goStep(1); }
+  showOk('נטען: ' + plan.name);
+}
+async function removePlan(i) {
+  const p = savedPlans[i]; if (!p) return;
+  savedPlans.splice(i, 1); loadExisting();
+  try { await api.deleteNapPlan(p.id); showOk('הוסר · ניתן לשחזור מהפח'); }
+  catch (e) { showErr('ההסרה נכשלה: ' + e.message); }
+}
+async function openVersions() {
+  openModal('גרסאות שמורות', `כל גרסה היא צילום של "${plan.name}".`,
+    '<div class="empty-note">טוען…</div>',
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
+  try {
+    const r = await api.getNapPlan(plan.id);
+    savedVers = (r && r.versions) || [];
+    document.getElementById('modalBody').innerHTML = savedVers.length
+      ? savedVers.map((v, i) => `<div class="plan-row" onclick="openVersion(${i})">
+          <div><div class="nm">${esc(v.note)}</div>
+          <div class="meta">${(v.date || '').split('-').reverse().join('.')} · ${(v.plan.mats || []).length} מזרונים</div></div>
+          <button class="rm" onclick="event.stopPropagation();removeVersion(${i})">הסר</button></div>`).join('')
+      : '<div class="empty-note">עוד לא נשמרה אף גרסה.</div>';
+  } catch (e) {
+    document.getElementById('modalBody').innerHTML = `<div class="empty-note">הטעינה נכשלה: ${esc(e.message)}</div>`;
+  }
+}
+function openVersion(i) {
+  const v = savedVers[i]; if (!v || !v.plan) return;
+  closeModal(); plan = Object.assign(newPlan(), v.plan); undoStack = []; built = true;
+  document.getElementById('wizard').classList.add('hide');
+  document.getElementById('steps').classList.add('hide');
+  document.getElementById('board').classList.remove('hide');
+  renderTop(); renderBoard();
+  showOk(`נפתחה "${v.note}" לעריכה · "שמור גרסה" ייצור גרסה חדשה`);
+}
+async function removeVersion(i) {
+  const v = savedVers[i]; if (!v) return;
+  savedVers.splice(i, 1); openVersions();
+  try { await api.deleteNapVersion(v.id); showOk('הוסרה · ניתן לשחזור מהפח'); }
+  catch (e) { showErr('ההסרה נכשלה: ' + e.message); }
+}
+function startFresh() {
+  if (!plan.childIds.length) { doFresh(); return; }
+  openModal('סידור חדש', 'הטיוטה הנוכחית תימחק. אם רוצים לשמור — סגרי ולחצי "שמירה" קודם.',
+    `<div class="empty-note"><b>${esc(plan.name)}</b> · ${plan.childIds.length} מזרונים</div>`,
+    `<button class="btn" onclick="doFresh()">התחלה מחדש</button>
+     <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
+}
+function doFresh() { closeModal(); clearDraft(); plan = newPlan(); built = false; goStep(WELCOME); }
+
+function showErr(m) { const el = document.getElementById('error'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 5000); }
+function showOk(m) { const el = document.getElementById('success'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000); }
+
+boot();
+</script>
+</body>
+</html>

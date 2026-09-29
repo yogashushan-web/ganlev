@@ -85,6 +85,16 @@ const api = {
   saveSeatingVersion: (plan, note) => apiCall(`/seating?garden_id=${getGardenId()}`, 'POST', { action: 'version', plan, note }),
   deleteSeatingVersion: (version_id) => apiCall(`/seating?garden_id=${getGardenId()}`, 'POST', { action: 'del-version', version_id }),
 
+  // Nap-room mattress layout (events, calendar='nap-plan'); rituals share the
+  // public nap form's record (calendar='child-nap') so there is one truth.
+  getNapPlans: () => apiCall(`/nap-layout?garden_id=${getGardenId()}`),
+  getNapPlan: (id) => apiCall(`/nap-layout?garden_id=${getGardenId()}&id=${encodeURIComponent(id)}`),
+  saveNapPlan: (plan) => apiCall(`/nap-layout?garden_id=${getGardenId()}`, 'POST', { action: 'save', plan }),
+  saveNapVersion: (plan, note) => apiCall(`/nap-layout?garden_id=${getGardenId()}`, 'POST', { action: 'version', plan, note }),
+  deleteNapVersion: (version_id) => apiCall(`/nap-layout?garden_id=${getGardenId()}`, 'POST', { action: 'del-version', version_id }),
+  deleteNapPlan: (id) => apiCall(`/nap-layout/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+  saveNapRitual: (data) => apiCall(`/nap-layout?garden_id=${getGardenId()}`, 'POST', Object.assign({ action: 'ritual' }, data)),
+
   // Food allergies per child (stored as JSON in events, calendar='child-health')
   getChildHealth: () => apiCall(`/child-health?garden_id=${getGardenId()}`),
   setChildAllergies: (child_id, allergies) => apiCall(`/child-health?garden_id=${getGardenId()}`, 'POST', { child_id, allergies }),

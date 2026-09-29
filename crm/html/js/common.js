@@ -201,6 +201,7 @@ function renderNavSidebar() {
     { href: 'parents-tuition.html', icon: '👨‍👩‍👧', label: 'הורים' },
     { href: 'tuition-board.html',   icon: '💳', label: 'שכר לימוד' },
     { href: 'seating.html',         icon: '🍽️', label: 'סידור ישיבה' },
+    { href: 'nap-layout.html',      icon: '🛏️', label: 'סידור מזרונים' },
     { href: 'staff-salaries.html',  icon: '👥', label: 'צוות' },
     { href: 'content.html',         icon: '📚', label: 'תוכן חינוכי' },
     { href: 'forms.html',           icon: '📋', label: 'טפסים' },

@@ -195,8 +195,11 @@
     const mats = plan.mats || [];
     const by = {};
     mats.forEach(m => { by[m.id] = m; });
+    // "ליד" = צלע ארוכה מול צלע ארוכה, כלומר ילד ששוכב לצד ילד.
+    // מגע ראש-ברגליים קרוב פיזית אבל אינו "ליד", ולכן הוא מותר — וזה
+    // משחרר הרבה מקום בסידור.
     const nb = neighbours(mats, opts.near);
-    const near = (a, b) => (nb[a] || []).some(x => x.id === b);
+    const near = (a, b) => (nb[a] || []).some(x => x.id === b && x.how === 'side');
     const matOf = pid => (mats.find(m => plan.who[m.id] === pid) || {}).id;
     const nameOf = pid => (plan.people[pid] || {}).name || pid;
 
