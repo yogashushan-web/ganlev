@@ -109,8 +109,7 @@
     .mat.potty { border-color:#e0c08a; background:#fdf6e9; border-style:dashed; }
     .mat.potty .nm { color:#8a6a23; }
     .mat.potty .rt { color:#b8801f; }
-    .mat.sel { outline:3px solid #1F3D34; outline-offset:2px; }
-    .mat.bad { border-color:#e0837a; background:#fdf0ef; }
+        .mat.bad { border-color:#e0837a; background:#fdf0ef; }
     .mat.unreach::after { content:'אין גישה'; position:absolute; top:2px; left:4px; font-size:8.5px;
                           font-weight:800; color:#c94147; }
     .mat.from { opacity:.34; }
@@ -119,6 +118,24 @@
     .obst { position:absolute; background:#e7e0d4; border:2px solid #c9bda9; border-radius:6px;
             display:flex; align-items:center; justify-content:center; direction:rtl;
             font-size:11.5px; font-weight:800; color:#6f6457; cursor:grab; touch-action:none; z-index:4; }
+    /* מזרן מסומן: קו ירוק מלא, כדי שקבוצה מסומנת תיקרא כגוש אחד */
+    .mat.sel { outline:3px solid #1F7a4f; outline-offset:2px; }
+    .zoombar { display:flex; align-items:center; gap:9px; margin-right:6px;
+               padding-right:12px; border-right:1px solid #e8e4de; }
+    .zoombar .zv { font-size:12.5px; color:#1F3D34; font-weight:800; min-width:40px;
+                   font-variant-numeric:tabular-nums; }
+    #zoomR { -webkit-appearance:none; appearance:none; width:110px; height:3px; border-radius:99px;
+             background:#e0d7c7; outline:none; cursor:ew-resize; }
+    #zoomR::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:14px; height:14px;
+             border-radius:50%; background:#fff; border:2px solid #C4846C;
+             box-shadow:0 1px 4px rgba(0,0,0,.18); cursor:grab; }
+    #zoomR::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:#fff;
+             border:2px solid #C4846C; }
+    .obst .orot { position:absolute; top:-9px; right:-6px; background:#fff; border:1px solid #e8e1d6;
+            color:#8a7f70; border-radius:7px; padding:1px 7px; font-size:11px; font-weight:700;
+            font-family:'Heebo'; cursor:pointer; opacity:0; transition:opacity .12s; }
+    .obst:hover .orot { opacity:1; }
+    .obst .orot:hover { border-color:#C4846C; color:#8a5a44; }
     .obst .odel, .pmark .odel { position:absolute; top:-9px; left:-6px; background:#fff; border:1px solid #e8e1d6;
             color:#8a7f70; border-radius:7px; padding:1px 6px; font-size:10px; font-weight:700;
             font-family:'Heebo'; cursor:pointer; opacity:0; transition:opacity .12s; }
@@ -237,7 +254,7 @@
       html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
           box-shadow:none !important; }
-      .header, .steps, .toolbar, .status, .a4note, .err, .ok, .ov, .odel, .blockers, .viol,
+      .header, .steps, .toolbar, .status, .a4note, .err, .ok, .ov, .odel, .orot, .blockers, .viol,
       #crmSidebar, #crmMenuBtn, #trashFab { display:none !important; }
       .wrap { padding:0 !important; max-width:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
@@ -310,7 +327,7 @@ const SPOT_KINDS = [
 const spotKind = k => SPOT_KINDS.find(x => x.id === k) || SPOT_KINDS[0];
 
 let allKids = [], allStaff = [], rituals = {}, step = WELCOME, plan = null, built = false, kidFilter = '';
-let selMat = null, undoStack = [];
+let selMats = new Set(), undoStack = [];
 
 function newPlan() {
   return { id: 'np' + Date.now().toString(36), name: 'סידור מזרונים ' + schoolYear(),
@@ -642,6 +659,18 @@ const canAdvance = n => !stepBlockers(n).length;
 
 /* ---------- הדף ---------- */
 // PX לכל סנטימטר, כך שהפריסה תמלא את הדף בלי לחרוג ממנו
+// גודל התוכן על הדף, מעל ההתאמה האוטומטית. 100% הוא "למלא את הדף",
+// ומכאן אפשר להקטין כדי להשאיר שוליים או להגדיל כדי שהשמות ייקראו
+// מרחוק. נצרב בהדפסה, לא זום מסך.
+const zoomOf = () => (plan && plan.zoom) || 1;
+function liveZoom(v) {
+  plan.zoom = Math.round(Number(v)) / 100;
+  const el = document.getElementById('rscale');
+  if (el) el.style.transform = `scale(${plan.zoom})`;
+  const out = document.getElementById('zoomV');
+  if (out) out.textContent = Math.round(plan.zoom * 100) + '%';
+  saveDraft();
+}
 function pxPerCm() {
   const r = E.requiredRoom(plan.mats, plan.obstacles, 40);
   const useW = plan.room && plan.room.w ? plan.room.w : r.w;
@@ -690,7 +719,7 @@ function renderBoard() {
     const cls = ['mat'];
     if (cid && plan.potty[cid]) cls.push('potty');
     if (cid && bad.has(cid)) cls.push('bad');
-    if (selMat === m.id) cls.push('sel');
+    if (selMats.has(m.id)) cls.push('sel');
     if (!reach[m.id]) cls.push('unreach');
     const rt = cid ? ritualText(cid) : '';
     return `<div class="${cls.join(' ')}" data-m="${m.id}"
@@ -704,8 +733,11 @@ function renderBoard() {
   }).join('');
 
   const obsHtml = (plan.obstacles || []).map(ob => `<div class="obst" data-o="${ob.id}"
-      style="left:${toPx(ob.x, o.x)}px;top:${toPx(ob.y, o.y)}px;width:${ob.w * s}px;height:${ob.h * s}px"
-      onpointerdown="startObsDrag(event,'${ob.id}')">${spotKind(ob.kind).ico} ${esc(ob.name)}
+      style="left:${toPx(ob.x, o.x)}px;top:${toPx(ob.y, o.y)}px;width:${ob.w * s}px;height:${ob.h * s}px;
+        transform:rotate(${ob.rot || 0}deg)"
+      onpointerdown="startObsDrag(event,'${ob.id}')">
+      <span style="transform:rotate(${-(ob.rot || 0)}deg)">${spotKind(ob.kind).ico} ${esc(ob.name)}</span>
+      <button class="orot" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();rotObs('${ob.id}')" title="סיבוב ב-15°">⟳</button>
       <button class="odel" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();delObs('${ob.id}')">הסר</button></div>`).join('');
 
   const staffHtml = (plan.staff || []).map(st => `<div class="pmark" data-s="${st.id}"
@@ -731,13 +763,21 @@ function renderBoard() {
       <button class="lb" onclick="openSpots()">🚪 קבוע בחדר</button>
       <button class="lb" onclick="openStaffPick()">👩‍🏫 צוות בחדר</button>
       <button class="lb" onclick="flipPage()" title="A4 לאורך או לרוחב">${plan.portrait ? '🔄 לרוחב' : '🔄 לאורך'}</button>
+      <button class="lb" onclick="selectAllMats()" title="ואז גרירה מזיזה את כולם יחד">⬚ סמני הכל</button>
       <button class="lb" onclick="tidy()">✨ סדר יפה</button>
+      <div class="zoombar">
+        <input type="range" id="zoomR" min="50" max="160" step="1" value="${Math.round(zoomOf() * 100)}"
+          aria-label="גודל המזרונים על הדף"
+          onpointerdown="pushUndo('שינוי גודל')" oninput="liveZoom(this.value)" onchange="renderBoard()">
+        <span class="zv" id="zoomV">${Math.round(zoomOf() * 100)}%</span>
+      </div>
     </div>
     <div class="a4note">📄 A4 ${plan.portrait ? 'לאורך' : 'לרוחב'} · הסידור דורש חדר של
       <b>${(need.w / 100).toFixed(2)} × ${(need.h / 100).toFixed(2)} מטר</b></div>
     <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)"
       style="width:${ROOM_W()}px;height:${ROOM_H()}px">
-      <div class="rscale" id="rscale" style="width:${ROOM_W()}px;height:${ROOM_H()}px">${matsHtml}${obsHtml}${staffHtml}<div id="guides"></div></div>
+      <div class="rscale" id="rscale" style="width:${ROOM_W()}px;height:${ROOM_H()}px;
+        transform:scale(${zoomOf()});transform-origin:${ROOM_W() / 2}px ${ROOM_H() / 2}px">${matsHtml}${obsHtml}${staffHtml}<div id="guides"></div></div>
       ${legendHtml()}${scaleBar()}</div></div>
     ${statusStrip(viols, phys, unreach)}
     <div style="font-size:12.5px;color:#9B8E82;text-align:center;margin:4px 0 16px;line-height:1.7">
@@ -809,7 +849,7 @@ function acceptViol(id) { pushUndo('אישור חריגה'); plan.okRules = plan
 function roomScale() {
   const room = document.getElementById('room');
   const sc = room ? (room.getBoundingClientRect().width / ROOM_W()) || 1 : 1;
-  return { sc, cm: sc * pxPerCm() };     // פיקסלים על המסך לכל סנטימטר
+  return { sc, cm: sc * pxPerCm() * zoomOf() };   // פיקסלים על המסך לכל סנטימטר
 }
 let drag = null;
 const SNAP = 8;   // ס"מ — הצמדה לקצה של מזרן אחר
@@ -817,8 +857,19 @@ const SNAP = 8;   // ס"מ — הצמדה לקצה של מזרן אחר
 function startMatDrag(ev, id) {
   ev.preventDefault(); ev.stopPropagation();
   const m = plan.mats.find(x => x.id === id); if (!m) return;
+
+  // Shift או Ctrl מוסיפים לבחירה במקום להחליף אותה — בלי זה אי אפשר
+  // לבחור חמישה מזרונים ולהזיז אותם יחד.
+  if (ev.shiftKey || ev.ctrlKey || ev.metaKey) {
+    if (selMats.has(id)) selMats.delete(id); else selMats.add(id);
+    renderBoard(); return;
+  }
+
   pushUndo('הזזת מזרן');
-  drag = { id, sx: ev.clientX, sy: ev.clientY, ox: m.x, oy: m.y, moved: false };
+  // גוררים את כל מה שמסומן, אם המזרן הנגרר הוא חלק מהבחירה
+  const group = (selMats.size > 1 && selMats.has(id)) ? [...selMats] : [id];
+  drag = { id, group, sx: ev.clientX, sy: ev.clientY, moved: false,
+           start: group.map(g => { const t = plan.mats.find(x => x.id === g); return { id: g, x: t.x, y: t.y }; }) };
   try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
   window.addEventListener('pointermove', onMatDrag);
   window.addEventListener('pointerup', endMatDrag, { once: true });
@@ -828,19 +879,31 @@ function onMatDrag(ev) {
   if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) < 5) return;
   drag.moved = true;
   const { cm } = roomScale();
+  const dx = (ev.clientX - drag.sx) / cm, dy = (ev.clientY - drag.sy) / cm;
+  const lead = drag.start.find(st => st.id === drag.id);
   const m = plan.mats.find(x => x.id === drag.id);
-  let x = drag.ox + (ev.clientX - drag.sx) / cm;
-  let y = drag.oy + (ev.clientY - drag.sy) / cm;
-  const sn = snapTo(m, x, y);
-  m.x = Math.round(sn.x); m.y = Math.round(sn.y);
+
+  // ההצמדה מחושבת על המזרן הנגרר, וההיסט שנוצר ממנה מוחל על כל הקבוצה,
+  // כדי שהקבוצה תזוז כגוש אחד ולא תתפרק.
+  const sn = drag.group.length > 1
+    ? { x: lead.x + dx, y: lead.y + dy, lines: [] }
+    : snapTo(m, lead.x + dx, lead.y + dy);
+  const adjX = sn.x - (lead.x + dx), adjY = sn.y - (lead.y + dy);
+
   const o = originCm(), s = pxPerCm();
-  const el = document.querySelector(`.mat[data-m="${m.id}"]`);
-  if (el) { el.style.left = toPx(m.x, o.x) + 'px'; el.style.top = toPx(m.y, o.y) + 'px'; }
+  drag.start.forEach(st => {
+    const t = plan.mats.find(x => x.id === st.id); if (!t) return;
+    t.x = Math.round(st.x + dx + adjX); t.y = Math.round(st.y + dy + adjY);
+    const el = document.querySelector(`.mat[data-m="${t.id}"]`);
+    if (el) { el.style.left = toPx(t.x, o.x) + 'px'; el.style.top = toPx(t.y, o.y) + 'px'; }
+  });
   drawGuides(sn.lines);
-  // סימון המזרן שמתחת לסמן, להחלפת ילדים
+
   document.querySelectorAll('.mat.target').forEach(e => e.classList.remove('target'));
-  const t = matUnder(ev, m.id);
-  if (t) { const te = document.querySelector(`.mat[data-m="${t}"]`); if (te) te.classList.add('target'); }
+  if (drag.group.length === 1) {
+    const t = matUnder(ev, m.id);
+    if (t) { const te = document.querySelector(`.mat[data-m="${t}"]`); if (te) te.classList.add('target'); }
+  }
 }
 function endMatDrag(ev) {
   window.removeEventListener('pointermove', onMatDrag);
@@ -849,14 +912,16 @@ function endMatDrag(ev) {
   const d = drag; drag = null;
   if (!d) return;
   if (!d.moved) { tapMat(d.id); return; }
-  const t = matUnder(ev, d.id);
-  if (t) {
-    // נחת על מזרן אחר — מחליפים ילדים, והמזרן חוזר למקומו
-    const m = plan.mats.find(x => x.id === d.id);
-    m.x = d.ox; m.y = d.oy;
-    const a = plan.who[d.id], b = plan.who[t];
-    plan.who[d.id] = b; plan.who[t] = a;
-    showOk(`${nameOf(a) || '—'} ו${nameOf(b) || '—'} התחלפו`);
+  if (d.group.length === 1) {
+    const t = matUnder(ev, d.id);
+    if (t) {
+      // נחת על מזרן אחר — מחליפים ילדים, והמזרן חוזר למקומו
+      const m = plan.mats.find(x => x.id === d.id);
+      const st = d.start[0]; m.x = st.x; m.y = st.y;
+      const a = plan.who[d.id], b = plan.who[t];
+      plan.who[d.id] = b; plan.who[t] = a;
+      showOk(`${nameOf(a) || '—'} ו${nameOf(b) || '—'} התחלפו`);
+    }
   }
   renderBoard();
 }
@@ -867,17 +932,24 @@ function matUnder(ev, selfId) {
   return null;
 }
 function tapMat(id) {
-  if (!selMat) { selMat = id; renderBoard(); return; }
-  if (selMat === id) { selMat = null; renderBoard(); return; }
+  // לחיצה רגילה: ראשונה בוחרת, שנייה על מזרן אחר מחליפה ילדים
+  if (!selMats.size) { selMats = new Set([id]); renderBoard(); return; }
+  if (selMats.size === 1 && selMats.has(id)) { selMats.clear(); renderBoard(); return; }
+  if (selMats.size > 1) { selMats = new Set([id]); renderBoard(); return; }
+  const from = [...selMats][0];
   pushUndo('החלפת מקומות');
-  const a = plan.who[selMat], b = plan.who[id];
-  plan.who[selMat] = b; plan.who[id] = a;
-  selMat = null; renderBoard();
+  const a = plan.who[from], b = plan.who[id];
+  plan.who[from] = b; plan.who[id] = a;
+  selMats.clear(); renderBoard();
+}
+function selectAllMats() {
+  selMats = new Set(plan.mats.map(m => m.id));
+  renderBoard(); showOk(`${selMats.size} מזרונים מסומנים · גרירה מזיזה את כולם יחד`);
 }
 function clearSel(ev) {
-  if (!selMat) return;
+  if (!selMats.size) return;
   if (ev.target.closest && ev.target.closest('.mat,.obst,.pmark')) return;
-  selMat = null; renderBoard();
+  selMats.clear(); renderBoard();
 }
 
 // הצמדה לקצוות של מזרונים אחרים — מה שגורם לשורות להיראות ישרות
@@ -951,6 +1023,14 @@ function addSpot(kind) {
   plan.obstacles = plan.obstacles || [];
   plan.obstacles.push({ id: uid(), kind, name: k.name, w: k.w, h: k.h,
                         x: Math.round(r.x + 20), y: Math.round(r.y + 20 + plan.obstacles.length * 30) });
+  renderBoard();
+}
+// חלון על קיר צדדי חייב לעמוד אנכית. קפיצות של 15° מגיעות ל-90 בשש
+// לחיצות ומאפשרות גם קיר אלכסוני, בלי ידית גרירה על אובייקט קטן.
+function rotObs(id) {
+  const ob = (plan.obstacles || []).find(o => o.id === id); if (!ob) return;
+  pushUndo('סיבוב פריט');
+  ob.rot = ((ob.rot || 0) + 15) % 360;
   renderBoard();
 }
 function delObs(id) { pushUndo('הסרת פריט'); plan.obstacles = plan.obstacles.filter(o => o.id !== id); renderBoard(); }
@@ -1031,7 +1111,8 @@ function tidy() {
 
 /* ---------- ביטול ---------- */
 function snapshot() { return JSON.stringify({ mats: plan.mats, who: plan.who,
-  obstacles: plan.obstacles || [], staff: plan.staff || [], okRules: plan.okRules || {} }); }
+  obstacles: plan.obstacles || [], staff: plan.staff || [], okRules: plan.okRules || {},
+  zoom: zoomOf(), portrait: !!plan.portrait }); }
 function pushUndo(label) {
   const s = snapshot();
   const top = undoStack[undoStack.length - 1];
@@ -1044,7 +1125,8 @@ function undoMove() {
   const p = JSON.parse(e.s);
   plan.mats = p.mats; plan.who = p.who; plan.obstacles = p.obstacles;
   plan.staff = p.staff; plan.okRules = p.okRules;
-  selMat = null; renderBoard(); showOk('בוטל: ' + e.label);
+  plan.zoom = p.zoom || 1; plan.portrait = !!p.portrait;
+  selMats.clear(); renderBoard(); showOk('בוטל: ' + e.label);
 }
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
