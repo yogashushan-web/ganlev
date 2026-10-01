@@ -164,7 +164,7 @@
        ותמונה על הכרית — וזה כבר חדר ילדים. והכרית נושאת מידע: היא
        מסמנת לאיזה כיוון פונה הראש, מה שלא היה קיים בדף קודם. */
     .mat { position:absolute; border-radius:10px; cursor:grab; touch-action:none;
-           direction:rtl; overflow:visible; z-index:5;
+           direction:rtl; overflow:hidden; z-index:5;
            --bl:#dce9f3; --bll:#a9c6dc;
            background:#fff; border:1.5px solid var(--bll);
            box-shadow:0 1px 3px rgba(0,0,0,.05); }
@@ -180,7 +180,8 @@
     .mat.h-top .pillow::after, .mat.h-bottom .pillow::after {
       top:50%; left:20%; right:20%; height:1px; }
     .mat .pillow { position:absolute; }
-    .mat .face { position:absolute; border-radius:50%; object-fit:cover;
+    .mat .face { position:absolute; border-radius:50%; object-fit:cover; display:block;
+                 max-width:92%; max-height:92%;     /* רשת ביטחון למידה שלא חושבה */
                  border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.18); z-index:3; }
     .mat .num { position:absolute; bottom:3px; left:5px; font-size:9px; font-weight:700;
                 color:var(--bll); z-index:2; }
@@ -235,7 +236,7 @@
     /* מזרן מסומן: קו ירוק מלא, כדי שקבוצה מסומנת תיקרא כגוש אחד */
     .mat.sel { outline:3px solid #1F7a4f; outline-offset:2px; }
     /* סיבוב מזרן בודד — מופיע בריחוף, כדי שלא יוסיף רעש לדף */
-    .mrot { position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:7px;
+    .mrot { position:absolute; top:2px; left:2px; width:21px; height:21px; border-radius:7px;
             background:#fff; border:1px solid #d6e1ea; color:#6f8aa0; font-size:13px;
             line-height:1; cursor:pointer; font-family:'Alef'; opacity:0;
             transition:opacity .12s; display:flex; align-items:center; justify-content:center; }
@@ -1012,12 +1013,17 @@ function renderBoard() {
     const rt = cid ? ritualHtml(cid) : '';
     const ph = cid ? photoOf(cid) : '';
     const tint = BLANKETS[idx % BLANKETS.length];
+    // גודל התמונה נגזר מגודל הכרית בפועל. בלי מידה מפורשת הדפדפן
+    // מציג את הקובץ בגודלו המקורי — מאות פיקסלים שמכסים את כל הדף.
+    const bw = sLen(r.w), bh = sLen(r.h);
+    const pwPx = vert ? bw - 8 : bw * 0.30, phPx = vert ? bh * 0.30 : bh - 8;
+    const faceSz = Math.max(9, Math.min(pwPx, phPx) * 0.82);
     return `<div class="${cls.join(' ')}" data-m="${m.id}"
       style="left:${sX(r.x)}px;top:${sY(r.y)}px;width:${sLen(r.w)}px;height:${sLen(r.h)}px
              ${cid && plan.potty[cid] ? '' : `;--bl:${tint.bg};--bll:${tint.line}`}"
       onpointerdown="startMatDrag(event,'${m.id}')">
       <i class="blanket"></i><i class="fold"></i><i class="pillow"></i>
-      ${ph ? `<img class="face" src="${ph}" alt="">` : ''}
+      ${ph ? `<img class="face" src="${ph}" alt="" style="width:${faceSz}px;height:${faceSz}px">` : ''}
       <span class="num">${idx + 1}</span>
       <div class="body">
         <span class="nm">${esc(cid ? kidName(cid) : '—')}</span>
