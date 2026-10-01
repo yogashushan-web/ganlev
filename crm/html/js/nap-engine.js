@@ -269,6 +269,7 @@
     MAT_KINDS, MAT_ROLES,
     rectOf, requiredRoom, neighbours, reachable,
     proposals, bestPerRow, checkViolations, physical, overlaps,
+    layoutRows, layoutAisle, layoutCols, layoutRing,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else root.NapEngine = API;

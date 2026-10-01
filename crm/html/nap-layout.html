@@ -81,6 +81,58 @@
     .dims input:focus { border-color:#1F3D34; }
     .dims span { font-size:12.5px; color:#9B8E82; font-weight:700; }
 
+    /* ---- מחוונים: לכוונן את הסידור בלי לגרור ---- */
+    .gridbar { display:flex; align-items:center; gap:18px; flex-wrap:wrap; background:#fff;
+               border:1px solid #e8e4de; border-radius:12px; padding:10px 16px; margin-bottom:9px; }
+    .gridbar label { display:flex; align-items:center; gap:9px; font-size:12.5px;
+                     color:#9B8E82; font-weight:700; }
+    .gridbar label b { color:#1F3D34; font-size:12.5px; min-width:54px;
+                       font-variant-numeric:tabular-nums; }
+    .gridbar input[type=range] { -webkit-appearance:none; appearance:none; width:108px; height:3px;
+               border-radius:99px; background:#e0d7c7; outline:none; cursor:ew-resize; }
+    .gridbar input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none;
+               width:14px; height:14px; border-radius:50%; background:#fff; border:2px solid #C4846C;
+               box-shadow:0 1px 4px rgba(0,0,0,.18); cursor:grab; }
+    .gridbar input[type=range]::-moz-range-thumb { width:12px; height:12px; border-radius:50%;
+               background:#fff; border:2px solid #C4846C; }
+    .gtog { background:#FAF8F4; border:1px solid #e8e4de; border-radius:999px; padding:6px 14px;
+            font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#6f6457; cursor:pointer; }
+    .gtog.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
+
+    /* ---- מסילת כלים אנכית בצד הדף ----
+       שורת כפתורים מעל הדף גנבה ממנו גובה ונקראה כניווט כללי. מסילה
+       צמודה לצידו נקראת כ"כלים של הדף הזה", ולא עולה כלום בגובה. */
+    .sheet-wrap { display:flex; align-items:flex-start; gap:10px; }
+    .sheet-wrap .room-outer { flex:1; min-width:0; }
+    .rail { flex:0 0 46px; display:flex; flex-direction:column; align-items:center; gap:6px;
+            background:#fff; border:1px solid #e8e4de; border-radius:14px; padding:7px 5px 10px; }
+    .rb { width:34px; height:34px; border-radius:10px; border:1px solid transparent; background:#FAF8F4;
+          font-size:16px; line-height:1; cursor:pointer; position:relative; display:flex;
+          align-items:center; justify-content:center; font-family:'Heebo'; }
+    .rb:hover { background:#f4f9f6; border-color:#1F3D34; }
+    /* התווית נפתחת בריחוף — המסילה נשארת צרה, ושום דבר לא מנוחש */
+    .rb::after { content:attr(data-t); position:absolute; right:calc(100% + 8px); top:50%;
+                 transform:translateY(-50%); background:#1F3D34; color:#fff; border-radius:7px;
+                 padding:4px 10px; font-size:11.5px; font-weight:700; white-space:nowrap;
+                 opacity:0; pointer-events:none; transition:opacity .12s; }
+    .rb:hover::after { opacity:1; }
+    .rsep { width:22px; height:1px; background:#e8e4de; margin:2px 0; }
+    .rzoom { height:92px; display:flex; align-items:center; justify-content:center; }
+    .rzoom input { -webkit-appearance:none; appearance:none; width:88px; height:3px; border-radius:99px;
+                   background:#e0d7c7; outline:none; cursor:ns-resize; transform:rotate(-90deg); }
+    .rzoom input::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:14px; height:14px;
+                   border-radius:50%; background:#fff; border:2px solid #C4846C;
+                   box-shadow:0 1px 4px rgba(0,0,0,.18); cursor:grab; }
+    .rzoom input::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:#fff;
+                   border:2px solid #C4846C; }
+    .rzv { font-size:11px; color:#9B8E82; font-weight:800; font-variant-numeric:tabular-nums; }
+    @media (max-width: 700px) {
+      .sheet-wrap { flex-direction:column-reverse; }
+      .rail { flex-direction:row; flex:none; width:100%; justify-content:center; flex-wrap:wrap; }
+      .rzoom { height:auto; } .rzoom input { transform:none; }
+      .rb::after { right:auto; left:50%; top:calc(100% + 6px); transform:translateX(-50%); }
+    }
+
     /* ---- הדף ---- */
     .toolbar { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
     .toolbar .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px; padding:0 14px; height:34px;
@@ -263,7 +315,7 @@
       html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
           box-shadow:none !important; }
-      .header, .steps, .toolbar, .status, .a4note, .err, .ok, .ov, .odel, .ohandle, .rot-tag, .blockers, .viol,
+      .header, .steps, .toolbar, .status, .rail, .gridbar, .a4note, .err, .ok, .ov, .odel, .ohandle, .rot-tag, .blockers, .viol,
       #crmSidebar, #crmMenuBtn, #trashFab { display:none !important; }
       .wrap { padding:0 !important; max-width:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
@@ -565,52 +617,97 @@ function delRule(id) { plan.rules = plan.rules.filter(r => r.id !== id); renderS
 function killRule(id) { const r = plan.rules.find(x => x.id === id); if (r) r.active = false; renderBoard(); }
 
 /* ---------- 4. בחירת פריסה ---------- */
-let props = [];
+// צורת החדר קובעת לאן הסידור שואף, ואילו מכשולים כבר קיימים בו.
+// היא לא מידות — גננת לא יודעת אותן — אלא פרופורציה ונקודת פתיחה.
+const ROOM_SHAPES = [
+  { id:'square', name:'מלבני רגיל', hint:'החדר הנפוץ', ico:'▭',
+    per: (n, W, H) => E.bestPerRow(n, W, H), obs: [] },
+  { id:'long',   name:'ארוך וצר',   hint:'שורות ארוכות לאורך הקיר', ico:'▬',
+    per: n => Math.max(2, Math.ceil(n / 2)), obs: [] },
+  { id:'pillar', name:'עם עמוד',    hint:'עמוד שאי אפשר לשים עליו מזרן', ico:'▣',
+    per: (n, W, H) => E.bestPerRow(n, W, H),
+    obs: (W, H, per, rows) => [{ kind:'pillar', name:'עמוד', w:40, h:40,
+      x: Math.round(per * W / 2 - 20), y: Math.round(rows * H / 2 - 20) }] },
+  { id:'ell',    name:'בצורת ר׳',   hint:'פינה חסומה', ico:'◱',
+    per: (n, W, H) => E.bestPerRow(n, W, H),
+    obs: (W, H, per, rows) => [{ kind:'closet', name:'פינה חסומה', w: Math.round(W * 1.2), h: Math.round(H * 1.5),
+      x: Math.round(per * W - W * 1.2), y: 0 }] },
+];
 function stepBuild() {
-  const n = plan.childIds.length;
-  props = E.proposals(n, plan.mat, { aisle: 60 });
+  const n = plan.childIds.length, m = plan.mat;
   return `<div class="card">
-    <h2>בחרי פריסה</h2>
-    <div class="sub">כל פריסה אומרת כמה חדר היא דורשת. אחרי הבחירה אפשר לגרור כל מזרן ביד —
-      קווי יישור יעזרו ליישר שורות ולשמור רווחים שווים.</div>
-    <div class="props">${props.map((p, i) => `<button class="prop" onclick="useProp(${i})">
-      <b>${esc(p.name)}</b><em>${esc(p.hint)}</em>
-      ${miniSvg(p)}
-      <span class="sz">${(p.room.w / 100).toFixed(1)} × ${(p.room.h / 100).toFixed(1)} מ'</span></button>`).join('')}</div>
+    <h2>צורת החדר</h2>
+    <div class="sub">לא צריך מידות — רק הצורה הכללית. אחרי הבחירה אפשר לכוונן את הסידור
+      במחוונים, בלי לגרור אף מזרן.</div>
+    <div class="props">${ROOM_SHAPES.map(sh => {
+      const per = sh.per(n, m.w, m.h), rows = Math.ceil(n / per);
+      const mats = E.layoutRows(n, m.w, m.h, per, 0, 0).map(x => Object.assign({}, x, { w: m.w, h: m.h }));
+      const obs = typeof sh.obs === 'function' ? sh.obs(m.w, m.h, per, rows) : [];
+      const room = E.requiredRoom(mats, obs, 40);
+      return `<button class="prop" onclick="useShape('${sh.id}')">
+        <b>${sh.ico} ${esc(sh.name)}</b><em>${esc(sh.hint)}</em>
+        ${miniSvg({ mats, room, obs })}
+        <span class="sz">${(room.w / 100).toFixed(1)} × ${(room.h / 100).toFixed(1)} מ'</span></button>`;
+    }).join('')}</div>
     <div class="nav">
       <button class="btn ghost" onclick="goStep(3)">חזרה</button>
     </div></div>`;
 }
 function miniSvg(p) {
-  const W = 132, H = 74, pad = 3;
+  const W = 142, H = 80, pad = 3;
   const s = Math.min((W - pad * 2) / p.room.w, (H - pad * 2) / p.room.h);
   const ox = (W - p.room.w * s) / 2 - p.room.x * s, oy = (H - p.room.h * s) / 2 - p.room.y * s;
+  const box = (x, y, w, h, f, st) => `<rect x="${(ox + x * s).toFixed(1)}" y="${(oy + y * s).toFixed(1)}"
+      width="${Math.max(1.5, w * s).toFixed(1)}" height="${Math.max(1.5, h * s).toFixed(1)}"
+      rx="1.2" fill="${f}" stroke="${st}" stroke-width="0.7"/>`;
   return `<svg class="mini" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-    ${p.mats.map(m => {
-      const r = E.rectOf(m);
-      return `<rect x="${(ox + r.x * s).toFixed(1)}" y="${(oy + r.y * s).toFixed(1)}"
-        width="${Math.max(1.5, r.w * s).toFixed(1)}" height="${Math.max(1.5, r.h * s).toFixed(1)}"
-        rx="1.2" fill="#eef5fb" stroke="#9dbdd6" stroke-width="0.7"/>`;
-    }).join('')}</svg>`;
+    ${(p.obs || []).map(o => box(o.x, o.y, o.w, o.h, '#e7e0d4', '#c9bda9')).join('')}
+    ${p.mats.map(m => { const r = E.rectOf(m); return box(r.x, r.y, r.w, r.h, '#eef5fb', '#9dbdd6'); }).join('')}</svg>`;
 }
-function useProp(i) {
-  const p = props[i]; if (!p) return;
-  // מזיזים את הפריסה כך שתתחיל ב-0,0 — הדף מתמרכז עליה בהמשך
-  const r = E.requiredRoom(p.mats, [], 0);
-  plan.mats = p.mats.map(m => ({ id: m.id, x: m.x - r.x, y: m.y - r.y, rot: m.rot,
-                                 w: plan.mat.w, h: plan.mat.h }));
-  plan.layoutName = p.name;
-  // שיבוץ ראשוני: לפי סדר, ואז מתקנים לפי הכללים
-  plan.who = {};
-  plan.childIds.forEach((c, k) => { if (plan.mats[k]) plan.who[plan.mats[k].id] = c; });
-  solveRules();
+
+function useShape(id) {
+  const sh = ROOM_SHAPES.find(x => x.id === id) || ROOM_SHAPES[0];
+  const n = plan.childIds.length, m = plan.mat;
+  const per = sh.per(n, m.w, m.h), rows = Math.ceil(n / per);
+  plan.shape = id;
+  plan.grid = { per, rowGap: 0, aisle: false };
+  plan.obstacles = (typeof sh.obs === 'function' ? sh.obs(m.w, m.h, per, rows) : [])
+    .map(o => Object.assign({ id: uid(), rot: 0 }, o));
+  applyGrid(true);
   built = true; undoStack = [];
   document.getElementById('wizard').classList.add('hide');
   document.getElementById('steps').classList.add('hide');
   document.getElementById('board').classList.remove('hide');
-  centerMats();
   renderTop(); renderBoard();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// הסידור נבנה מחדש מהמחוונים, והשיבוץ נשמר לפי מיקום: מי ששכב במקום
+// השלישי נשאר שלישי. בלי זה כל הזזת מחוון הייתה מערבבת את כל הילדים.
+function applyGrid(fresh) {
+  const n = plan.childIds.length, m = plan.mat;
+  const g = plan.grid || (plan.grid = { per: E.bestPerRow(n, m.w, m.h), rowGap: 0, aisle: false });
+  const raw = g.aisle
+    ? E.layoutAisle(n, m.w, m.h, g.per, Math.max(60, g.rowGap || 60))
+    : E.layoutRows(n, m.w, m.h, g.per, 0, g.rowGap || 0);
+  const order = fresh ? plan.childIds.slice()
+    : (plan.mats || []).map(x => plan.who[x.id]).filter(Boolean);
+  plan.mats = raw.map(x => Object.assign({}, x, { w: m.w, h: m.h }));
+  plan.who = {};
+  plan.mats.forEach((mt, i) => { if (order[i]) plan.who[mt.id] = order[i]; });
+  // ילדים שנשארו בלי מקום אחרי שינוי — משובצים בסוף
+  plan.childIds.forEach(c => {
+    if (Object.values(plan.who).includes(c)) return;
+    const free = plan.mats.find(mt => !plan.who[mt.id]);
+    if (free) plan.who[free.id] = c;
+  });
+  if (fresh) solveRules();
+  centerMats();
+}
+function setGrid(key, val) {
+  pushUndo('שינוי הסידור');
+  plan.grid[key] = key === 'aisle' ? !!val : Math.max(1, Math.round(val));
+  applyGrid(false); renderBoard();
 }
 
 // שיבוץ פשוט: החלפות חמדניות עד שאין שיפור. 19 ילדים נפתרים במילישניות,
@@ -768,27 +865,47 @@ function renderBoard() {
         <button class="btn ghost" onclick="window.print()">הדפסה</button>
       </div>
     </div>
-    <div class="toolbar">
-      <button class="lb" onclick="goStep(4)">▦ פריסה אחרת</button>
-      <button class="lb" onclick="openSpots()">🚪 קבוע בחדר</button>
-      <button class="lb" onclick="openStaffPick()">👩‍🏫 צוות בחדר</button>
-      <button class="lb" onclick="flipPage()" title="A4 לאורך או לרוחב">${plan.portrait ? '🔄 לרוחב' : '🔄 לאורך'}</button>
-      <button class="lb" onclick="selectAllMats()" title="ואז גרירה מזיזה את כולם יחד">⬚ סמני הכל</button>
-      <button class="lb" onclick="tidy()">✨ סדר יפה</button>
-      <div class="zoombar">
-        <input type="range" id="zoomR" min="50" max="160" step="1" value="${Math.round(zoomOf() * 100)}"
-          aria-label="גודל המזרונים על הדף"
-          onpointerdown="pushUndo('שינוי גודל')" oninput="liveZoom(this.value)" onchange="renderBoard()">
-        <span class="zv" id="zoomV">${Math.round(zoomOf() * 100)}%</span>
-      </div>
+    <!-- מחוונים במקום גרירה: במקרה הרגיל הגננת מכווננת כאן ולא נוגעת
+         באף מזרן בודד. השיבוץ נשמר לפי מיקום, כך ששינוי לא מערבב ילדים. -->
+    <div class="gridbar">
+      <label>בשורה
+        <input type="range" min="1" max="${Math.max(2, plan.childIds.length)}" value="${(plan.grid || {}).per || 1}"
+          oninput="document.getElementById('gper').textContent=this.value"
+          onchange="setGrid('per',this.value)">
+        <b id="gper">${(plan.grid || {}).per || 1}</b></label>
+      <label>רווח בין שורות
+        <input type="range" min="0" max="120" step="10" value="${(plan.grid || {}).rowGap || 0}"
+          oninput="document.getElementById('ggap').textContent=this.value+' ס\u05f4מ'"
+          onchange="setGrid('rowGap',this.value)">
+        <b id="ggap">${(plan.grid || {}).rowGap || 0} ס"מ</b></label>
+      <button class="gtog ${(plan.grid || {}).aisle ? 'on' : ''}" onclick="setGrid('aisle',!(plan.grid||{}).aisle)">
+        מעבר באמצע · ${(plan.grid || {}).aisle ? 'יש' : 'אין'}</button>
     </div>
     <div class="a4note">📄 A4 ${plan.portrait ? 'לאורך' : 'לרוחב'} · הסידור דורש חדר של
       <b>${(need.w / 100).toFixed(2)} × ${(need.h / 100).toFixed(2)} מטר</b></div>
+    <div class="sheet-wrap">
     <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)"
       style="width:${ROOM_W()}px;height:${ROOM_H()}px">
       <div class="rscale" id="rscale" style="width:${ROOM_W()}px;height:${ROOM_H()}px;
         transform:scale(${zoomOf()});transform-origin:${ROOM_W() / 2}px ${ROOM_H() / 2}px">${matsHtml}${obsHtml}${staffHtml}<div id="guides"></div></div>
       ${legendHtml()}${scaleBar()}</div></div>
+      <div class="rail">
+        <button class="rb" data-t="פריסה אחרת" onclick="goStep(4)">▦</button>
+        <button class="rb" data-t="קבוע בחדר" onclick="openSpots()">🚪</button>
+        <button class="rb" data-t="צוות בחדר" onclick="openStaffPick()">👩‍🏫</button>
+        <i class="rsep"></i>
+        <button class="rb" data-t="${plan.portrait ? 'דף לרוחב' : 'דף לאורך'}" onclick="flipPage()">🔄</button>
+        <button class="rb" data-t="סמני הכל" onclick="selectAllMats()">⬚</button>
+        <button class="rb" data-t="סדר יפה" onclick="tidy()">✨</button>
+        <i class="rsep"></i>
+        <div class="rzoom">
+          <input type="range" id="zoomR" min="50" max="160" step="1" value="${Math.round(zoomOf() * 100)}"
+            aria-label="גודל המזרונים על הדף"
+            onpointerdown="pushUndo('שינוי גודל')" oninput="liveZoom(this.value)" onchange="renderBoard()">
+        </div>
+        <span class="rzv" id="zoomV">${Math.round(zoomOf() * 100)}%</span>
+      </div>
+    </div>
     ${statusStrip(viols, phys, unreach)}
     <div style="font-size:12.5px;color:#9B8E82;text-align:center;margin:4px 0 16px;line-height:1.7">
       גרירת מזרן מחליפה בין שני ילדים · לחיצה על טקס ההירדמות עורכת אותו ·

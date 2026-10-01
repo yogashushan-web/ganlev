@@ -367,23 +367,39 @@
            font-weight:700; cursor:pointer; }
     .btn:disabled { opacity:.42; cursor:not-allowed; }
 
-    /* ---- סרגל הכלים: מחובר לדף, לא מרחף מעליו ----
-       הוא ישב כשורת כפתורים נפרדת, וכך לא היה ברור שהוא שייך לדף
-       שמתחתיו. עכשיו הוא לשונית על קצהו העליון — אותו רקע, אותה מסגרת,
-       בלי רווח ביניהם — ונפתח ונסגר כדי שלא יפריע כשלא צריך אותו. */
-    .sheet-top { display:flex; align-items:center; gap:9px; flex-wrap:wrap;
-                 background:#fffdf9; border:1.5px solid #e0d7c7; border-bottom:0;
-                 border-radius:14px 14px 0 0; padding:8px 14px; margin-bottom:-1.5px;
-                 position:relative; z-index:2; }
-    .ttab { background:#1F3D34; color:#fff; border:0; border-radius:999px; padding:6px 15px;
-            font-family:'Heebo'; font-size:12.5px; font-weight:800; cursor:pointer;
-            display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
-    .ttab:hover { background:#2c5448; }
-    .ttools { display:none; align-items:center; gap:7px; flex-wrap:wrap; }
-    .sheet-top.open .ttools { display:flex; }
-    .tnote { margin-right:auto; font-size:11.5px; color:#b3a899; font-weight:700; white-space:nowrap; }
-    /* הפינות העליונות של הדף מתיישרות עם הלשונית שמעליו */
-    .sheet-top + .room-outer .room { border-radius:0 0 16px 16px; border-top-color:transparent; }
+    /* ---- מסילת כלים אנכית בצד הדף ----
+       שורת כפתורים מעל הדף גנבה ממנו גובה ונקראה כניווט כללי. מסילה
+       צמודה לצידו נקראת כ"כלים של הדף הזה", ולא עולה כלום בגובה. */
+    .sheet-wrap { display:flex; align-items:flex-start; gap:10px; }
+    .sheet-wrap .room-outer { flex:1; min-width:0; }
+    .rail { flex:0 0 46px; display:flex; flex-direction:column; align-items:center; gap:6px;
+            background:#fff; border:1px solid #e8e4de; border-radius:14px; padding:7px 5px 10px; }
+    .rb { width:34px; height:34px; border-radius:10px; border:1px solid transparent; background:#FAF8F4;
+          font-size:16px; line-height:1; cursor:pointer; position:relative; display:flex;
+          align-items:center; justify-content:center; font-family:'Heebo'; }
+    .rb:hover { background:#f4f9f6; border-color:#1F3D34; }
+    /* התווית נפתחת בריחוף — המסילה נשארת צרה, ושום דבר לא מנוחש */
+    .rb::after { content:attr(data-t); position:absolute; right:calc(100% + 8px); top:50%;
+                 transform:translateY(-50%); background:#1F3D34; color:#fff; border-radius:7px;
+                 padding:4px 10px; font-size:11.5px; font-weight:700; white-space:nowrap;
+                 opacity:0; pointer-events:none; transition:opacity .12s; }
+    .rb:hover::after { opacity:1; }
+    .rsep { width:22px; height:1px; background:#e8e4de; margin:2px 0; }
+    .rzoom { height:92px; display:flex; align-items:center; justify-content:center; }
+    .rzoom input { -webkit-appearance:none; appearance:none; width:88px; height:3px; border-radius:99px;
+                   background:#e0d7c7; outline:none; cursor:ns-resize; transform:rotate(-90deg); }
+    .rzoom input::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:14px; height:14px;
+                   border-radius:50%; background:#fff; border:2px solid #C4846C;
+                   box-shadow:0 1px 4px rgba(0,0,0,.18); cursor:grab; }
+    .rzoom input::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:#fff;
+                   border:2px solid #C4846C; }
+    .rzv { font-size:11px; color:#9B8E82; font-weight:800; font-variant-numeric:tabular-nums; }
+    @media (max-width: 700px) {
+      .sheet-wrap { flex-direction:column-reverse; }
+      .rail { flex-direction:row; flex:none; width:100%; justify-content:center; flex-wrap:wrap; }
+      .rzoom { height:auto; } .rzoom input { transform:none; }
+      .rb::after { right:auto; left:50%; top:calc(100% + 6px); transform:translateX(-50%); }
+    }
 
     .toolbar, .layouts { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
     .toolbar .lb, .layouts .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px;
@@ -477,7 +493,7 @@
          שמו מופיע בשורת "לא יושבים" בתחתית ה-PDF במקום. */
       .header, .steps, .board-top, .layouts, .legend, .viol, .a4note,
       .undo, .parked, .rot, .rhandle, .rot-tag, .err, .ok, .ov, .idel,
-      .toolbar, .status, .sheet-top,
+      .toolbar, .status, .rail, .a4note,
       #crmSidebar, #crmMenuBtn, #trashFab, #error, #success { display:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
       .room { transform:none !important; border:none !important; border-radius:0 !important;
@@ -520,14 +536,7 @@ const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&am
 const uid = () => 's' + Math.random().toString(36).slice(2, 9);
 
 let allKids = [], allStaff = [], step = 1, plan = null, selectedSeat = null, built = false, kidFilter = '';
-// הסרגל נפתח ונסגר, והבחירה נזכרת. בפעם הראשונה הוא פתוח, כדי שיהיה
-// ברור שהכלים האלה קיימים ושייכים לדף.
-let toolsOpen = (() => { try { return localStorage.getItem('seat_tools') !== '0'; } catch (e) { return true; } })();
-function toggleTools() {
-  toolsOpen = !toolsOpen;
-  try { localStorage.setItem('seat_tools', toolsOpen ? '1' : '0'); } catch (e) {}
-  renderBoard();
-}
+
 const STEPS = ['מי אוכל', 'שולחנות', 'צוות', 'כללי ישיבה', 'חלוקה'];
 const WELCOME = 0;   // עמוד הפתיחה — לפני שלב 1
 
@@ -1822,25 +1831,24 @@ function renderBoard() {
         <button class="btn ghost" onclick="window.print()">הדפסה</button>
       </div>
     </div>
-    <div class="sheet-top ${toolsOpen ? 'open' : ''}">
-      <button class="ttab" onclick="toggleTools()"
-        title="${toolsOpen ? 'הסתרת הכלים' : 'כלים לעריכת הדף'}">🛠 כלי עריכה ${toolsOpen ? '▴' : '▾'}</button>
-      <div class="ttools">
-        <button class="lb" onclick="openLayouts()">▦ פריסת החדר</button>
-        <button class="lb" onclick="openItems()">🍲 פריטים בחדר</button>
-        <button class="lb" onclick="openAllergies()">⚠️ אלרגיות</button>
-        <div class="zoombar">
+    <div class="a4note">📄 A4 לרוחב · מה שכאן הוא מה שיודפס</div>
+    <div class="sheet-wrap">
+    <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">
+      <div class="rscale" id="rscale" style="transform:scale(${zoomOf()})">${tablesHtml}${itemsHtml()}${markersHtml()}${parkedHtml()}<div id="guides"></div></div>${legendHtml()}</div></div>
+      <div class="rail">
+        <button class="rb" data-t="פריסת החדר" onclick="openLayouts()">▦</button>
+        <button class="rb" data-t="פריטים בחדר" onclick="openItems()">🍲</button>
+        <button class="rb" data-t="אלרגיות" onclick="openAllergies()">⚠️</button>
+        <i class="rsep"></i>
+        <button class="rb" data-t="התאם לדף" onclick="fitToPage()">⤢</button>
+        <div class="rzoom">
           <input type="range" id="zoomR" min="50" max="200" step="1" value="${Math.round(zoomOf() * 100)}"
             aria-label="גודל התוכן על הדף"
             onpointerdown="pushUndo('שינוי גודל')" oninput="liveZoom(this.value)" onchange="renderBoard()">
-          <span class="zv" id="zoomV">${Math.round(zoomOf() * 100)}%</span>
-          <button class="lb" onclick="fitToPage()" title="ממלא את הדף בלי לחרוג משוליו">התאם לדף</button>
         </div>
+        <span class="rzv" id="zoomV">${Math.round(zoomOf() * 100)}%</span>
       </div>
-      <span class="tnote">📄 A4 לרוחב · מה שכאן הוא מה שיודפס</span>
     </div>
-    <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">
-      <div class="rscale" id="rscale" style="transform:scale(${zoomOf()})">${tablesHtml}${itemsHtml()}${markersHtml()}${parkedHtml()}<div id="guides"></div></div>${legendHtml()}</div></div>
     ${statusStrip(viols, okd)}
     <div class="legend">לחיצה על ילד/ה ואז על מקום אחר — מחליפה ביניהם · קליק ימני על מקום נועל אותו 🔒 ·
       גרירת שם השולחן מזיזה אותו בחדר · ⟳ מסובב</div>`;
