@@ -186,23 +186,29 @@
                  align-items:center; justify-content:center; text-align:center;
                  padding:2px; overflow:hidden; }
 
-    /* ראש ימינה — כרית ברוחב 34% בצד ימין */
-    .mat.h-right .pillow { top:6px; bottom:6px; right:4px; width:30%; }
-    .mat.h-right .fold   { top:5px; bottom:5px; right:calc(30% + 7px); width:5px; }
-    .mat.h-right .body   { top:0; bottom:0; right:32%; left:2px; }
-    .mat.h-left  .pillow { top:6px; bottom:6px; left:4px; width:30%; }
-    .mat.h-left  .fold   { top:5px; bottom:5px; left:calc(30% + 7px); width:5px; }
-    .mat.h-left  .body   { top:0; bottom:0; left:32%; right:2px; }
-    .mat.h-top   .pillow { left:6px; right:6px; top:4px; height:30%; }
-    .mat.h-top   .fold   { left:5px; right:5px; top:calc(30% + 7px); height:5px; }
-    .mat.h-top   .body   { left:0; right:0; top:32%; bottom:2px; }
-    .mat.h-bottom .pillow{ left:6px; right:6px; bottom:4px; height:30%; }
-    .mat.h-bottom .fold  { left:5px; right:5px; bottom:calc(30% + 7px); height:5px; }
-    .mat.h-bottom .body  { left:0; right:0; bottom:32%; top:2px; }
+    /* הכרית נושאת את השם, השמיכה את ההערות, והקיפול בפינה הימנית
+       העליונה שלה — כאילו היא פתוחה קצת. */
+    .mat .pillow { background:#fffdfa; border:1px solid var(--bll); border-radius:7px;
+                   display:flex; align-items:center; justify-content:center;
+                   padding:2px; overflow:hidden; z-index:2; position:absolute; }
+    .mat .nm { font-size:11px; font-weight:700; color:#2c4d66; line-height:1.1;
+               text-align:center; word-break:break-word; }
+    .mat.potty .nm { color:#8a6a23; }
 
-    /* מזרן אנכי: השם נקרא לאורך הגוף במקום להישבר לשתי שורות צרות */
-    .mat.vert .body { writing-mode:vertical-rl; transform:rotate(180deg); }
-    .mat.vert .body .rt { writing-mode:horizontal-tb; transform:rotate(180deg); }
+    .mat.h-right .pillow { top:3px; bottom:3px; right:3px; width:40%; }
+    .mat.h-right .body   { top:3px; bottom:3px; right:calc(40% + 4px); left:3px; }
+    .mat.h-left  .pillow { top:3px; bottom:3px; left:3px; width:40%; }
+    .mat.h-left  .body   { top:3px; bottom:3px; left:calc(40% + 4px); right:3px; }
+    .mat.h-top   .pillow { left:3px; right:3px; top:3px; height:40%; }
+    .mat.h-top   .body   { left:3px; right:3px; top:calc(40% + 4px); bottom:3px; }
+    .mat.h-bottom .pillow{ left:3px; right:3px; bottom:3px; height:40%; }
+    .mat.h-bottom .body  { left:3px; right:3px; bottom:calc(40% + 4px); top:3px; }
+
+    /* הקיפול: משולש לבן בפינה הימנית-העליונה של אזור השמיכה */
+    .mat .fold { top:3px; right:3px; width:26%; aspect-ratio:1;
+                 background:#fff; opacity:.72; z-index:1;
+                 clip-path:polygon(100% 0, 0 0, 100% 100%); border-radius:0 7px 0 0; }
+    .mat.h-right .fold { right:calc(40% + 4px); }
 
     .mat:active { cursor:grabbing; }
     .mat .nm { font-size:13px; font-weight:700; color:#2c4d66; line-height:1.15; text-align:center; }
@@ -218,8 +224,6 @@
     .mat.potty .nm { color:#8a6a23; }
     .mat.potty .rt { color:#b8801f; }
         .mat.bad { --bl:#fadfdc; --bll:#e0837a; }
-    .mat.unreach::after { content:'אין גישה'; position:absolute; top:2px; left:4px; font-size:8.5px;
-                          font-weight:700; color:#c94147; }
     .mat.from { opacity:.34; }
     .mat.target { --bl:#dcf0e4 !important; --bll:#1F7a4f !important; }
 
@@ -991,7 +995,6 @@ function renderBoard() {
     if (cid && plan.potty[cid]) cls.push('potty');
     if (cid && bad.has(cid)) cls.push('bad');
     if (selMats.has(m.id)) cls.push('sel');
-    if (!reach[m.id]) cls.push('unreach');
     if (vert) cls.push('vert');
     const rt = cid ? ritualHtml(cid) : '';
     const tint = BLANKETS[idx % BLANKETS.length];
@@ -999,14 +1002,13 @@ function renderBoard() {
       style="left:${sX(r.x)}px;top:${sY(r.y)}px;width:${sLen(r.w)}px;height:${sLen(r.h)}px
              ${cid && plan.potty[cid] ? '' : `;--bl:${tint.bg};--bll:${tint.line}`}"
       onpointerdown="startMatDrag(event,'${m.id}')">
-      <i class="blanket"></i><i class="fold"></i><i class="pillow"></i>
+      <i class="blanket"></i><i class="fold"></i>
+      <div class="pillow"><span class="nm">${esc(cid ? kidName(cid) : '—')}</span></div>
       <span class="num">${idx + 1}</span>
-      <div class="body">
-        <span class="nm">${esc(cid ? kidName(cid) : '—')}</span>
-        ${cid ? `<span class="rt ${rt ? '' : 'empty'}" onpointerdown="event.stopPropagation()"
-          onclick="event.stopPropagation();openRitual('${cid}')"
-          title="לחיצה עורכת את טקס ההירדמות">${rt || 'להוספת טקס הירדמות'}</span>` : ''}
-      </div>
+      ${cid ? `<div class="body"><span class="rt ${rt ? '' : 'empty'}"
+        onpointerdown="event.stopPropagation()"
+        onclick="event.stopPropagation();openRitual('${cid}')"
+        title="לחיצה עורכת את טקס ההירדמות">${rt || '+ טקס הירדמות'}</span></div>` : ''}
       <button class="mrot" onpointerdown="event.stopPropagation()"
         onclick="event.stopPropagation();rotateMat('${m.id}')"
         title="סיבוב · גם מחליף את צד הראש">⟲</button>
