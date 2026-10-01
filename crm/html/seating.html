@@ -1300,16 +1300,58 @@ function startDragMark(ev, sid) {
   window.addEventListener('pointermove', onDragMark);
   window.addEventListener('pointerup', endDragMark, { once: true });
 }
+// יישור סמני הצוות, כמו לשולחנות: הם נתפסים למרכז של סמן אחר, למרכז
+// של שולחן ולמרכז החדר. בלי זה שלושה עיגולים יושבים בשלושה גבהים
+// שונים בהפרש של שני פיקסלים, וזה נראה מרושל בדף שתלוי על הקיר.
+const MARK_R = 27;
+function snapMark(sid, x, y) {
+  const cx = x + MARK_R, cy = y + MARK_R;
+  const xs = [], ys = [];
+  offSlots().forEach(o => {
+    if (o === sid || !plan.marks[o]) return;
+    xs.push({ at: plan.marks[o].x + MARK_R, why: 'mark' });
+    ys.push({ at: plan.marks[o].y + MARK_R, why: 'mark' });
+  });
+  plan.tables.forEach(t => {
+    const l = plan.layout[t.id]; if (!l) return;
+    const r = tableRect(t, l);
+    xs.push({ at: r.x + r.w / 2 }); xs.push({ at: r.x }); xs.push({ at: r.x + r.w });
+    ys.push({ at: r.y + r.h / 2 }); ys.push({ at: r.y }); ys.push({ at: r.y + r.h });
+  });
+  xs.push({ at: ROOM_W / 2 }); ys.push({ at: ROOM_H / 2 });
+
+  const pick = (list, v) => {
+    let best = null;
+    list.forEach(c => {
+      const d = Math.abs(v - c.at);
+      if (d <= SNAP && (!best || d < best.d)) best = { d, at: c.at };
+    });
+    return best;
+  };
+  const bx = pick(xs, cx), by = pick(ys, cy);
+  const lines = [];
+  if (bx) { x = bx.at - MARK_R; lines.push({ dir: 'v', at: bx.at }); }
+  if (by) { y = by.at - MARK_R; lines.push({ dir: 'h', at: by.at }); }
+  return { x, y, lines };
+}
 function onDragMark(ev) {
   if (!dragMark) return;
   const { k } = roomScale();
   const m = plan.marks[dragMark.sid];
-  m.x = Math.max(0, Math.round(dragMark.ox + (ev.clientX - dragMark.sx) / k));
-  m.y = Math.max(0, Math.round(dragMark.oy + (ev.clientY - dragMark.sy) / k));
+  const raw = {
+    x: Math.max(0, dragMark.ox + (ev.clientX - dragMark.sx) / k),
+    y: Math.max(0, dragMark.oy + (ev.clientY - dragMark.sy) / k),
+  };
+  const sn = ev.altKey ? { x: raw.x, y: raw.y, lines: [] } : snapMark(dragMark.sid, raw.x, raw.y);
+  m.x = Math.round(sn.x); m.y = Math.round(sn.y);
   const el = [...document.querySelectorAll('.pmark')][offSlots().indexOf(dragMark.sid)];
   if (el) { el.style.left = m.x + 'px'; el.style.top = m.y + 'px'; }
+  drawGuides(sn.lines);
 }
-function endDragMark() { window.removeEventListener('pointermove', onDragMark); dragMark = null; renderBoard(); }
+function endDragMark() {
+  window.removeEventListener('pointermove', onDragMark);
+  drawGuides([]); dragMark = null; renderBoard();
+}
 
 // הקטנת הדף כך שייכנס לרוחב המסך, בלי לשנות את הפריסה עצמה.
 function fitRoom() {
