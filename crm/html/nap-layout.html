@@ -131,11 +131,20 @@
              box-shadow:0 1px 4px rgba(0,0,0,.18); cursor:grab; }
     #zoomR::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:#fff;
              border:2px solid #C4846C; }
-    .obst .orot { position:absolute; top:-9px; right:-6px; background:#fff; border:1px solid #e8e1d6;
-            color:#8a7f70; border-radius:7px; padding:1px 7px; font-size:11px; font-weight:700;
-            font-family:'Heebo'; cursor:pointer; opacity:0; transition:opacity .12s; }
-    .obst:hover .orot { opacity:1; }
-    .obst .orot:hover { border-color:#C4846C; color:#8a5a44; }
+    /* ידית סיבוב על גבעול מראש הפריט, כמו בכלי גרפי */
+    .ohandle { position:absolute; left:50%; top:-20px; transform:translateX(-50%);
+               width:26px; height:26px; cursor:grab; z-index:9; opacity:0; transition:opacity .12s; }
+    .obst:hover .ohandle, .ohandle:active { opacity:1; }
+    .ohandle::before { content:''; position:absolute; left:50%; top:13px; width:1.5px; height:10px;
+                       background:#C4846C; transform:translateX(-50%); }
+    .ohandle span { position:absolute; left:50%; top:2px; transform:translateX(-50%);
+                    width:13px; height:13px; border-radius:50%; background:#fff;
+                    border:2px solid #C4846C; box-shadow:0 1px 4px rgba(0,0,0,.15); display:block; }
+    .ohandle:active { cursor:grabbing; }
+    .rot-tag { position:fixed; z-index:10002; pointer-events:none; background:#fff; color:#9B8E82;
+               border:1.5px solid #e8e4de; border-radius:999px; padding:3px 11px; font-size:12px;
+               font-weight:800; box-shadow:0 3px 10px rgba(0,0,0,.14); white-space:nowrap; }
+    .rot-tag.snap { color:#8a5a44; border-color:#C4846C; background:#fdf6f2; }
     .obst .odel, .pmark .odel { position:absolute; top:-9px; left:-6px; background:#fff; border:1px solid #e8e1d6;
             color:#8a7f70; border-radius:7px; padding:1px 6px; font-size:10px; font-weight:700;
             font-family:'Heebo'; cursor:pointer; opacity:0; transition:opacity .12s; }
@@ -254,7 +263,7 @@
       html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
           box-shadow:none !important; }
-      .header, .steps, .toolbar, .status, .a4note, .err, .ok, .ov, .odel, .orot, .blockers, .viol,
+      .header, .steps, .toolbar, .status, .a4note, .err, .ok, .ov, .odel, .ohandle, .rot-tag, .blockers, .viol,
       #crmSidebar, #crmMenuBtn, #trashFab { display:none !important; }
       .wrap { padding:0 !important; max-width:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
@@ -736,8 +745,9 @@ function renderBoard() {
       style="left:${toPx(ob.x, o.x)}px;top:${toPx(ob.y, o.y)}px;width:${ob.w * s}px;height:${ob.h * s}px;
         transform:rotate(${ob.rot || 0}deg)"
       onpointerdown="startObsDrag(event,'${ob.id}')">
-      <span style="transform:rotate(${-(ob.rot || 0)}deg)">${spotKind(ob.kind).ico} ${esc(ob.name)}</span>
-      <button class="orot" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();rotObs('${ob.id}')" title="סיבוב ב-15°">⟳</button>
+      <span>${spotKind(ob.kind).ico} ${esc(ob.name)}</span>
+      <div class="ohandle" onpointerdown="startObsRotate(event,'${ob.id}')"
+        title="גרירה מסובבת · Alt לזווית חופשית"><span></span></div>
       <button class="odel" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();delObs('${ob.id}')">הסר</button></div>`).join('');
 
   const staffHtml = (plan.staff || []).map(st => `<div class="pmark" data-s="${st.id}"
@@ -1025,13 +1035,48 @@ function addSpot(kind) {
                         x: Math.round(r.x + 20), y: Math.round(r.y + 20 + plan.obstacles.length * 30) });
   renderBoard();
 }
-// חלון על קיר צדדי חייב לעמוד אנכית. קפיצות של 15° מגיעות ל-90 בשש
-// לחיצות ומאפשרות גם קיר אלכסוני, בלי ידית גרירה על אובייקט קטן.
-function rotObs(id) {
+// סיבוב בגרירה ולא בלחיצות: חלון על קיר אלכסוני צריך זווית מדויקת,
+// ולחיצות של 15° מכריחות לנחש כמה פעמים ללחוץ. מגנט כל 15° נותן את
+// הזוויות הנפוצות בלי מאמץ, ו-Alt משחרר לזווית חופשית לגמרי.
+let obsRot = null;
+function startObsRotate(ev, id) {
+  ev.preventDefault(); ev.stopPropagation();
   const ob = (plan.obstacles || []).find(o => o.id === id); if (!ob) return;
   pushUndo('סיבוב פריט');
-  ob.rot = ((ob.rot || 0) + 15) % 360;
-  renderBoard();
+  const r = ev.currentTarget.closest('.obst').getBoundingClientRect();
+  obsRot = { ob, cx: r.left + r.width / 2, cy: r.top + r.height / 2, start: ob.rot || 0 };
+  obsRot.grab = Math.atan2(ev.clientY - obsRot.cy, ev.clientX - obsRot.cx) * 180 / Math.PI;
+  try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+  window.addEventListener('pointermove', onObsRotate);
+  window.addEventListener('pointerup', endObsRotate, { once: true });
+}
+function onObsRotate(ev) {
+  if (!obsRot) return;
+  const now = Math.atan2(ev.clientY - obsRot.cy, ev.clientX - obsRot.cx) * 180 / Math.PI;
+  let deg = obsRot.start + (now - obsRot.grab);
+  deg = ((deg % 360) + 360) % 360;
+  let snapped = false;
+  if (!ev.altKey) {
+    const near = Math.round(deg / 15) * 15;
+    if (Math.abs(deg - near) <= 5) { deg = near % 360; snapped = true; }
+  }
+  obsRot.ob.rot = Math.round(deg * 10) / 10;
+  const el = document.querySelector(`.obst[data-o="${obsRot.ob.id}"]`);
+  if (el) el.style.transform = `rotate(${obsRot.ob.rot}deg)`;
+  showAngle(obsRot.ob.rot, snapped, ev);
+}
+function showAngle(deg, snapped, ev) {
+  let tag = document.getElementById('rotTag');
+  if (!tag) { tag = document.createElement('div'); tag.id = 'rotTag'; tag.className = 'rot-tag'; document.body.appendChild(tag); }
+  tag.textContent = (Number.isInteger(deg) ? deg : deg.toFixed(1)) + '°';
+  tag.classList.toggle('snap', !!snapped);
+  tag.style.left = (ev.clientX + 16) + 'px';
+  tag.style.top = (ev.clientY - 30) + 'px';
+}
+function endObsRotate() {
+  window.removeEventListener('pointermove', onObsRotate);
+  const t = document.getElementById('rotTag'); if (t) t.remove();
+  obsRot = null; renderBoard();
 }
 function delObs(id) { pushUndo('הסרת פריט'); plan.obstacles = plan.obstacles.filter(o => o.id !== id); renderBoard(); }
 function openStaffPick() {
