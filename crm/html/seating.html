@@ -363,7 +363,24 @@
            font-weight:700; cursor:pointer; }
     .btn:disabled { opacity:.42; cursor:not-allowed; }
 
-    /* ---- סרגל הכלים שמעל הדף: רק מה שמשמש ליצירה ---- */
+    /* ---- סרגל הכלים: מחובר לדף, לא מרחף מעליו ----
+       הוא ישב כשורת כפתורים נפרדת, וכך לא היה ברור שהוא שייך לדף
+       שמתחתיו. עכשיו הוא לשונית על קצהו העליון — אותו רקע, אותה מסגרת,
+       בלי רווח ביניהם — ונפתח ונסגר כדי שלא יפריע כשלא צריך אותו. */
+    .sheet-top { display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+                 background:#fffdf9; border:1.5px solid #e0d7c7; border-bottom:0;
+                 border-radius:14px 14px 0 0; padding:8px 14px; margin-bottom:-1.5px;
+                 position:relative; z-index:2; }
+    .ttab { background:#1F3D34; color:#fff; border:0; border-radius:999px; padding:6px 15px;
+            font-family:'Heebo'; font-size:12.5px; font-weight:800; cursor:pointer;
+            display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
+    .ttab:hover { background:#2c5448; }
+    .ttools { display:none; align-items:center; gap:7px; flex-wrap:wrap; }
+    .sheet-top.open .ttools { display:flex; }
+    .tnote { margin-right:auto; font-size:11.5px; color:#b3a899; font-weight:700; white-space:nowrap; }
+    /* הפינות העליונות של הדף מתיישרות עם הלשונית שמעליו */
+    .sheet-top + .room-outer .room { border-radius:0 0 16px 16px; border-top-color:transparent; }
+
     .toolbar, .layouts { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
     .toolbar .lb, .layouts .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px;
       padding:0 14px; height:34px; display:inline-flex; align-items:center; gap:6px;
@@ -456,7 +473,7 @@
          שמו מופיע בשורת "לא יושבים" בתחתית ה-PDF במקום. */
       .header, .steps, .board-top, .layouts, .legend, .viol, .a4note,
       .undo, .parked, .rot, .rhandle, .rot-tag, .err, .ok, .ov, .idel,
-      .toolbar, .status,
+      .toolbar, .status, .sheet-top,
       #crmSidebar, #crmMenuBtn, #trashFab, #error, #success { display:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
       .room { transform:none !important; border:none !important; border-radius:0 !important;
@@ -499,11 +516,34 @@ const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&am
 const uid = () => 's' + Math.random().toString(36).slice(2, 9);
 
 let allKids = [], allStaff = [], step = 1, plan = null, selectedSeat = null, built = false, kidFilter = '';
+// הסרגל נפתח ונסגר, והבחירה נזכרת. בפעם הראשונה הוא פתוח, כדי שיהיה
+// ברור שהכלים האלה קיימים ושייכים לדף.
+let toolsOpen = (() => { try { return localStorage.getItem('seat_tools') !== '0'; } catch (e) { return true; } })();
+function toggleTools() {
+  toolsOpen = !toolsOpen;
+  try { localStorage.setItem('seat_tools', toolsOpen ? '1' : '0'); } catch (e) {}
+  renderBoard();
+}
 const STEPS = ['מי אוכל', 'שולחנות', 'צוות', 'כללי ישיבה', 'חלוקה'];
 const WELCOME = 0;   // עמוד הפתיחה — לפני שלב 1
 
+// שם ברירת המחדל נושא את החודש ואת שם הגן, כי אלה שני הדברים שמבדילים
+// בין סידור לסידור ברשימה. שם הגן נלקח מהגן הפעיל, כך שכל גן מקבל את
+// שמו שלו ולא "גן לב" קבוע.
+const HE_MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+                   'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+function gardenName() {
+  let g = '';
+  try { g = window.crmGardenName || localStorage.getItem('crm_garden_name') || ''; } catch (e) {}
+  return String(g).trim();
+}
+function defaultPlanName() {
+  const d = new Date(), g = gardenName();
+  const yy = String(d.getFullYear()).slice(2);
+  return `סידור ישיבה - ${HE_MONTHS[d.getMonth()]} ${yy}` + (g ? ` - ${g}` : '');
+}
 function newPlan() {
-  return { id: uid(), name: 'סידור ארוחה', childIds: [], tables: [], staff: {},
+  return { id: uid(), name: defaultPlanName(), childIds: [], tables: [], staff: {},
            rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {}, marks: {}, parked: {}, items: [], zoom: 1 };
 }
 const tplOf = t => E.TEMPLATES[t.templateId] || E.TEMPLATES.rect6_heads;
@@ -580,7 +620,6 @@ function renderTop() {
   document.getElementById('topActions').innerHTML = built
     ? `<button class="btn ghost" onclick="backToWizard()">שינוי הגדרות</button>
        <button class="btn ghost" onclick="openVersions()">גרסאות שמורות</button>
-       <button class="btn soft" onclick="saveVersion()">שמור גרסה</button>
        <button class="btn" onclick="savePlan()">שמירה</button>`
     : `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
        <button class="btn ghost" onclick="startFresh()">סידור חדש</button>`;
@@ -1517,17 +1556,10 @@ function sheetData() {
   };
 }
 
-// שם הקובץ: "סידור ישיבה - ספטמבר 26 - גן לב". שם הגן נלקח מהגן הפעיל,
-// כך שכל גן מקבל את שמו שלו ולא את "גן לב" קבוע.
-const HE_MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
-                   'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+// שם הקובץ הוא שם הסידור עצמו — שיטת שמות אחת, כדי שמה שנשמר באתר
+// ומה שיורד למחשב ייקראו אותו דבר.
 function sheetFileName() {
-  const d = new Date();
-  let gan = window.crmGardenName || localStorage.getItem('crm_garden_name') || '';
-  gan = String(gan).trim();
-  const base = `סידור ישיבה - ${HE_MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
-  // תווים שמערכות קבצים לא אוהבות
-  return (gan ? `${base} - ${gan}` : base).replace(/[\\/:*?"<>|]/g, '');
+  return (plan.name || defaultPlanName()).replace(/[\\/:*?"<>|]/g, '').trim();
 }
 
 async function downloadPdf() {
@@ -1781,19 +1813,23 @@ function renderBoard() {
         <button class="btn ghost" onclick="window.print()">הדפסה</button>
       </div>
     </div>
-    <div class="toolbar">
-      <button class="lb" onclick="openLayouts()">▦ פריסת החדר</button>
-      <button class="lb" onclick="openItems()">🍲 פריטים בחדר</button>
-      <button class="lb" onclick="openAllergies()">⚠️ אלרגיות</button>
-      <div class="zoombar">
-        <input type="range" id="zoomR" min="50" max="200" step="1" value="${Math.round(zoomOf() * 100)}"
-          aria-label="גודל התוכן על הדף"
-          onpointerdown="pushUndo('שינוי גודל')" oninput="liveZoom(this.value)" onchange="renderBoard()">
-        <span class="zv" id="zoomV">${Math.round(zoomOf() * 100)}%</span>
-        <button class="lb" onclick="fitToPage()" title="ממלא את הדף בלי לחרוג משוליו">התאם לדף</button>
+    <div class="sheet-top ${toolsOpen ? 'open' : ''}">
+      <button class="ttab" onclick="toggleTools()"
+        title="${toolsOpen ? 'הסתרת הכלים' : 'כלים לעריכת הדף'}">🛠 כלי עריכה ${toolsOpen ? '▴' : '▾'}</button>
+      <div class="ttools">
+        <button class="lb" onclick="openLayouts()">▦ פריסת החדר</button>
+        <button class="lb" onclick="openItems()">🍲 פריטים בחדר</button>
+        <button class="lb" onclick="openAllergies()">⚠️ אלרגיות</button>
+        <div class="zoombar">
+          <input type="range" id="zoomR" min="50" max="200" step="1" value="${Math.round(zoomOf() * 100)}"
+            aria-label="גודל התוכן על הדף"
+            onpointerdown="pushUndo('שינוי גודל')" oninput="liveZoom(this.value)" onchange="renderBoard()">
+          <span class="zv" id="zoomV">${Math.round(zoomOf() * 100)}%</span>
+          <button class="lb" onclick="fitToPage()" title="ממלא את הדף בלי לחרוג משוליו">התאם לדף</button>
+        </div>
       </div>
+      <span class="tnote">📄 A4 לרוחב · מה שכאן הוא מה שיודפס</span>
     </div>
-    <div class="a4note">📄 הדף בגודל A4 לרוחב — מה שנראה כאן הוא בדיוק מה שיודפס</div>
     <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">
       <div class="rscale" id="rscale" style="transform:scale(${zoomOf()})">${tablesHtml}${itemsHtml()}${markersHtml()}${parkedHtml()}<div id="guides"></div></div>${legendHtml()}</div></div>
     ${statusStrip(viols, okd)}
@@ -2488,10 +2524,36 @@ function reSolve() {
 }
 
 /* ---------- שמירה ---------- */
-async function savePlan() {
-  try { await api.saveSeatingPlan(plan); showOk('הסידור נשמר'); }
-  catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+// השמירה פותחת חלון ולא שומרת מיד: שם הקובץ הוא מה שתחפשי אחר כך
+// ברשימת הסידורים, וזו ההזדמנות הטבעית היחידה לתקן אותו.
+function savePlan() {
+  openModal('שמירת הסידור', 'השם הזה יופיע ברשימת הסידורים השמורים ובכותרת הדף המודפס.',
+    `<input type="text" id="planName" value="${esc(plan.name)}" maxlength="60"
+       onkeydown="if(event.key==='Enter')doSavePlan()">`,
+    `<button class="btn" onclick="doSavePlan()">אישור ושמירה</button>
+     <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
+  setTimeout(() => { const el = document.getElementById('planName'); if (el) { el.focus(); el.select(); } }, 60);
 }
+async function doSavePlan() {
+  const v = ((document.getElementById('planName') || {}).value || '').trim();
+  if (!v) { showErr('צריך לתת שם לסידור'); return; }
+  plan.name = v;
+  closeModal(); renderBoard();
+  try {
+    await api.saveSeatingPlan(plan);
+    // כל שמירה נשמרת גם כגרסה שאפשר לחזור אליה — אין סיבה שהמשתמשת
+    // תצטרך להחליט מראש אם הרגע הזה "שווה גרסה". שמירה זהה לקודמת
+    // לא מוסיפה רשומה, אחרת הרשימה מתמלאת בכפילויות.
+    const sig = JSON.stringify({ seats: plan.seats, layout: plan.layout, name: plan.name,
+                                 items: plan.items || [], marks: plan.marks || {} });
+    if (sig !== lastSavedSig) {
+      lastSavedSig = sig;
+      await api.saveSeatingVersion(plan, `${v} · ${new Date().toLocaleDateString('he-IL')}`);
+      showOk(`נשמר: ${v} · אפשר לחזור לנקודה הזו מ"גרסאות שמורות"`);
+    } else showOk(`נשמר: ${v}`);
+  } catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+let lastSavedSig = null;
 /* ---------- חלון בתוך העמוד ---------- */
 function openModal(title, sub, body, actions) {
   document.getElementById('modalTitle').textContent = title;
@@ -2503,24 +2565,6 @@ function openModal(title, sub, body, actions) {
 function closeModal() { document.getElementById('modalOv').classList.remove('show'); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-function saveVersion() {
-  const def = 'גרסה מ-' + new Date().toLocaleDateString('he-IL');
-  openModal('שמירת גרסה', 'נשמרת בצד ולא דורסת כלום. תמצאי אותה בכפתור "גרסאות שמורות", ואפשר לפתוח אותה כבסיס לסידור חדש.',
-    `<input type="text" id="verName" value="${esc(def)}">`,
-    `<button class="btn" onclick="doSaveVersion()">שמירה</button>
-     <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
-  setTimeout(() => { const el = document.getElementById('verName'); if (el) { el.focus(); el.select(); } }, 60);
-}
-async function doSaveVersion() {
-  const note = (document.getElementById('verName') || {}).value || '';
-  if (!note.trim()) { showErr('צריך לתת שם לגרסה'); return; }
-  closeModal();
-  try {
-    await api.saveSeatingPlan(plan);
-    await api.saveSeatingVersion(plan, note.trim());
-    showOk(`נשמרה הגרסה "${note.trim()}" · נמצאת בכפתור "גרסאות שמורות"`);
-  } catch (e) { showErr('שמירת הגרסה נכשלה: ' + e.message); }
-}
 
 /* ---------- גרסאות שמורות ---------- */
 // כל "שמור גרסה" מוסיף צילום נפרד של הסידור. כאן רואים את כולן ואפשר
@@ -2528,7 +2572,7 @@ async function doSaveVersion() {
 // את נובמבר, בלי לדרוס את ספטמבר.
 let savedVers = [];
 async function openVersions() {
-  openModal('גרסאות שמורות', `כל גרסה היא צילום של "${plan.name}" ברגע שבו נשמרה.`,
+  openModal('גרסאות שמורות', `כל שמירה נשמרת גם כאן. לחיצה על גרסה פותחת אותה לעריכה, ושמירה ממנה לא תדרוס אותה.`,
     '<div class="empty-note">טוען…</div>',
     `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
   try {
