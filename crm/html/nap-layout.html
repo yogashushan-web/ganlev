@@ -63,6 +63,10 @@
     .p.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
     .p.staff.on { background:#C4846C; border-color:#C4846C; }
     .count-line { font-size:13px; color:#9B8E82; font-weight:700; margin-top:14px; }
+    .bulk { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    .bulk-all { border-color:#1F3D34 !important; color:#1F3D34 !important; font-weight:800; }
+    .bulk-all:hover { background:#1F3D34 !important; color:#fff !important; }
+    .bulk-note { font-size:12px; color:#b3a899; font-weight:700; }
 
     /* ---- המזרונים ---- */
     .msizes { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
@@ -417,11 +421,17 @@ function stepChildren() {
     <div class="sub">לא כל הילדים ישנים צהריים. מסמנים רק את מי שמשכיבים.</div>
     <input class="search" id="kf" placeholder="חיפוש שם…" value="${esc(kidFilter)}"
       oninput="kidFilter=this.value;renderStep();setTimeout(()=>{const e=document.getElementById('kf');e.focus();e.setSelectionRange(e.value.length,e.value.length)},0)">
+    <!-- "כולם" לפני השמות ולא אחריהם: ברוב הימים כל הגן ישן, וזו
+         הפעולה הראשונה שמחפשים — לא אחרי שסורקים 19 שמות. -->
+    <div class="bulk">
+      <button class="p bulk-all" onclick="plan.childIds=allKids.map(k=>k.id);renderStep()">
+        ✓ כל ${allKids.length} הילדים</button>
+      ${plan.childIds.length ? `<button class="p" onclick="plan.childIds=[];renderStep()">נקי בחירה</button>` : ''}
+      <span class="bulk-note">או לסמן אחד-אחד למטה</span>
+    </div>
     <div class="pick">${shown.map(k => `<button class="p ${on.has(k.id) ? 'on' : ''}" onclick="toggleKid('${k.id}')">${esc(k.name)}</button>`).join('')
       || '<div class="empty-note">לא נמצא ילד בשם הזה.</div>'}</div>
     <div class="count-line">👧 ${plan.childIds.length} ילדים ישנים${plan.childIds.length ? ` · ${plan.childIds.length} מזרונים` : ''}</div>
-    ${plan.childIds.length ? `<div style="margin-top:10px"><button class="p" onclick="plan.childIds=[];renderStep()">נקי בחירה</button>
-      <button class="p" onclick="plan.childIds=allKids.map(k=>k.id);renderStep()">כולם</button></div>` : ''}
     ${blockerHtml(1)}
     <div class="nav">
       <button class="btn ghost" onclick="goStep(0)">חזרה</button>

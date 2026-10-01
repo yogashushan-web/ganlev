@@ -39,6 +39,10 @@
     .pick .p.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
     .pick .p.staff.on { background:#C4846C; border-color:#C4846C; }
     .count-line { font-size:13px; color:#9B8E82; margin:12px 0 4px; font-weight:600; }
+    .bulk { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    .bulk-all { border-color:#1F3D34 !important; color:#1F3D34 !important; font-weight:800; }
+    .bulk-all:hover { background:#1F3D34 !important; color:#fff !important; }
+    .bulk-note { font-size:12px; color:#b3a899; font-weight:700; }
 
     /* ---- בחירת שולחנות, ויזואלית ---- */
     .palette { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
@@ -761,14 +765,19 @@ function stepChildren() {
     <div class="fld"><label>חיפוש ילד/ה</label>
       <input type="text" id="kidSearch" value="${esc(kidFilter)}" placeholder="הקלידי שם…"
         oninput="kidFilter=this.value;renderStep();document.getElementById('kidSearch').focus()"></div>
+    <!-- "כולם" לפני השמות: ברוב הארוחות כל הגן משתתף, וזו הפעולה
+         הראשונה שמחפשים — לא אחרי שסורקים 19 שמות. -->
+    <div class="bulk">
+      <button class="p bulk-all" onclick="allKidsOn()">✓ כל ${allKids.length} הילדים</button>
+      ${plan.childIds.length ? `<button class="p" onclick="plan.childIds=[];renderStep()">נקי בחירה</button>` : ''}
+      <span class="bulk-note">או לסמן אחד-אחד למטה</span>
+    </div>
     <div class="pick">
       ${shown.map(k => `<button class="p ${plan.childIds.includes(k.id) ? 'on' : ''}" onclick="toggleKid('${k.id}')">${esc(k.name)}</button>`).join('')
         || '<div class="count-line">לא נמצא ילד/ה בשם הזה.</div>'}
     </div>
     <div class="count-line">נבחרו ${plan.childIds.length} מתוך ${allKids.length} ילדים</div>
     <div class="nav">
-      <button class="btn soft" onclick="allKidsOn()">בחרי את כולם</button>
-      <button class="btn ghost" onclick="plan.childIds=[];renderStep()">נקי בחירה</button>
       <button class="btn ghost" onclick="goStep(0)">חזרה</button>
       <button class="btn" ${canAdvance(1) ? "" : "disabled"} onclick="goStep(2)">המשך</button>
     </div></div>`;
