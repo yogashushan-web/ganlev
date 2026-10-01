@@ -393,7 +393,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=22"></script>
+<script src="js/common.js?v=23"></script>
 <script src="js/api.js?v=21"></script>
 <script src="js/nap-engine.js?v=1"></script>
 <script>
@@ -419,7 +419,7 @@ const WELCOME = 0;
 const DRAFT = 'nap_layout_draft';
 
 const NEEDS = [
-  { v:'בקבוק', ic:'🍼' }, { v:'מוצץ', ic:'👶' }, { v:'דובי / בובה', ic:'🧸' },
+  { v:'בקבוק', ic:'🍼' }, { v:'מוצץ', ic:'👶' }, { v:'בובה', ic:'🧸' },
   { v:'שמיכה', ic:'☁️' }, { v:'חיתול', ic:'🤍' }, { v:'הנקה', ic:'🤱' },
 ];
 const needIcon = v => (NEEDS.find(n => n.v === v) || {}).ic || '';
@@ -540,8 +540,8 @@ const HOW = [
 ];
 function stepWelcome() {
   const demo = [
-    { n:'יעל', r:'🧸 דובי' }, { n:'דני', r:'👶 מוצץ' },
-    { n:'מאיה', r:'☁️ שמיכה' }, { n:'תום', r:'' },
+    { n:'יעל', r:'בובה' }, { n:'דני', r:'מוצץ' },
+    { n:'מאיה', r:'שמיכה' }, { n:'תום', r:'' },
   ];
   return `<div class="card welcome">
     <h2 class="wtitle">סידור המזרונים בחדר השינה 🛏️</h2>
@@ -913,7 +913,7 @@ function ritualOf(cid) { return rituals[cid] || null; }
 function ritualText(cid) {
   const r = ritualOf(cid);
   if (!r) return '';
-  const parts = (r.needs || []).slice();
+  const parts = (r.needs || []).map(napLabel);
   if (r.needs_other) parts.push(r.needs_other);
   return parts.join(' · ');
 }
@@ -921,7 +921,7 @@ function ritualHtml(cid) {
   const r = ritualOf(cid);
   if (!r) return '';
   const parts = (r.needs || []).map(n =>
-    `<span class="ri">${napIcon(n, 13)}${esc(n)}</span>`);
+    `<span class="ri">${napIcon(n, 13)}${esc(napLabel(n))}</span>`);
   if (r.needs_other) parts.push(`<span class="ri">${esc(r.needs_other)}</span>`);
   return parts.join('<i class="rsep2">·</i>');
 }

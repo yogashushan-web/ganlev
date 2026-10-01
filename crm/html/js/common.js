@@ -228,7 +228,7 @@ const NAP_ART = {
     '<circle cx="12" cy="4.4" r="2.6" fill="none" stroke="#e8a0b4" stroke-width="1.9"/>' +
     '<path d="M12 7.1c4.2 0 7.6 1.2 7.6 3.6 0 2.6-3 3.9-5.3 3.4-.9-.2-1.5-.6-2.3-.6s-1.4.4-2.3.6c-2.3.5-5.3-.8-5.3-3.4 0-2.4 3.4-3.6 7.6-3.6z" fill="#f6c9d4" stroke="#e8a0b4" stroke-width="1.2" stroke-linejoin="round"/>' +
     '<path d="M12 13.9c3.5 0 4.8 2.4 4.8 4.2 0 2.1-2.1 3.5-4.8 3.5s-4.8-1.4-4.8-3.5c0-1.8 1.3-4.2 4.8-4.2z" fill="#f0c9a8" stroke="#d4a574" stroke-width="1.2" stroke-linejoin="round"/>',
-  'דובי / בובה':
+  'בובה':
     '<circle cx="6.8" cy="7.2" r="3.1" fill="#d8ab7c"/><circle cx="17.2" cy="7.2" r="3.1" fill="#d8ab7c"/>' +
     '<circle cx="6.8" cy="7.2" r="1.5" fill="#a87d52"/><circle cx="17.2" cy="7.2" r="1.5" fill="#a87d52"/>' +
     '<circle cx="12" cy="13.6" r="7.5" fill="#d8ab7c"/>' +
@@ -253,8 +253,12 @@ const NAP_ART = {
     '<path d="M5.6 12c1.2 2.6 2.8 4 4.6 4.6" fill="none" stroke="#e8b48c" stroke-width="2.4" stroke-linecap="round"/>' +
     '<path d="M17.6 4.2c.9-1.4 3-1 3 .8 0 1.4-1.7 2.6-3 3.6-1.3-1-3-2.2-3-3.6 0-1.8 2.1-2.2 3-.8z" fill="#e8a0b4"/>',
 };
+// טפסים שכבר נשלחו שמרו "דובי / בובה". השם קוצר ל"בובה", והכינוי
+// הזה מתרגם את הישן כדי שלא יישבר מה שההורים כבר מילאו.
+const NAP_ALIAS = { 'דובי / בובה': 'בובה', 'דובי': 'בובה' };
+function napLabel(v) { return NAP_ALIAS[v] || v; }
 function napIcon(name, size) {
-  const d = NAP_ART[name];
+  const d = NAP_ART[napLabel(name)];
   if (!d) return '';
   const s = size || 15;
   return '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s +
