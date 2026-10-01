@@ -811,11 +811,18 @@ function pxPerCm() {
   if (!useW || !useH) return 1;
   return Math.min((ROOM_W() - 60) / useW, (ROOM_H() - 90) / useH);
 }
+// נקודת האפס של הדף, כך שהתוכן יֵצא *ממורכז* בו — אופקית ואנכית.
+// קודם הוא היה מעוגן לפינה השמאלית-עליונה, בעוד ההגדלה מתבצעת סביב
+// מרכז הדף. כששני אלה לא מתלכדים, כל הגדלה דוחפת את התוכן כלפי מעלה
+// במקום להרחיב אותו סימטרית.
 function originCm() {
   const r = E.requiredRoom(plan.mats, plan.obstacles, 40);
   const s = pxPerCm();
-  const w = (plan.room && plan.room.w) || r.w, h = (plan.room && plan.room.h) || r.h;
-  return { x: r.x - ((w - r.w) / 2), y: r.y - ((h - r.h) / 2), s };
+  return {
+    x: r.x - ((ROOM_W() - r.w * s) / 2) / s,
+    y: r.y - ((ROOM_H() - r.h * s) / 2) / s,
+    s,
+  };
 }
 const toPx = (cm, o) => (cm - o) * pxPerCm();
 
