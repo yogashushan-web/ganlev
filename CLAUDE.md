@@ -140,8 +140,14 @@
 **מטמון.** קובצי JS משותפים נטענים עם `?v=N`. שינוי ב-`common.js` או
 `api.js` מחייב להעלות את המספר בכל 36 המסכים, אחרת הדפדפן מגיש ישן.
 
-**CSP.** סקריפטים חיצוניים חסומים חוץ מ-cdnjs ו-Google Fonts.
-אין ספריות חיצוניות בלי בדיקה ב-`netlify.toml`.
+**CSP — אין cdnjs.** `script-src` הוא `'self' 'unsafe-inline'` בלבד.
+**כל** סקריפט חיצוני חסום, כולל cdnjs. ההקלות היחידות הן פר-עמוד:
+`accounts.google.com` ב-staff-boards וב-`/boards`, ו-`unsafe-eval` באלבום.
+`style-src` כן מתיר `'unsafe-inline'` ו-Google Fonts.
+
+ספרייה חיצונית שצריך אותה — **מורידים לקובץ** תחת `js/vendor/` ומגישים
+מ-`'self'`. זה עובד תחת ה-CSP הקיים בלי לגעת בו, הגרסה נעולה ב-git,
+והיא מתנהגת כמו כל קובץ אחר עם `?v=N`.
 
 **פונטים בעברית ב-PDF.** `pdfkit` + `lib/rtl.js`. אם האריזה של Netlify
 שוברת את הייבוא (`drawRtl is not a function`) — מטמיעים את הפונקציות
