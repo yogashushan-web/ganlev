@@ -296,6 +296,15 @@
     /* ---- סמן איש צוות שלא יושב בתוך השולחן ---- */
     /* גלולת הצוות: מסגרת עבה והילה באותו צבע, כדי שהקשר לשולחן שצבוע
        באותו גוון ייקלט בלי קו מחבר ובלי מקרא */
+    /* משבצת בלי שם = תפקיד ולא אדם. מקווקו, כמו כל דבר שעוד לא סופי. */
+    .p.open-slot { border-style:dashed; border-color:#C4846C; color:#8a5a44; }
+    .p.open-slot:hover { background:#fdf6f2; }
+    .slot-label { width:120px; padding:5px 10px; border:1.5px dashed #C4846C; border-radius:999px;
+                  font-family:'Heebo'; font-size:12.5px; font-weight:800; color:#8a5a44;
+                  background:#fdf6f2; outline:none; }
+    .slot-label:focus { border-style:solid; border-color:#1F3D34; color:#1F3D34; }
+    .seat.open-slot, .pmark.open-slot { border-style:dashed !important; }
+
     .pmark { position:absolute; display:flex; align-items:center; gap:5px; background:#fff;
              border:3px solid #C4846C; border-radius:999px; padding:6px 14px 6px 10px;
              font-size:12px; font-weight:800; white-space:nowrap; cursor:grab;
@@ -494,9 +503,16 @@ const tplOf = t => E.TEMPLATES[t.templateId] || E.TEMPLATES.rect6_heads;
 const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
 const staffName = id => (allStaff.find(s => s.id === id) || {}).name || '';
 // שם המשבצת: מי שפעילה כרגע מבין המחליפות
+// משבצת בלי אנשים היא תפקיד ולא אדם — "מחליפה", "סטודנטית", "אחראית
+// שולחן 2". התווית היא שמה, וברגע שיודעים מי זו מוסיפים אותה לאותה
+// משבצת והיא הופכת לשם, בלי לאבד את הצבע, השולחן או הכללים.
 const slotName = sid => {
   const s = plan.staff[sid]; if (!s) return '';
+  if (!s.members.length) return (s.label || 'ללא שם').trim();
   return staffName(s.members[s.active || 0]);
+};
+const isOpenSlot = sid => {
+  const s = plan.staff[sid]; return !!s && !s.members.length;
 };
 // מה שמוצג על הסידור. כיסא מחזיק אדם אחד — אי אפשר לשבת שתיים על אותו
 // כיסא, ולכן משבצת שיושבת בתוך שולחן מציגה את הפעילה בלבד ומתחלפת ב-⇄.
@@ -811,13 +827,17 @@ function stepStaff() {
     ${planSketch()}
     <div class="pick">
       ${allStaff.map(s => `<button class="p staff ${used.has(s.id) ? 'on' : ''}" onclick="toggleStaff('${s.id}')">${esc(s.name)}</button>`).join('')}
+      <button class="p open-slot" onclick="openRolePick()" title="תפקיד שעוד לא יודעים מי ימלא">➕ משבצת בלי שם</button>
     </div>
     ${Object.keys(plan.staff).length ? `<div style="margin-top:18px;">
       ${Object.keys(plan.staff).map(sid => {
         const cfg = plan.staff[sid];
         const free = allStaff.filter(s => !used.has(s.id));
         return `<div class="staff-row">
-          <b style="color:#1F3D34;min-width:88px">${esc(slotLabel(sid))}</b>
+          ${isOpenSlot(sid)
+            ? `<input class="slot-label" value="${esc(slotName(sid))}" maxlength="22"
+                 onchange="renameSlot('${sid}',this.value)" title="שם התפקיד">`
+            : `<b style="color:#1F3D34;min-width:88px">${esc(slotLabel(sid))}</b>`}
           ${cfg.members.length > 1 ? (cfg.sits === 'seat'
             ? `<button class="swap" onclick="flipSlot('${sid}')" title="על כיסא אחד יושבת אחת">⇄ היום: ${esc(slotName(sid))}</button>`
             : `<button class="${cfg.alt ? 'swap' : 'both'}" onclick="toggleAlt('${sid}')"
@@ -852,7 +872,8 @@ function toggleStaff(id) {
   if (slot) {
     const s = plan.staff[slot];
     s.members = s.members.filter(m => m !== id);
-    if (!s.members.length) delete plan.staff[slot];
+    // משבצת שנוצרה כתפקיד נשארת גם כשמסירים ממנה את האדם
+    if (!s.members.length && !s.label) delete plan.staff[slot];
     else s.active = 0;
   } else {
     plan.staff[uid()] = { members: [id], active: 0, sits: 'seat', tables: [] };
@@ -860,6 +881,26 @@ function toggleStaff(id) {
   renderStep();
 }
 function addAlt(sid, staffId) { plan.staff[sid].members.push(staffId); renderStep(); }
+const OPEN_ROLES = ['מחליפה', 'סטודנטית', 'מתנדבת', 'מלווה', 'סייעת'];
+function addOpenSlot(label) {
+  plan.staff[uid()] = { members: [], active: 0, label: label || 'מחליפה', sits: 'seat', tables: [] };
+  closeModal(); renderStep();
+}
+function openRolePick() {
+  openModal('משבצת בלי שם', 'תפקיד שיושב בשולחן גם כשעוד לא יודעים מי ימלא אותו. מוסיפים אדם למשבצת מאוחר יותר והיא הופכת לשם.',
+    `<div class="ipick">${OPEN_ROLES.map(r => `<button onclick="addOpenSlot('${r}')">
+       <span class="e">👤</span><span>${esc(r)}</span></button>`).join('')}</div>
+     <div class="flab" style="font-size:12.5px;color:#9B8E82;font-weight:700;margin:14px 0 5px">או שם משלך</div>
+     <input type="text" id="roleOther" placeholder="למשל: אחראית שולחן 2"
+       onkeydown="if(event.key==='Enter')addOpenSlot(this.value.trim()||'ללא שם')">`,
+    `<button class="btn" onclick="addOpenSlot((document.getElementById('roleOther')||{}).value.trim()||'ללא שם')">הוספה</button>
+     <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
+}
+function renameSlot(sid, v) {
+  const s = plan.staff[sid]; if (!s) return;
+  s.label = (v || '').trim() || 'ללא שם';
+  renderStep(); if (built) renderBoard();
+}
 function flipSlot(sid) { const s = plan.staff[sid]; s.active = (s.active + 1) % s.members.length; renderStep(); if (built) renderBoard(); }
 function delSlot(sid) { delete plan.staff[sid]; renderStep(); }
 function toggleResp(sid, tid) {
@@ -1224,7 +1265,7 @@ function markersHtml() {
     }).filter(Boolean);
     const ico = cfg.sits === 'beside' ? '🪑' : '👀';
     const ttl = cfg.sits === 'beside' ? 'יושבת ליד השולחן' : 'משגיחה';
-    return `<div class="pmark" style="left:${m.x}px;top:${m.y}px;border-color:${c};color:${c};
+    return `<div class="pmark ${isOpenSlot(sid) ? 'open-slot' : ''}" style="left:${m.x}px;top:${m.y}px;border-color:${c};color:${c};
       box-shadow:0 0 0 4px ${mix('#ffffff', c, 0.16)},0 2px 8px rgba(0,0,0,.10)"
       onpointerdown="startDragMark(event,'${sid}')"
       title="${ttl}${tables.length ? ' · ' + esc(tables.join(', ')) : ''}">
@@ -1406,6 +1447,7 @@ function sheetData() {
     label: slotLabel(sid), color: markColor(sid),
     // 🪑 / 👀 מצויירים ב-PDF כווקטור, כי ל-Heebo אין גליפים לאמוג'י
     icon: plan.staff[sid].sits === 'beside' ? 'chair' : 'watch',
+    open: isOpenSlot(sid),       // תפקיד בלי שם — מסגרת מקווקוות גם על הדף
   }));
 
   const taken = new Set(Object.values(plan.seats));
@@ -1637,6 +1679,7 @@ function renderBoard() {
       const cls = ['seat'];
       if (p) cls.push('filled');
       if (p && p.kind === 'staff') cls.push('staff');
+      if (pid && isOpenSlot(pid)) cls.push('open-slot');   // תפקיד, לא אדם
       if (pid && bad.has(pid)) cls.push('bad');
       if (selectedSeat === k) cls.push('sel');
       if (plan.locks[k]) cls.push('lock');
@@ -1798,7 +1841,8 @@ function legendRows() {
     }).filter(Boolean);
     const role = cfg.sits === 'seat' ? 'יושבת בשולחן'
       : cfg.sits === 'beside' ? 'יושבת ליד' : 'משגיחה';
-    return { color: markColor(sid), name: slotLabel(sid), role, tables: tbls };
+    return { color: markColor(sid), name: slotLabel(sid),
+             role: isOpenSlot(sid) ? role + ' · תפקיד' : role, tables: tbls };
   }).filter(r => r.name);
 }
 function legendHtml() {

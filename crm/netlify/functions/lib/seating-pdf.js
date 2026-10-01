@@ -259,8 +259,10 @@ function buildSeatingPdf(sheet) {
         const ic = hh * 0.62, gap = ic * 0.45;               // הסמל יושב משמאל, כמו במסך
         const w = tw + padX * 2 + ic + gap, x = X(m.x), y = Y(m.y);
         doc.roundedRect(x, y, w, hh, hh / 2).fillColor('#ffffff').fill();
-        doc.roundedRect(x, y, w, hh, hh / 2).lineWidth(Math.max(0.7, 1.6 * k))
-           .strokeColor(m.color || C.brand).stroke();
+        doc.roundedRect(x, y, w, hh, hh / 2).lineWidth(Math.max(0.7, 1.6 * k));
+        // תפקיד בלי שם מסומן במקווקו, כמו כל דבר שעוד לא סופי
+        if (m.open) doc.dash(3, { space: 2 }).strokeColor(m.color || C.brand).stroke().undash();
+        else doc.strokeColor(m.color || C.brand).stroke();
         drawMarkIcon(doc, m.icon === 'chair' ? 'chair' : 'watch',
                      x + padX, y + (hh - ic) / 2, ic, m.color || C.brand);
         doc.fillColor(m.color || C.brand);
