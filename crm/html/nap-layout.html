@@ -159,17 +159,57 @@
             border-radius:16px; transform-origin:top right; direction:ltr; }
     .rscale { position:absolute; left:0; top:0; width:1123px; height:794px; transform-origin:561.5px 397px; }
 
-    /* המזרן: מלבן פיזי. השם גדול, וטקס ההירדמות מתחתיו בכתב קטן. */
-    /* קירות החדר. הם לא קישוט — הם מערכת הצירים שהפכה לנראית: מרגע
-       שיש להם מידות, גרירת מזרן לא יכולה להזיז שום דבר אחר. */
-    /* מלבן הסימון בגרירה */
-    .marq { position:absolute; border:1.5px dashed #1F7a4f; background:rgba(31,122,79,.08);
-            border-radius:4px; pointer-events:none; z-index:12; }
-    .walls { position:absolute; border:3px solid #cbbfa9; border-radius:3px;
-             background:#fffdf9; box-shadow:inset 0 0 0 1px rgba(203,191,169,.3); z-index:1; }
-    .mat { position:absolute; border:2px solid #cfe0ec; background:#eef5fb; border-radius:9px;
-           display:flex; flex-direction:column; align-items:center; justify-content:center;
-           cursor:grab; touch-action:none; direction:rtl; overflow:hidden; padding:4px; z-index:5; }
+    /* ---- המזרן כמיטה ----
+       מלבן עם שם הוא תרשים. כרית בקצה אחד, שמיכה מקופלת על השני
+       ותמונה על הכרית — וזה כבר חדר ילדים. והכרית נושאת מידע: היא
+       מסמנת לאיזה כיוון פונה הראש, מה שלא היה קיים בדף קודם. */
+    .mat { position:absolute; border-radius:10px; cursor:grab; touch-action:none;
+           direction:rtl; overflow:visible; z-index:5;
+           --bl:#dce9f3; --bll:#a9c6dc;
+           background:#fff; border:1.5px solid var(--bll);
+           box-shadow:0 1px 3px rgba(0,0,0,.05); }
+    .mat i { position:absolute; display:block; pointer-events:none; }
+    /* השמיכה מכסה את החלק שאינו הכרית, עם קפל בקצה העליון שלה */
+    .mat .blanket { background:var(--bl); border-radius:8px; inset:3px; }
+    .mat .fold { background:#fff; opacity:.55; border-radius:3px; }
+    .mat .pillow { background:#fffdfa; border:1px solid var(--bll); border-radius:7px; }
+    /* קמט רך באמצע הכרית — בלעדיו היא נקראת כקופסה לבנה ריקה */
+    .mat .pillow::after { content:''; position:absolute; background:var(--bll); opacity:.4; }
+    .mat.h-right .pillow::after, .mat.h-left .pillow::after {
+      left:50%; top:20%; bottom:20%; width:1px; }
+    .mat.h-top .pillow::after, .mat.h-bottom .pillow::after {
+      top:50%; left:20%; right:20%; height:1px; }
+    .mat .pillow { position:absolute; }
+    .mat .face { position:absolute; border-radius:50%; object-fit:cover;
+                 border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.18); z-index:3; }
+    .mat .num { position:absolute; bottom:3px; left:5px; font-size:9px; font-weight:700;
+                color:var(--bll); z-index:2; }
+    .mat .body { position:absolute; z-index:2; display:flex; flex-direction:column;
+                 align-items:center; justify-content:center; text-align:center;
+                 padding:2px; overflow:hidden; }
+
+    /* ראש ימינה — כרית ברוחב 34% בצד ימין */
+    .mat.h-right .pillow { top:6px; bottom:6px; right:4px; width:30%; }
+    .mat.h-right .fold   { top:5px; bottom:5px; right:calc(30% + 7px); width:5px; }
+    .mat.h-right .face   { top:50%; right:4%; transform:translateY(-50%); }
+    .mat.h-right .body   { top:0; bottom:0; right:32%; left:2px; }
+    .mat.h-left  .pillow { top:6px; bottom:6px; left:4px; width:30%; }
+    .mat.h-left  .fold   { top:5px; bottom:5px; left:calc(30% + 7px); width:5px; }
+    .mat.h-left  .face   { top:50%; left:4%; transform:translateY(-50%); }
+    .mat.h-left  .body   { top:0; bottom:0; left:32%; right:2px; }
+    .mat.h-top   .pillow { left:6px; right:6px; top:4px; height:30%; }
+    .mat.h-top   .fold   { left:5px; right:5px; top:calc(30% + 7px); height:5px; }
+    .mat.h-top   .face   { left:50%; top:4%; transform:translateX(-50%); }
+    .mat.h-top   .body   { left:0; right:0; top:32%; bottom:2px; }
+    .mat.h-bottom .pillow{ left:6px; right:6px; bottom:4px; height:30%; }
+    .mat.h-bottom .fold  { left:5px; right:5px; bottom:calc(30% + 7px); height:5px; }
+    .mat.h-bottom .face  { left:50%; bottom:4%; transform:translateX(-50%); }
+    .mat.h-bottom .body  { left:0; right:0; bottom:32%; top:2px; }
+
+    /* מזרן אנכי: השם נקרא לאורך הגוף במקום להישבר לשתי שורות צרות */
+    .mat.vert .body { writing-mode:vertical-rl; transform:rotate(180deg); }
+    .mat.vert .body .rt { writing-mode:horizontal-tb; transform:rotate(180deg); }
+
     .mat:active { cursor:grabbing; }
     .mat .nm { font-size:13px; font-weight:700; color:#2c4d66; line-height:1.15; text-align:center; }
     .mat .ri { display:inline-flex; align-items:center; gap:3px; }
@@ -180,14 +220,14 @@
     .mat .rt:hover { border-color:#C4846C; background:rgba(255,255,255,.75); color:#8a5a44; }
     .mat .rt.empty { color:#b9c6d0; font-style:italic; }
     /* מזרן גמילה — אותה מידה, חומר אחר, ולכן סימון ולא צורה אחרת */
-    .mat.potty { border-color:#e0c08a; background:#fdf6e9; border-style:dashed; }
+    .mat.potty { --bl:#f7e9cf; --bll:#e0c08a; border-style:dashed; }
     .mat.potty .nm { color:#8a6a23; }
     .mat.potty .rt { color:#b8801f; }
-        .mat.bad { border-color:#e0837a; background:#fdf0ef; }
+        .mat.bad { --bl:#fadfdc; --bll:#e0837a; }
     .mat.unreach::after { content:'אין גישה'; position:absolute; top:2px; left:4px; font-size:8.5px;
                           font-weight:700; color:#c94147; }
     .mat.from { opacity:.34; }
-    .mat.target { border-color:#1F7a4f !important; background:#e6f4ec !important; }
+    .mat.target { --bl:#dcf0e4 !important; --bll:#1F7a4f !important; }
 
     .obst { position:absolute; background:#e7e0d4; border:2px solid #c9bda9; border-radius:6px;
             display:flex; align-items:center; justify-content:center; direction:rtl;
@@ -473,6 +513,13 @@ async function boot() {
   } catch (e) { showErr('שגיאה בטעינת הילדים והצוות: ' + e.message); }
 
   api.getNapPlans().then(r => { rituals = (r && r.rituals) || {}; if (built) renderBoard(); }).catch(() => {});
+  // התמונות נטענות ברקע; הדף לא מחכה להן ומצייר שוב כשהן מגיעות
+  api.getEvents('child-card').then(r => {
+    ((r && r.data) || []).forEach(ev => {
+      try { const p = JSON.parse(ev.notes || '{}'); if (p.photo) faces[ev.category] = p.photo; } catch (e) {}
+    });
+    if (built) renderBoard();
+  }).catch(() => {});
 
   plan = newPlan();
   try {
@@ -908,6 +955,16 @@ const sY = cm => cm * view.pxPerCm + view.panY;
 const sLen = cm => cm * view.pxPerCm;
 
 function ritualOf(cid) { return rituals[cid] || null; }
+// תמונות מהכרטיס האישי. גננת מחליפה לא מכירה שמות — היא מכירה פנים.
+let faces = {};
+function photoOf(cid) { return faces[cid] || ''; }
+// גווני שמיכות. ילדים אמיתיים לא ישנים על מיטות זהות, והגיוון גם
+// מקל למצוא מיטה מסוימת בעין.
+const BLANKETS = [
+  { bg:'#dce9f3', line:'#a9c6dc' }, { bg:'#e6ebdc', line:'#b7c3a2' },
+  { bg:'#f3e3dc', line:'#dcb9a6' }, { bg:'#e7e2ef', line:'#bdb2cf' },
+  { bg:'#dceae7', line:'#a5c6bd' }, { bg:'#f3eada', line:'#d8c69c' },
+];
 // שתי גרסאות בכוונה: טקסט נקי עובר ל-PDF, וה-HTML עם האייקונים נשאר
 // למסך. ערבוב של השניים היה מכניס תגיות SVG לתוך הדף המודפס.
 function ritualText(cid) {
@@ -940,24 +997,37 @@ function renderBoard() {
   viols.forEach(v => { const r = plan.rules.find(x => x.id === v.ruleId); if (r) { bad.add(r.a); if (r.b) bad.add(r.b); } });
   const reach = E.reachable(plan.mats, plan.aisle || 45);
 
-  const matsHtml = plan.mats.map(m => {
+  // המזרן מצוייר כמיטה: כרית בקצה שאליו פונה הראש, שמיכה על השאר,
+  // ותמונת הילד על הכרית. הכרית אינה קישוט — היא המידע היחיד בדף
+  // שאומר לאיזה כיוון שוכבים, ובלעדיה הדף הוא תרשים ולא חדר.
+  const matsHtml = plan.mats.map((m, idx) => {
     const r = E.rectOf(m), cid = plan.who[m.id];
-    const cls = ['mat'];
+    const side = E.headSide(m), vert = (side === 'top' || side === 'bottom');
+    const cls = ['mat', 'bed', 'h-' + side];
     if (cid && plan.potty[cid]) cls.push('potty');
     if (cid && bad.has(cid)) cls.push('bad');
     if (selMats.has(m.id)) cls.push('sel');
     if (!reach[m.id]) cls.push('unreach');
+    if (vert) cls.push('vert');
     const rt = cid ? ritualHtml(cid) : '';
+    const ph = cid ? photoOf(cid) : '';
+    const tint = BLANKETS[idx % BLANKETS.length];
     return `<div class="${cls.join(' ')}" data-m="${m.id}"
-      style="left:${sX(r.x)}px;top:${sY(r.y)}px;width:${sLen(r.w)}px;height:${sLen(r.h)}px"
+      style="left:${sX(r.x)}px;top:${sY(r.y)}px;width:${sLen(r.w)}px;height:${sLen(r.h)}px
+             ${cid && plan.potty[cid] ? '' : `;--bl:${tint.bg};--bll:${tint.line}`}"
       onpointerdown="startMatDrag(event,'${m.id}')">
-      <span class="nm">${esc(cid ? kidName(cid) : '—')}</span>
-      ${cid ? `<span class="rt ${rt ? '' : 'empty'}" onpointerdown="event.stopPropagation()"
-        onclick="event.stopPropagation();openRitual('${cid}')"
-        title="לחיצה עורכת את טקס ההירדמות">${rt || 'להוספת טקס הירדמות'}</span>` : ''}
+      <i class="blanket"></i><i class="fold"></i><i class="pillow"></i>
+      ${ph ? `<img class="face" src="${ph}" alt="">` : ''}
+      <span class="num">${idx + 1}</span>
+      <div class="body">
+        <span class="nm">${esc(cid ? kidName(cid) : '—')}</span>
+        ${cid ? `<span class="rt ${rt ? '' : 'empty'}" onpointerdown="event.stopPropagation()"
+          onclick="event.stopPropagation();openRitual('${cid}')"
+          title="לחיצה עורכת את טקס ההירדמות">${rt || 'להוספת טקס הירדמות'}</span>` : ''}
+      </div>
       <button class="mrot" onpointerdown="event.stopPropagation()"
         onclick="event.stopPropagation();rotateMat('${m.id}')"
-        title="סיבוב המזרן ברבע סיבוב">⟲</button>
+        title="סיבוב · גם מחליף את צד הראש">⟲</button>
     </div>`;
   }).join('');
 
@@ -1293,7 +1363,7 @@ function rotateSel() {
     // מרכז המזרן מסתובב ברבע סיבוב סביב מרכז הקבוצה, כך שהשורה כולה
     // הופכת לטור במקום שבו היא עומדת ולא קופצת הצידה
     const nx = cx + (my - cy), ny = cy - (mx - cx);
-    m.rot = m.rot === 90 ? 0 : 90;
+    m.rot = (((m.rot || 0) + 90) % 360);
     const nr = E.rectOf(Object.assign({}, m, { x: 0, y: 0 }));
     m.x = Math.round(nx - nr.w / 2); m.y = Math.round(ny - nr.h / 2);
   });
@@ -1308,7 +1378,8 @@ function rotateMat(id) {
   pushUndo('סיבוב מזרן');
   const r = E.rectOf(m);
   const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
-  m.rot = m.rot === 90 ? 0 : 90;
+  // מחזור של ארבעה: שני כיוונים, ובכל כיוון שני צדדים לראש
+  m.rot = (((m.rot || 0) + 90) % 360);
   const nr = E.rectOf(Object.assign({}, m, { x: 0, y: 0 }));
   m.x = Math.round(cx - nr.w / 2); m.y = Math.round(cy - nr.h / 2);
   renderBoard();
@@ -1575,12 +1646,13 @@ function napSheet() {
     name: plan.name, portrait: !!plan.portrait, zoom: zoomOf(),
     room: plan.room,
     meta: `${dd}  ·  ${plan.mats.length - out.length}/${plan.childIds.length}`,
-    mats: plan.mats.map(m => {
+    mats: plan.mats.map((m, i) => {
       const r = E.rectOf(m), cid = plan.who[m.id];
       // הפריטים נשלחים כרשימה ולא כמחרוזת מחוברת, כדי שה-PDF יוכל
       // לצייר אייקון לצד כל אחד — בדיוק כמו במסך
       const rr = cid ? (ritualOf(cid) || {}) : {};
       return { x: r.x, y: r.y, w: r.w, h: r.h,
+               head: E.headSide(m), child_id: cid || null, num: i + 1,
                name: cid ? kidName(cid) : '',
                needs: (rr.needs || []).map(napLabel),
                other: rr.needs_other || '',

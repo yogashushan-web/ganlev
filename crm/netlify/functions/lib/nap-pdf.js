@@ -167,27 +167,80 @@ function buildNapPdf(sheet) {
       doc.roundedRect(X(0), Y(0), L(room.w), L(room.h), 3)
          .lineWidth(Math.max(1.4, 3 * k)).strokeColor(C.wall).stroke();
 
-      // המזרונים: שם גדול, וטקס ההירדמות מתחתיו בכתב קטן
-      (sheet.mats || []).forEach(m => {
+      // המזרן מצוייר כמיטה: שמיכה, קפל, כרית ותמונה. הכרית אינה
+      // קישוט — היא המידע היחיד בדף שאומר לאיזה כיוון פונה הראש.
+      const BLANKETS = [
+        { bg:'#dce9f3', ln:'#a9c6dc' }, { bg:'#e6ebdc', ln:'#b7c3a2' },
+        { bg:'#f3e3dc', ln:'#dcb9a6' }, { bg:'#e7e2ef', ln:'#bdb2cf' },
+        { bg:'#dceae7', ln:'#a5c6bd' }, { bg:'#f3eada', ln:'#d8c69c' },
+      ];
+      (sheet.mats || []).forEach((m, idx) => {
         const x = X(m.x), y = Y(m.y), w = L(m.w), h = L(m.h);
         const potty = !!m.potty;
-        doc.roundedRect(x, y, w, h, 4 * k)
-           .fillColor(potty ? C.pottyFill : C.matFill).fill();
-        doc.roundedRect(x, y, w, h, 4 * k).lineWidth(Math.max(.7, 1.8 * k));
-        if (potty) doc.dash(4, { space: 2.5 }).strokeColor(C.pottyLine).stroke().undash();
-        else doc.strokeColor(C.matLine).stroke();
+        const bl = potty ? { bg:'#f7e9cf', ln:'#e0c08a' } : BLANKETS[idx % BLANKETS.length];
+        const rad = 5 * k, pad = 2.5 * k;
+
+        doc.roundedRect(x, y, w, h, rad).fillColor('#ffffff').fill();
+        doc.roundedRect(x + pad, y + pad, w - pad * 2, h - pad * 2, rad * .8)
+           .fillColor(bl.bg).fill();
+
+        // הכרית והקפל, לפי הצד שאליו פונה הראש
+        const head = m.head || 'right';
+        const vert = head === 'top' || head === 'bottom';
+        const pw = vert ? w - 5 * k : w * 0.30;
+        const ph = vert ? h * 0.30 : h - 5 * k;
+        const px = head === 'right' ? x + w - pw - 3 * k : head === 'left' ? x + 3 * k : x + 2.5 * k;
+        const py = head === 'bottom' ? y + h - ph - 3 * k : head === 'top' ? y + 3 * k : y + 2.5 * k;
+        doc.roundedRect(px, py, pw, ph, 4 * k).fillColor('#fffdfa').fill();
+        doc.roundedRect(px, py, pw, ph, 4 * k).lineWidth(Math.max(.4, .9 * k))
+           .strokeColor(bl.ln).stroke();
+        // קמט רך באמצע הכרית — בלעדיו היא נקראת כקופסה לבנה ריקה
+        const kx = px + pw / 2, ky = py + ph / 2;
+        if (vert) doc.moveTo(px + pw * .2, ky).lineTo(px + pw * .8, ky);
+        else doc.moveTo(kx, py + ph * .2).lineTo(kx, py + ph * .8);
+        doc.lineWidth(Math.max(.3, .7 * k)).strokeColor(bl.ln).opacity(.45).stroke().opacity(1);
+        // קפל השמיכה, צמוד לכרית
+        const fw = vert ? w - 7 * k : 3.5 * k, fh = vert ? 3.5 * k : h - 7 * k;
+        const fx = head === 'right' ? px - 5 * k : head === 'left' ? px + pw + 1.5 * k : x + 3.5 * k;
+        const fy = head === 'bottom' ? py - 5 * k : head === 'top' ? py + ph + 1.5 * k : y + 3.5 * k;
+        doc.roundedRect(fx, fy, fw, fh, 1.5 * k).fillColor('#ffffff').opacity(.55).fill().opacity(1);
+
+        doc.roundedRect(x, y, w, h, rad).lineWidth(Math.max(.6, 1.4 * k));
+        if (potty) doc.dash(4, { space: 2.5 }).strokeColor(bl.ln).stroke().undash();
+        else doc.strokeColor(bl.ln).stroke();
+
+        // תמונת הילד, חתוכה לעיגול על הכרית
+        const face = m.child_id && sheet.faces ? sheet.faces[m.child_id] : null;
+        if (face) {
+          try {
+            const b64 = String(face).replace(/^data:[^,]+,/, '');
+            const img = Buffer.from(b64, 'base64');
+            const fr = Math.min(pw, ph) * 0.42;
+            const fcx = px + pw / 2, fcy = py + ph / 2;
+            doc.save();
+            doc.circle(fcx, fcy, fr).clip();
+            doc.image(img, fcx - fr, fcy - fr, { width: fr * 2, height: fr * 2 });
+            doc.restore();
+            doc.circle(fcx, fcy, fr).lineWidth(Math.max(.5, 1.3 * k)).strokeColor('#ffffff').stroke();
+          } catch (e) { /* תמונה פגומה לא תפיל את הדף */ }
+        }
+
+        doc.font('he').fontSize(Math.max(4, 7 * k)).fillColor(bl.ln);
+        doc.text(String(m.num || idx + 1), x + 3 * k, y + h - 8 * k, { lineBreak: false });
 
         if (!m.name) return;
-        const pad = 4 * k;
-        doc.font('heB').fontSize(Math.max(5.5, 11 * k)).fillColor(potty ? C.pottyInk : C.matInk);
-        const nameLines = wrapLines(doc, m.name, w - pad * 2, 2);
+        // אזור הכתב: מה שנשאר אחרי הכרית
+        const bx = head === 'right' ? x + 2 * k : head === 'left' ? px + pw + 2 * k : x + 2 * k;
+        const bw = vert ? w - 4 * k : w - pw - 7 * k;
+        const by = head === 'bottom' ? y + 2 * k : head === 'top' ? py + ph + 2 * k : y + 2 * k;
+        const bh = vert ? h - ph - 7 * k : h - 4 * k;
+
+        doc.font('heB').fontSize(Math.max(5.5, 10.5 * k)).fillColor(potty ? C.pottyInk : C.matInk);
+        const nameLines = wrapLines(doc, m.name, bw, 2);
         const nameH = nameLines.length * doc.currentLineHeight();
 
-        // טקס ההירדמות: אייקון לצד כל פריט, בדיוק כמו במסך. הפריטים
-        // נארזים לשורות לפי הרוחב הפנוי, וכל שורה ממורכזת בנפרד.
-        doc.font('he').fontSize(Math.max(4.6, 8.4 * k));
-        const ico = Math.max(5, 11 * k), gp = ico * 0.22, sepW = doc.widthOfString(' · ');
-        const avail = w - pad * 2;
+        doc.font('he').fontSize(Math.max(4.6, 8 * k));
+        const ico = Math.max(5, 10 * k), gp = ico * 0.22, sepW = doc.widthOfString(' · ');
         const items = (m.needs || []).map(nd => {
           const tw = lineWidth(doc, wordsOf(nd));
           return { kind: 'need', label: nd, w: ico + gp + tw, tw };
@@ -200,28 +253,27 @@ function buildNapPdf(sheet) {
         let row = [], rw = 0;
         items.forEach(it => {
           const add = (row.length ? sepW : 0) + it.w;
-          if (row.length && rw + add > avail) { rows.push({ items: row, w: rw }); row = []; rw = 0; }
+          if (row.length && rw + add > bw) { rows.push({ items: row, w: rw }); row = []; rw = 0; }
           row.push(it); rw += (row.length > 1 ? sepW : 0) + it.w;
         });
         if (row.length) rows.push({ items: row, w: rw });
         const rlh = Math.max(doc.currentLineHeight(), ico * 0.95);
         const ritH = rows.length * rlh;
 
-        let top = y + (h - nameH - ritH) / 2;
-        doc.font('heB').fontSize(Math.max(5.5, 11 * k)).fillColor(potty ? C.pottyInk : C.matInk);
+        let top = by + (bh - nameH - ritH) / 2;
+        doc.font('heB').fontSize(Math.max(5.5, 10.5 * k)).fillColor(potty ? C.pottyInk : C.matInk);
         const nlh = doc.currentLineHeight();
-        nameLines.forEach((ws, i) => drawWordsRtl(doc, ws, x + w / 2 + lineWidth(doc, ws) / 2, top + i * nlh));
+        nameLines.forEach((ws, i) => drawWordsRtl(doc, ws, bx + bw / 2 + lineWidth(doc, ws) / 2, top + i * nlh));
 
         if (rows.length) {
           top += nameH + 1 * k;
           const sub = potty ? C.pottySub : C.matSub;
           rows.forEach((rr, ri) => {
-            // מימין לשמאל: מתחילים מהקצה הימני של השורה ומתקדמים שמאלה
-            let cur = x + w / 2 + rr.w / 2;
+            let cur = bx + bw / 2 + rr.w / 2;
             const ry = top + ri * rlh;
             rr.items.forEach((it, ii) => {
               if (ii) {
-                doc.font('he').fontSize(Math.max(4.6, 8.4 * k)).fillColor(sub);
+                doc.font('he').fontSize(Math.max(4.6, 8 * k)).fillColor(sub);
                 cur -= sepW;
                 doc.text(' · ', cur, ry, { lineBreak: false });
               }
@@ -230,7 +282,7 @@ function buildNapPdf(sheet) {
                 drawNapIcon(doc, it.label, cur, ry + (rlh - ico) / 2 - ico * 0.08, ico);
                 cur -= gp;
               }
-              doc.font('he').fontSize(Math.max(4.6, 8.4 * k)).fillColor(sub);
+              doc.font('he').fontSize(Math.max(4.6, 8 * k)).fillColor(sub);
               drawWordsRtl(doc, wordsOf(it.label), cur, ry + (rlh - doc.currentLineHeight()) / 2);
               cur -= it.tw;
             });

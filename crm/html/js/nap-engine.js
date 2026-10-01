@@ -21,10 +21,15 @@
   // הוא לא מיטה אחרת, הוא אותו מזרן בתפקיד אחר.
   const MAT_ROLES = { std: 'רגיל', potty: 'גמילה' };
 
+  // rot מקבל 0, 90, 180 או 270. 0 ו-180 שוכבים לרוחב, 90 ו-270 לאורך —
+  // אבל ההבדל בין 0 ל-180 אינו ריק: הוא קובע לאיזה צד פונה הראש.
   const rectOf = m => {
-    const w = m.rot === 90 ? m.h : m.w, h = m.rot === 90 ? m.w : m.h;
+    const up = m.rot === 90 || m.rot === 270;
+    const w = up ? m.h : m.w, h = up ? m.w : m.h;
     return { x: m.x, y: m.y, w, h, x2: m.x + w, y2: m.y + h };
   };
+  // לאיזו פאה פונה הראש: 0 = ימין, 90 = מעלה, 180 = שמאל, 270 = מטה.
+  const headSide = m => ({ 0: 'right', 90: 'top', 180: 'left', 270: 'bottom' })[((m.rot || 0) % 360 + 360) % 360] || 'right';
 
   // תיבה חוסמת את כל מה שבפנים. חדר בצורת ר' נפתר עם מכשול בפינה,
   // וזה חוסך לגננת לצייר מצולעים בעכבר.
@@ -267,7 +272,7 @@
 
   const API = {
     MAT_KINDS, MAT_ROLES,
-    rectOf, requiredRoom, neighbours, reachable,
+    rectOf, headSide, requiredRoom, neighbours, reachable,
     proposals, bestPerRow, checkViolations, physical, overlaps,
     layoutRows, layoutAisle, layoutCols, layoutRing,
   };
