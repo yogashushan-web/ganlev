@@ -636,12 +636,26 @@ async function boot() {
 }
 function currentSchoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
 
+// חזרה ללוח בלי לפתור מחדש. בלי זה, מי שנכנסה ל"שינוי הגדרות" כדי
+// להציץ נתקעה: הדרך היחידה קדימה עברה דרך שלב החלוקה, שבונה את
+// הסידור מחדש ומוחק כל הזזה ידנית.
+function backToBoard() {
+  if (!Object.keys(plan.seats || {}).length) { goStep(1); return; }
+  built = true;
+  document.getElementById('wizard').classList.add('hide');
+  document.getElementById('steps').classList.add('hide');
+  document.getElementById('board').classList.remove('hide');
+  renderTop(); renderBoard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 function renderTop() {
+  const back = (!built && Object.keys(plan.seats || {}).length)
+    ? `<button class="btn soft" onclick="backToBoard()">חזרה לסידור</button>` : '';
   document.getElementById('topActions').innerHTML = built
     ? `<button class="btn ghost" onclick="backToWizard()">שינוי הגדרות</button>
        <button class="btn ghost" onclick="openVersions()">גרסאות שמורות</button>
        <button class="btn" onclick="savePlan()">שמירה</button>`
-    : `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
+    : back + `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
        <button class="btn ghost" onclick="startFresh()">סידור חדש</button>`;
 }
 function renderSteps() {
@@ -1210,7 +1224,9 @@ function showConflict(res) {
       <div class="opts">${plan.rules.filter(r => r.active !== false).map(r =>
         `<button onclick="toggleRule('${r.id}');buildPlan()">בטלי: ${esc(E.RULE_TYPES[r.type].label)} — ${esc(ruleText(r))}</button>`).join('')}</div></div>`;
   }
-  box.innerHTML = html + `<div class="nav"><button class="btn ghost" onclick="goStep(4)">חזרה לכללים</button></div>`;
+  box.innerHTML = html + `<div class="nav">
+    ${Object.keys(plan.seats || {}).length ? `<button class="btn" onclick="backToBoard()">חזרה לסידור</button>` : ''}
+    <button class="btn ghost" onclick="goStep(4)">חזרה לכללים</button></div>`;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function resolvePair(a, b) {

@@ -236,6 +236,7 @@
     .prop { background:#fff; border:1.5px solid #e8e4de; border-radius:14px; padding:13px; cursor:pointer;
             text-align:center; font-family:'Heebo'; }
     .prop:hover { border-color:#1F3D34; background:#f4f9f6; }
+    .prop.on { border-color:#1F3D34; background:#f4f9f6; box-shadow:0 0 0 3px rgba(31,61,52,.1); }
     .prop b { display:block; font-size:13.5px; color:#1F3D34; margin-bottom:2px; }
     .prop em { font-style:normal; font-size:11.5px; color:#9B8E82; display:block; }
     .prop .sz { font-size:11.5px; color:#C4846C; font-weight:800; margin-top:6px; display:block; }
@@ -445,12 +446,14 @@ function saveDraft() { try { localStorage.setItem(DRAFT, JSON.stringify({ plan, 
 function clearDraft() { try { localStorage.removeItem(DRAFT); } catch (e) {} }
 
 function renderTop() {
+  const back = (!built && plan.mats && plan.mats.length)
+    ? `<button class="btn soft" onclick="backToBoard()">חזרה לסידור</button>` : '';
   document.getElementById('topActions').innerHTML = built
     ? `<button class="btn ghost" onclick="goStep(1)">שינוי הגדרות</button>
        <button class="btn ghost" onclick="openVersions()">גרסאות שמורות</button>
        <button class="btn soft" onclick="saveVersion()">שמור גרסה</button>
        <button class="btn" onclick="savePlan()">שמירה</button>`
-    : `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
+    : back + `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
        <button class="btn ghost" onclick="startFresh()">סידור חדש</button>`;
 }
 function renderSteps() {
@@ -651,14 +654,31 @@ function stepBuild() {
       const mats = E.layoutRows(n, m.w, m.h, per, 0, 0).map(x => Object.assign({}, x, { w: m.w, h: m.h }));
       const obs = typeof sh.obs === 'function' ? sh.obs(m.w, m.h, per, rows) : [];
       const room = E.requiredRoom(mats, obs, 40);
-      return `<button class="prop" onclick="useShape('${sh.id}')">
+      return `<button class="prop ${plan.shape === sh.id ? 'on' : ''}" onclick="useShape('${sh.id}')">
         <b>${sh.ico} ${esc(sh.name)}</b><em>${esc(sh.hint)}</em>
         ${miniSvg({ mats, room, obs })}
         <span class="sz">${(room.w / 100).toFixed(1)} × ${(room.h / 100).toFixed(1)} מ'</span></button>`;
     }).join('')}</div>
+    ${plan.mats && plan.mats.length ? `<div class="bk" style="margin-top:16px">
+      <b>⚠️ בחירת צורה בונה את הסידור מחדש</b>
+      <p>המזרונים יסודרו מההתחלה לפי הצורה החדשה. מי שוכב ליד מי ייקבע שוב לפי הכללים,
+        והמיקומים שהזזת ביד יילכו לאיבוד. אם רק רצית לחזור — "חזרה לסידור".</p></div>` : ''}
     <div class="nav">
-      <button class="btn ghost" onclick="goStep(3)">חזרה</button>
+      ${plan.mats && plan.mats.length ? `<button class="btn" onclick="backToBoard()">חזרה לסידור</button>` : ''}
+      <button class="btn ghost" onclick="goStep(3)">חזרה לכללים</button>
     </div></div>`;
+}
+// חזרה ללוח בלי לשנות דבר. בלי זה, מי שנכנסה לראות את הצורות נתקעה
+// שם — "חזרה" החזירה אותה לשלב הכללים, והדרך היחידה קדימה הייתה
+// לבחור צורה ולאבד את כל מה שסידרה.
+function backToBoard() {
+  if (!plan.mats || !plan.mats.length) { goStep(3); return; }
+  built = true;
+  document.getElementById('wizard').classList.add('hide');
+  document.getElementById('steps').classList.add('hide');
+  document.getElementById('board').classList.remove('hide');
+  renderTop(); renderBoard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function miniSvg(p) {
   const W = 142, H = 80, pad = 3;
