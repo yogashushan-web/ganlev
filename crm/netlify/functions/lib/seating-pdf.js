@@ -52,7 +52,7 @@ function drawCentered(doc, text, cx, cy, maxW, maxLines) {
   use.forEach((ws, i) => drawWordsRtl(doc, ws, cx + lineWidth(doc, ws) / 2, top + i * lh));
 }
 
-// הסמלים 🪑 ו-👀 שעל הגלולות במסך — אין להם גליף ב-Heebo, ופונט אמוג'י
+// הסמלים 🪑 ו-👀 שעל הגלולות במסך — אין להם גליף בגופן, ופונט אמוג'י
 // שוקל עשרות מגה ונשבר ב-fontkit. שתי צורות וקטוריות קצרות עושות את
 // אותו דבר, מודפסות חד גם בשחור-לבן, וגדלות עם הדף.
 function drawMarkIcon(doc, kind, x, y, s, color) {
@@ -137,8 +137,8 @@ function buildSeatingPdf(sheet) {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 0 });
-      doc.registerFont('he', fontPath('Heebo-Regular.ttf'));
-      doc.registerFont('heB', fontPath('Heebo-Bold.ttf'));
+      doc.registerFont('he', fontPath('Alef-Regular.ttf'));
+      doc.registerFont('heB', fontPath('Alef-Bold.ttf'));
 
       const chunks = [];
       doc.on('data', c => chunks.push(c));

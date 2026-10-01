@@ -4,26 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>טפסים — מערכת גנים</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
     h1 { font-size:26px; color:#1F3D34; margin-bottom:6px; }
     .lead { color:#9B8E82; font-size:14px; margin-bottom:24px; }
     .card { background:#FFF; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:20px; }
     .card h3 { font-size:17px; color:#1F3D34; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid #f0ece6; }
     .doc-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-radius:10px; background:#FAF8F4; margin-bottom:8px; flex-wrap:wrap; gap:8px; }
-    .doc-title { font-weight:600; font-size:14px; }
+    .doc-title { font-weight:700; font-size:14px; }
     .doc-actions { display:flex; gap:8px; }
-    .dl { background:#1F3D34; color:#fff; text-decoration:none; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; }
+    .dl { background:#1F3D34; color:#fff; text-decoration:none; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700; }
     .dl:hover { background:#154428; }
-    .del { background:#e74c3c; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-family:'Heebo'; }
+    .del { background:#e74c3c; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-family:'Alef'; }
     .empty { color:#9B8E82; font-size:13px; padding:8px 4px; }
     .upload-row { display:flex; gap:10px; align-items:center; margin-top:14px; flex-wrap:wrap; padding-top:14px; border-top:1px dashed #e3ddd2; }
-    .upload-row input[type=text] { flex:1; min-width:200px; padding:10px 13px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .upload-row input[type=text] { flex:1; min-width:200px; padding:10px 13px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Alef'; font-size:14px; outline:none; }
     .upload-row input[type=text]:focus { border-color:#1F3D34; }
-    .upload-row input[type=file] { font-size:13px; font-family:'Heebo'; max-width:230px; }
-    .up-btn { background:#C4846C; color:#fff; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .upload-row input[type=file] { font-size:13px; font-family:'Alef'; max-width:230px; }
+    .up-btn { background:#C4846C; color:#fff; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:13px; }
     .up-btn:hover { background:#a96b54; }
     .up-btn:disabled { background:#cfc8bd; cursor:not-allowed; }
     .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
@@ -35,12 +35,12 @@
   <h1>📋 טפסים</h1>
   <div class="lead">קבצים שנשמרים ונגישים בכל רגע - חוזים, תפריטים, תכניות וטפסים. (קובץ עד 5MB)</div>
   <div style="margin-bottom:18px;">
-    <button onclick="location.href='athand.html'" style="background:#2D5A50; color:#fff; border:none; padding:12px 18px; border-radius:11px; font-family:'Heebo'; font-weight:700; font-size:14px; cursor:pointer;">🗂️ בהישג יד — חשבונות · חוזים · ספקים 🔒</button>
+    <button onclick="location.href='athand.html'" style="background:#2D5A50; color:#fff; border:none; padding:12px 18px; border-radius:11px; font-family:'Alef'; font-weight:700; font-size:14px; cursor:pointer;">🗂️ בהישג יד — חשבונות · חוזים · ספקים 🔒</button>
   </div>
   <div id="error" class="error"></div>
   <div id="groups"></div>
 
-<script src="js/common.js?v=23"></script>
+<script src="js/common.js?v=24"></script>
 <script src="js/api.js?v=21"></script>
 <script>
 const SECTION = 'forms';

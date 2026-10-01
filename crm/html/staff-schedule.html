@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>סידור עבודה — מערכת גנים</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
     .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
     .header h1 { font-size:26px; color:#1F3D34; }
-    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:12px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; }
+    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:12px 22px; border-radius:10px; cursor:pointer; font-family:'Alef'; font-weight:700; }
     .btn-add:hover { background:#154428; }
     .btn-add:disabled { background:#cfc8bd; cursor:not-allowed; }
-    .btn-delete { padding:8px 12px; border:none; border-radius:9px; cursor:pointer; font-size:12px; font-family:'Heebo'; font-weight:700; background:#e74c3c; color:#fff; }
-    .btn-whatsapp { padding:7px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; font-weight:700; background:#25D366; color:#fff; }
-    .btn-ai { background:linear-gradient(135deg,#7A6A55,#5f5342); color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13.5px; }
+    .btn-delete { padding:8px 12px; border:none; border-radius:9px; cursor:pointer; font-size:12px; font-family:'Alef'; font-weight:700; background:#e74c3c; color:#fff; }
+    .btn-whatsapp { padding:7px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Alef'; font-weight:700; background:#25D366; color:#fff; }
+    .btn-ai { background:linear-gradient(135deg,#7A6A55,#5f5342); color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:13.5px; }
     .btn-ai:hover { opacity:.92; }
     .btn-ai:disabled { background:#cfc8bd; cursor:not-allowed; }
     .intro { color:#9B8E82; font-size:13px; line-height:1.6; margin-bottom:18px; }
@@ -27,7 +27,7 @@
     .round-card { background:#fff; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.05); overflow:hidden; }
     .round-head { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; cursor:pointer; flex-wrap:wrap; gap:10px; }
     .round-head:hover { background:#FAF8F4; }
-    .round-title { font-size:15.5px; font-weight:800; color:#1F3D34; }
+    .round-title { font-size:15.5px; font-weight:700; color:#1F3D34; }
     .round-sub { font-size:12px; color:#9B8E82; margin-top:3px; }
     .badge { font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:20px; }
     .badge.collecting { background:#fff3cd; color:#856404; }
@@ -67,7 +67,7 @@
 
   <div id="list" class="loading">טוען...</div>
 
-<script src="js/common.js?v=23"></script>
+<script src="js/common.js?v=24"></script>
 <script src="js/api.js?v=21"></script>
 <script>
 let rounds = [];

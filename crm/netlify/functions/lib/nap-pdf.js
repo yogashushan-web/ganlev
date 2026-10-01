@@ -74,8 +74,8 @@ function buildNapPdf(sheet) {
     try {
       const portrait = !!sheet.portrait;
       const doc = new PDFDocument({ size: 'A4', layout: portrait ? 'portrait' : 'landscape', margin: 0 });
-      doc.registerFont('he', fontPath('Heebo-Regular.ttf'));
-      doc.registerFont('heB', fontPath('Heebo-Bold.ttf'));
+      doc.registerFont('he', fontPath('Alef-Regular.ttf'));
+      doc.registerFont('heB', fontPath('Alef-Bold.ttf'));
 
       const chunks = [];
       doc.on('data', c => chunks.push(c));

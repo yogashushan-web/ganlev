@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ככה אני נרדם/ת · גן לב</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      font-family:'Heebo',sans-serif; direction:rtl; color:#43413c; min-height:100vh;
+      font-family:'Alef',sans-serif; direction:rtl; color:#43413c; min-height:100vh;
       background:linear-gradient(170deg,#FBF7EF 0%,#EEF5FB 55%,#E6F0F9 100%);
       position:relative; overflow-x:hidden;
     }
@@ -24,16 +24,16 @@
       box-shadow:0 14px 44px rgba(120,140,170,.18); margin-bottom:18px; }
     .head { text-align:center; }
     .head .m { font-size:44px; }
-    .head h1 { font-size:26px; color:#3a5b73; margin-top:4px; font-weight:800; }
+    .head h1 { font-size:26px; color:#3a5b73; margin-top:4px; font-weight:700; }
     .head p { font-size:14.5px; color:#7d7568; line-height:1.7; margin-top:12px; }
 
     label.q { display:block; font-size:17px; font-weight:700; color:#3a5b73; margin-bottom:4px; }
     .hint { font-size:13px; color:#a49b8c; line-height:1.6; margin-bottom:12px; }
-    .hint b { color:#8aa9bf; font-weight:600; }
+    .hint b { color:#8aa9bf; font-weight:700; }
 
     /* child picker */
     .ac { position:relative; }
-    .ac input { width:100%; padding:15px 16px; border:2px solid #e4e9ee; border-radius:16px; font-family:'Heebo';
+    .ac input { width:100%; padding:15px 16px; border:2px solid #e4e9ee; border-radius:16px; font-family:'Alef';
       font-size:16px; outline:none; background:#fff; transition:border-color .15s; }
     .ac input:focus { border-color:#9cc3de; }
     .ac-list { position:absolute; top:calc(100% + 6px); right:0; left:0; background:#fff; border-radius:14px;
@@ -54,24 +54,24 @@
     .need:hover { border-color:#cfe0ec; }
     .need.on { border-color:#9cc3de; background:#f2f8fc; box-shadow:0 4px 14px rgba(120,160,190,.16); }
     .need .ic { font-size:26px; line-height:1; }
-    .need .lb { font-size:15.5px; font-weight:600; color:#4a4740; }
+    .need .lb { font-size:15.5px; font-weight:700; color:#4a4740; }
     .need .ck { margin-right:auto; width:22px; height:22px; border-radius:50%; border:2px solid #d7dee4;
       display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; transition:.13s; }
     .need.on .ck { background:#7fb0d0; border-color:#7fb0d0; }
 
-    textarea { width:100%; padding:14px 15px; border:2px solid #e4e9ee; border-radius:16px; font-family:'Heebo';
+    textarea { width:100%; padding:14px 15px; border:2px solid #e4e9ee; border-radius:16px; font-family:'Alef';
       font-size:15px; outline:none; resize:vertical; line-height:1.7; min-height:96px; background:#fff; }
     textarea:focus { border-color:#9cc3de; }
-    input.other { width:100%; padding:13px 15px; border:2px dashed #dfe5ea; border-radius:14px; font-family:'Heebo';
+    input.other { width:100%; padding:13px 15px; border:2px dashed #dfe5ea; border-radius:14px; font-family:'Alef';
       font-size:15px; outline:none; background:#fff; }
     input.other:focus { border-color:#9cc3de; }
 
     .send { width:100%; margin-top:6px; background:linear-gradient(135deg,#7fb0d0,#5f93b8); color:#fff; border:none;
-      padding:17px; border-radius:18px; font-family:'Heebo'; font-weight:800; font-size:18px; cursor:pointer;
+      padding:17px; border-radius:18px; font-family:'Alef'; font-weight:700; font-size:18px; cursor:pointer;
       box-shadow:0 10px 26px rgba(95,147,184,.34); transition:.15s; }
     .send:hover { transform:translateY(-1px); box-shadow:0 14px 30px rgba(95,147,184,.42); }
     .send:disabled { opacity:.55; cursor:default; transform:none; }
-    .err { color:#c9776b; font-size:14px; text-align:center; margin-top:12px; min-height:18px; font-weight:600; }
+    .err { color:#c9776b; font-size:14px; text-align:center; margin-top:12px; min-height:18px; font-weight:700; }
 
     /* thank you */
     .staff-link { display:block; text-align:center; margin:26px auto 0; padding:10px; font-size:13px; color:#7e8fa0;

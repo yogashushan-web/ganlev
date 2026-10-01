@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ימי היכרות · גן לב</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; direction:rtl; color:#3D3228; min-height:100vh; background:linear-gradient(170deg,#F6F1E7 0%,#EAF2EC 100%); }
+    body { font-family:'Alef',sans-serif; direction:rtl; color:#3D3228; min-height:100vh; background:linear-gradient(170deg,#F6F1E7 0%,#EAF2EC 100%); }
     .wrap { max-width:600px; margin:0 auto; padding:26px 16px 60px; }
     .card { background:#fff; border-radius:22px; padding:26px 22px; box-shadow:0 12px 40px rgba(90,120,100,.14); margin-bottom:16px; }
     .head h1 { font-size:26px; color:#1F3D34; text-align:center; }
     .head p { font-size:14.5px; color:#7d7568; line-height:1.7; margin-top:12px; text-align:center; }
     label.q { display:block; font-size:16px; font-weight:700; color:#1F3D34; margin-bottom:8px; }
     .ac { position:relative; }
-    .ac input { width:100%; padding:14px 15px; border:2px solid #e4e9e4; border-radius:15px; font-family:'Heebo'; font-size:16px; outline:none; }
+    .ac input { width:100%; padding:14px 15px; border:2px solid #e4e9e4; border-radius:15px; font-family:'Alef'; font-size:16px; outline:none; }
     .ac input:focus { border-color:#7fae90; }
     .ac-list { position:absolute; top:calc(100% + 5px); right:0; left:0; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15); max-height:230px; overflow:auto; z-index:20; display:none; padding:5px; }
     .ac-list.show { display:block; }
@@ -29,20 +29,20 @@
     .days { display:none; }
     .days.show { display:block; }
     .day { margin-bottom:14px; }
-    .day-h { font-size:16px; font-weight:800; color:#1F3D34; margin-bottom:8px; }
+    .day-h { font-size:16px; font-weight:700; color:#1F3D34; margin-bottom:8px; }
     .caps { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     @media(max-width:460px){ .caps{grid-template-columns:1fr;} }
     .cap { border:2px solid #e4e9e4; border-radius:14px; padding:13px; text-align:center; background:#fbfaf7; }
-    .cap .t { font-weight:800; font-size:16px; color:#1F3D34; direction:ltr; }
+    .cap .t { font-weight:700; font-size:16px; color:#1F3D34; direction:ltr; }
     .cap .left { font-size:12.5px; color:#7d7568; margin:4px 0 9px; }
-    .cap button { width:100%; border:none; border-radius:10px; padding:9px; font-family:'Heebo'; font-weight:700; font-size:13.5px; cursor:pointer; }
+    .cap button { width:100%; border:none; border-radius:10px; padding:9px; font-family:'Alef'; font-weight:700; font-size:13.5px; cursor:pointer; }
     .b-book { background:#1F3D34; color:#fff; } .b-book:hover{ background:#154428; }
     .b-cancel { background:#f3e4e2; color:#c0492a; }
     .cap.full { opacity:.65; } .cap.full button, .cap .disabled { background:#e9e4da; color:#9B8E82; cursor:default; }
     .cap.mine { border-color:#7fae90; background:#eef7f0; }
     .cap.mine .tag { font-size:11.5px; font-weight:700; color:#2f6b46; margin-bottom:6px; }
     .cap.otherday .note { font-size:11.5px; color:#b6875a; }
-    .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#1F3D34; color:#fff; padding:11px 20px; border-radius:12px; font-weight:600; font-size:14px; opacity:0; transition:.2s; pointer-events:none; }
+    .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#1F3D34; color:#fff; padding:11px 20px; border-radius:12px; font-weight:700; font-size:14px; opacity:0; transition:.2s; pointer-events:none; }
     .toast.show { opacity:1; }
     .hint { color:#9B8E82; font-size:13.5px; text-align:center; margin-top:4px; }
   </style>

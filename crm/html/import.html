@@ -4,15 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ייבוא מטבלה — מערכת ניהול גנים</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
     h1 { font-size:26px; color:#1F3D34; margin-bottom:6px; }
     .lead { color:#9B8E82; font-size:14px; margin-bottom:24px; }
     .card { background:#FFF; border-radius:18px; padding:24px; box-shadow:0 4px 16px rgba(31,61,52,0.06); margin-bottom:22px; }
     .types { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
-    .type-btn { flex:1; min-width:150px; background:#F4EFE6; border:2px solid transparent; border-radius:14px; padding:16px; cursor:pointer; font-family:'Heebo'; text-align:center; transition:all .18s; }
+    .type-btn { flex:1; min-width:150px; background:#F4EFE6; border:2px solid transparent; border-radius:14px; padding:16px; cursor:pointer; font-family:'Alef'; text-align:center; transition:all .18s; }
     .type-btn .t-ico { font-size:26px; display:block; margin-bottom:6px; }
     .type-btn .t-lbl { font-weight:700; color:#1F3D34; font-size:15px; }
     .type-btn:hover { background:#ece6db; }
@@ -20,10 +20,10 @@
     .hint { background:#f3f8f3; border:1px solid #d9ead9; border-radius:12px; padding:14px 16px; font-size:13px; color:#3D3228; margin:18px 0; line-height:1.7; }
     .hint code { background:#1F3D34; color:#fff; padding:2px 8px; border-radius:6px; font-size:12px; margin:0 2px; display:inline-block; }
     label { display:block; font-size:13px; font-weight:700; color:#1F3D34; margin-bottom:8px; }
-    textarea { width:100%; min-height:160px; padding:14px; border:1.5px solid #e3ddd2; border-radius:12px; font-family:'Heebo',monospace; font-size:13px; outline:none; resize:vertical; direction:ltr; text-align:right; }
+    textarea { width:100%; min-height:160px; padding:14px; border:1.5px solid #e3ddd2; border-radius:12px; font-family:'Alef',monospace; font-size:13px; outline:none; resize:vertical; direction:ltr; text-align:right; }
     textarea:focus { border-color:#1F3D34; }
     .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:14px; }
-    .btn { background:#1F3D34; color:#fff; border:none; border-radius:12px; padding:13px 26px; font-family:'Heebo'; font-weight:700; font-size:14px; cursor:pointer; transition:all .2s; }
+    .btn { background:#1F3D34; color:#fff; border:none; border-radius:12px; padding:13px 26px; font-family:'Alef'; font-weight:700; font-size:14px; cursor:pointer; transition:all .2s; }
     .btn:hover { background:#154428; transform:translateY(-1px); }
     .btn.alt { background:#C4846C; }
     .btn.alt:hover { background:#a96b54; }
@@ -31,7 +31,7 @@
     .file-label { font-size:13px; color:#9B8E82; cursor:pointer; text-decoration:underline; }
     input[type=file] { display:none; }
     table { width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
-    th { background:#1F3D34; color:#fff; padding:10px 12px; text-align:right; font-weight:500; font-size:12px; position:sticky; top:0; }
+    th { background:#1F3D34; color:#fff; padding:10px 12px; text-align:right; font-weight:400; font-size:12px; position:sticky; top:0; }
     td { padding:9px 12px; border-bottom:1px solid #f0ece6; }
     tr.bad td { background:#fdf0ef; }
     .tbl-wrap { max-height:360px; overflow:auto; border-radius:12px; border:1px solid #f0ece6; }
@@ -39,7 +39,7 @@
     .pill { padding:8px 16px; border-radius:20px; font-weight:700; font-size:14px; }
     .pill.ok { background:#d4edda; color:#155724; }
     .pill.warn { background:#fff3cd; color:#856404; }
-    .msg { padding:14px 16px; border-radius:12px; margin-top:16px; font-size:14px; font-weight:600; display:none; }
+    .msg { padding:14px 16px; border-radius:12px; margin-top:16px; font-size:14px; font-weight:700; display:none; }
     .msg.show { display:block; }
     .msg.success { background:#d4edda; color:#155724; }
     .msg.error { background:#fdf0ef; color:#c0563f; }

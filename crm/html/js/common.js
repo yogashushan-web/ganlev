@@ -132,21 +132,21 @@ function renderTrashBin() {
     st.id = 'trash-style';
     st.textContent = [
       "#trashFab{position:fixed;bottom:18px;left:18px;z-index:9500;background:#6f6457;color:#fff;border:none;",
-      "border-radius:999px;padding:11px 16px;font-family:'Heebo',sans-serif;font-weight:700;font-size:13px;cursor:pointer;",
+      "border-radius:999px;padding:11px 16px;font-family:'Alef',sans-serif;font-weight:700;font-size:13px;cursor:pointer;",
       "box-shadow:0 6px 18px rgba(0,0,0,.25);display:flex;align-items:center;gap:6px;}",
       "#trashFab:hover{background:#564d42;}",
       "#trashOv{position:fixed;inset:0;background:rgba(31,61,52,.45);display:none;align-items:center;justify-content:center;z-index:99999;}",
       "#trashOv.show{display:flex;}",
-      "#trashOv .box{background:#fff;border-radius:18px;padding:24px;width:92%;max-width:480px;max-height:80vh;overflow:auto;font-family:'Heebo',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.3);}",
+      "#trashOv .box{background:#fff;border-radius:18px;padding:24px;width:92%;max-width:480px;max-height:80vh;overflow:auto;font-family:'Alef',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.3);}",
       "#trashOv h3{color:#1F3D34;margin-bottom:6px;}",
       "#trashOv .sub{color:#9B8E82;font-size:12px;margin-bottom:14px;}",
       ".tr-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid #f0ece6;}",
-      ".tr-item .lbl{font-size:13px;font-weight:600;}",
+      ".tr-item .lbl{font-size:13px;font-weight:700;}",
       ".tr-item .tag{font-size:11px;color:#9B8E82;font-weight:400;}",
-      ".tr-item button{border:none;border-radius:8px;padding:6px 11px;font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}",
+      ".tr-item button{border:none;border-radius:8px;padding:6px 11px;font-family:'Alef',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}",
       ".tr-restore{background:#1F7a4f;color:#fff;}",
       ".tr-purge{background:#e74c3c;color:#fff;}",
-      "#trashOv .close{margin-top:16px;width:100%;background:#f0ece6;border:none;border-radius:10px;padding:11px;font-family:'Heebo',sans-serif;font-weight:700;cursor:pointer;}",
+      "#trashOv .close{margin-top:16px;width:100%;background:#f0ece6;border:none;border-radius:10px;padding:11px;font-family:'Alef',sans-serif;font-weight:700;cursor:pointer;}",
     ].join('');
     document.head.appendChild(st);
   }
@@ -244,14 +244,16 @@ const NAP_ART = {
     '<path d="M3.6 6.2c0-.7.6-1.3 1.3-1.3h4.3v3.9H3.6zM14.8 4.9h4.3c.7 0 1.3.6 1.3 1.3v2.6h-5.6z" fill="#cfe0ec"/>' +
     '<path d="M8.3 13.4c2.4 1.3 5 1.3 7.4 0" stroke="#8fb2cd" stroke-width="1.2" fill="none" stroke-linecap="round"/>' +
     '<circle cx="12" cy="10.4" r=".9" fill="#cfe0ec"/>',
+  // "על הכתף": אם בפרופיל והתינוק עטוף בחיקה. מבין חמש האפשרויות
+  // שנבדקו זו היחידה שנקראת כשני אנשים גם בגודל 13 פיקסל — קו הגוף
+  // והזרוע נשאר צורה מזוהה, והתינוק הוא אובייקט נפרד שנושק אליה.
   'הנקה':
-    '<circle cx="7" cy="5" r="3.3" fill="#e8b48c"/>' +
-    '<path d="M3.6 8.4C2.6 10 2.2 12.2 2.2 14.6c0 3.2.6 5.8 1.6 7.2" fill="none" stroke="#e8b48c" stroke-width="3.4" stroke-linecap="round"/>' +
-    '<path d="M10.4 12.8c4.2-.9 8 .6 8.8 3.4.6 2.2-1.2 4.2-4 4.2h-5.4c-2 0-3.2-1.2-3.2-2.8 0-2 1.6-4.2 3.8-4.8z" fill="#cfe0ec" stroke="#8fb2cd" stroke-width="1.1" stroke-linejoin="round"/>' +
-    '<circle cx="11.8" cy="14" r="2.6" fill="#f0c9a8"/>' +
-    '<circle cx="11.2" cy="13.6" r=".7" fill="#4a3728"/><circle cx="13.1" cy="13.6" r=".7" fill="#4a3728"/>' +
-    '<path d="M5.6 12c1.2 2.6 2.8 4 4.6 4.6" fill="none" stroke="#e8b48c" stroke-width="2.4" stroke-linecap="round"/>' +
-    '<path d="M17.6 4.2c.9-1.4 3-1 3 .8 0 1.4-1.7 2.6-3 3.6-1.3-1-3-2.2-3-3.6 0-1.8 2.1-2.2 3-.8z" fill="#e8a0b4"/>',
+    '<path d="M3.4 21.6c0-5.4 3.2-9.4 7.2-9.4 1.6 0 3 .6 4.2 1.7" fill="none" stroke="#e8b48c" stroke-width="4" stroke-linecap="round"/>' +
+    '<circle cx="8.6" cy="5.6" r="3.6" fill="#e8b48c"/>' +
+    '<path d="M12.2 15c3.8-1 7.2.6 7.8 3.2.5 2.1-1.2 3.8-3.6 3.8h-4.4c-1.6 0-2.6-1-2.6-2.4 0-1.8 1-3.8 2.8-4.6z" fill="#cfe0ec" stroke="#8fb2cd" stroke-width="1.1" stroke-linejoin="round"/>' +
+    '<circle cx="14.6" cy="16" r="2.9" fill="#f0c9a8"/>' +
+    '<path d="M13.3 15.6h.01M16 15.6h.01" stroke="#4a3728" stroke-width="1.5" stroke-linecap="round"/>' +
+    '<path d="M13.6 17.7c.7.5 1.4.5 2.1 0" stroke="#4a3728" stroke-width=".85" fill="none" stroke-linecap="round"/>',
 };
 // טפסים שכבר נשלחו שמרו "דובי / בובה". השם קוצר ל"בובה", והכינוי
 // הזה מתרגם את הישן כדי שלא יישבר מה שההורים כבר מילאו.
@@ -302,18 +304,18 @@ function renderNavSidebar() {
       "button{transition:background .15s,box-shadow .15s,transform .1s,opacity .15s;}",
       "button:active{transform:scale(.97);}",
       // --- sidebar ---
-      "#crmSidebar{position:fixed;top:0;right:0;width:252px;height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#244c40 0%,#1c3e34 55%,#173229 100%);padding:24px 15px 22px;overflow-y:auto;z-index:9000;font-family:'Heebo',sans-serif;box-shadow:-4px 0 26px rgba(0,0,0,.16);}",
+      "#crmSidebar{position:fixed;top:0;right:0;width:252px;height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#244c40 0%,#1c3e34 55%,#173229 100%);padding:24px 15px 22px;overflow-y:auto;z-index:9000;font-family:'Alef',sans-serif;box-shadow:-4px 0 26px rgba(0,0,0,.16);}",
       "#crmSidebar .cs-logo,#crmSidebar a,#crmSidebar .cs-logout{flex-shrink:0;}",
       "#crmSidebar::-webkit-scrollbar{width:6px;}",
       "#crmSidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border:none;border-radius:6px;}",
-      "#crmSidebar .cs-logo{color:#fff;font-size:18px;font-weight:800;text-align:center;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.13);letter-spacing:.3px;}",
+      "#crmSidebar .cs-logo{color:#fff;font-size:18px;font-weight:700;text-align:center;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.13);letter-spacing:.3px;}",
       "#crmSidebar .cs-logo img{width:64px;height:64px;border-radius:50%;background:#fff;display:block;margin:0 auto 9px;object-fit:cover;box-shadow:0 5px 16px rgba(0,0,0,.28),0 0 0 4px rgba(255,255,255,.10);}",
-      "#crmSidebar .cs-logo .cs-sub{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.46);letter-spacing:2px;margin-top:3px;}",
-      "#crmSidebar a{display:flex;align-items:center;gap:11px;padding:11px 13px;color:rgba(255,255,255,.72);text-decoration:none;border-radius:11px;font-size:14px;font-weight:600;margin-bottom:4px;transition:background .16s,color .16s,transform .16s,box-shadow .16s;}",
+      "#crmSidebar .cs-logo .cs-sub{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.46);letter-spacing:2px;margin-top:3px;}",
+      "#crmSidebar a{display:flex;align-items:center;gap:11px;padding:11px 13px;color:rgba(255,255,255,.72);text-decoration:none;border-radius:11px;font-size:14px;font-weight:700;margin-bottom:4px;transition:background .16s,color .16s,transform .16s,box-shadow .16s;}",
       "#crmSidebar a span:first-child{width:24px;text-align:center;font-size:16px;flex-shrink:0;}",
       "#crmSidebar a:hover{background:rgba(255,255,255,.09);color:#fff;transform:translateX(-3px);}",
       "#crmSidebar a.active{background:linear-gradient(135deg,#C4846C,#b06f55);color:#fff;font-weight:700;box-shadow:0 6px 16px rgba(196,132,108,.42);}",
-      "#crmSidebar .cs-logout{margin:auto 0 0;align-self:stretch;padding:11px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.18);border-radius:11px;font-family:'Heebo';cursor:pointer;font-size:13px;font-weight:600;transition:background .16s,border-color .16s;}",
+      "#crmSidebar .cs-logout{margin:auto 0 0;align-self:stretch;padding:11px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.18);border-radius:11px;font-family:'Alef';cursor:pointer;font-size:13px;font-weight:700;transition:background .16s,border-color .16s;}",
       "#crmSidebar .cs-logout:hover{background:rgba(231,76,60,.88);border-color:transparent;color:#fff;}",
       "body{padding:26px 286px 44px 30px !important;}",
       // hamburger + backdrop: hidden on desktop, used as a slide-out drawer on mobile
@@ -417,10 +419,10 @@ async function renderGardenSwitcher() {
       '.gv-switcher{margin:0 0 18px;padding:12px;background:rgba(255,255,255,.06);',
       'border:1px solid rgba(255,255,255,.12);border-radius:14px;}',
       '.gv-title{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.6);',
-      "font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:9px;font-family:'Heebo',sans-serif;}",
+      "font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:9px;font-family:'Alef',sans-serif;}",
       '.gv-seg{display:block;width:100%;text-align:right;border:none;background:rgba(255,255,255,.08);',
-      "color:rgba(255,255,255,.86);padding:9px 12px;border-radius:9px;font-family:'Heebo',sans-serif;",
-      'font-size:13px;font-weight:600;cursor:pointer;margin-bottom:6px;transition:all .18s;}',
+      "color:rgba(255,255,255,.86);padding:9px 12px;border-radius:9px;font-family:'Alef',sans-serif;",
+      'font-size:13px;font-weight:700;cursor:pointer;margin-bottom:6px;transition:all .18s;}',
       '.gv-seg:last-child{margin-bottom:0;}',
       '.gv-seg:hover{background:rgba(255,255,255,.18);}',
       '.gv-seg.active{background:linear-gradient(135deg,#C4846C,#a96b54);color:#fff;',

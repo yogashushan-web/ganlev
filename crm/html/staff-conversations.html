@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>שיחות צוות · תיקי עובדים — מעגל השנה</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
     .wrap { max-width:860px; margin:0 auto; padding:22px 18px 60px; }
     .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:10px; }
     h1 { font-size:25px; color:#1F3D34; }
-    .back { color:#9B8E82; font-size:13px; text-decoration:none; font-weight:600; }
+    .back { color:#9B8E82; font-size:13px; text-decoration:none; font-weight:700; }
     .back:hover { color:#1F3D34; }
     .lead { color:#9B8E82; font-size:14px; margin-bottom:20px; max-width:680px; line-height:1.6; }
-    .flow { display:inline-flex; gap:6px; align-items:center; background:#efe9e0; border-radius:999px; padding:5px 13px; font-size:12px; font-weight:600; color:#6f6457; margin-top:4px; }
+    .flow { display:inline-flex; gap:6px; align-items:center; background:#efe9e0; border-radius:999px; padding:5px 13px; font-size:12px; font-weight:700; color:#6f6457; margin-top:4px; }
     .flow b { color:#1F3D34; }
     .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
     .error.show { display:block; }
@@ -33,13 +33,13 @@
     .file { display:none; }
     .file.show { display:block; }
     .file-head { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-    .file-head .big-av { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,#1F3D34,#356152); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:19px; }
+    .file-head .big-av { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,#1F3D34,#356152); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:19px; }
     .file-head h2 { font-size:21px; color:#1F3D34; }
     .file-head .sub { font-size:12px; color:#9B8E82; }
-    .btn-add { margin-right:auto; background:#1F3D34; color:#FFF; border:none; padding:11px 18px; border-radius:11px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn-add { margin-right:auto; background:#1F3D34; color:#FFF; border:none; padding:11px 18px; border-radius:11px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:13px; }
     .btn-add:hover { background:#154428; }
 
-    .group-title { font-size:12px; font-weight:800; color:#a05a3d; letter-spacing:.5px; margin:20px 0 10px; text-transform:none; }
+    .group-title { font-size:12px; font-weight:700; color:#a05a3d; letter-spacing:.5px; margin:20px 0 10px; text-transform:none; }
     .empty { color:#b6ab9d; font-size:14px; background:#fbf9f5; border:1px dashed #e3d9c8; border-radius:12px; padding:18px; text-align:center; }
 
     .card { background:#fff; border-radius:14px; padding:14px 16px; box-shadow:0 2px 11px rgba(0,0,0,.05); margin-bottom:11px; border-right:4px solid #C4846C; }
@@ -56,7 +56,7 @@
     .u-critical { background:#e0483f; } .u-important { background:#e8912f; } .u-calm { background:#5aa06e; }
     .c-goal { font-size:13px; color:#6f6457; margin-top:7px; line-height:1.5; }
     .c-actions { display:flex; gap:7px; margin-top:11px; flex-wrap:wrap; }
-    .c-actions button { border:none; border-radius:8px; padding:7px 14px; font-family:'Heebo'; font-size:12.5px; font-weight:700; cursor:pointer; }
+    .c-actions button { border:none; border-radius:8px; padding:7px 14px; font-family:'Alef'; font-size:12.5px; font-weight:700; cursor:pointer; }
     .a-do { background:#1F3D34; color:#fff; } .a-do:hover{ background:#154428; }
     .a-view { background:#efe9e0; color:#6f6457; }
     .a-edit { background:#f5efe6; color:#8a7a63; } .a-del { background:#f7e7e4; color:#c0492a; }
@@ -74,7 +74,7 @@
     .type-btn .tb-g { font-size:11.5px; color:#9B8E82; margin-top:3px; line-height:1.4; }
     label { display:block; font-size:13.5px; font-weight:700; color:#3D3228; margin:15px 0 6px; }
     .q-field { position:relative; }
-    textarea, select, input[type=date] { width:100%; padding:11px 12px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo'; font-size:14px; outline:none; background:#fff; }
+    textarea, select, input[type=date] { width:100%; padding:11px 12px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Alef'; font-size:14px; outline:none; background:#fff; }
     textarea:focus, select:focus, input:focus { border-color:#1F3D34; }
     textarea { resize:vertical; line-height:1.6; min-height:64px; padding-left:44px; }
     .mic { position:absolute; left:8px; bottom:8px; width:30px; height:30px; border-radius:50%; border:none; background:#efe9e0; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; }
@@ -84,9 +84,9 @@
     .note-box { background:#fdf5ec; border:1px solid #f0dcc4; border-radius:11px; padding:11px 13px; font-size:12.5px; color:#9a6b3a; line-height:1.55; margin-top:14px; }
     .row2 { display:flex; gap:10px; } .row2 > div { flex:1; }
     .actions { display:flex; gap:10px; margin-top:20px; }
-    .b-save { flex:1; background:#1F3D34; color:#fff; border:none; padding:12px; border-radius:11px; font-family:'Heebo'; font-weight:700; font-size:14px; cursor:pointer; }
+    .b-save { flex:1; background:#1F3D34; color:#fff; border:none; padding:12px; border-radius:11px; font-family:'Alef'; font-weight:700; font-size:14px; cursor:pointer; }
     .b-save:hover { background:#154428; }
-    .b-cancel { background:#efe9e0; color:#6f6457; border:none; padding:12px 18px; border-radius:11px; font-family:'Heebo'; font-weight:600; cursor:pointer; }
+    .b-cancel { background:#efe9e0; color:#6f6457; border:none; padding:12px 18px; border-radius:11px; font-family:'Alef'; font-weight:700; cursor:pointer; }
     .view-block { margin-bottom:14px; }
     .view-block .vq { font-size:12.5px; font-weight:700; color:#a05a3d; margin-bottom:2px; }
     .view-block .va { font-size:14px; color:#3D3228; line-height:1.6; white-space:pre-wrap; }
@@ -183,7 +183,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=23"></script>
+<script src="js/common.js?v=24"></script>
 <script src="js/api.js?v=21"></script>
 <script>
   const CONV_TYPES = {

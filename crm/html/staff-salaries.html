@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>צוות — מערכת גנים</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
     .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:10px; }
     .header h1 { font-size:26px; color:#1F3D34; }
     .acts { display:flex; gap:8px; flex-wrap:wrap; }
-    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:13px; }
     .btn-add:hover { background:#154428; }
-    .btn-link { background:#C4846C; color:#fff; border:none; padding:11px 18px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn-link { background:#C4846C; color:#fff; border:none; padding:11px 18px; border-radius:10px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:13px; }
     .btn-link:hover { background:#a96b54; }
     .error, .success { padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
     .error { background:#fdf0ef; color:#c94147; } .error.show { display:block; }
@@ -24,10 +24,10 @@
     @media(max-width:700px){ .form-row{grid-template-columns:1fr 1fr;} }
     .fg { margin-bottom:14px; }
     label { display:block; font-size:12px; color:#3D3228; font-weight:700; margin-bottom:5px; }
-    input, select, textarea { width:100%; padding:10px 12px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:14px; outline:none; }
+    input, select, textarea { width:100%; padding:10px 12px; border:1px solid #e8e4de; border-radius:9px; font-family:'Alef'; font-size:14px; outline:none; }
     input:focus, select:focus { border-color:#1F3D34; }
-    .btn-submit { background:#1F3D34; color:#FFF; border:none; padding:11px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; }
-    .btn-cancel { background:#f0ece6; color:#333; border:none; padding:11px 22px; border-radius:10px; cursor:pointer; font-family:'Heebo'; margin-right:10px; }
+    .btn-submit { background:#1F3D34; color:#FFF; border:none; padding:11px 22px; border-radius:10px; cursor:pointer; font-family:'Alef'; font-weight:700; }
+    .btn-cancel { background:#f0ece6; color:#333; border:none; padding:11px 22px; border-radius:10px; cursor:pointer; font-family:'Alef'; margin-right:10px; }
     .tbl-wrap { overflow-x:auto; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
     table { width:100%; border-collapse:collapse; background:#FFF; }
     th { background:#1F3D34; color:#FFF; padding:12px 14px; font-size:12px; text-align:right; white-space:nowrap; }
@@ -35,9 +35,9 @@
     tr:last-child td { border-bottom:none; }
     tr:hover td { background:#FAF8F4; }
     .name-link { color:#1F3D34; font-weight:700; cursor:pointer; text-decoration:underline; }
-    a.wa { color:#1F7a4f; text-decoration:none; font-weight:600; direction:ltr; display:inline-block; }
+    a.wa { color:#1F7a4f; text-decoration:none; font-weight:700; direction:ltr; display:inline-block; }
     .muted { color:#c4bcae; }
-    .btn-edit,.btn-delete { padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; }
+    .btn-edit,.btn-delete { padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Alef'; }
     .btn-edit { background:#C4846C; color:#FFF; } .btn-delete { background:#e74c3c; color:#FFF; }
     .loading { text-align:center; padding:40px; color:#9B8E82; }
     .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-left:7px; vertical-align:middle; }
@@ -45,23 +45,23 @@
     .dot.red { background:#e74c3c; box-shadow:0 0 0 3px rgba(231,76,60,.15); }
     .dot-toggle { cursor:pointer; display:inline-block; padding:5px 8px; margin-left:2px; border-radius:8px; vertical-align:middle; transition:background .12s; }
     .dot-toggle:hover { background:#efe9df; }
-    .sec-title { font-size:17px; font-weight:800; color:#1F3D34; margin:0 0 10px; display:flex; align-items:center; gap:5px; }
-    .sec-title .cnt { color:#9B8E82; font-weight:600; font-size:13px; }
+    .sec-title { font-size:17px; font-weight:700; color:#1F3D34; margin:0 0 10px; display:flex; align-items:center; gap:5px; }
+    .sec-title .cnt { color:#9B8E82; font-weight:700; font-size:13px; }
     .sec-title .chev { font-size:13px; color:#C4846C; width:15px; display:inline-block; }
-    .btn-toggle { background:#e8e4de; color:#3D3228; padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Heebo'; }
+    .btn-toggle { background:#e8e4de; color:#3D3228; padding:6px 11px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Alef'; }
     .btn-toggle:hover { background:#dcd6cc; }
     .empty-sec { padding:14px; color:#9B8E82; font-size:13px; }
     /* per-employee documents in the profile modal */
     .docs-wrap { margin-top:18px; border-top:1px solid #f0ece6; padding-top:14px; }
-    .docs-head { font-weight:800; color:#1F3D34; margin-bottom:11px; font-size:15px; }
+    .docs-head { font-weight:700; color:#1F3D34; margin-bottom:11px; font-size:15px; }
     .doc-card { background:#FAF8F4; border:1px solid #f0ece6; border-radius:12px; padding:11px 12px; margin-bottom:9px; }
     .doc-card .dc-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
     .doc-card .dc-name { font-weight:700; font-size:13px; color:#3D3228; }
-    .doc-add { background:#1F3D34; color:#fff; border:none; border-radius:8px; padding:5px 12px; font-size:12px; font-family:'Heebo'; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .doc-add { background:#1F3D34; color:#fff; border:none; border-radius:8px; padding:5px 12px; font-size:12px; font-family:'Alef'; font-weight:700; cursor:pointer; white-space:nowrap; }
     .doc-add:hover { background:#154428; }
     .doc-files { margin-top:9px; display:flex; flex-direction:column; gap:6px; }
     .doc-file { display:flex; justify-content:space-between; align-items:center; gap:8px; background:#fff; border:1px solid #eee; border-radius:8px; padding:7px 10px; font-size:12px; }
-    .doc-file a { color:#1F7a4f; text-decoration:none; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .doc-file a { color:#1F7a4f; text-decoration:none; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .doc-file .del { background:none; border:none; color:#e74c3c; cursor:pointer; font-size:14px; padding:0 2px; }
     .doc-empty { color:#c4bcae; font-size:12px; }
     /* profile modal */
@@ -72,8 +72,8 @@
     .pf .role { color:#9B8E82; font-size:13px; margin-bottom:16px; }
     .pf .row { display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid #f3efe8; font-size:14px; }
     .pf .row .k { color:#9B8E82; }
-    .pf .row .v { font-weight:600; text-align:left; }
-    .pf .close { margin-top:18px; width:100%; background:#f0ece6; border:none; border-radius:10px; padding:11px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
+    .pf .row .v { font-weight:700; text-align:left; }
+    .pf .close { margin-top:18px; width:100%; background:#f0ece6; border:none; border-radius:10px; padding:11px; font-family:'Alef'; font-weight:700; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -137,7 +137,7 @@
 
   <div class="ov" id="pfOv"><div class="pf" id="pfBox"></div></div>
 
-<script src="js/common.js?v=23"></script>
+<script src="js/common.js?v=24"></script>
 <script src="js/api.js?v=21"></script>
 <script>
 let staff = [];

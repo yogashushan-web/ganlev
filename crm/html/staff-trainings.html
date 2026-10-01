@@ -4,25 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>הדרכות צוות — מאגר וציר שנה</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
     .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:10px; }
     h1 { font-size:26px; color:#1F3D34; }
-    .back { color:#9B8E82; font-size:13px; text-decoration:none; font-weight:600; }
+    .back { color:#9B8E82; font-size:13px; text-decoration:none; font-weight:700; }
     .back:hover { color:#1F3D34; }
     .lead { color:#9B8E82; font-size:14px; margin-bottom:18px; max-width:720px; line-height:1.6; }
     .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
     .error.show { display:block; }
-    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn-add { background:#1F3D34; color:#FFF; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:13px; }
     .btn-add:hover { background:#154428; }
 
     /* search */
     .searchbar { background:#FFF; border-radius:14px; padding:12px 16px; box-shadow:0 2px 11px rgba(0,0,0,0.05); margin-bottom:20px; display:flex; align-items:center; gap:10px; }
-    .searchbar input { flex:1; border:none; outline:none; font-family:'Heebo'; font-size:15px; background:transparent; }
+    .searchbar input { flex:1; border:none; outline:none; font-family:'Alef'; font-size:15px; background:transparent; }
     .searchbar .ic { font-size:18px; color:#9B8E82; }
-    .searchbar .clr { background:#efe9e0; border:none; border-radius:8px; padding:6px 12px; font-family:'Heebo'; font-size:12px; font-weight:600; color:#6f6457; cursor:pointer; display:none; }
+    .searchbar .clr { background:#efe9e0; border:none; border-radius:8px; padding:6px 12px; font-family:'Alef'; font-size:12px; font-weight:700; color:#6f6457; cursor:pointer; display:none; }
     .result-note { color:#9B8E82; font-size:13px; margin:-8px 0 16px; }
 
     /* timeline */
@@ -35,8 +35,8 @@
     .month.empty .m-card { background:#fbf9f5; box-shadow:none; }
     .m-head { display:flex; align-items:center; gap:9px; margin-bottom:11px; }
     .m-emoji { font-size:20px; }
-    .m-name { font-size:17px; font-weight:800; color:#1F3D34; }
-    .m-head .add-mini { margin-right:auto; background:none; border:1.5px dashed #d8cdba; color:#9B8E82; border-radius:8px; padding:5px 11px; font-family:'Heebo'; font-size:12px; font-weight:600; cursor:pointer; }
+    .m-name { font-size:17px; font-weight:700; color:#1F3D34; }
+    .m-head .add-mini { margin-right:auto; background:none; border:1.5px dashed #d8cdba; color:#9B8E82; border-radius:8px; padding:5px 11px; font-family:'Alef'; font-size:12px; font-weight:700; cursor:pointer; }
     .m-head .add-mini:hover { border-color:#C4846C; color:#a05a3d; }
     .m-empty { color:#b6ab9d; font-size:13px; }
 
@@ -48,7 +48,7 @@
     .t-date { font-size:12px; color:#9B8E82; margin-right:auto; white-space:nowrap; }
     .t-notes { font-size:13px; color:#6f6457; margin-top:6px; line-height:1.5; white-space:pre-wrap; }
     .t-actions { display:flex; gap:7px; margin-top:9px; }
-    .t-actions button { border:none; border-radius:7px; padding:5px 12px; font-family:'Heebo'; font-size:12px; font-weight:600; cursor:pointer; }
+    .t-actions button { border:none; border-radius:7px; padding:5px 12px; font-family:'Alef'; font-size:12px; font-weight:700; cursor:pointer; }
     .b-edit { background:#C4846C; color:#fff; } .b-del { background:#f3e4e2; color:#c0492a; }
     mark { background:#fff1a8; padding:0 1px; border-radius:2px; }
 
@@ -57,13 +57,13 @@
     .modal-ov.show { display:flex; }
     .modal { background:#fff; border-radius:16px; padding:22px; width:100%; max-width:460px; box-shadow:0 18px 50px rgba(0,0,0,.25); max-height:88vh; overflow:auto; }
     .modal h3 { font-size:18px; color:#1F3D34; margin-bottom:14px; }
-    .modal label { display:block; font-size:13px; font-weight:600; color:#6f6457; margin:10px 0 5px; }
-    .modal input, .modal textarea { width:100%; padding:10px 12px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .modal label { display:block; font-size:13px; font-weight:700; color:#6f6457; margin:10px 0 5px; }
+    .modal input, .modal textarea { width:100%; padding:10px 12px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Alef'; font-size:14px; outline:none; }
     .modal input:focus, .modal textarea:focus { border-color:#1F3D34; }
     .modal textarea { resize:vertical; line-height:1.6; }
     .modal-actions { display:flex; gap:10px; margin-top:18px; }
-    .b-save { flex:1; background:#1F3D34; color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
-    .b-cancel { flex:1; background:#efe9e0; color:#6f6457; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:600; cursor:pointer; }
+    .b-save { flex:1; background:#1F3D34; color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Alef'; font-weight:700; cursor:pointer; }
+    .b-cancel { flex:1; background:#efe9e0; color:#6f6457; border:none; padding:11px; border-radius:10px; font-family:'Alef'; font-weight:700; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -107,7 +107,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=23"></script>
+<script src="js/common.js?v=24"></script>
 <script src="js/api.js?v=21"></script>
 <script>
 const CAL = 'staff-training';   // stored as events with calendar='staff-training' (isolated from other calendars)

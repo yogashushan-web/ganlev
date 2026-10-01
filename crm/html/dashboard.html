@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>לוח בקרה — מערכת ניהול גנים</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
     .header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #e8e4de; }
     .header h1 { font-size:26px; color:#1F3D34; }
     .header .sub { font-size:13px; color:#9B8E82; margin-top:4px; }
@@ -18,14 +18,14 @@
 
     .chips { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px; }
     @media(max-width:680px){ .chips{ grid-template-columns:1fr; } }
-    .chip-s { background:#FFF; border-radius:16px; padding:16px 18px; box-shadow:0 4px 16px rgba(31,61,52,.06); font-size:14px; font-weight:600; color:#6f6457; display:flex; align-items:center; justify-content:space-between; border-right:4px solid #C4846C; transition:transform .15s, box-shadow .18s; }
+    .chip-s { background:#FFF; border-radius:16px; padding:16px 18px; box-shadow:0 4px 16px rgba(31,61,52,.06); font-size:14px; font-weight:700; color:#6f6457; display:flex; align-items:center; justify-content:space-between; border-right:4px solid #C4846C; transition:transform .15s, box-shadow .18s; }
     .chip-s:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(31,61,52,.10); }
     .chip-s:nth-child(1){ border-right-color:#C4846C; }
     .chip-s:nth-child(2){ border-right-color:#2D5A50; }
     .chip-s:nth-child(3){ border-right-color:#d97706; }
-    .chip-s b { color:#1F3D34; font-size:24px; font-weight:800; }
+    .chip-s b { color:#1F3D34; font-size:24px; font-weight:700; }
 
-    .cal-section { font-size:18px; font-weight:800; color:#1F3D34; margin:0 0 12px; cursor:pointer; user-select:none; display:flex; align-items:center; gap:8px; padding:6px 6px; border-radius:9px; transition:background .15s; }
+    .cal-section { font-size:18px; font-weight:700; color:#1F3D34; margin:0 0 12px; cursor:pointer; user-select:none; display:flex; align-items:center; gap:8px; padding:6px 6px; border-radius:9px; transition:background .15s; }
     .cal-section:hover { background:rgba(31,61,52,.045); }
     .cal-section .chev { font-size:13px; color:#9B8E82; transition:transform .2s; }
     .cal-section.collapsed { margin-bottom:18px; }
@@ -40,9 +40,9 @@
     .cal-nav .nav-row { display:flex; align-items:center; gap:6px; }
     .cal-nav button { border:none; background:#F4EFE6; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:#1F3D34; }
     .cal-nav button:hover { background:#e8e0d4; }
-    .cal-nav select { font-family:'Heebo'; font-weight:700; color:#1F3D34; background:#F4EFE6; border:none; border-radius:9px; padding:0 8px; height:32px; font-size:14px; cursor:pointer; min-width:112px; text-align:center; text-align-last:center; }
+    .cal-nav select { font-family:'Alef'; font-weight:700; color:#1F3D34; background:#F4EFE6; border:none; border-radius:9px; padding:0 8px; height:32px; font-size:14px; cursor:pointer; min-width:112px; text-align:center; text-align-last:center; }
     .cal-nav select:hover { background:#e8e0d4; }
-    .cal-nav .today-btn { align-self:stretch; width:150px; height:auto; border-radius:12px; font-size:16px; font-weight:800; background:#C4846C; color:#fff; }
+    .cal-nav .today-btn { align-self:stretch; width:150px; height:auto; border-radius:12px; font-size:16px; font-weight:700; background:#C4846C; color:#fff; }
     .cal-nav .today-btn:hover { background:#a96b54; }
 
     /* day detail view */
@@ -52,11 +52,11 @@
     .day-body { max-height:62vh; overflow:auto; display:flex; flex-direction:column; gap:10px; }
     .day-item { display:flex; align-items:center; gap:13px; padding:14px 16px; border-radius:13px; background:#faf8f4; border-right:4px solid #C4846C; }
     .day-item[onclick]:hover { background:#f1ebe1; }
-    .day-item .di-time { font-weight:800; color:#6f6457; font-size:14px; min-width:54px; text-align:center; }
+    .day-item .di-time { font-weight:700; color:#6f6457; font-size:14px; min-width:54px; text-align:center; }
     .day-item .di-title { font-weight:700; color:#1F3D34; font-size:15.5px; line-height:1.4; }
     .day-item .di-cat { font-size:12px; color:#9B8E82; margin-top:2px; }
     .day-empty { color:#b6ab9d; text-align:center; padding:30px 10px; font-size:15px; }
-    .btn-add-evt { background:#C4846C; color:#fff; border:none; padding:9px 16px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:13px; }
+    .btn-add-evt { background:#C4846C; color:#fff; border:none; padding:9px 16px; border-radius:10px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:13px; }
     .btn-add-evt:hover { background:#a96b54; }
 
     .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
@@ -67,7 +67,7 @@
     .cal-cell.today { outline:2px solid #C4846C; background:#fdf3ee; }
     .cal-d { font-size:12px; font-weight:700; color:#6f6457; margin-bottom:4px; }
     .cal-d .he-d { font-weight:400; color:#b3a995; font-size:11px; }
-    .ev-chip { font-size:10.5px; padding:2px 6px; border-radius:5px; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
+    .ev-chip { font-size:10.5px; padding:2px 6px; border-radius:5px; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; }
 
     .legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; font-size:11.5px; color:#6f6457; }
     .legend span { display:inline-flex; align-items:center; gap:5px; }
@@ -86,10 +86,10 @@
     .modal-ov { padding:16px 0; }
     .modal h3 { color:#1F3D34; margin-bottom:18px; }
     .modal label { display:block; font-size:12px; font-weight:700; color:#3D3228; margin:12px 0 6px; }
-    .modal input, .modal select, .modal textarea { width:100%; padding:11px 13px; border:1px solid #e8e4de; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .modal input, .modal select, .modal textarea { width:100%; padding:11px 13px; border:1px solid #e8e4de; border-radius:10px; font-family:'Alef'; font-size:14px; outline:none; }
     .modal input:focus, .modal select:focus { border-color:#1F3D34; }
     .modal-actions { display:flex; gap:10px; margin-top:20px; }
-    .modal-actions button { flex:1; padding:12px; border:none; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
+    .modal-actions button { flex:1; padding:12px; border:none; border-radius:10px; font-family:'Alef'; font-weight:700; cursor:pointer; }
     .b-save { background:#1F3D34; color:#fff; }
     .b-cancel { background:#f0ece6; color:#333; }
     .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
@@ -188,17 +188,17 @@
       <div id="smWrap" style="display:none; margin-top:8px; background:#f6f3fb; border:1px solid #e4dcf3; border-radius:12px; padding:12px 13px;">
         <div style="display:flex; gap:10px;">
           <div id="smTypeWrap" style="flex:1;"><label style="margin-top:0;">סוג ההדרכה</label>
-            <select id="smType" onchange="renderSmPrep()" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;"></select></div>
+            <select id="smType" onchange="renderSmPrep()" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Alef'; font-size:14px;"></select></div>
           <div id="smStaffWrap" style="flex:1;"><label style="margin-top:0;">עובד/ת</label>
-            <select id="smStaff" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;"></select></div>
+            <select id="smStaff" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Alef'; font-size:14px;"></select></div>
         </div>
         <div id="smFeedbackWrap" style="display:none; margin-top:9px;">
-          <label style="display:flex; align-items:center; gap:7px; font-weight:600; color:#5b5147; cursor:pointer; margin:0;"><input type="checkbox" id="smFeedback" style="width:16px; height:16px;"> זו שיחת משוב</label>
+          <label style="display:flex; align-items:center; gap:7px; font-weight:700; color:#5b5147; cursor:pointer; margin:0;"><input type="checkbox" id="smFeedback" style="width:16px; height:16px;"> זו שיחת משוב</label>
         </div>
         <label>כותרת למפגש <span style="font-weight:400; color:#9B8E82;">(לא חובה)</span></label>
-        <input type="text" id="smTitle" placeholder="למשל: הדרכה על מעברים בגן" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;">
+        <input type="text" id="smTitle" placeholder="למשל: הדרכה על מעברים בגן" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Alef'; font-size:14px;">
         <label>דחיפות</label>
-        <select id="smUrg" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Heebo'; font-size:14px;">
+        <select id="smUrg" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid #e0d8cf; border-radius:9px; font-family:'Alef'; font-size:14px;">
           <option value="critical">🔴 קריטי · תזכורת כל שעתיים</option>
           <option value="important" selected>🟠 חשוב · פעם ביום</option>
           <option value="calm">🟢 רגוע · פעם ב-3 ימים</option>
@@ -209,20 +209,20 @@
       </div>
       <div id="evtNotesWrap" style="display:none;">
         <label>תוכן ההודעה <span style="font-weight:400; color:#9B8E82;">(אופציונלי)</span></label>
-        <textarea id="evtNotes" rows="5" oninput="document.getElementById('evtCopyBtn').style.display = this.value.trim() ? 'inline-block' : 'none'" placeholder="הדביקי כאן את ההודעה המלאה לשליחה בקבוצת ההורים..." style="width:100%; box-sizing:border-box; font-family:'Heebo'; font-size:14px; padding:10px; border:1px solid #e0d8cf; border-radius:10px; resize:vertical; line-height:1.6;"></textarea>
-        <button id="evtCopyBtn" type="button" onclick="copyEvtNotes()" style="display:none; margin-top:6px; background:#0d9488; color:#fff; border:none; padding:8px 14px; border-radius:9px; font-family:'Heebo'; font-weight:600; font-size:13px; cursor:pointer;">📋 העתק את ההודעה</button>
+        <textarea id="evtNotes" rows="5" oninput="document.getElementById('evtCopyBtn').style.display = this.value.trim() ? 'inline-block' : 'none'" placeholder="הדביקי כאן את ההודעה המלאה לשליחה בקבוצת ההורים..." style="width:100%; box-sizing:border-box; font-family:'Alef'; font-size:14px; padding:10px; border:1px solid #e0d8cf; border-radius:10px; resize:vertical; line-height:1.6;"></textarea>
+        <button id="evtCopyBtn" type="button" onclick="copyEvtNotes()" style="display:none; margin-top:6px; background:#0d9488; color:#fff; border:none; padding:8px 14px; border-radius:9px; font-family:'Alef'; font-weight:700; font-size:13px; cursor:pointer;">📋 העתק את ההודעה</button>
       </div>
       <div style="font-size:11px; color:#9B8E82; margin-top:8px; line-height:1.5;">לאירוע מתמשך (כמו חופשה) בחרי תאריך סיום מאוחר יותר — ייווצר אוטומטית לכל יום בטווח. בחירת קטגוריה ממלאת שעות ברירת מחדל. בקטגוריית "הודעה בקבוצה" אפשר לשמור הודעה ארוכה ולהעתיק אותה בתאריך השליחה.</div>
       <div class="modal-actions">
         <button class="b-save" onclick="saveEvt()">שמור</button>
         <button class="b-cancel" onclick="closeEvt()">ביטול</button>
       </div>
-      <button id="evtDelBtn" onclick="delCurrentEvt()" style="display:none; width:100%; margin-top:10px; background:#e74c3c; color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer;">🗑 מחק אירוע</button>
+      <button id="evtDelBtn" onclick="delCurrentEvt()" style="display:none; width:100%; margin-top:10px; background:#e74c3c; color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Alef'; font-weight:700; cursor:pointer;">🗑 מחק אירוע</button>
     </div>
   </div>
 
   <style>
-    #smPrep textarea, #convBody textarea { width:100%; box-sizing:border-box; font-family:'Heebo'; font-size:14px; padding:9px 10px 9px 40px; border:1px solid #e0d8cf; border-radius:9px; resize:vertical; line-height:1.55; min-height:52px; }
+    #smPrep textarea, #convBody textarea { width:100%; box-sizing:border-box; font-family:'Alef'; font-size:14px; padding:9px 10px 9px 40px; border:1px solid #e0d8cf; border-radius:9px; resize:vertical; line-height:1.55; min-height:52px; }
     .sm-q { position:relative; margin-top:8px; }
     .sm-q label, #convBody label { display:block; font-size:12.5px; font-weight:700; color:#5b5147; margin:8px 0 3px; }
     .sm-mic { position:absolute; left:6px; bottom:6px; width:28px; height:28px; border-radius:50%; border:none; background:#efe9e0; cursor:pointer; font-size:14px; }
@@ -241,14 +241,14 @@
         <button class="b-save" id="convSaveBtn" onclick="saveConv()">שמור סיכום · סמן כבוצע ✓</button>
         <button class="b-cancel" onclick="closeConv()">סגור</button>
       </div>
-      <button id="convDelBtn" onclick="delConv()" style="width:100%; margin-top:10px; background:#e74c3c; color:#fff; border:none; padding:10px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer;">🗑 מחק שיחה</button>
+      <button id="convDelBtn" onclick="delConv()" style="width:100%; margin-top:10px; background:#e74c3c; color:#fff; border:none; padding:10px; border-radius:10px; font-family:'Alef'; font-weight:700; cursor:pointer;">🗑 מחק שיחה</button>
     </div>
   </div>
 
   <style>
     .bc-ctx { background:#fdeef4; color:#a03b64; border-radius:11px; padding:9px 13px; font-size:13px; font-weight:700; margin-bottom:12px; }
     .bc-purpose { background:#faf8f4; border:1px solid #f0ece6; border-radius:11px; padding:11px 13px; font-size:13px; color:#6f6457; line-height:1.6; white-space:pre-wrap; margin-bottom:6px; }
-    .bc-sec { font-size:12.5px; font-weight:800; color:#d6336c; margin:14px 0 8px; }
+    .bc-sec { font-size:12.5px; font-weight:700; color:#d6336c; margin:14px 0 8px; }
     .prow { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #f0ece6; border-radius:11px; padding:9px 12px; margin-bottom:8px; flex-wrap:wrap; }
     .prow .pnm { font-weight:700; color:#3D3228; font-size:14px; margin-left:auto; }
     .pbtn { text-decoration:none; border-radius:9px; padding:7px 13px; font-size:12.5px; font-weight:700; }
@@ -263,8 +263,8 @@
         <button class="b-save" onclick="saveBc()">💾 שמור בתיק</button>
         <button class="b-cancel" onclick="closeBc()">סגור</button>
       </div>
-      <button onclick="copyBcGroup()" style="width:100%; margin-top:10px; background:#0d9488; color:#fff; border:none; padding:10px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer;">📋 העתק לקבוצת הצוות</button>
-      <button onclick="delBc()" style="width:100%; margin-top:8px; background:#f3e4e2; color:#c0492a; border:none; padding:9px; border-radius:10px; font-family:'Heebo'; font-weight:600; cursor:pointer;">🗑 מחק תזכורת</button>
+      <button onclick="copyBcGroup()" style="width:100%; margin-top:10px; background:#0d9488; color:#fff; border:none; padding:10px; border-radius:10px; font-family:'Alef'; font-weight:700; cursor:pointer;">📋 העתק לקבוצת הצוות</button>
+      <button onclick="delBc()" style="width:100%; margin-top:8px; background:#f3e4e2; color:#c0492a; border:none; padding:9px; border-radius:10px; font-family:'Alef'; font-weight:700; cursor:pointer;">🗑 מחק תזכורת</button>
     </div>
   </div>
 
@@ -289,7 +289,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=23"></script>
+<script src="js/common.js?v=24"></script>
 <script src="js/api.js?v=21"></script>
 <script>
 const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -857,10 +857,10 @@ function renderConv() {
   }
   document.getElementById('convSaveBtn').style.display = '';
   const tp = convTypeInfo(convCard.conv_type);
-  let h = '<div class="conv-view"><div style="font-size:12px;font-weight:800;color:#7c3aed;">כרטיס הכנה' + (tp ? ' · ' + tp.emoji + ' ' + tp.label : '') + '</div>';
+  let h = '<div class="conv-view"><div style="font-size:12px;font-weight:700;color:#7c3aed;">כרטיס הכנה' + (tp ? ' · ' + tp.emoji + ' ' + tp.label : '') + '</div>';
   (convCard.prep || []).forEach(p => { h += `<div class="vq">${esc(p.q)}</div><div class="va ${p.a ? '' : 'empty'}">${esc(p.a || '—')}</div>`; });
   h += '</div><div style="height:1px;background:#efe6d8;margin:14px 0;"></div>';
-  h += '<div style="font-size:12px;font-weight:800;color:#2f6b46;">ביצוע וסיכום' + (convCard.status === 'done' ? ' ✓ (בוצע — אפשר לעדכן)' : '') + '</div>';
+  h += '<div style="font-size:12px;font-weight:700;color:#2f6b46;">ביצוע וסיכום' + (convCard.status === 'done' ? ' ✓ (בוצע — אפשר לעדכן)' : '') + '</div>';
   const s = convCard.summary || {};
   SM_SUMMARY_QS.forEach((it, i) => {
     h += `<div class="sm-q"><label>${esc(it.q)}</label>

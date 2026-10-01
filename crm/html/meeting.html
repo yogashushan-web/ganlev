@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>זמן הורים — גן לב ❤️</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; padding:18px; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; padding:18px; }
     .wrap { max-width:680px; margin:0 auto; }
     .hero { background:#FFF; border-radius:18px; padding:24px 22px; box-shadow:0 2px 14px rgba(0,0,0,0.06); margin-bottom:18px; }
     .hero h1 { font-size:24px; color:#1F3D34; margin-bottom:10px; }
     .hero p { font-size:15px; line-height:1.7; color:#5c5347; }
     .hero .hint { font-size:13px; color:#9B8E82; margin-top:12px; }
-    .msg { padding:13px 15px; border-radius:12px; margin-bottom:16px; font-weight:600; display:none; }
+    .msg { padding:13px 15px; border-radius:12px; margin-bottom:16px; font-weight:700; display:none; }
     .msg.show { display:block; }
     .msg.ok { background:#dcfce7; color:#166534; }
     .msg.err { background:#fdf0ef; color:#c94147; }
@@ -21,13 +21,13 @@
     .day { background:#FFF; border-radius:16px; padding:16px 18px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:14px; }
     .day h3 { font-size:16px; color:#1F3D34; margin-bottom:12px; border-bottom:2px solid #f0ece6; padding-bottom:9px; }
     .slots { display:flex; flex-wrap:wrap; gap:9px; }
-    .slot { border:1.5px solid #cfe3d8; background:#f4faf6; color:#1F3D34; border-radius:11px; padding:10px 14px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; text-align:center; transition:all .15s; }
+    .slot { border:1.5px solid #cfe3d8; background:#f4faf6; color:#1F3D34; border-radius:11px; padding:10px 14px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:14px; text-align:center; transition:all .15s; }
     .slot:hover { background:#1F3D34; color:#fff; border-color:#1F3D34; transform:translateY(-1px); }
     .slot.taken { background:#f3f0eb; color:#9b8f7e; border-color:#e8e2d8; cursor:default; }
     .slot.taken:hover { transform:none; background:#f3f0eb; color:#9b8f7e; border-color:#e8e2d8; }
-    .slot.taken .who { display:block; font-size:11px; font-weight:600; margin-top:2px; opacity:.85; }
+    .slot.taken .who { display:block; font-size:11px; font-weight:700; margin-top:2px; opacity:.85; }
     .slot.mine { border-color:#C4846C; background:#fbf1ec; }
-    .cancel-mine { display:block; margin-top:5px; font-size:11px; color:#c0492a; background:none; border:none; cursor:pointer; font-family:'Heebo'; font-weight:700; text-decoration:underline; }
+    .cancel-mine { display:block; margin-top:5px; font-size:11px; color:#c0492a; background:none; border:none; cursor:pointer; font-family:'Alef'; font-weight:700; text-decoration:underline; }
     .empty { text-align:center; color:#9B8E82; padding:36px 12px; font-size:15px; }
 
     .ov { position:fixed; inset:0; background:rgba(31,61,52,.5); display:none; align-items:center; justify-content:center; z-index:99; padding:18px; }
@@ -36,7 +36,7 @@
     .modal h2 { color:#1F3D34; font-size:19px; margin-bottom:4px; }
     .modal .when { color:#9B8E82; font-size:14px; margin-bottom:16px; }
     .modal label { display:block; font-size:13px; font-weight:700; color:#3D3228; margin:14px 0 6px; }
-    .modal input[type=text], .modal textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Heebo'; font-size:15px; outline:none; text-align:right; }
+    .modal input[type=text], .modal textarea { width:100%; padding:12px 14px; border:1.5px solid #e3ddd2; border-radius:11px; font-family:'Alef'; font-size:15px; outline:none; text-align:right; }
     .modal input:focus, .modal textarea:focus { border-color:#1F3D34; }
     .ac { position:relative; }
     .ac-list { position:absolute; top:100%; right:0; left:0; background:#fff; border:1.5px solid #e3ddd2; border-top:none; border-radius:0 0 12px 12px; max-height:230px; overflow:auto; z-index:5; display:none; box-shadow:0 10px 24px rgba(0,0,0,.13); }
@@ -47,15 +47,15 @@
     .ac-item b { color:#1F3D34; }
     .ac-empty { padding:12px 14px; color:#9B8E82; font-size:14px; }
     .parents { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
-    .pchk { display:flex; align-items:center; gap:9px; background:#FAF8F4; border:1.5px solid #eee6da; border-radius:10px; padding:10px 12px; cursor:pointer; font-size:15px; font-weight:600; }
+    .pchk { display:flex; align-items:center; gap:9px; background:#FAF8F4; border:1.5px solid #eee6da; border-radius:10px; padding:10px 12px; cursor:pointer; font-size:15px; font-weight:700; }
     .pchk input { width:18px; height:18px; accent-color:#1F3D34; }
     .pnote { font-size:12px; color:#9B8E82; margin-top:6px; }
-    .mErr { color:#c94147; font-size:13px; font-weight:600; margin-top:10px; min-height:16px; }
+    .mErr { color:#c94147; font-size:13px; font-weight:700; margin-top:10px; min-height:16px; }
     .mBtns { display:flex; gap:10px; margin-top:18px; }
-    .ok { flex:1; background:#1F3D34; color:#fff; border:none; padding:13px; border-radius:12px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:15px; }
+    .ok { flex:1; background:#1F3D34; color:#fff; border:none; padding:13px; border-radius:12px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:15px; }
     .ok:hover { background:#154428; }
     .ok:disabled { background:#9aa7a0; cursor:progress; }
-    .cancelb { background:#f0ece6; color:#333; border:none; padding:13px 20px; border-radius:12px; cursor:pointer; font-family:'Heebo'; font-weight:600; }
+    .cancelb { background:#f0ece6; color:#333; border:none; padding:13px 20px; border-radius:12px; cursor:pointer; font-family:'Alef'; font-weight:700; }
   </style>
 </head>
 <body>

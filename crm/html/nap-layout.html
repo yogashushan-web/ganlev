@@ -6,17 +6,17 @@
   <title>סידור מזרונים — גן לב</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
     .wrap { max-width:1180px; margin:0 auto; padding:26px 20px 60px; }
 
     .header { display:flex; justify-content:space-between; align-items:center; gap:14px;
               flex-wrap:wrap; margin-bottom:18px; }
     .header h1 { font-size:23px; color:#1F3D34; }
     .btn { background:#1F3D34; color:#fff; border:0; border-radius:10px; padding:10px 20px;
-           font-family:'Heebo'; font-size:13.5px; font-weight:700; cursor:pointer; }
+           font-family:'Alef'; font-size:13.5px; font-weight:700; cursor:pointer; }
     .btn.ghost { background:#efe9e0; color:#6f6457; }
     .btn.soft { background:#C4846C; }
     .btn.big { font-size:15px; padding:13px 34px; }
@@ -28,7 +28,7 @@
 
     .steps { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:16px; }
     .step-pill { background:#fff; border:1px solid #e8e4de; border-radius:999px; padding:7px 15px;
-                 font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#9B8E82; cursor:pointer; }
+                 font-family:'Alef'; font-size:12.5px; font-weight:700; color:#9B8E82; cursor:pointer; }
     .step-pill.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
     .step-pill.done { color:#1F7a4f; border-color:#cfe7d9; }
 
@@ -41,43 +41,43 @@
     .wgrid { display:flex; flex-wrap:wrap; gap:7px; justify-content:center; }
     .wm { width:104px; height:52px; border-radius:7px; border:2px solid #cfe0ec; background:#eef5fb;
           display:flex; flex-direction:column; align-items:center; justify-content:center;
-          font-size:11px; font-weight:800; color:#2c4d66; }
+          font-size:11px; font-weight:700; color:#2c4d66; }
     .wm em { font-style:normal; font-size:9px; color:#7c93a6; font-weight:700; margin-top:1px; }
     .wcap { font-size:11.5px; color:#9B8E82; font-weight:700; margin-top:11px; }
     .whow { display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:12px; text-align:right; }
     .wstep { display:flex; gap:11px; align-items:flex-start; background:#fff; border:1px solid #efe9e0;
              border-radius:13px; padding:13px 14px; }
     .wn { flex:0 0 25px; height:25px; border-radius:50%; background:#1F3D34; color:#fff; font-size:13px;
-          font-weight:800; display:flex; align-items:center; justify-content:center; }
+          font-weight:700; display:flex; align-items:center; justify-content:center; }
     .wstep b { display:block; color:#1F3D34; font-size:13.5px; margin-bottom:2px; }
     .wstep em { font-style:normal; font-size:12px; color:#9B8E82; line-height:1.55; }
     .wnav { justify-content:center; }
 
     /* ---- בחירת ילדים ---- */
     .search { width:100%; padding:11px 14px; border:1.5px solid #e8e4de; border-radius:11px;
-              font-family:'Heebo'; font-size:14px; outline:none; margin-bottom:12px; }
+              font-family:'Alef'; font-size:14px; outline:none; margin-bottom:12px; }
     .search:focus { border-color:#1F3D34; }
     .pick { display:flex; flex-wrap:wrap; gap:7px; }
     .p { background:#fff; border:1.5px solid #e8e4de; border-radius:999px; padding:8px 15px;
-         font-family:'Heebo'; font-size:13px; font-weight:700; color:#6f6457; cursor:pointer; }
+         font-family:'Alef'; font-size:13px; font-weight:700; color:#6f6457; cursor:pointer; }
     .p.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
     .p.staff.on { background:#C4846C; border-color:#C4846C; }
     .count-line { font-size:13px; color:#9B8E82; font-weight:700; margin-top:14px; }
     .bulk { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-    .bulk-all { border-color:#1F3D34 !important; color:#1F3D34 !important; font-weight:800; }
+    .bulk-all { border-color:#1F3D34 !important; color:#1F3D34 !important; font-weight:700; }
     .bulk-all:hover { background:#1F3D34 !important; color:#fff !important; }
     .bulk-note { font-size:12px; color:#b3a899; font-weight:700; }
 
     /* ---- המזרונים ---- */
     .msizes { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
     .msize { background:#fff; border:1.5px solid #e8e4de; border-radius:13px; padding:13px 16px;
-             cursor:pointer; text-align:center; font-family:'Heebo'; }
+             cursor:pointer; text-align:center; font-family:'Alef'; }
     .msize.on { border-color:#1F3D34; background:#f4f9f6; }
     .msize b { display:block; font-size:13.5px; color:#1F3D34; }
     .msize em { font-style:normal; font-size:11.5px; color:#9B8E82; }
     .dims { display:flex; gap:9px; align-items:center; flex-wrap:wrap; }
     .dims input { width:88px; padding:9px 11px; border:1.5px solid #e8e4de; border-radius:9px;
-                  font-family:'Heebo'; font-size:13.5px; outline:none; text-align:center; }
+                  font-family:'Alef'; font-size:13.5px; outline:none; text-align:center; }
     .dims input:focus { border-color:#1F3D34; }
     .dims span { font-size:12.5px; color:#9B8E82; font-weight:700; }
 
@@ -98,11 +98,11 @@
     .gsep { width:1px; height:20px; background:#e8e4de; }
     .groom { display:flex; align-items:center; gap:6px; font-size:12.5px; color:#9B8E82; font-weight:700; }
     .groom input { width:64px; padding:5px 8px; border:1.5px solid #e8e4de; border-radius:8px;
-                   font-family:'Heebo'; font-size:12.5px; text-align:center; outline:none;
+                   font-family:'Alef'; font-size:12.5px; text-align:center; outline:none;
                    font-variant-numeric:tabular-nums; }
     .groom input:focus { border-color:#1F3D34; }
     .gtog { background:#FAF8F4; border:1px solid #e8e4de; border-radius:999px; padding:6px 14px;
-            font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#6f6457; cursor:pointer; }
+            font-family:'Alef'; font-size:12.5px; font-weight:700; color:#6f6457; cursor:pointer; }
     .gtog.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
 
     /* ---- מסילת כלים אנכית בצד הדף ----
@@ -118,7 +118,7 @@
             box-shadow:0 1px 3px rgba(0,0,0,.03); }
     .rb { width:32px; height:32px; border-radius:9px; border:0; background:none; color:#8a7f70;
           cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center;
-          font-family:'Heebo'; transition:background .12s, color .12s; }
+          font-family:'Alef'; transition:background .12s, color .12s; }
     .rb:hover { background:#f2f6f3; color:#1F3D34; }
     .rb.on { background:#1F3D34; color:#fff; }
     /* התווית נפתחת בריחוף — המסילה נשארת צרה, ושום דבר לא מנוחש */
@@ -136,7 +136,7 @@
                    box-shadow:0 1px 3px rgba(0,0,0,.2); cursor:grab; }
     .rzoom input::-moz-range-thumb { width:11px; height:11px; border-radius:50%; background:#fff;
                    border:2px solid #C4846C; }
-    .rzv { font-size:10px; color:#b3a899; font-weight:800; font-variant-numeric:tabular-nums;
+    .rzv { font-size:10px; color:#b3a899; font-weight:700; font-variant-numeric:tabular-nums;
            letter-spacing:.2px; }
     @media (max-width: 700px) {
       .sheet-wrap { flex-direction:column-reverse; }
@@ -149,7 +149,7 @@
     /* ---- הדף ---- */
     .toolbar { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
     .toolbar .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px; padding:0 14px; height:34px;
-                   display:inline-flex; align-items:center; gap:6px; font-family:'Heebo'; font-size:12.5px;
+                   display:inline-flex; align-items:center; gap:6px; font-family:'Alef'; font-size:12.5px;
                    font-weight:700; color:#1F3D34; cursor:pointer; }
     .toolbar .lb:hover { border-color:#1F3D34; background:#f4f9f6; }
     .a4note { font-size:12px; color:#9B8E82; text-align:center; padding:7px 0; border-top:1px dashed #e0d7c7;
@@ -171,7 +171,7 @@
            display:flex; flex-direction:column; align-items:center; justify-content:center;
            cursor:grab; touch-action:none; direction:rtl; overflow:hidden; padding:4px; z-index:5; }
     .mat:active { cursor:grabbing; }
-    .mat .nm { font-size:13px; font-weight:800; color:#2c4d66; line-height:1.15; text-align:center; }
+    .mat .nm { font-size:13px; font-weight:700; color:#2c4d66; line-height:1.15; text-align:center; }
     .mat .ri { display:inline-flex; align-items:center; gap:3px; }
     .mat .rsep2 { font-style:normal; opacity:.5; margin:0 3px; }
     .mat .rt { font-size:10px; font-weight:700; color:#7c93a6; line-height:1.3; text-align:center;
@@ -185,26 +185,26 @@
     .mat.potty .rt { color:#b8801f; }
         .mat.bad { border-color:#e0837a; background:#fdf0ef; }
     .mat.unreach::after { content:'אין גישה'; position:absolute; top:2px; left:4px; font-size:8.5px;
-                          font-weight:800; color:#c94147; }
+                          font-weight:700; color:#c94147; }
     .mat.from { opacity:.34; }
     .mat.target { border-color:#1F7a4f !important; background:#e6f4ec !important; }
 
     .obst { position:absolute; background:#e7e0d4; border:2px solid #c9bda9; border-radius:6px;
             display:flex; align-items:center; justify-content:center; direction:rtl;
-            font-size:11.5px; font-weight:800; color:#6f6457; cursor:grab; touch-action:none; z-index:4; }
+            font-size:11.5px; font-weight:700; color:#6f6457; cursor:grab; touch-action:none; z-index:4; }
     /* מזרן מסומן: קו ירוק מלא, כדי שקבוצה מסומנת תיקרא כגוש אחד */
     .mat.sel { outline:3px solid #1F7a4f; outline-offset:2px; }
     /* סיבוב מזרן בודד — מופיע בריחוף, כדי שלא יוסיף רעש לדף */
     .mrot { position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:7px;
             background:#fff; border:1px solid #d6e1ea; color:#6f8aa0; font-size:13px;
-            line-height:1; cursor:pointer; font-family:'Heebo'; opacity:0;
+            line-height:1; cursor:pointer; font-family:'Alef'; opacity:0;
             transition:opacity .12s; display:flex; align-items:center; justify-content:center; }
     .mat:hover .mrot { opacity:1; }
     .mrot:hover { background:#1F3D34; border-color:#1F3D34; color:#fff; }
     .mat.potty .mrot { border-color:#e3cfa6; color:#a8842f; }
     .zoombar { display:flex; align-items:center; gap:9px; margin-right:6px;
                padding-right:12px; border-right:1px solid #e8e4de; }
-    .zoombar .zv { font-size:12.5px; color:#1F3D34; font-weight:800; min-width:40px;
+    .zoombar .zv { font-size:12.5px; color:#1F3D34; font-weight:700; min-width:40px;
                    font-variant-numeric:tabular-nums; }
     #zoomR { -webkit-appearance:none; appearance:none; width:110px; height:3px; border-radius:99px;
              background:#e0d7c7; outline:none; cursor:ew-resize; }
@@ -235,19 +235,19 @@
     .ogrip.sw { left:-6px;  bottom:-6px; cursor:nesw-resize; }
     .rot-tag { position:fixed; z-index:10002; pointer-events:none; background:#fff; color:#9B8E82;
                border:1.5px solid #e8e4de; border-radius:999px; padding:3px 11px; font-size:12px;
-               font-weight:800; box-shadow:0 3px 10px rgba(0,0,0,.14); white-space:nowrap; }
+               font-weight:700; box-shadow:0 3px 10px rgba(0,0,0,.14); white-space:nowrap; }
     .rot-tag.snap { color:#8a5a44; border-color:#C4846C; background:#fdf6f2; }
     .obst .odel, .pmark .odel { position:absolute; top:-9px; left:-6px; background:#fff; border:1px solid #e8e1d6;
             color:#8a7f70; border-radius:7px; padding:1px 6px; font-size:10px; font-weight:700;
-            font-family:'Heebo'; cursor:pointer; opacity:0; transition:opacity .12s; }
+            font-family:'Alef'; cursor:pointer; opacity:0; transition:opacity .12s; }
     .obst:hover .odel, .pmark:hover .odel { opacity:1; }
     .pmark { position:absolute; display:flex; align-items:center; gap:5px; background:#fff;
              border:3px solid #C4846C; border-radius:999px; padding:6px 14px 6px 10px; direction:rtl;
-             font-size:12px; font-weight:800; white-space:nowrap; cursor:grab; touch-action:none; z-index:6; }
+             font-size:12px; font-weight:700; white-space:nowrap; cursor:grab; touch-action:none; z-index:6; }
 
     .ghostm { position:fixed; pointer-events:none; z-index:10000; border-radius:9px; background:#eef5fb;
               border:2px solid #5f93b8; color:#2c4d66; display:flex; align-items:center; justify-content:center;
-              font-size:12px; font-weight:800; box-shadow:0 6px 18px rgba(0,0,0,.2); opacity:.95; }
+              font-size:12px; font-weight:700; box-shadow:0 6px 18px rgba(0,0,0,.2); opacity:.95; }
 
     #guides { position:absolute; inset:0; pointer-events:none; z-index:8; }
     .gline { position:absolute; }
@@ -258,8 +258,8 @@
                justify-content:center; gap:7px 16px; padding:0 30px; direction:rtl; }
     .rlegend .lg { display:inline-flex; align-items:center; gap:6px; font-size:11px; }
     .rlegend .lg i { width:11px; height:11px; border-radius:3px; display:inline-block; flex:0 0 auto; }
-    .rlegend .lg b { color:#3D3228; font-weight:800; }
-    .rlegend .lg em { color:#9B8E82; font-style:normal; font-weight:600; }
+    .rlegend .lg b { color:#3D3228; font-weight:700; }
+    .rlegend .lg em { color:#9B8E82; font-style:normal; font-weight:700; }
     .scalebar { position:absolute; right:30px; bottom:30px; display:flex; align-items:center; gap:7px;
                 direction:rtl; font-size:10.5px; color:#9B8E82; font-weight:700; }
     .scalebar i { display:block; height:7px; border:1.5px solid #9B8E82; border-top:0; }
@@ -267,12 +267,12 @@
     /* ---- פריסות מוצעות ---- */
     .props { display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:11px; }
     .prop { background:#fff; border:1.5px solid #e8e4de; border-radius:14px; padding:13px; cursor:pointer;
-            text-align:center; font-family:'Heebo'; }
+            text-align:center; font-family:'Alef'; }
     .prop:hover { border-color:#1F3D34; background:#f4f9f6; }
     .prop.on { border-color:#1F3D34; background:#f4f9f6; box-shadow:0 0 0 3px rgba(31,61,52,.1); }
     .prop b { display:block; font-size:13.5px; color:#1F3D34; margin-bottom:2px; }
     .prop em { font-style:normal; font-size:11.5px; color:#9B8E82; display:block; }
-    .prop .sz { font-size:11.5px; color:#C4846C; font-weight:800; margin-top:6px; display:block; }
+    .prop .sz { font-size:11.5px; color:#C4846C; font-weight:700; margin-top:6px; display:block; }
     .mini { display:block; margin:9px auto 0; }
 
     /* ---- רצועת בקרה ---- */
@@ -281,20 +281,20 @@
     .srow { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
     .srow.wait { margin-top:8px; }
     .chip { display:inline-flex; align-items:center; border-radius:999px; padding:4px 12px; font-size:12px;
-            font-weight:800; font-family:'Heebo'; border:1px solid transparent; }
+            font-weight:700; font-family:'Alef'; border:1px solid transparent; }
     .chip.good { background:#e6f4ec; border-color:#cfe7d9; color:#1F7a4f; }
     .chip.warn { background:#fdf6e9; border-color:#e8c88a; color:#b8801f; }
     .chip.bad  { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
     .smuted { font-size:12px; color:#9B8E82; font-weight:700; }
     .wchip { background:#fff; border:1.5px dashed #C4846C; color:#8a5a44; border-radius:999px;
-             padding:4px 12px; font-family:'Heebo'; font-size:12px; font-weight:800; cursor:pointer; }
+             padding:4px 12px; font-family:'Alef'; font-size:12px; font-weight:700; cursor:pointer; }
     .wchip:hover { background:#C4846C; color:#fff; border-style:solid; }
     .viol { background:#fdf0ef; border:1px solid #f3cfc9; border-radius:12px; padding:12px 16px; margin-top:10px; }
     .viol .v { display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:13.5px;
                color:#8a3b34; padding:6px 0; flex-wrap:wrap; border-top:1px solid #f6dedb; }
     .viol .v:first-child { border-top:0; }
     .viol .v button { background:#fff; border:1px solid #f3cfc9; color:#c94147; border-radius:8px;
-                      padding:4px 10px; font-family:'Heebo'; font-size:12px; font-weight:700; cursor:pointer; }
+                      padding:4px 10px; font-family:'Alef'; font-size:12px; font-weight:700; cursor:pointer; }
     .blockers { margin:16px 0 4px; display:flex; flex-direction:column; gap:9px; }
     .bk { background:#fdf6e9; border:1px solid #e8c88a; border-radius:12px; padding:13px 16px; }
     .bk b { color:#b8801f; font-size:14px; }
@@ -303,14 +303,14 @@
     /* ---- כללים ---- */
     .rule-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
     .rule-row select { padding:9px 11px; border:1.5px solid #e8e4de; border-radius:9px;
-                       font-family:'Heebo'; font-size:13px; color:#3D3228; background:#fff; }
+                       font-family:'Alef'; font-size:13px; color:#3D3228; background:#fff; }
     .rule { display:flex; align-items:center; gap:9px; background:#FAF8F4; border:1px solid #efe9e0;
             border-radius:11px; padding:10px 14px; margin-bottom:7px; font-size:13.5px; flex-wrap:wrap; }
     .rule.off { opacity:.5; }
-    .rule .state { font-size:11.5px; font-weight:800; color:#1F7a4f; cursor:pointer; }
+    .rule .state { font-size:11.5px; font-weight:700; color:#1F7a4f; cursor:pointer; }
     .rule.off .state { color:#9B8E82; }
     .rule .x { margin-right:auto; background:none; border:0; color:#c94147; cursor:pointer;
-               font-family:'Heebo'; font-size:12.5px; }
+               font-family:'Alef'; font-size:12.5px; }
 
     /* ---- חלון ---- */
     .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center;
@@ -321,27 +321,27 @@
     .modal h3 { color:#1F3D34; font-size:19px; margin-bottom:4px; }
     .modal .msub { color:#9B8E82; font-size:13px; margin-bottom:16px; line-height:1.6; }
     .modal input[type=text], .modal textarea { width:100%; padding:11px 13px; border:1.5px solid #e8e4de;
-             border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; resize:vertical; }
+             border-radius:10px; font-family:'Alef'; font-size:14px; outline:none; resize:vertical; }
     .modal input:focus, .modal textarea:focus { border-color:#1F3D34; }
     .m-actions { display:flex; gap:9px; margin-top:18px; flex-wrap:wrap; }
     .needs { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px; }
     .need { background:#fff; border:1.5px solid #e8e4de; border-radius:999px; padding:6px 14px 6px 11px;
-            font-family:'Heebo'; font-size:13px; font-weight:700; color:#6f6457; cursor:pointer;
+            font-family:'Alef'; font-size:13px; font-weight:700; color:#6f6457; cursor:pointer;
             display:inline-flex; align-items:center; gap:7px; }
     .need.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
     .flab { font-size:12.5px; color:#9B8E82; font-weight:700; margin:12px 0 5px; }
     .plan-row { display:flex; align-items:center; gap:10px; background:#FAF8F4; border:1px solid #efe9e0;
                 border-radius:12px; padding:12px 14px; margin-bottom:8px; cursor:pointer; }
     .plan-row:hover { border-color:#1F3D34; background:#f4f9f6; }
-    .plan-row .nm { font-weight:800; color:#1F3D34; font-size:14.5px; }
+    .plan-row .nm { font-weight:700; color:#1F3D34; font-size:14.5px; }
     .plan-row .meta { font-size:12px; color:#9B8E82; }
     .plan-row .rm { margin-right:auto; background:#f6f2ec; border:1px solid #e8e1d6; color:#8a7f70;
                     border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700;
-                    cursor:pointer; font-family:'Heebo'; }
+                    cursor:pointer; font-family:'Alef'; }
     .empty-note { color:#9B8E82; font-size:13.5px; line-height:1.7; }
     .ipick { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
     .ipick button { display:flex; align-items:center; gap:9px; background:#FAF8F4; border:1px solid #efe9e0;
-                    border-radius:12px; padding:12px 14px; font-family:'Heebo'; font-size:13.5px;
+                    border-radius:12px; padding:12px 14px; font-family:'Alef'; font-size:13.5px;
                     font-weight:700; color:#1F3D34; cursor:pointer; text-align:right; }
     .ipick button:hover { border-color:#1F3D34; background:#f4f9f6; }
     .ipick .e { font-size:20px; }
@@ -393,7 +393,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=23"></script>
+<script src="js/common.js?v=24"></script>
 <script src="js/api.js?v=21"></script>
 <script src="js/nap-engine.js?v=1"></script>
 <script>

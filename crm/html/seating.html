@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>סידור ישיבה — גן לב</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
     .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
     .header h1 { font-size:26px; color:#1F3D34; }
-    .btn { background:#1F3D34; color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Heebo'; font-weight:700; font-size:14px; }
+    .btn { background:#1F3D34; color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:14px; }
     .btn.ghost { background:#efe9e0; color:#6f6457; }
     .btn.soft { background:#fff; color:#1F3D34; box-shadow:0 2px 8px rgba(0,0,0,.06); }
     .btn:disabled { opacity:.5; cursor:default; }
@@ -20,7 +20,7 @@
     .hide { display:none !important; }
 
     .steps { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
-    .step-pill { padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700; background:#fff; color:#8a7f70; border:1px solid #e8e4de; cursor:pointer; font-family:'Heebo'; }
+    .step-pill { padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700; background:#fff; color:#8a7f70; border:1px solid #e8e4de; cursor:pointer; font-family:'Alef'; }
     .step-pill:hover { border-color:#1F3D34; color:#1F3D34; }
     .step-pill.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
     .step-pill.done { background:#e6f4ec; color:#1F7a4f; border-color:#cfe7d9; }
@@ -30,24 +30,24 @@
     .card .sub { color:#9B8E82; font-size:13.5px; margin-bottom:18px; line-height:1.6; }
     .fld { margin-bottom:16px; }
     .fld label { display:block; font-size:13px; font-weight:700; color:#3D3228; margin-bottom:7px; }
-    .fld input, .fld select { width:100%; max-width:340px; padding:11px 13px; border:1.5px solid #e8e4de; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .fld input, .fld select { width:100%; max-width:340px; padding:11px 13px; border:1.5px solid #e8e4de; border-radius:10px; font-family:'Alef'; font-size:14px; outline:none; }
     .fld input:focus, .fld select:focus { border-color:#1F3D34; }
     .nav { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
 
     .pick { display:flex; gap:8px; flex-wrap:wrap; }
-    .pick .p { border:1.5px solid #e8e4de; background:#fff; border-radius:999px; padding:8px 15px; font-family:'Heebo'; font-size:13.5px; font-weight:600; cursor:pointer; color:#6f6457; }
+    .pick .p { border:1.5px solid #e8e4de; background:#fff; border-radius:999px; padding:8px 15px; font-family:'Alef'; font-size:13.5px; font-weight:700; cursor:pointer; color:#6f6457; }
     .pick .p.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
     .pick .p.staff.on { background:#C4846C; border-color:#C4846C; }
-    .count-line { font-size:13px; color:#9B8E82; margin:12px 0 4px; font-weight:600; }
+    .count-line { font-size:13px; color:#9B8E82; margin:12px 0 4px; font-weight:700; }
     .bulk { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-    .bulk-all { border-color:#1F3D34 !important; color:#1F3D34 !important; font-weight:800; }
+    .bulk-all { border-color:#1F3D34 !important; color:#1F3D34 !important; font-weight:700; }
     .bulk-all:hover { background:#1F3D34 !important; color:#fff !important; }
     .bulk-note { font-size:12px; color:#b3a899; font-weight:700; }
 
     /* ---- בחירת שולחנות, ויזואלית ---- */
     .palette { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
     .shape { border:2px solid #e8e4de; background:#fff; border-radius:14px; padding:10px 12px 8px; cursor:pointer;
-             text-align:center; font-family:'Heebo'; transition:.12s; }
+             text-align:center; font-family:'Alef'; transition:.12s; }
     .shape:hover { border-color:#1F3D34; background:#f4f9f6; transform:translateY(-2px); }
     .shape.on { border-color:#1F3D34; background:#f4f9f6; }
     .shape .cap { font-size:11.5px; font-weight:700; color:#6f6457; margin-top:4px; }
@@ -57,7 +57,7 @@
     .tcard b { color:#1F3D34; font-size:13px; display:block; margin-bottom:6px; }
     .tcard .swapline { font-size:11.5px; color:#9B8E82; margin-top:6px; }
     .tcard .kill { position:absolute; top:7px; left:8px; background:#f6f2ec; border:1px solid #e8e1d6; color:#8a7f70;
-                   font-size:11px; font-weight:700; cursor:pointer; font-family:'Heebo'; line-height:1;
+                   font-size:11px; font-weight:700; cursor:pointer; font-family:'Alef'; line-height:1;
                    border-radius:7px; padding:4px 8px; }
     .tcard .kill:hover { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
     .capbar { height:16px; border-radius:999px; background:#efe9e0; overflow:hidden; display:flex; margin:6px 0 4px; max-width:420px; }
@@ -86,10 +86,10 @@
     /* ---- חלוקה ויזואלית ---- */
     .splits { display:grid; grid-template-columns:repeat(auto-fill,minmax(178px,1fr)); gap:11px; }
     .sp { border:2px solid #e8e4de; background:#fff; border-radius:16px; padding:14px 12px 12px; cursor:pointer;
-          font-family:'Heebo'; text-align:center; transition:.12s; }
+          font-family:'Alef'; text-align:center; transition:.12s; }
     .sp:hover { border-color:#1F3D34; transform:translateY(-2px); }
     .sp.on { border-color:#1F3D34; background:#f4f9f6; }
-    .sp .t { font-size:14px; font-weight:800; color:#1F3D34; margin-top:9px; }
+    .sp .t { font-size:14px; font-weight:700; color:#1F3D34; margin-top:9px; }
     .sp .h { font-size:11.5px; color:#9B8E82; margin-top:2px; line-height:1.4; }
     .mini { display:flex; gap:7px; justify-content:center; align-items:flex-end; height:46px; }
     .mt { background:#efe6d8; border:1.5px solid #ddd0bb; border-radius:5px; width:34px; padding:4px 2px;
@@ -98,25 +98,25 @@
     .d-s { width:5px; height:5px; } .d-m { width:7px; height:7px; } .d-l { width:9px; height:9px; }
 
     .staff-row { display:flex; align-items:center; gap:10px; background:#FAF8F4; border-radius:11px; padding:11px 14px; margin-bottom:9px; flex-wrap:wrap; }
-    .staff-row select { padding:7px 10px; border:1px solid #e8e4de; border-radius:9px; font-family:'Heebo'; font-size:12.5px; }
-    .swap { background:#fff; border:1px solid #eccfc2; color:#8a4d33; border-radius:999px; padding:5px 12px; font-family:'Heebo'; font-size:12.5px; font-weight:700; cursor:pointer; }
+    .staff-row select { padding:7px 10px; border:1px solid #e8e4de; border-radius:9px; font-family:'Alef'; font-size:12.5px; }
+    .swap { background:#fff; border:1px solid #eccfc2; color:#8a4d33; border-radius:999px; padding:5px 12px; font-family:'Alef'; font-size:12.5px; font-weight:700; cursor:pointer; }
     /* המצב עצמו הוא הכפתור: "יחד" או "⇄ מחליפות", ולחיצה מחליפה ביניהם */
     .both { background:#f4f9f6; border:1px solid #cfe7d9; color:#1F7a4f; border-radius:999px;
             padding:5px 14px; font-size:12.5px; font-weight:700; white-space:nowrap;
-            font-family:'Heebo'; cursor:pointer; }
+            font-family:'Alef'; cursor:pointer; }
     .both:hover { background:#e6f4ec; }
     .nms { font-size:12.5px; color:#6f6457; font-weight:700; }
     .swap:hover { background:#fbf1ec; }
 
     .rule-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
-    .rule-row select { padding:9px 11px; border:1.5px solid #e8e4de; border-radius:10px; font-family:'Heebo'; font-size:13px; }
+    .rule-row select { padding:9px 11px; border:1.5px solid #e8e4de; border-radius:10px; font-family:'Alef'; font-size:13px; }
     .rule-list { display:flex; flex-direction:column; gap:7px; margin-top:14px; }
     .rule { display:flex; align-items:center; gap:10px; background:#FAF8F4; border-radius:10px; padding:9px 13px; font-size:13.5px; flex-wrap:wrap; }
-    .rule .x { margin-right:auto; background:none; border:none; color:#c94147; cursor:pointer; font-size:13px; font-family:'Heebo'; }
-    .rule .state { border:1px solid #cfe7d9; background:#e6f4ec; color:#1F7a4f; border-radius:999px; padding:3px 11px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Heebo'; }
+    .rule .x { margin-right:auto; background:none; border:none; color:#c94147; cursor:pointer; font-size:13px; font-family:'Alef'; }
+    .rule .state { border:1px solid #cfe7d9; background:#e6f4ec; color:#1F7a4f; border-radius:999px; padding:3px 11px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Alef'; }
     .rule.off { opacity:.5; } .rule.off .state { background:#f6f2ec; color:#8a7f70; border-color:#e8e1d6; }
 
-    .opt { display:block; width:100%; text-align:right; border:1.5px solid #e8e4de; background:#fff; border-radius:13px; padding:13px 16px; margin-bottom:9px; cursor:pointer; font-family:'Heebo'; }
+    .opt { display:block; width:100%; text-align:right; border:1.5px solid #e8e4de; background:#fff; border-radius:13px; padding:13px 16px; margin-bottom:9px; cursor:pointer; font-family:'Alef'; }
     .opt.on { border-color:#1F3D34; background:#f4f9f6; }
     .opt b { display:block; font-size:14.5px; color:#1F3D34; margin-bottom:3px; }
     .opt span { font-size:12.5px; color:#9B8E82; line-height:1.55; }
@@ -134,7 +134,7 @@
               transform-origin:561.5px 397px; }
     .zoombar { display:flex; align-items:center; gap:9px; margin-right:6px;
                padding-right:12px; border-right:1px solid #e8e4de; }
-    .zoombar .zv { font-size:12.5px; color:#1F3D34; font-weight:800; min-width:40px;
+    .zoombar .zv { font-size:12.5px; color:#1F3D34; font-weight:700; min-width:40px;
                    font-variant-numeric:tabular-nums; }
     #zoomR { -webkit-appearance:none; appearance:none; width:132px; height:3px; border-radius:99px;
              background:#e0d7c7; outline:none; cursor:ew-resize; }
@@ -147,14 +147,14 @@
     .a4note { font-size:11.5px; color:#b3a89a; text-align:left; margin-bottom:4px; }
     .twrap { position:absolute; touch-action:none; }
     /* שם השולחן יושב במרכזו, וניתן ללחוץ עליו כדי לשנות */
-    .tlabel { position:absolute; display:flex; align-items:center; gap:4px; font-size:12.5px; font-weight:800;
+    .tlabel { position:absolute; display:flex; align-items:center; gap:4px; font-size:12.5px; font-weight:700;
               color:#8a7f70; white-space:nowrap; z-index:5; }
     .tname { cursor:text; padding:2px 8px; border-radius:7px; border:1px dashed transparent; }
     .tname:hover { border-color:#C4846C; color:#1F3D34; background:rgba(255,255,255,.7); }
     .tname-input { width:92px; padding:3px 7px; border:1.5px solid #1F3D34; border-radius:7px;
-                   font-family:'Heebo'; font-size:12.5px; font-weight:700; text-align:center; outline:none; }
+                   font-family:'Alef'; font-size:12.5px; font-weight:700; text-align:center; outline:none; }
     /* ⟳ מסובב ברבע סיבוב — נשאר רק למסך צר, שם אין לאן לגרור ידית באצבע */
-    .rot { display:none; background:rgba(255,255,255,.8); border:1px solid #e8e4de; border-radius:6px; font-size:10.5px; cursor:pointer; font-family:'Heebo'; padding:1px 5px; }
+    .rot { display:none; background:rgba(255,255,255,.8); border:1px solid #e8e4de; border-radius:6px; font-size:10.5px; cursor:pointer; font-family:'Alef'; padding:1px 5px; }
     @media (max-width: 760px), (hover: none) { .rot { display:inline-block; } .rhandle { display:none; } }
 
     /* ידית הסיבוב: עיגול על גבעול קצר מראש השולחן, כמו בכל כלי גרפי */
@@ -170,17 +170,17 @@
     /* מספר המעלות החי ליד האצבע */
     .rot-tag { position:fixed; z-index:10002; pointer-events:none; background:#fff; color:#9B8E82;
                border:1.5px solid #e8e4de; border-radius:999px; padding:3px 11px; font-size:12px;
-               font-weight:800; box-shadow:0 3px 10px rgba(0,0,0,.14); white-space:nowrap; }
+               font-weight:700; box-shadow:0 3px 10px rgba(0,0,0,.14); white-space:nowrap; }
     .rot-tag.snap { color:#8a5a44; border-color:#C4846C; background:#fdf6f2; }
     /* כפתור הביטול אומר מה הוא מבטל: "⟲ בטל הזזת שולחן". החץ לבדו,
        ובעיקר המילה "ביטול" לבדה, נקראים בעברית כ-Cancel. */
     .undo-btn { display:inline-flex; align-items:center; gap:6px; }
-    .undo-btn b { font-weight:800; }
+    .undo-btn b { font-weight:700; }
     .undo-btn .ua { font-size:15px; line-height:1; transform:translateY(1px); }
     .undo-btn:not(:disabled):hover { border-color:#1F3D34; background:#f4f9f6; }
     .undo-btn:disabled { opacity:.45; cursor:default; }
     /* שם האחראית מתחת לשולחן בסקיצה, בצבע שלה */
-    .sk-who { font-size:10.5px; font-weight:800; text-align:center; margin-top:4px; }
+    .sk-who { font-size:10.5px; font-weight:700; text-align:center; margin-top:4px; }
 
 
     /* גרירת ילד: צל שעוקב אחרי האצבע, וכיסא שמואר כשמתקרבים אליו */
@@ -208,7 +208,7 @@
             font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:10px;
             box-shadow:0 6px 20px rgba(0,0,0,.22); }
     .undo button { background:#fff; color:#1F3D34; border:0; border-radius:999px; padding:5px 13px;
-                   font-family:'Heebo'; font-size:12px; font-weight:800; cursor:pointer; }
+                   font-family:'Alef'; font-size:12px; font-weight:700; cursor:pointer; }
     /* ילד שהוצא מכיסא נשאר בדיוק איפה שהונח — המיקום הוא מידע ("שם הוא
        אמור לשבת"). אבל המצב חייב להיות חד-משמעי: קו מקווקו, גוון דהוי,
        ותווית "ממתין". והוא לא מודפס — ראו @media print למטה. */
@@ -219,7 +219,7 @@
               overflow:visible; cursor:grab; touch-action:none; z-index:7; opacity:.9; }
     .parked::after { content:'ממתין'; position:absolute; bottom:-9px; left:50%;
                      transform:translateX(-50%); background:#C4846C; color:#fff;
-                     border-radius:999px; padding:1px 7px; font-size:9px; font-weight:800;
+                     border-radius:999px; padding:1px 7px; font-size:9px; font-weight:700;
                      letter-spacing:.3px; white-space:nowrap; }
     .parked:hover { opacity:1; border-style:solid; }
     /* אותו שם במד למעלה, כדי שיהיה ברור שמדובר באותו ילד */
@@ -228,13 +228,13 @@
     .algw { position:absolute; width:54px; height:54px; pointer-events:none; z-index:9; }
     .algw .alg { position:absolute; top:45px; left:50%; transform:translateX(-50%);
                  background:#c94147; color:#fff; border-radius:999px; padding:1.5px 8px;
-                 font-size:9.5px; font-weight:800; white-space:nowrap; letter-spacing:.2px;
+                 font-size:9.5px; font-weight:700; white-space:nowrap; letter-spacing:.2px;
                  box-shadow:0 1px 4px rgba(0,0,0,.18); }
     /* בחירת פריט בחלון */
     .ipick { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
     .ipick button { display:flex; align-items:center; gap:9px; background:#FAF8F4;
                     border:1px solid #efe9e0; border-radius:12px; padding:12px 14px;
-                    font-family:'Heebo'; font-size:13.5px; font-weight:700; color:#1F3D34;
+                    font-family:'Alef'; font-size:13.5px; font-weight:700; color:#1F3D34;
                     cursor:pointer; text-align:right; }
     .ipick button:hover { border-color:#1F3D34; background:#f4f9f6; }
     .ipick .e { font-size:20px; }
@@ -245,16 +245,16 @@
     .alrow .bub { display:flex; gap:5px; flex-wrap:wrap; flex:1; }
     .alrow .none { color:#c4bbb0; font-size:12px; font-weight:700; }
     .alrow .al { background:#fdf0ef; border:1px solid #f3cfc9; color:#c94147; border-radius:999px;
-                 padding:3px 10px; font-size:11.5px; font-weight:800; font-family:'Heebo'; cursor:pointer; }
+                 padding:3px 10px; font-size:11.5px; font-weight:700; font-family:'Alef'; cursor:pointer; }
     .alrow .al:hover { background:#c94147; color:#fff; border-color:#c94147; }
     .alrow select { border:1px solid #e8e4de; border-radius:8px; padding:5px 8px;
-                    font-family:'Heebo'; font-size:12px; color:#6f6457; }
+                    font-family:'Alef'; font-size:12px; color:#6f6457; }
     .hint-box { background:#fdf6e9; border:1px solid #e8c88a; border-radius:12px;
                 padding:13px 15px; margin-bottom:14px; }
     .hint-box b { color:#b8801f; font-size:13.5px; }
     .hint-box p { font-size:12px; color:#8a6a23; line-height:1.65; margin:4px 0 9px; }
     .hint-box .hb { background:#fff; border:1px solid #e8c88a; color:#8a6a23; border-radius:999px;
-                    padding:5px 12px; font-size:12px; font-weight:700; font-family:'Heebo';
+                    padding:5px 12px; font-size:12px; font-weight:700; font-family:'Alef';
                     cursor:pointer; margin:0 0 5px 5px; }
 
     /* ---- מקרא בתחתית הדף ---- */
@@ -262,15 +262,15 @@
                justify-content:center; gap:7px 16px; padding:0 30px; direction:rtl; }
     .rlegend .lg { display:inline-flex; align-items:center; gap:6px; font-size:11px; }
     .rlegend .lg i { width:11px; height:11px; border-radius:3px; display:inline-block; flex:0 0 auto; }
-    .rlegend .lg b { color:#3D3228; font-weight:800; }
-    .rlegend .lg em { color:#9B8E82; font-style:normal; font-weight:600; }
+    .rlegend .lg b { color:#3D3228; font-weight:700; }
+    .rlegend .lg em { color:#9B8E82; font-style:normal; font-weight:700; }
 
     /* ---- פריטים בחדר: עמדת הגשה, פינוי, כיור, דלת ---- */
     /* נייטרליים בכוונה — הצבע בדף שמור לאחריות של הצוות, ופריט צבעוני
        היה נקרא כאילו מישהי אחראית עליו. */
     .ritem { position:absolute; display:flex; align-items:center; justify-content:center;
              background:#f6f2ea; border:1.5px dashed #c9bda9; border-radius:9px;
-             color:#6f6457; font-size:12px; font-weight:800; cursor:grab;
+             color:#6f6457; font-size:12px; font-weight:700; cursor:grab;
              touch-action:none; z-index:4; text-align:center; padding:2px 6px; }
     .ritem:active { cursor:grabbing; }
     .ritem.door { background:#fff; border-style:solid; border-width:0 0 4px 0;
@@ -280,7 +280,7 @@
     .ritem .inm:hover { border-color:#C4846C; background:rgba(255,255,255,.75); }
     .ritem .idel { position:absolute; top:-9px; left:-6px; background:#fff; border:1px solid #e8e1d6;
                    color:#8a7f70; border-radius:7px; padding:1px 6px; font-size:10px; font-weight:700;
-                   font-family:'Heebo'; cursor:pointer; opacity:0; transition:opacity .12s; }
+                   font-family:'Alef'; cursor:pointer; opacity:0; transition:opacity .12s; }
     .ritem:hover .idel { opacity:1; }
     .ritem .idel:hover { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
 
@@ -304,7 +304,7 @@
     .p.open-slot { border-style:dashed; border-color:#C4846C; color:#8a5a44; }
     .p.open-slot:hover { background:#fdf6f2; }
     .slot-label { width:120px; padding:5px 10px; border:1.5px dashed #C4846C; border-radius:999px;
-                  font-family:'Heebo'; font-size:12.5px; font-weight:800; color:#8a5a44;
+                  font-family:'Alef'; font-size:12.5px; font-weight:700; color:#8a5a44;
                   background:#fdf6f2; outline:none; }
     .slot-label:focus { border-style:solid; border-color:#1F3D34; color:#1F3D34; }
     .seat.open-slot, .pmark.open-slot { border-style:dashed !important; }
@@ -319,7 +319,7 @@
     .pmark .ico { font-size:21px; line-height:1; }
     .pmark .who { position:absolute; top:58px; left:50%; transform:translateX(-50%);
                   background:#fff; border:1.5px solid currentColor; border-radius:999px;
-                  padding:2px 10px; font-size:11px; font-weight:800; white-space:nowrap;
+                  padding:2px 10px; font-size:11px; font-weight:700; white-space:nowrap;
                   box-shadow:0 1px 4px rgba(0,0,0,.10); }
     .pmark.open-slot, .pmark.open-slot .who { border-style:dashed; }
 
@@ -328,7 +328,7 @@
     .gline { position:absolute; }
     .gline.v { top:0; bottom:0; width:0; border-right:1.5px dashed #C4846C; }
     .gline.h { left:0; right:0; height:0; border-bottom:1.5px dashed #C4846C; }
-    .gap-tag { position:absolute; background:#C4846C; color:#fff; font-size:10px; font-weight:800;
+    .gap-tag { position:absolute; background:#C4846C; color:#fff; font-size:10px; font-weight:700;
                border-radius:5px; padding:1px 6px; transform:translate(50%,-50%); }
 
     /* ---- עמוד הפתיחה ---- */
@@ -340,18 +340,18 @@
              padding:20px 18px 14px; margin-bottom:26px; display:flex;
              flex-wrap:wrap; justify-content:center; gap:18px; }
     .wt { flex:0 1 210px; }
-    .wtn { font-size:12.5px; font-weight:800; margin-bottom:7px; }
+    .wtn { font-size:12.5px; font-weight:700; margin-bottom:7px; }
     .wts { border:2px solid; border-radius:12px; padding:13px 10px; display:flex;
            flex-wrap:wrap; gap:6px; justify-content:center; }
     .wts span { background:#fff; border:1.5px solid #e2ecf3; color:#2c4d66; border-radius:999px;
-                padding:5px 13px; font-size:12px; font-weight:800; }
+                padding:5px 13px; font-size:12px; font-weight:700; }
     .wcap { flex:1 0 100%; font-size:11.5px; color:#9B8E82; font-weight:700; margin-top:2px; }
     .whow { display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
             gap:12px; text-align:right; margin-bottom:8px; }
     .wstep { display:flex; gap:11px; align-items:flex-start; background:#fff;
              border:1px solid #efe9e0; border-radius:13px; padding:13px 14px; }
     .wn { flex:0 0 25px; height:25px; border-radius:50%; background:#1F3D34; color:#fff;
-          font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+          font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; }
     .wstep b { display:block; color:#1F3D34; font-size:13.5px; margin-bottom:2px; }
     .wstep em { font-style:normal; font-size:12px; color:#9B8E82; line-height:1.55; }
     .wnav { justify-content:center; }
@@ -363,7 +363,7 @@
     .bk b { color:#b8801f; font-size:14px; }
     .bk p { font-size:13px; color:#8a6a23; line-height:1.7; margin-top:4px; }
     .bkx { margin-top:9px; background:#fff; border:1px solid #e8c88a; color:#8a6a23;
-           border-radius:9px; padding:6px 13px; font-family:'Heebo'; font-size:12.5px;
+           border-radius:9px; padding:6px 13px; font-family:'Alef'; font-size:12.5px;
            font-weight:700; cursor:pointer; }
     .btn:disabled { opacity:.42; cursor:not-allowed; }
 
@@ -380,7 +380,7 @@
             box-shadow:0 1px 3px rgba(0,0,0,.03); }
     .rb { width:32px; height:32px; border-radius:9px; border:0; background:none; color:#8a7f70;
           cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center;
-          font-family:'Heebo'; transition:background .12s, color .12s; }
+          font-family:'Alef'; transition:background .12s, color .12s; }
     .rb:hover { background:#f2f6f3; color:#1F3D34; }
     .rb.on { background:#1F3D34; color:#fff; }
     /* התווית נפתחת בריחוף — המסילה נשארת צרה, ושום דבר לא מנוחש */
@@ -398,7 +398,7 @@
                    box-shadow:0 1px 3px rgba(0,0,0,.2); cursor:grab; }
     .rzoom input::-moz-range-thumb { width:11px; height:11px; border-radius:50%; background:#fff;
                    border:2px solid #C4846C; }
-    .rzv { font-size:10px; color:#b3a899; font-weight:800; font-variant-numeric:tabular-nums;
+    .rzv { font-size:10px; color:#b3a899; font-weight:700; font-variant-numeric:tabular-nums;
            letter-spacing:.2px; }
     @media (max-width: 700px) {
       .sheet-wrap { flex-direction:column-reverse; }
@@ -411,7 +411,7 @@
     .toolbar, .layouts { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
     .toolbar .lb, .layouts .lb { background:#fff; border:1px solid #e8e4de; border-radius:9px;
       padding:0 14px; height:34px; display:inline-flex; align-items:center; gap:6px;
-      font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#1F3D34; cursor:pointer; }
+      font-family:'Alef'; font-size:12.5px; font-weight:700; color:#1F3D34; cursor:pointer; }
     .toolbar .lb:hover, .layouts .lb:hover { border-color:#1F3D34; background:#f4f9f6; }
 
     /* ---- רצועת בקרה מתחת לדף ---- */
@@ -421,7 +421,7 @@
     .srow { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
     .srow.wait { margin-top:8px; }
     .chip { display:inline-flex; align-items:center; border-radius:999px; padding:4px 12px;
-            font-size:12px; font-weight:800; font-family:'Heebo'; border:1px solid transparent; }
+            font-size:12px; font-weight:700; font-family:'Alef'; border:1px solid transparent; }
     .chip.good { background:#e6f4ec; border-color:#cfe7d9; color:#1F7a4f; }
     .chip.warn { background:#fdf6e9; border-color:#e8c88a; color:#b8801f; }
     .chip.bad  { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; cursor:pointer; }
@@ -431,13 +431,13 @@
     .sbar i { display:block; height:100%; border-radius:99px; background:#1F7a4f; transition:width .25s; }
     .smuted { font-size:12px; color:#9B8E82; font-weight:700; }
     .wchip { background:#fff; border:1.5px dashed #C4846C; color:#8a5a44; border-radius:999px;
-             padding:4px 12px; font-family:'Heebo'; font-size:12px; font-weight:800; cursor:pointer; }
+             padding:4px 12px; font-family:'Alef'; font-size:12px; font-weight:700; cursor:pointer; }
     .wchip:hover { background:#C4846C; color:#fff; border-style:solid; }
     .wchip.onpage { border-style:solid; background:#fdf6f2; }
     .status .viol { margin-top:10px; }
     .ipick button span b { display:block; }
     .ipick button span em { display:block; font-style:normal; font-size:11.5px;
-                            color:#9B8E82; font-weight:600; margin-top:1px; }
+                            color:#9B8E82; font-weight:700; margin-top:1px; }
     .legend { font-size:12.5px; color:#9B8E82; text-align:center; margin:4px 0 16px; line-height:1.7; }
 
     .viol { background:#fdf0ef; border:1px solid #f3cfc9; border-radius:12px; padding:14px 16px; margin-bottom:14px; }
@@ -446,21 +446,21 @@
                color:#8a3b34; padding:7px 0; flex-wrap:wrap; border-top:1px solid #f6dedb; }
     .viol .v:first-of-type { border-top:0; }
     .vbtns { display:flex; gap:6px; }
-    .viol .v button { background:#fff; border:1px solid #f3cfc9; color:#c94147; border-radius:8px; padding:4px 10px; font-family:'Heebo'; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .viol .v button { background:#fff; border:1px solid #f3cfc9; color:#c94147; border-radius:8px; padding:4px 10px; font-family:'Alef'; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
     .viol .v button:first-child { border-color:#cfe7d9; color:#1F7a4f; }
     /* כלל שבור — לא באשמת הסידור, ולכן לא בצבע של שגיאה */
     .viol .v.stuck { color:#8a5a44; }
-    .viol .v.stuck .wh { font-size:12px; color:#9B8E82; font-weight:600; margin-top:2px; }
+    .viol .v.stuck .wh { font-size:12px; color:#9B8E82; font-weight:700; margin-top:2px; }
     .okd { display:flex; flex-wrap:wrap; gap:8px; margin:-6px 0 14px; }
     .okd span { display:inline-flex; align-items:center; gap:7px; background:#FAF8F4; border:1px solid #e8e4de;
                 border-radius:999px; padding:4px 6px 4px 13px; font-size:12px; color:#6f6457; font-weight:700; }
-    .okd button { background:none; border:0; color:#9B8E82; font-family:'Heebo'; font-size:11.5px;
+    .okd button { background:none; border:0; color:#9B8E82; font-family:'Alef'; font-size:11.5px;
                   font-weight:700; cursor:pointer; text-decoration:underline; padding:0 4px; }
     .conflict { background:#fdf6e9; border:1px solid #e8c88a; border-radius:12px; padding:16px 18px; margin-bottom:14px; }
     .conflict h4 { color:#b8801f; margin-bottom:8px; font-size:15px; }
     .conflict p { font-size:13.5px; color:#8a6a23; line-height:1.7; margin-bottom:12px; }
     .conflict .opts { display:flex; gap:8px; flex-wrap:wrap; }
-    .conflict .opts button { background:#fff; border:1px solid #e8c88a; color:#8a6a23; border-radius:9px; padding:8px 13px; font-family:'Heebo'; font-size:13px; font-weight:700; cursor:pointer; }
+    .conflict .opts button { background:#fff; border:1px solid #e8c88a; color:#8a6a23; border-radius:9px; padding:8px 13px; font-family:'Alef'; font-size:13px; font-weight:700; cursor:pointer; }
     /* ---- חלון בתוך העמוד, במקום חלונות הדפדפן ---- */
     .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none;
           align-items:center; justify-content:center; z-index:9999; padding:18px; }
@@ -470,16 +470,16 @@
     .modal h3 { color:#1F3D34; font-size:19px; margin-bottom:4px; }
     .modal .msub { color:#9B8E82; font-size:13px; margin-bottom:16px; line-height:1.6; }
     .modal input[type=text] { width:100%; padding:11px 13px; border:1.5px solid #e8e4de;
-             border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+             border-radius:10px; font-family:'Alef'; font-size:14px; outline:none; }
     .modal input[type=text]:focus { border-color:#1F3D34; }
     .m-actions { display:flex; gap:9px; margin-top:18px; flex-wrap:wrap; }
     .plan-row { display:flex; align-items:center; gap:10px; background:#FAF8F4; border:1px solid #efe9e0;
              border-radius:12px; padding:12px 14px; margin-bottom:8px; cursor:pointer; }
     .plan-row:hover { border-color:#1F3D34; background:#f4f9f6; }
-    .plan-row .nm { font-weight:800; color:#1F3D34; font-size:14.5px; }
+    .plan-row .nm { font-weight:700; color:#1F3D34; font-size:14.5px; }
     .plan-row .meta { font-size:12px; color:#9B8E82; }
     .plan-row .rm { margin-right:auto; background:#f6f2ec; border:1px solid #e8e1d6; color:#8a7f70;
-             border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Heebo'; }
+             border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Alef'; }
     .plan-row .rm:hover { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
     .empty-note { color:#9B8E82; font-size:13.5px; line-height:1.7; }
 
@@ -537,7 +537,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=23"></script>
+<script src="js/common.js?v=24"></script>
 <script src="js/api.js?v=21"></script>
 <script src="js/seating-engine.js?v=4"></script>
 <script>
@@ -945,7 +945,7 @@ function stepStaff() {
           ${cfg.sits !== 'seat' ? `<span style="font-size:12px;color:#9B8E82;">אחראית על:</span>
             ${plan.tables.map(t => `<label style="font-size:12.5px;display:flex;align-items:center;gap:4px;">
               <input type="checkbox" ${(cfg.tables||[]).includes(t.id)?'checked':''} onchange="toggleResp('${sid}','${t.id}')"> ${esc(t.name)}</label>`).join('')}` : ''}
-          <button class="x" style="margin-right:auto;background:none;border:none;color:#c94147;cursor:pointer;font-family:'Heebo';font-size:13px"
+          <button class="x" style="margin-right:auto;background:none;border:none;color:#c94147;cursor:pointer;font-family:'Alef';font-size:13px"
             onclick="delSlot('${sid}')">הסר</button>
         </div>`;
       }).join('')}</div>` : '<div class="count-line">אפשר גם בלי אנשי צוות בסידור.</div>'}
@@ -1135,9 +1135,9 @@ const SPLITS = [
   { id: 'fill',   t: 'אחד אחרי השני', h: 'ממלא שולחן ועובר לבא',
     fig: mt(['m','m','m','m']) + mt(['m','m']) + mt([]) },
   { id: 'manual', t: 'אני קובעת',   h: 'מספר לכל שולחן',
-    fig: `<div class="mt" style="align-items:center;font-size:12px;font-weight:800;color:#8a7f70">5</div>
-          <div class="mt" style="align-items:center;font-size:12px;font-weight:800;color:#8a7f70">4</div>
-          <div class="mt" style="align-items:center;font-size:12px;font-weight:800;color:#8a7f70">3</div>` },
+    fig: `<div class="mt" style="align-items:center;font-size:12px;font-weight:700;color:#8a7f70">5</div>
+          <div class="mt" style="align-items:center;font-size:12px;font-weight:700;color:#8a7f70">4</div>
+          <div class="mt" style="align-items:center;font-size:12px;font-weight:700;color:#8a7f70">3</div>` },
   { id: 'any',    t: 'לא משנה לי',  h: 'מה שיסתדר הכי פשוט',
     fig: mt(['s','l']) + mt(['m','m','s','l']) + mt(['l','s','m']) },
 ];
@@ -1154,7 +1154,7 @@ function stepSplit() {
     </div>
     ${m === 'manual' ? `<div style="margin-top:12px">${plan.tables.map(t => `
       <div class="staff-row"><b style="min-width:84px">${esc(t.name)}</b>
-        <input type="number" min="0" max="${tplOf(t).seats.length}" style="width:90px;padding:7px 9px;border:1px solid #e8e4de;border-radius:9px;font-family:'Heebo'"
+        <input type="number" min="0" max="${tplOf(t).seats.length}" style="width:90px;padding:7px 9px;border:1px solid #e8e4de;border-radius:9px;font-family:'Alef'"
           value="${(plan.split.counts && plan.split.counts[t.id]) || ''}" oninput="setCount('${t.id}',this.value)">
         <span style="font-size:12px;color:#9B8E82">מתוך ${tplOf(t).seats.length} מקומות</span></div>`).join('')}</div>` : ''}
     <div class="count-line" style="margin-top:16px;">
@@ -1577,7 +1577,7 @@ function sheetData() {
   const marks = offSlots().map(sid => ({
     x: Math.round(ZX(plan.marks[sid].x)), y: Math.round(ZY(plan.marks[sid].y)),
     label: slotLabel(sid), color: markColor(sid),
-    // 🪑 / 👀 מצויירים ב-PDF כווקטור, כי ל-Heebo אין גליפים לאמוג'י
+    // 🪑 / 👀 מצויירים ב-PDF כווקטור, כי לגופן אין גליפים לאמוג׳י
     icon: plan.staff[sid].sits === 'beside' ? 'chair' : 'watch',
     open: isOpenSlot(sid),       // תפקיד בלי שם — מסגרת מקווקוות גם על הדף
   }));

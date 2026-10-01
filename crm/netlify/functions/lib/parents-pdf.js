@@ -82,8 +82,8 @@ function tableHead(doc, pageW, y) {
 function buildPdf(rows) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: M, autoFirstPage: false });
-    doc.registerFont('reg', fontPath('Heebo-Regular.ttf'));
-    doc.registerFont('bold', fontPath('Heebo-Bold.ttf'));
+    doc.registerFont('reg', fontPath('Alef-Regular.ttf'));
+    doc.registerFont('bold', fontPath('Alef-Bold.ttf'));
 
     const chunks = [];
     doc.on('data', c => chunks.push(c));

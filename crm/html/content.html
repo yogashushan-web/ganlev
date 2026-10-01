@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>תוכן חינוכי — ציר השנה</title>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Heebo',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
     h1 { font-size:26px; color:#1F3D34; margin-bottom:6px; }
     .lead { color:#9B8E82; font-size:14px; margin-bottom:24px; max-width:720px; line-height:1.6; }
     .error { background:#fdf0ef; color:#c94147; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
@@ -21,11 +21,11 @@
     .m-card { background:#FFF; border-radius:15px; padding:16px 18px; box-shadow:0 2px 11px rgba(0,0,0,0.05); }
     .m-head { display:flex; align-items:center; gap:9px; margin-bottom:12px; padding-bottom:11px; border-bottom:2px solid #f0ece6; }
     .m-emoji { font-size:22px; }
-    .m-name { font-size:18px; font-weight:800; color:#1F3D34; }
+    .m-name { font-size:18px; font-weight:700; color:#1F3D34; }
     .m-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
     @media(max-width:620px){ .m-cols { grid-template-columns:1fr; } }
     .col h4 { font-size:13px; font-weight:700; color:#7a6f63; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
-    .item { display:flex; align-items:center; justify-content:space-between; gap:6px; background:#FAF8F4; border-radius:9px; padding:7px 11px; margin-bottom:6px; font-size:14px; font-weight:500; }
+    .item { display:flex; align-items:center; justify-content:space-between; gap:6px; background:#FAF8F4; border-radius:9px; padding:7px 11px; margin-bottom:6px; font-size:14px; font-weight:400; }
     .item.event { background:#fef6f1; }
     .item.topic { background:#f1f7f4; }
     .item .txt { cursor:pointer; flex:1; line-height:1.4; }
@@ -33,7 +33,7 @@
     .item .del { background:none; border:none; color:#c9a99a; font-size:16px; cursor:pointer; line-height:1; padding:0 2px; flex-shrink:0; }
     .item .del:hover { color:#c0492a; }
     .empty { color:#b6ab9d; font-size:13px; padding:3px 2px 7px; }
-    .add-btn { background:none; border:1.5px dashed #d8cdba; color:#9B8E82; border-radius:9px; padding:7px 11px; width:100%; font-family:'Heebo'; font-size:13px; font-weight:600; cursor:pointer; transition:border-color .15s,color .15s; }
+    .add-btn { background:none; border:1.5px dashed #d8cdba; color:#9B8E82; border-radius:9px; padding:7px 11px; width:100%; font-family:'Alef'; font-size:13px; font-weight:700; cursor:pointer; transition:border-color .15s,color .15s; }
     .add-btn:hover { border-color:#C4846C; color:#a05a3d; }
 
     /* album card inside June */
@@ -41,8 +41,8 @@
       background:linear-gradient(135deg,#C4846C,#b06f55); color:#fff; box-shadow:0 5px 16px rgba(196,132,108,.34); transition:transform .15s,box-shadow .15s; }
     .album-link:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(196,132,108,.42); }
     .album-link .ic { font-size:26px; }
-    .album-link .al-t { font-size:15px; font-weight:800; }
-    .album-link .al-s { font-size:12px; font-weight:500; opacity:.92; margin-top:2px; }
+    .album-link .al-t { font-size:15px; font-weight:700; }
+    .album-link .al-s { font-size:12px; font-weight:400; opacity:.92; margin-top:2px; }
     .album-link .arr { margin-right:auto; font-size:20px; }
 
     /* modal */
@@ -50,12 +50,12 @@
     .modal-ov.show { display:flex; }
     .modal { background:#fff; border-radius:16px; padding:22px; width:100%; max-width:420px; box-shadow:0 18px 50px rgba(0,0,0,.25); }
     .modal h3 { font-size:18px; color:#1F3D34; margin-bottom:16px; }
-    .modal label { display:block; font-size:13px; font-weight:600; color:#6f6457; margin:10px 0 5px; }
-    .modal select, .modal input { width:100%; padding:10px 12px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Heebo'; font-size:14px; outline:none; }
+    .modal label { display:block; font-size:13px; font-weight:700; color:#6f6457; margin:10px 0 5px; }
+    .modal select, .modal input { width:100%; padding:10px 12px; border:1.5px solid #e3ddd2; border-radius:10px; font-family:'Alef'; font-size:14px; outline:none; }
     .modal select:focus, .modal input:focus { border-color:#1F3D34; }
     .modal-actions { display:flex; gap:10px; margin-top:18px; }
-    .b-save { flex:1; background:#1F3D34; color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:700; cursor:pointer; }
-    .b-cancel { flex:1; background:#efe9e0; color:#6f6457; border:none; padding:11px; border-radius:10px; font-family:'Heebo'; font-weight:600; cursor:pointer; }
+    .b-save { flex:1; background:#1F3D34; color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Alef'; font-weight:700; cursor:pointer; }
+    .b-cancel { flex:1; background:#efe9e0; color:#6f6457; border:none; padding:11px; border-radius:10px; font-family:'Alef'; font-weight:700; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -63,7 +63,7 @@
   <h1>📚 תוכן חינוכי — ציר השנה</h1>
   <div class="lead">סקירה של השנה בגן: לכל חודש האירועים המרכזיים והנושאים החינוכיים שבהם נוגעים. לחצי על פריט כדי לערוך, על × כדי למחוק, או על "הוסף" כדי להוסיף חדש.</div>
   <div style="margin-bottom:16px;">
-    <button onclick="location.href='nap-forms.html'" style="background:#5f93b8; color:#fff; border:none; padding:10px 16px; border-radius:11px; font-family:'Heebo'; font-weight:700; font-size:13px; cursor:pointer;">🌙 שנת הצהריים — טקסי הירדמות (ספטמבר · הסתגלות)</button>
+    <button onclick="location.href='nap-forms.html'" style="background:#5f93b8; color:#fff; border:none; padding:10px 16px; border-radius:11px; font-family:'Alef'; font-weight:700; font-size:13px; cursor:pointer;">🌙 שנת הצהריים — טקסי הירדמות (ספטמבר · הסתגלות)</button>
   </div>
   <div id="error" class="error"></div>
 
@@ -89,7 +89,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=23"></script>
+<script src="js/common.js?v=24"></script>
 <script src="js/api.js?v=21"></script>
 <script>
 const CAL = 'curriculum';   // stored as events with calendar='curriculum' (isolated from the garden calendar)
