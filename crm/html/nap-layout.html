@@ -969,6 +969,7 @@ function renderBoard() {
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn ghost undo-btn" onclick="undoMove()" ${undoStack.length ? '' : 'disabled'}>⟲ ${undoStack.length ? 'בטל ' + esc(undoStack[undoStack.length - 1].label) : 'אין מה לבטל'}</button>
         <button class="btn soft" onclick="reflow()">סדרי מחדש</button>
+        <button class="btn ghost" id="pdfBtn" onclick="downloadPdf()">📄 הורדה ל-PDF</button>
         <button class="btn ghost" onclick="window.print()">הדפסה</button>
       </div>
     </div>
@@ -1534,6 +1535,62 @@ async function saveRitual() {
   closeModal(); renderBoard();
   try { await api.saveNapRitual(data); showOk('נשמר'); }
   catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+
+/* ---------- הורדה ל-PDF ---------- */
+// הדפדפן הוא המקור היחיד לגאומטריה: שולח סנטימטרים עם אפס בפינת החדר,
+// בדיוק מה שהמסך מצייר ממנו. לשרת אין לוגיקת פריסה משלו.
+function napSheet() {
+  const taken = new Set(Object.values(plan.who));
+  const out = plan.childIds.filter(c => !taken.has(c));
+  const d = new Date();
+  const dd = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+  const pottyN = plan.mats.filter(m => plan.potty[plan.who[m.id]]).length;
+
+  const legend = [{ color: '#cfe0ec', name: 'מזרן רגיל', note: `${plan.mat.w}×${plan.mat.h} ס"מ` }];
+  if (pottyN) legend.push({ color: '#e0c08a', name: 'מזרן גמילה', note: `${pottyN} ילדים` });
+  (plan.staff || []).forEach(st => legend.push({ color: '#C4846C', name: st.name, note: 'צוות בחדר' }));
+
+  return {
+    name: plan.name, portrait: !!plan.portrait, zoom: zoomOf(),
+    room: plan.room,
+    meta: `${dd}  ·  ${plan.mats.length - out.length}/${plan.childIds.length}`,
+    mats: plan.mats.map(m => {
+      const r = E.rectOf(m), cid = plan.who[m.id];
+      return { x: r.x, y: r.y, w: r.w, h: r.h,
+               name: cid ? kidName(cid) : '', ritual: cid ? ritualText(cid) : '',
+               potty: !!(cid && plan.potty[cid]) };
+    }),
+    items: (plan.obstacles || []).map(o => ({ x: o.x, y: o.y, w: o.w, h: o.h,
+             rot: o.rot || 0, name: o.name, kind: o.kind })),
+    staff: (plan.staff || []).map(st => ({ x: st.x, y: st.y, name: st.name })),
+    legend,
+    note: out.length ? `בלי מזרן: ${out.map(kidName).join(', ')}` : '',
+  };
+}
+function sheetFileName() {
+  return (plan.name || defaultPlanName()).replace(/[\\/:*?"<>|]/g, '').trim();
+}
+async function downloadPdf() {
+  const btn = document.getElementById('pdfBtn');
+  const label = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '…'; }
+  try {
+    const res = await fetch('/.netlify/functions/nap-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json',
+                 'Authorization': 'Bearer ' + localStorage.getItem('crm_token') },
+      body: JSON.stringify({ sheet: napSheet() }),
+    });
+    if (!res.ok) throw new Error('סטטוס ' + res.status);
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url; a.download = sheetFileName() + '.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch (e) {
+    showErr('ההורדה נכשלה: ' + e.message + ' — אפשר בינתיים דרך הדפסה ושמירה כ-PDF');
+  } finally { if (btn) { btn.disabled = false; btn.innerHTML = label; } }
 }
 
 /* ---------- סידור מחדש ויישור ---------- */

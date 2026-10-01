@@ -93,6 +93,7 @@ const api = {
   saveNapVersion: (plan, note) => apiCall(`/nap-layout?garden_id=${getGardenId()}`, 'POST', { action: 'version', plan, note }),
   deleteNapVersion: (version_id) => apiCall(`/nap-layout?garden_id=${getGardenId()}`, 'POST', { action: 'del-version', version_id }),
   deleteNapPlan: (id) => apiCall(`/nap-layout/${id}?garden_id=${getGardenId()}`, 'DELETE'),
+  napPdf: (sheet) => apiCall(`/nap-pdf?garden_id=${getGardenId()}`, 'POST', { sheet }),
   saveNapRitual: (data) => apiCall(`/nap-layout?garden_id=${getGardenId()}`, 'POST', Object.assign({ action: 'ritual' }, data)),
 
   // Food allergies per child (stored as JSON in events, calendar='child-health')
