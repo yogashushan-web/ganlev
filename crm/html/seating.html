@@ -2567,7 +2567,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 
 
 /* ---------- גרסאות שמורות ---------- */
-// כל "שמור גרסה" מוסיף צילום נפרד של הסידור. כאן רואים את כולן ואפשר
+// כל שמירה מוסיפה צילום נפרד של הסידור. כאן רואים את כולן ואפשר
 // לפתוח אחת כבסיס לעבודה חדשה — למשל לפתוח את ספטמבר ולבנות ממנה
 // את נובמבר, בלי לדרוס את ספטמבר.
 let savedVers = [];
@@ -2596,7 +2596,7 @@ function renderVerList() {
         </div>`;
       }).join('')
     : `<div class="empty-note">עוד לא נשמרה אף גרסה.<br>
-        סגרי את החלון ולחצי "שמור גרסה" — הסידור שעל המסך יישמר בצד,
+        סגרי את החלון ולחצי "שמירה" — כל שמירה נשמרת גם כאן,
         ותמיד אפשר יהיה לחזור אליו.</div>`;
   document.getElementById('modalBody').innerHTML = body;
 }
@@ -2613,7 +2613,7 @@ function openVersion(i) {
   document.getElementById('steps').classList.add('hide');
   document.getElementById('board').classList.remove('hide');
   renderTop(); renderBoard();
-  showOk(`נפתחה "${v.note}" לעריכה · "שמור גרסה" ייצור גרסה חדשה ולא ידרוס אותה`);
+  showOk(`נפתחה "${v.note}" לעריכה · שמירה ממנה תיצור נקודה חדשה ולא תדרוס אותה`);
 }
 // מחיקה בלי שאלה — הגרסה עוברת לפח וניתנת לשחזור
 async function removeVersion(i) {
