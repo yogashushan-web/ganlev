@@ -369,35 +369,42 @@
 
     /* ---- מסילת כלים אנכית בצד הדף ----
        שורת כפתורים מעל הדף גנבה ממנו גובה ונקראה כניווט כללי. מסילה
-       צמודה לצידו נקראת כ"כלים של הדף הזה", ולא עולה כלום בגובה. */
+       צמודה לצידו נקראת כ"כלים של הדף הזה", ולא עולה כלום בגובה.
+       האייקונים הם משפחה אחת של קווים — אותו עובי, אותו צבע, אותו
+       ריבוע — כי אמוג'י לא יכולים להיות סרגל: כל אחד מהם משקל ויזואלי
+       ופלטה אחרים, ושורה שלהם נקראת כמדבקות. */
     .sheet-wrap { display:flex; align-items:flex-start; gap:10px; }
     .sheet-wrap .room-outer { flex:1; min-width:0; }
-    .rail { flex:0 0 46px; display:flex; flex-direction:column; align-items:center; gap:6px;
-            background:#fff; border:1px solid #e8e4de; border-radius:14px; padding:7px 5px 10px; }
-    .rb { width:34px; height:34px; border-radius:10px; border:1px solid transparent; background:#FAF8F4;
-          font-size:16px; line-height:1; cursor:pointer; position:relative; display:flex;
-          align-items:center; justify-content:center; font-family:'Heebo'; }
-    .rb:hover { background:#f4f9f6; border-color:#1F3D34; }
+    .rail { flex:0 0 42px; display:flex; flex-direction:column; align-items:center; gap:2px;
+            background:#fff; border:1px solid #ece7df; border-radius:12px; padding:5px 4px 8px;
+            box-shadow:0 1px 3px rgba(0,0,0,.03); }
+    .rb { width:32px; height:32px; border-radius:9px; border:0; background:none; color:#8a7f70;
+          cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center;
+          font-family:'Heebo'; transition:background .12s, color .12s; }
+    .rb:hover { background:#f2f6f3; color:#1F3D34; }
+    .rb.on { background:#1F3D34; color:#fff; }
     /* התווית נפתחת בריחוף — המסילה נשארת צרה, ושום דבר לא מנוחש */
-    .rb::after { content:attr(data-t); position:absolute; right:calc(100% + 8px); top:50%;
-                 transform:translateY(-50%); background:#1F3D34; color:#fff; border-radius:7px;
-                 padding:4px 10px; font-size:11.5px; font-weight:700; white-space:nowrap;
-                 opacity:0; pointer-events:none; transition:opacity .12s; }
+    .rb::after { content:attr(data-t); position:absolute; right:calc(100% + 9px); top:50%;
+                 transform:translateY(-50%); background:#1F3D34; color:#fff; border-radius:6px;
+                 padding:4px 9px; font-size:11.5px; font-weight:700; white-space:nowrap;
+                 opacity:0; pointer-events:none; transition:opacity .12s; z-index:20; }
     .rb:hover::after { opacity:1; }
-    .rsep { width:22px; height:1px; background:#e8e4de; margin:2px 0; }
-    .rzoom { height:92px; display:flex; align-items:center; justify-content:center; }
-    .rzoom input { -webkit-appearance:none; appearance:none; width:88px; height:3px; border-radius:99px;
-                   background:#e0d7c7; outline:none; cursor:ns-resize; transform:rotate(-90deg); }
-    .rzoom input::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:14px; height:14px;
+    .rsep { width:18px; height:1px; background:#ece7df; margin:5px 0; }
+    .rzoom { height:84px; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+    .rzoom input { -webkit-appearance:none; appearance:none; width:76px; height:3px; border-radius:99px;
+                   background:#ece7df; outline:none; cursor:ns-resize; transform:rotate(-90deg); }
+    .rzoom input::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:12px; height:12px;
                    border-radius:50%; background:#fff; border:2px solid #C4846C;
-                   box-shadow:0 1px 4px rgba(0,0,0,.18); cursor:grab; }
-    .rzoom input::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:#fff;
+                   box-shadow:0 1px 3px rgba(0,0,0,.2); cursor:grab; }
+    .rzoom input::-moz-range-thumb { width:11px; height:11px; border-radius:50%; background:#fff;
                    border:2px solid #C4846C; }
-    .rzv { font-size:11px; color:#9B8E82; font-weight:800; font-variant-numeric:tabular-nums; }
+    .rzv { font-size:10px; color:#b3a899; font-weight:800; font-variant-numeric:tabular-nums;
+           letter-spacing:.2px; }
     @media (max-width: 700px) {
       .sheet-wrap { flex-direction:column-reverse; }
-      .rail { flex-direction:row; flex:none; width:100%; justify-content:center; flex-wrap:wrap; }
-      .rzoom { height:auto; } .rzoom input { transform:none; }
+      .rail { flex-direction:row; flex:none; width:100%; justify-content:center; flex-wrap:wrap; gap:4px; }
+      .rsep { width:1px; height:18px; margin:0 4px; }
+      .rzoom { height:auto; } .rzoom input { transform:none; width:100px; }
       .rb::after { right:auto; left:50%; top:calc(100% + 6px); transform:translateX(-50%); }
     }
 
@@ -527,7 +534,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=20"></script>
+<script src="js/common.js?v=21"></script>
 <script src="js/api.js?v=21"></script>
 <script src="js/seating-engine.js?v=4"></script>
 <script>
@@ -1836,11 +1843,11 @@ function renderBoard() {
     <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">
       <div class="rscale" id="rscale" style="transform:scale(${zoomOf()})">${tablesHtml}${itemsHtml()}${markersHtml()}${parkedHtml()}<div id="guides"></div></div>${legendHtml()}</div></div>
       <div class="rail">
-        <button class="rb" data-t="פריסת החדר" onclick="openLayouts()">▦</button>
-        <button class="rb" data-t="פריטים בחדר" onclick="openItems()">🍲</button>
-        <button class="rb" data-t="אלרגיות" onclick="openAllergies()">⚠️</button>
+        <button class="rb" data-t="פריסת החדר" onclick="openLayouts()">${crmIcon('grid')}</button>
+        <button class="rb" data-t="פריטים בחדר" onclick="openItems()">${crmIcon('box')}</button>
+        <button class="rb" data-t="אלרגיות" onclick="openAllergies()">${crmIcon('alert')}</button>
         <i class="rsep"></i>
-        <button class="rb" data-t="התאם לדף" onclick="fitToPage()">⤢</button>
+        <button class="rb" data-t="התאם לדף" onclick="fitToPage()">${crmIcon('expand')}</button>
         <div class="rzoom">
           <input type="range" id="zoomR" min="50" max="200" step="1" value="${Math.round(zoomOf() * 100)}"
             aria-label="גודל התוכן על הדף"

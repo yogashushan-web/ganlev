@@ -189,6 +189,30 @@ async function purgeTrash(id) {
   catch (e) { alert('שגיאה: ' + e.message); }
 }
 
+// ---- Line icons (inline SVG) ----
+// Emoji cannot make a toolbar: each one is a different weight, palette and
+// optical size, so a row of them reads as stickers. These are one family —
+// same 24x24 box, same 1.8 stroke, same colour inherited from the button —
+// which is what makes a rail look like a tool and not a sticker sheet.
+const CRM_ICONS = {
+  grid:    '<path d="M3 3h18v18H3z"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
+  box:     '<path d="M21 8v8l-9 5-9-5V8l9-5z"/><path d="M3.3 7.5 12 12.5l8.7-5M12 12.5V21"/>',
+  alert:   '<path d="M10.3 3.9 2.1 18a2 2 0 0 0 1.7 3h16.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  expand:  '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>',
+  door:    '<path d="M4 21V4a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v17"/><path d="M2 21h20M13 12h.01"/>',
+  person:  '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  rotate:  '<path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/>',
+  select:  '<path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="M10 4h4M10 20h4M4 10v4M20 10v4"/>',
+  align:   '<path d="M4 6h16M7 12h10M4 18h16"/>',
+  layers:  '<path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>',
+};
+function crmIcon(name, size) {
+  const d = CRM_ICONS[name] || CRM_ICONS.grid;
+  return '<svg viewBox="0 0 24 24" width="' + (size || 19) + '" height="' + (size || 19) +
+    '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
+    'stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+}
+
 // Inject a persistent navigation sidebar (same on every page) so sections are
 // always one click away. Highlights the current page.
 function renderNavSidebar() {
