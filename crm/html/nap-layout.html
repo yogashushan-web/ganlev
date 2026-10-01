@@ -221,6 +221,16 @@
                     width:13px; height:13px; border-radius:50%; background:#fff;
                     border:2px solid #C4846C; box-shadow:0 1px 4px rgba(0,0,0,.15); display:block; }
     .ohandle:active { cursor:grabbing; }
+    /* ידיות פינה לשינוי גודל. מסתובבות יחד עם הפריט, ולכן "הפינה
+       הימנית התחתונה" היא תמיד אותה פינה של האובייקט. */
+    .ogrip { position:absolute; width:11px; height:11px; border-radius:3px; background:#fff;
+             border:1.5px solid #C4846C; box-shadow:0 1px 3px rgba(0,0,0,.18);
+             opacity:0; transition:opacity .12s; z-index:10; }
+    .obst:hover .ogrip, .ogrip:active { opacity:1; }
+    .ogrip.nw { left:-6px;  top:-6px;    cursor:nwse-resize; }
+    .ogrip.ne { right:-6px; top:-6px;    cursor:nesw-resize; }
+    .ogrip.se { right:-6px; bottom:-6px; cursor:nwse-resize; }
+    .ogrip.sw { left:-6px;  bottom:-6px; cursor:nesw-resize; }
     .rot-tag { position:fixed; z-index:10002; pointer-events:none; background:#fff; color:#9B8E82;
                border:1.5px solid #e8e4de; border-radius:999px; padding:3px 11px; font-size:12px;
                font-weight:800; box-shadow:0 3px 10px rgba(0,0,0,.14); white-space:nowrap; }
@@ -344,7 +354,7 @@
       html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
           box-shadow:none !important; }
-      .header, .steps, .toolbar, .status, .rail, .gridbar, .a4note, .err, .ok, .ov, .odel, .ohandle, .rot-tag, .marq, .mrot, .blockers, .viol,
+      .header, .steps, .toolbar, .status, .rail, .gridbar, .a4note, .err, .ok, .ov, .odel, .ohandle, .rot-tag, .marq, .mrot, .ogrip, .blockers, .viol,
       #crmSidebar, #crmMenuBtn, #trashFab { display:none !important; }
       .wrap { padding:0 !important; max-width:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
@@ -928,6 +938,8 @@ function renderBoard() {
       <span>${spotKind(ob.kind).ico} ${esc(ob.name)}</span>
       <div class="ohandle" onpointerdown="startObsRotate(event,'${ob.id}')"
         title="גרירה מסובבת · Alt לזווית חופשית"><span></span></div>
+      ${['nw','ne','se','sw'].map(c => `<i class="ogrip ${c}"
+        onpointerdown="startObsResize(event,'${ob.id}','${c}')" title="גרירה משנה גודל"></i>`).join('')}
       <button class="odel" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();delObs('${ob.id}')">הסר</button></div>`).join('');
 
   const staffHtml = (plan.staff || []).map(st => `<div class="pmark" data-s="${st.id}"
@@ -1393,6 +1405,64 @@ function endObsRotate() {
   const t = document.getElementById('rotTag'); if (t) t.remove();
   obsRot = null; renderBoard();
 }
+// שינוי גודל בגרירת פינה. הפינה הנגדית נשארת במקומה — גם כשהפריט
+// מסובב, ולכן החישוב עובר דרך המרכז: מוצאים איפה הפינה הנגדית נמצאת
+// בעולם, ואז מחזירים ממנה את המרכז החדש לפי הגודל החדש.
+function startObsResize(ev, id, corner) {
+  ev.preventDefault(); ev.stopPropagation();
+  const ob = (plan.obstacles || []).find(o => o.id === id); if (!ob) return;
+  pushUndo('שינוי גודל פריט');
+  const p0 = sceneAt(ev);
+  const st = { x: ob.x, y: ob.y, w: ob.w, h: ob.h };
+  const rad = (ob.rot || 0) * Math.PI / 180;
+  const cos = Math.cos(rad), sin = Math.sin(rad);
+  // סימני הפינה הנגררת, במערכת המקומית של הפריט
+  const sx = corner.includes('e') ? 1 : -1;
+  const sy = corner.includes('s') ? 1 : -1;
+  // הפינה הנגדית, במקום שבו היא נראית על הדף — זו שלא תזוז
+  const c0 = { x: st.x + st.w / 2, y: st.y + st.h / 2 };
+  const ox = -sx * st.w / 2, oy = -sy * st.h / 2;
+  const P = { x: c0.x + ox * cos - oy * sin, y: c0.y + ox * sin + oy * cos };
+
+  const move = e => {
+    const p = sceneAt(e);
+    const dx = p.x - p0.x, dy = p.y - p0.y;
+    // ההזזה מתורגמת למערכת המקומית, אחרת גרירה על פריט מסובב
+    // משנה את הממד הלא נכון
+    const lx = dx * cos + dy * sin, ly = -dx * sin + dy * cos;
+    let w = Math.max(15, Math.round(st.w + sx * lx));
+    let h = Math.max(10, Math.round(st.h + sy * ly));
+    if (e.shiftKey) {                       // שמירת יחס
+      const k = Math.max(w / st.w, h / st.h);
+      w = Math.max(15, Math.round(st.w * k)); h = Math.max(10, Math.round(st.h * k));
+    }
+    const nx = -sx * w / 2, ny = -sy * h / 2;
+    const c = { x: P.x - (nx * cos - ny * sin), y: P.y - (nx * sin + ny * cos) };
+    ob.w = w; ob.h = h;
+    ob.x = Math.round(c.x - w / 2); ob.y = Math.round(c.y - h / 2);
+    const el = document.querySelector(`.obst[data-o="${id}"]`);
+    if (el) {
+      el.style.left = sX(ob.x) + 'px'; el.style.top = sY(ob.y) + 'px';
+      el.style.width = sLen(ob.w) + 'px'; el.style.height = sLen(ob.h) + 'px';
+    }
+    showSize(ob, e);
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', () => {
+    window.removeEventListener('pointermove', move);
+    const t = document.getElementById('rotTag'); if (t) t.remove();
+    renderBoard();
+  }, { once: true });
+}
+function showSize(ob, ev) {
+  let tag = document.getElementById('rotTag');
+  if (!tag) { tag = document.createElement('div'); tag.id = 'rotTag'; tag.className = 'rot-tag'; document.body.appendChild(tag); }
+  tag.textContent = `${ob.w} × ${ob.h} ס"מ`;
+  tag.classList.remove('snap');
+  tag.style.left = (ev.clientX + 16) + 'px';
+  tag.style.top = (ev.clientY - 30) + 'px';
+}
+
 function delObs(id) { pushUndo('הסרת פריט'); plan.obstacles = plan.obstacles.filter(o => o.id !== id); renderBoard(); }
 function openStaffPick() {
   const on = new Set((plan.staff || []).map(s => s.sid));
