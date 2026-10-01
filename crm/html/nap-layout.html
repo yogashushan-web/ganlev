@@ -95,6 +95,12 @@
                box-shadow:0 1px 4px rgba(0,0,0,.18); cursor:grab; }
     .gridbar input[type=range]::-moz-range-thumb { width:12px; height:12px; border-radius:50%;
                background:#fff; border:2px solid #C4846C; }
+    .gsep { width:1px; height:20px; background:#e8e4de; }
+    .groom { display:flex; align-items:center; gap:6px; font-size:12.5px; color:#9B8E82; font-weight:700; }
+    .groom input { width:64px; padding:5px 8px; border:1.5px solid #e8e4de; border-radius:8px;
+                   font-family:'Heebo'; font-size:12.5px; text-align:center; outline:none;
+                   font-variant-numeric:tabular-nums; }
+    .groom input:focus { border-color:#1F3D34; }
     .gtog { background:#FAF8F4; border:1px solid #e8e4de; border-radius:999px; padding:6px 14px;
             font-family:'Heebo'; font-size:12.5px; font-weight:700; color:#6f6457; cursor:pointer; }
     .gtog.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
@@ -154,6 +160,10 @@
     .rscale { position:absolute; left:0; top:0; width:1123px; height:794px; transform-origin:561.5px 397px; }
 
     /* המזרן: מלבן פיזי. השם גדול, וטקס ההירדמות מתחתיו בכתב קטן. */
+    /* קירות החדר. הם לא קישוט — הם מערכת הצירים שהפכה לנראית: מרגע
+       שיש להם מידות, גרירת מזרן לא יכולה להזיז שום דבר אחר. */
+    .walls { position:absolute; border:3px solid #cbbfa9; border-radius:3px;
+             background:#fffdf9; box-shadow:inset 0 0 0 1px rgba(203,191,169,.3); z-index:1; }
     .mat { position:absolute; border:2px solid #cfe0ec; background:#eef5fb; border-radius:9px;
            display:flex; flex-direction:column; align-items:center; justify-content:center;
            cursor:grab; touch-action:none; direction:rtl; overflow:hidden; padding:4px; z-index:5; }
@@ -372,7 +382,7 @@ const ROOM_H = () => (plan && plan.portrait) ? A4_LONG : A4_SHORT;
 function flipPage() {
   pushUndo('היפוך הדף');
   plan.portrait = !plan.portrait;
-  centerMats(); renderBoard();
+  fitRoomToPage(); renderBoard();
   showOk(plan.portrait ? 'הדף לאורך' : 'הדף לרוחב');
 }
 const STEPS = ['מי ישן', 'המזרונים', 'כללי שינה', 'הסידור'];
@@ -401,7 +411,7 @@ let selMats = new Set(), undoStack = [];
 function newPlan() {
   return { id: 'np' + Date.now().toString(36), name: 'סידור מזרונים ' + schoolYear(),
            childIds: [], mat: { w: 120, h: 60, kind: 'naamat' }, potty: {},
-           mats: [], who: {}, obstacles: [], staff: [], rules: [], zoom: 1, okRules: {} };
+           mats: [], who: {}, obstacles: [], staff: [], rules: [], zoom: 1, okRules: {}, room: null };
 }
 function schoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
 const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
@@ -729,7 +739,9 @@ function applyGrid(fresh) {
     if (free) plan.who[free.id] = c;
   });
   if (fresh) solveRules();
-  centerMats();
+  anchorMats();
+  ensureRoom(fresh);
+  fitRoomToPage();
 }
 function setGrid(key, val) {
   pushUndo('שינוי הסידור');
@@ -804,36 +816,55 @@ function liveZoom(v) {
   if (out) out.textContent = Math.round(plan.zoom * 100) + '%';
   saveDraft();
 }
-function pxPerCm() {
-  const r = E.requiredRoom(plan.mats, plan.obstacles, 40);
-  const useW = plan.room && plan.room.w ? plan.room.w : r.w;
-  const useH = plan.room && plan.room.h ? plan.room.h : r.h;
-  if (!useW || !useH) return 1;
-  return Math.min((ROOM_W() - 60) / useW, (ROOM_H() - 90) / useH);
-}
-// נקודת האפס של הדף, כך שהתוכן יֵצא *ממורכז* בו — אופקית ואנכית.
-// קודם הוא היה מעוגן לפינה השמאלית-עליונה, בעוד ההגדלה מתבצעת סביב
-// מרכז הדף. כששני אלה לא מתלכדים, כל הגדלה דוחפת את התוכן כלפי מעלה
-// במקום להרחיב אותו סימטרית.
-function originCm() {
-  const r = E.requiredRoom(plan.mats, plan.obstacles, 40);
-  const s = pxPerCm();
-  return {
-    x: r.x - ((ROOM_W() - r.w * s) / 2) / s,
-    y: r.y - ((ROOM_H() - r.h * s) / 2) / s,
-    s,
-  };
-}
-const toPx = (cm, o) => (cm - o) * pxPerCm();
+/* ---------- מערכת צירים ---------- */
+// שלושה דברים שחייבים להישאר נפרדים, וקודם היו מעורבבים:
+//   1. המודל — סנטימטרים מוחלטים, אפס בפינת החדר. לא משתנה בתצוגה.
+//   2. התצוגה — view, זמנית, לא נשמרת בתוכנית.
+//   3. "התאם לדף" — פקודה שרצה בנקודות מוגדרות, לא חישוב מתמיד.
+//
+// קודם גם קנה המידה וגם נקודת האפס נגזרו מהתיבה החוסמת של המזרונים,
+// ולכן גרירת מזרן אחד שינתה את מערכת הצירים וכל השאר קפצו — התוכן
+// הזיז את הצירים של עצמו.
+const LEGEND_PX = 34;                      // שמור למקרא ולסרגל קנה המידה
+let view = { pxPerCm: 1, panX: 0, panY: 0 };
 
-function centerMats() {
-  const r = E.requiredRoom(plan.mats, plan.obstacles, 0);
+// גודל החדר נקבע פעם אחת מהסידור שנבנה, ומכאן הוא קבוע — עד שמשנים
+// אותו במפורש. זה מה שהופך אותו לנקודת ייחוס.
+function ensureRoom(force) {
+  if (!force && plan.room && plan.room.w) return;
+  const r = E.requiredRoom(plan.mats, plan.obstacles, 40);
+  plan.room = { w: Math.max(200, Math.ceil(r.w / 10) * 10),
+                h: Math.max(200, Math.ceil(r.h / 10) * 10) };
+}
+// הזזת הסידור כך שיתחיל בפינת החדר. נקראת בבנייה בלבד, לא בכל ציור.
+function anchorMats(pad) {
+  pad = pad == null ? 40 : pad;
   if (!plan.mats.length) return;
-  const dx = -r.x, dy = -r.y;
+  const r = E.requiredRoom(plan.mats, plan.obstacles, 0);
+  const dx = pad - r.x, dy = pad - r.y;
   plan.mats.forEach(m => { m.x += dx; m.y += dy; });
   (plan.obstacles || []).forEach(o => { o.x += dx; o.y += dy; });
-  (plan.staff || []).forEach(s => { s.x += dx; s.y += dy; });
+  (plan.staff || []).forEach(st => { st.x += dx; st.y += dy; });
 }
+function setRoom(w, h) {
+  pushUndo('שינוי גודל החדר');
+  plan.room = { w: Math.max(150, Math.round(w)), h: Math.max(150, Math.round(h)) };
+  fitRoomToPage(); renderBoard();
+}
+
+// הפקודה היחידה שכותבת ל-view. רצה בבנייה, בהיפוך הדף, בשינוי גודל
+// החדר ובשינוי רוחב החלון — ולעולם לא בזמן גרירה.
+function fitRoomToPage(pad) {
+  pad = pad == null ? 26 : pad;
+  ensureRoom();
+  const W = ROOM_W(), H = ROOM_H() - LEGEND_PX;
+  view.pxPerCm = Math.min((W - pad * 2) / plan.room.w, (H - pad * 2) / plan.room.h);
+  view.panX = (W - plan.room.w * view.pxPerCm) / 2;
+  view.panY = (H - plan.room.h * view.pxPerCm) / 2;
+}
+const sX = cm => cm * view.pxPerCm + view.panX;
+const sY = cm => cm * view.pxPerCm + view.panY;
+const sLen = cm => cm * view.pxPerCm;
 
 function ritualOf(cid) { return rituals[cid] || null; }
 function ritualText(cid) {
@@ -846,7 +877,11 @@ function ritualText(cid) {
 
 function renderBoard() {
   saveDraft();
-  const o = originCm(), s = pxPerCm();
+  // בטוח לקרוא בכל ציור: מאז התיקון הפקודה תלויה אך ורק במידות החדר
+  // ובכיוון הדף — לא בתוכן — ולכן היא אידמפוטנטית. זה גם מכסה תוכנית
+  // ישנה שנשמרה לפני שהיו לחדר מידות בכלל.
+  fitRoomToPage();
+  const s = view.pxPerCm;
   const viols = E.checkViolations(enginePlan(), { aisle: plan.aisle || 45 })
                  .filter(v => !(plan.okRules || {})[v.ruleId]);
   const phys = E.physical(enginePlan());
@@ -863,7 +898,7 @@ function renderBoard() {
     if (!reach[m.id]) cls.push('unreach');
     const rt = cid ? ritualText(cid) : '';
     return `<div class="${cls.join(' ')}" data-m="${m.id}"
-      style="left:${toPx(r.x, o.x)}px;top:${toPx(r.y, o.y)}px;width:${r.w * s}px;height:${r.h * s}px"
+      style="left:${sX(r.x)}px;top:${sY(r.y)}px;width:${sLen(r.w)}px;height:${sLen(r.h)}px"
       onpointerdown="startMatDrag(event,'${m.id}')">
       <span class="nm">${esc(cid ? kidName(cid) : '—')}</span>
       ${cid ? `<span class="rt ${rt ? '' : 'empty'}" onpointerdown="event.stopPropagation()"
@@ -873,7 +908,7 @@ function renderBoard() {
   }).join('');
 
   const obsHtml = (plan.obstacles || []).map(ob => `<div class="obst" data-o="${ob.id}"
-      style="left:${toPx(ob.x, o.x)}px;top:${toPx(ob.y, o.y)}px;width:${ob.w * s}px;height:${ob.h * s}px;
+      style="left:${sX(ob.x)}px;top:${sY(ob.y)}px;width:${sLen(ob.w)}px;height:${sLen(ob.h)}px;
         transform:rotate(${ob.rot || 0}deg)"
       onpointerdown="startObsDrag(event,'${ob.id}')">
       <span>${spotKind(ob.kind).ico} ${esc(ob.name)}</span>
@@ -882,7 +917,7 @@ function renderBoard() {
       <button class="odel" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();delObs('${ob.id}')">הסר</button></div>`).join('');
 
   const staffHtml = (plan.staff || []).map(st => `<div class="pmark" data-s="${st.id}"
-      style="left:${toPx(st.x, o.x)}px;top:${toPx(st.y, o.y)}px"
+      style="left:${sX(st.x)}px;top:${sY(st.y)}px"
       onpointerdown="startStaffDrag(event,'${st.id}')">👩‍🏫 ${esc(st.name)}
       <button class="odel" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();delStaff('${st.id}')">הסר</button></div>`).join('');
 
@@ -914,6 +949,14 @@ function renderBoard() {
         <b id="ggap">${(plan.grid || {}).rowGap || 0} ס"מ</b></label>
       <button class="gtog ${(plan.grid || {}).aisle ? 'on' : ''}" onclick="setGrid('aisle',!(plan.grid||{}).aisle)">
         מעבר באמצע · ${(plan.grid || {}).aisle ? 'יש' : 'אין'}</button>
+      <span class="gsep"></span>
+      <label class="groom">החדר
+        <input type="number" step="10" value="${plan.room.w}"
+          onchange="setRoom(this.value, plan.room.h)"> ×
+        <input type="number" step="10" value="${plan.room.h}"
+          onchange="setRoom(plan.room.w, this.value)"> ס"מ</label>
+      <button class="gtog" onclick="ensureRoom(true);fitRoomToPage();renderBoard()"
+        title="מכווץ את החדר למידה המינימלית שמכילה את הסידור">כווצי לסידור</button>
     </div>
     <div class="a4note">📄 A4 ${plan.portrait ? 'לאורך' : 'לרוחב'} · הסידור דורש חדר של
       <b>${(need.w / 100).toFixed(2)} × ${(need.h / 100).toFixed(2)} מטר</b></div>
@@ -921,7 +964,10 @@ function renderBoard() {
     <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)"
       style="width:${ROOM_W()}px;height:${ROOM_H()}px">
       <div class="rscale" id="rscale" style="width:${ROOM_W()}px;height:${ROOM_H()}px;
-        transform:scale(${zoomOf()});transform-origin:${ROOM_W() / 2}px ${ROOM_H() / 2}px">${matsHtml}${obsHtml}${staffHtml}<div id="guides"></div></div>
+        transform:scale(${zoomOf()});transform-origin:${ROOM_W() / 2}px ${ROOM_H() / 2}px">
+        <div class="walls" style="left:${sX(0)}px;top:${sY(0)}px;
+          width:${sLen(plan.room.w)}px;height:${sLen(plan.room.h)}px"></div>
+        ${matsHtml}${obsHtml}${staffHtml}<div id="guides"></div></div>
       ${legendHtml()}${scaleBar()}</div></div>
       <div class="rail">
         <button class="rb" data-t="צורת החדר" onclick="goStep(4)">${crmIcon('grid')}</button>
@@ -958,8 +1004,7 @@ function legendHtml() {
     <i style="background:${r.c}"></i><b>${esc(r.b)}</b><em>${esc(r.e)}</em></span>`).join('')}</div>`;
 }
 function scaleBar() {
-  const s = pxPerCm();
-  const px = 100 * s;                       // מטר אחד
+  const px = sLen(100);                       // מטר אחד
   return `<div class="scalebar"><i style="width:${px}px"></i><span>1 מטר</span></div>`;
 }
 // כיוון הדף בהדפסה לא ניתן להגדרה במחלקת CSS, ולכן הכלל מוזרק מחדש
@@ -980,7 +1025,7 @@ function fitRoom() {
   room.style.transform = 'scale(' + sc + ')';
   outer.style.height = (ROOM_H() * sc) + 'px';
 }
-window.addEventListener('resize', () => { if (built) fitRoom(); });
+window.addEventListener('resize', () => { if (built) { fitRoomToPage(); renderBoard(); } });
 
 function statusStrip(viols, phys, unreach) {
   const n = plan.childIds.length, placed = Object.values(plan.who).filter(Boolean).length;
@@ -1010,7 +1055,7 @@ function acceptViol(id) { pushUndo('אישור חריגה'); plan.okRules = plan
 function roomScale() {
   const room = document.getElementById('room');
   const sc = room ? (room.getBoundingClientRect().width / ROOM_W()) || 1 : 1;
-  return { sc, cm: sc * pxPerCm() * zoomOf() };   // פיקסלים על המסך לכל סנטימטר
+  return { sc, cm: sc * view.pxPerCm * zoomOf() };   // פיקסלים על המסך לכל סנטימטר
 }
 let drag = null;
 const SNAP = 8;   // ס"מ — הצמדה לקצה של מזרן אחר
@@ -1051,12 +1096,11 @@ function onMatDrag(ev) {
     : snapTo(m, lead.x + dx, lead.y + dy);
   const adjX = sn.x - (lead.x + dx), adjY = sn.y - (lead.y + dy);
 
-  const o = originCm(), s = pxPerCm();
   drag.start.forEach(st => {
     const t = plan.mats.find(x => x.id === st.id); if (!t) return;
     t.x = Math.round(st.x + dx + adjX); t.y = Math.round(st.y + dy + adjY);
     const el = document.querySelector(`.mat[data-m="${t.id}"]`);
-    if (el) { el.style.left = toPx(t.x, o.x) + 'px'; el.style.top = toPx(t.y, o.y) + 'px'; }
+    if (el) { el.style.left = sX(t.x) + 'px'; el.style.top = sY(t.y) + 'px'; }
   });
   drawGuides(sn.lines);
 
@@ -1142,10 +1186,9 @@ function snapTo(me, x, y) {
 }
 function drawGuides(lines) {
   const g = document.getElementById('guides'); if (!g) return;
-  const o = originCm();
   g.innerHTML = (lines || []).map(l => l.dir === 'v'
-    ? `<div class="gline v" style="left:${toPx(l.at, o.x)}px"></div>`
-    : `<div class="gline h" style="top:${toPx(l.at, o.y)}px"></div>`).join('');
+    ? `<div class="gline v" style="left:${sX(l.at)}px"></div>`
+    : `<div class="gline h" style="top:${sY(l.at)}px"></div>`).join('');
 }
 
 function startObsDrag(ev, id) { genericDrag(ev, id, plan.obstacles, 'obst', 'data-o', 'הזזת פריט'); }
@@ -1160,9 +1203,8 @@ function genericDrag(ev, id, arr, cls, attr, label) {
     const { cm } = roomScale();
     it.x = Math.round(st.ox + (e.clientX - st.sx) / cm);
     it.y = Math.round(st.oy + (e.clientY - st.sy) / cm);
-    const o = originCm();
     const el = document.querySelector(`.${cls}[${attr}="${id}"]`);
-    if (el) { el.style.left = toPx(it.x, o.x) + 'px'; el.style.top = toPx(it.y, o.y) + 'px'; }
+    if (el) { el.style.left = sX(it.x) + 'px'; el.style.top = sY(it.y) + 'px'; }
   };
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', () => {
@@ -1302,13 +1344,13 @@ function tidy() {
     m.x = r.x + Math.round((m.x - r.x) / gx) * gx;
     m.y = r.y + Math.round((m.y - r.y) / gy) * gy;
   });
-  centerMats(); renderBoard();
+  anchorMats(); fitRoomToPage(); renderBoard();
 }
 
 /* ---------- ביטול ---------- */
 function snapshot() { return JSON.stringify({ mats: plan.mats, who: plan.who,
   obstacles: plan.obstacles || [], staff: plan.staff || [], okRules: plan.okRules || {},
-  zoom: zoomOf(), portrait: !!plan.portrait }); }
+  zoom: zoomOf(), portrait: !!plan.portrait, room: plan.room }); }
 function pushUndo(label) {
   const s = snapshot();
   const top = undoStack[undoStack.length - 1];
@@ -1322,6 +1364,8 @@ function undoMove() {
   plan.mats = p.mats; plan.who = p.who; plan.obstacles = p.obstacles;
   plan.staff = p.staff; plan.okRules = p.okRules;
   plan.zoom = p.zoom || 1; plan.portrait = !!p.portrait;
+  if (p.room) plan.room = p.room;
+  fitRoomToPage();
   selMats.clear(); renderBoard(); showOk('בוטל: ' + e.label);
 }
 document.addEventListener('keydown', e => {
