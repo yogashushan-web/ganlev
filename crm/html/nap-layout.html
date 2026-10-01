@@ -430,9 +430,22 @@ let allKids = [], allStaff = [], rituals = {}, step = WELCOME, plan = null, buil
 let selMats = new Set(), undoStack = [];
 
 function newPlan() {
-  return { id: 'np' + Date.now().toString(36), name: 'סידור מזרונים ' + schoolYear(),
+  return { id: 'np' + Date.now().toString(36), name: defaultPlanName(),
            childIds: [], mat: { w: 120, h: 60, kind: 'naamat' }, potty: {},
            mats: [], who: {}, obstacles: [], staff: [], rules: [], zoom: 1, okRules: {}, room: null };
+}
+// שם ברירת מחדל זהה בכל הכלים: סוג · חודש · שנה · שם הגן הפעיל
+const HE_MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+                   'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+function gardenName() {
+  let g = '';
+  try { g = window.crmGardenName || localStorage.getItem('crm_garden_name') || ''; } catch (e) {}
+  return String(g).trim();
+}
+function defaultPlanName() {
+  const d = new Date(), g = gardenName();
+  return `סידור מזרונים - ${HE_MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`
+    + (g ? ` - ${g}` : '');
 }
 function schoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
 const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
@@ -482,7 +495,6 @@ function renderTop() {
   document.getElementById('topActions').innerHTML = built
     ? `<button class="btn ghost" onclick="goStep(1)">שינוי הגדרות</button>
        <button class="btn ghost" onclick="openVersions()">גרסאות שמורות</button>
-       <button class="btn soft" onclick="saveVersion()">שמור גרסה</button>
        <button class="btn" onclick="savePlan()">שמירה</button>`
     : back + `<button class="btn ghost" onclick="loadExisting()">סידורים שמורים</button>
        <button class="btn ghost" onclick="startFresh()">סידור חדש</button>`;
@@ -1580,25 +1592,35 @@ function openModal(title, sub, body, actions) {
 function closeModal() { document.getElementById('modalOv').classList.remove('show'); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-async function savePlan() {
-  try { await api.saveNapPlan(plan); showOk('הסידור נשמר'); }
-  catch (e) { showErr('השמירה נכשלה: ' + e.message); }
-}
-function saveVersion() {
-  const def = 'גרסה מ-' + new Date().toLocaleDateString('he-IL');
-  openModal('שמירת גרסה', 'נשמרת בצד ולא דורסת כלום. תמצאי אותה בכפתור "גרסאות שמורות".',
-    `<input type="text" id="verName" value="${esc(def)}">`,
-    `<button class="btn" onclick="doSaveVersion()">שמירה</button>
+// כפתור אחד. "שמירה" ו"שמור גרסה" הייתה הבחנה טכנית נכונה — האחת
+// דורסת והשנייה מוסיפה צילום — אבל היא הכריחה את המשתמשת לחשוב על
+// אחסון במקום על עבודה. עכשיו שמירה עושה את שניהם.
+function savePlan() {
+  openModal('שמירת הסידור', 'השם הזה יופיע ברשימת הסידורים השמורים ובכותרת הדף המודפס.',
+    `<input type="text" id="planName" value="${esc(plan.name)}" maxlength="60"
+       onkeydown="if(event.key==='Enter')doSavePlan()">`,
+    `<button class="btn" onclick="doSavePlan()">אישור ושמירה</button>
      <button class="btn ghost" onclick="closeModal()">ביטול</button>`);
-  setTimeout(() => { const el = document.getElementById('verName'); if (el) { el.focus(); el.select(); } }, 60);
+  setTimeout(() => { const el = document.getElementById('planName'); if (el) { el.focus(); el.select(); } }, 60);
 }
-async function doSaveVersion() {
-  const note = (document.getElementById('verName') || {}).value || '';
-  if (!note.trim()) { showErr('צריך לתת שם לגרסה'); return; }
-  closeModal();
-  try { await api.saveNapPlan(plan); await api.saveNapVersion(plan, note.trim());
-        showOk(`נשמרה הגרסה "${note.trim()}"`); }
-  catch (e) { showErr('שמירת הגרסה נכשלה: ' + e.message); }
+let lastSavedSig = null;
+async function doSavePlan() {
+  const v = ((document.getElementById('planName') || {}).value || '').trim();
+  if (!v) { showErr('צריך לתת שם לסידור'); return; }
+  plan.name = v;
+  closeModal(); renderBoard();
+  try {
+    await api.saveNapPlan(plan);
+    // שמירה זהה לקודמת לא מוסיפה רשומה, אחרת רשימת הגרסאות מתמלאת
+    // בכפילויות של אותו רגע בדיוק
+    const sig = JSON.stringify({ mats: plan.mats, who: plan.who, name: plan.name,
+                                 obstacles: plan.obstacles || [], room: plan.room });
+    if (sig !== lastSavedSig) {
+      lastSavedSig = sig;
+      await api.saveNapVersion(plan, `${v} · ${new Date().toLocaleDateString('he-IL')}`);
+      showOk(`נשמר: ${v} · אפשר לחזור לנקודה הזו מ"גרסאות שמורות"`);
+    } else showOk(`נשמר: ${v}`);
+  } catch (e) { showErr('השמירה נכשלה: ' + e.message); }
 }
 let savedPlans = [], savedVers = [];
 async function loadExisting() {
@@ -1636,7 +1658,7 @@ async function removePlan(i) {
   catch (e) { showErr('ההסרה נכשלה: ' + e.message); }
 }
 async function openVersions() {
-  openModal('גרסאות שמורות', `כל גרסה היא צילום של "${plan.name}".`,
+  openModal('גרסאות שמורות', 'כל שמירה נשמרת גם כאן. לחיצה על גרסה פותחת אותה לעריכה, ושמירה ממנה לא תדרוס אותה.',
     '<div class="empty-note">טוען…</div>',
     `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
   try {
@@ -1659,7 +1681,7 @@ function openVersion(i) {
   document.getElementById('steps').classList.add('hide');
   document.getElementById('board').classList.remove('hide');
   renderTop(); renderBoard();
-  showOk(`נפתחה "${v.note}" לעריכה · "שמור גרסה" ייצור גרסה חדשה`);
+  showOk(`נפתחה "${v.note}" לעריכה · שמירה ממנה תיצור נקודה חדשה ולא תדרוס אותה`);
 }
 async function removeVersion(i) {
   const v = savedVers[i]; if (!v) return;
