@@ -233,7 +233,7 @@
     .hide { display:none !important; }
 
     @media print {
-      @page { size: A4 landscape; margin: 0; }
+      @page { size: A4 landscape; margin: 0; }      /* ברירת מחדל; ראו applyPageCss */
       html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
           box-shadow:none !important; }
@@ -242,7 +242,7 @@
       .wrap { padding:0 !important; max-width:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
       .room { transform:none !important; border:none !important; border-radius:0 !important;
-              width:1120px !important; height:790px !important; background:#fff !important; }
+              background:#fff !important; }
     }
   </style>
 </head>
@@ -278,7 +278,17 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 // הדף בגודל A4 לרוחב. PX_CM הוא כמה פיקסלים שווה סנטימטר אחד —
 // כל הגאומטריה נשמרת בסנטימטרים, והמרה לפיקסלים קורית רק בתצוגה.
-const ROOM_W = 1123, ROOM_H = 794, CX = ROOM_W / 2, CY = ROOM_H / 2;
+// A4: הצלע הארוכה 1123 פיקסל, הקצרה 794. הדף מתהפך לפי plan.portrait,
+// כי סידור גבוה מרוחב (למשל 4.40 על 5.00 מטר) מתבזבז על דף לרוחב.
+const A4_LONG = 1123, A4_SHORT = 794;
+const ROOM_W = () => (plan && plan.portrait) ? A4_SHORT : A4_LONG;
+const ROOM_H = () => (plan && plan.portrait) ? A4_LONG : A4_SHORT;
+function flipPage() {
+  pushUndo('היפוך הדף');
+  plan.portrait = !plan.portrait;
+  centerMats(); renderBoard();
+  showOk(plan.portrait ? 'הדף לאורך' : 'הדף לרוחב');
+}
 const STEPS = ['מי ישן', 'המזרונים', 'כללי שינה', 'הסידור'];
 const WELCOME = 0;
 const DRAFT = 'nap_layout_draft';
@@ -637,7 +647,7 @@ function pxPerCm() {
   const useW = plan.room && plan.room.w ? plan.room.w : r.w;
   const useH = plan.room && plan.room.h ? plan.room.h : r.h;
   if (!useW || !useH) return 1;
-  return Math.min((ROOM_W - 60) / useW, (ROOM_H - 90) / useH);
+  return Math.min((ROOM_W() - 60) / useW, (ROOM_H() - 90) / useH);
 }
 function originCm() {
   const r = E.requiredRoom(plan.mats, plan.obstacles, 40);
@@ -720,12 +730,14 @@ function renderBoard() {
       <button class="lb" onclick="goStep(4)">▦ פריסה אחרת</button>
       <button class="lb" onclick="openSpots()">🚪 קבוע בחדר</button>
       <button class="lb" onclick="openStaffPick()">👩‍🏫 צוות בחדר</button>
+      <button class="lb" onclick="flipPage()" title="A4 לאורך או לרוחב">${plan.portrait ? '🔄 לרוחב' : '🔄 לאורך'}</button>
       <button class="lb" onclick="tidy()">✨ סדר יפה</button>
     </div>
-    <div class="a4note">📄 הדף בגודל A4 לרוחב · הסידור דורש חדר של
+    <div class="a4note">📄 A4 ${plan.portrait ? 'לאורך' : 'לרוחב'} · הסידור דורש חדר של
       <b>${(need.w / 100).toFixed(2)} × ${(need.h / 100).toFixed(2)} מטר</b></div>
-    <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)">
-      <div class="rscale" id="rscale">${matsHtml}${obsHtml}${staffHtml}<div id="guides"></div></div>
+    <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)"
+      style="width:${ROOM_W()}px;height:${ROOM_H()}px">
+      <div class="rscale" id="rscale" style="width:${ROOM_W()}px;height:${ROOM_H()}px">${matsHtml}${obsHtml}${staffHtml}<div id="guides"></div></div>
       ${legendHtml()}${scaleBar()}</div></div>
     ${statusStrip(viols, phys, unreach)}
     <div style="font-size:12.5px;color:#9B8E82;text-align:center;margin:4px 0 16px;line-height:1.7">
@@ -749,12 +761,23 @@ function scaleBar() {
   const px = 100 * s;                       // מטר אחד
   return `<div class="scalebar"><i style="width:${px}px"></i><span>1 מטר</span></div>`;
 }
+// כיוון הדף בהדפסה לא ניתן להגדרה במחלקת CSS, ולכן הכלל מוזרק מחדש
+// בכל ציור — יחד עם מידות הדף, שלוש פיקסלים מתחת ל-A4 כדי שעיגול של
+// דפדפן לא ידחוף את התוכן לעמוד שני.
+function applyPageCss() {
+  let el = document.getElementById('pageCss');
+  if (!el) { el = document.createElement('style'); el.id = 'pageCss'; document.head.appendChild(el); }
+  const w = ROOM_W() - 3, h = ROOM_H() - 3;
+  el.textContent = `@media print{@page{size:A4 ${plan.portrait ? 'portrait' : 'landscape'};margin:0}` +
+    `.room{width:${w}px !important;height:${h}px !important}}`;
+}
 function fitRoom() {
+  applyPageCss();
   const outer = document.getElementById('roomOuter'), room = document.getElementById('room');
   if (!outer || !room) return;
-  const sc = Math.min(1, outer.clientWidth / ROOM_W);
+  const sc = Math.min(1, outer.clientWidth / ROOM_W());
   room.style.transform = 'scale(' + sc + ')';
-  outer.style.height = (ROOM_H * sc) + 'px';
+  outer.style.height = (ROOM_H() * sc) + 'px';
 }
 window.addEventListener('resize', () => { if (built) fitRoom(); });
 
@@ -785,7 +808,7 @@ function acceptViol(id) { pushUndo('אישור חריגה'); plan.okRules = plan
 /* ---------- גרירה ---------- */
 function roomScale() {
   const room = document.getElementById('room');
-  const sc = room ? (room.getBoundingClientRect().width / ROOM_W) || 1 : 1;
+  const sc = room ? (room.getBoundingClientRect().width / ROOM_W()) || 1 : 1;
   return { sc, cm: sc * pxPerCm() };     // פיקסלים על המסך לכל סנטימטר
 }
 let drag = null;
