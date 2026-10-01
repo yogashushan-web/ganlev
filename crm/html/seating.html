@@ -502,9 +502,12 @@
       .undo, .parked, .rot, .rhandle, .rot-tag, .err, .ok, .ov, .idel,
       .toolbar, .status, .rail, .a4note,
       #crmSidebar, #crmMenuBtn, #trashFab, #error, #success { display:none !important; }
+      /* המסילה הייתה פריט flex לצד הדף; בהדפסה היא נעלמת והמעטפת
+         חייבת לחזור לבלוק, אחרת היא משאירה רוחב לפריט שלא קיים. */
+      .sheet-wrap { display:block !important; gap:0 !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
       .room { transform:none !important; border:none !important; border-radius:0 !important;
-              width:1120px !important; height:790px !important; overflow:hidden !important;
+              width:1118px !important; height:788px !important; overflow:hidden !important;
               background:#fff !important; }
       /* .rscale נשאר 1123×794 עם אותו transform-origin, כדי שההגדלה
          תיפול בדיוק באותו מקום כמו על המסך. החדר חותך 3 פיקסלים בקצה. */
@@ -534,7 +537,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=21"></script>
+<script src="js/common.js?v=22"></script>
 <script src="js/api.js?v=21"></script>
 <script src="js/seating-engine.js?v=4"></script>
 <script>

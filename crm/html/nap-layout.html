@@ -172,6 +172,8 @@
            cursor:grab; touch-action:none; direction:rtl; overflow:hidden; padding:4px; z-index:5; }
     .mat:active { cursor:grabbing; }
     .mat .nm { font-size:13px; font-weight:800; color:#2c4d66; line-height:1.15; text-align:center; }
+    .mat .ri { display:inline-flex; align-items:center; gap:3px; }
+    .mat .rsep2 { font-style:normal; opacity:.5; margin:0 3px; }
     .mat .rt { font-size:10px; font-weight:700; color:#7c93a6; line-height:1.3; text-align:center;
                margin-top:3px; cursor:pointer; border-radius:5px; padding:1px 5px;
                border:1px dashed transparent; }
@@ -274,6 +276,7 @@
     .mini { display:block; margin:9px auto 0; }
 
     /* ---- רצועת בקרה ---- */
+    .hint-row { font-size:12.5px; color:#9B8E82; text-align:center; margin:4px 0 16px; line-height:1.7; }
     .status { margin:10px 0 4px; }
     .srow { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
     .srow.wait { margin-top:8px; }
@@ -322,8 +325,9 @@
     .modal input:focus, .modal textarea:focus { border-color:#1F3D34; }
     .m-actions { display:flex; gap:9px; margin-top:18px; flex-wrap:wrap; }
     .needs { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px; }
-    .need { background:#fff; border:1.5px solid #e8e4de; border-radius:999px; padding:7px 14px;
-            font-family:'Heebo'; font-size:13px; font-weight:700; color:#6f6457; cursor:pointer; }
+    .need { background:#fff; border:1.5px solid #e8e4de; border-radius:999px; padding:6px 14px 6px 11px;
+            font-family:'Heebo'; font-size:13px; font-weight:700; color:#6f6457; cursor:pointer;
+            display:inline-flex; align-items:center; gap:7px; }
     .need.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
     .flab { font-size:12.5px; color:#9B8E82; font-weight:700; margin:12px 0 5px; }
     .plan-row { display:flex; align-items:center; gap:10px; background:#FAF8F4; border:1px solid #efe9e0;
@@ -354,9 +358,13 @@
       html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
           box-shadow:none !important; }
-      .header, .steps, .toolbar, .status, .rail, .gridbar, .a4note, .err, .ok, .ov, .odel, .ohandle, .rot-tag, .marq, .mrot, .ogrip, .blockers, .viol,
+      .header, .steps, .toolbar, .status, .rail, .gridbar, .a4note, .hint-row,
+      .err, .ok, .ov, .odel, .ohandle, .rot-tag, .marq, .mrot, .ogrip, .blockers, .viol,
       #crmSidebar, #crmMenuBtn, #trashFab { display:none !important; }
       .wrap { padding:0 !important; max-width:none !important; }
+      /* המסילה הייתה פריט flex לצד הדף; בהדפסה היא נעלמת והמעטפת
+         חייבת לחזור לבלוק, אחרת היא משאירה רוחב לפריט שלא קיים. */
+      .sheet-wrap { display:block !important; gap:0 !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
       .room { transform:none !important; border:none !important; border-radius:0 !important;
               background:#fff !important; }
@@ -385,7 +393,7 @@
     </div>
   </div>
 
-<script src="js/common.js?v=21"></script>
+<script src="js/common.js?v=22"></script>
 <script src="js/api.js?v=21"></script>
 <script src="js/nap-engine.js?v=1"></script>
 <script>
@@ -900,12 +908,22 @@ const sY = cm => cm * view.pxPerCm + view.panY;
 const sLen = cm => cm * view.pxPerCm;
 
 function ritualOf(cid) { return rituals[cid] || null; }
+// שתי גרסאות בכוונה: טקסט נקי עובר ל-PDF, וה-HTML עם האייקונים נשאר
+// למסך. ערבוב של השניים היה מכניס תגיות SVG לתוך הדף המודפס.
 function ritualText(cid) {
   const r = ritualOf(cid);
   if (!r) return '';
-  const parts = (r.needs || []).map(n => needIcon(n) + ' ' + n);
+  const parts = (r.needs || []).slice();
   if (r.needs_other) parts.push(r.needs_other);
   return parts.join(' · ');
+}
+function ritualHtml(cid) {
+  const r = ritualOf(cid);
+  if (!r) return '';
+  const parts = (r.needs || []).map(n =>
+    `<span class="ri">${napIcon(n, 13)}${esc(n)}</span>`);
+  if (r.needs_other) parts.push(`<span class="ri">${esc(r.needs_other)}</span>`);
+  return parts.join('<i class="rsep2">·</i>');
 }
 
 function renderBoard() {
@@ -929,14 +947,14 @@ function renderBoard() {
     if (cid && bad.has(cid)) cls.push('bad');
     if (selMats.has(m.id)) cls.push('sel');
     if (!reach[m.id]) cls.push('unreach');
-    const rt = cid ? ritualText(cid) : '';
+    const rt = cid ? ritualHtml(cid) : '';
     return `<div class="${cls.join(' ')}" data-m="${m.id}"
       style="left:${sX(r.x)}px;top:${sY(r.y)}px;width:${sLen(r.w)}px;height:${sLen(r.h)}px"
       onpointerdown="startMatDrag(event,'${m.id}')">
       <span class="nm">${esc(cid ? kidName(cid) : '—')}</span>
       ${cid ? `<span class="rt ${rt ? '' : 'empty'}" onpointerdown="event.stopPropagation()"
         onclick="event.stopPropagation();openRitual('${cid}')"
-        title="לחיצה עורכת את טקס ההירדמות">${esc(rt || 'להוספת טקס הירדמות')}</span>` : ''}
+        title="לחיצה עורכת את טקס ההירדמות">${rt || 'להוספת טקס הירדמות'}</span>` : ''}
       <button class="mrot" onpointerdown="event.stopPropagation()"
         onclick="event.stopPropagation();rotateMat('${m.id}')"
         title="סיבוב המזרן ברבע סיבוב">⟲</button>
@@ -1028,9 +1046,9 @@ function renderBoard() {
       </div>
     </div>
     ${statusStrip(viols, phys, unreach)}
-    <div style="font-size:12.5px;color:#9B8E82;text-align:center;margin:4px 0 16px;line-height:1.7">
+    <div class="hint-row">
       גרירת מזרן מחליפה בין שני ילדים · לחיצה על טקס ההירדמות עורכת אותו ·
-      גרירה לשטח ריק מזיזה את המזרן עצמו</div>`;
+      גרירה על הרקע מסמנת כמה יחד</div>`;
   fitRoom();
 }
 
@@ -1054,7 +1072,9 @@ function scaleBar() {
 function applyPageCss() {
   let el = document.getElementById('pageCss');
   if (!el) { el = document.createElement('style'); el.id = 'pageCss'; document.head.appendChild(el); }
-  const w = ROOM_W() - 3, h = ROOM_H() - 3;
+  // שישה פיקסלים מתחת ל-A4. שלושה לא הספיקו: דפדפנים מעגלים מילימטרים
+  // כלפי מעלה, ופיקסל אחד עודף דוחף את כל התוכן לעמוד שני.
+  const w = ROOM_W() - 6, h = ROOM_H() - 6;
   el.textContent = `@media print{@page{size:A4 ${plan.portrait ? 'portrait' : 'landscape'};margin:0}` +
     `.room{width:${w}px !important;height:${h}px !important}}`;
 }
@@ -1507,7 +1527,7 @@ function openRitual(cid) {
   openModal(`ככה ${kidName(cid)} נרדם/ת`,
     'זה מה שההורים מילאו בטופס. עריכה כאן נשמרת לאותו מקום, כך שאין שתי אמיתות.',
     `<div class="needs" id="needsBox">${NEEDS.map(n => `<button class="need ${ritualPicks.has(n.v) ? 'on' : ''}"
-       data-v="${esc(n.v)}" onclick="toggleNeed(this)">${n.ic} ${esc(n.v)}</button>`).join('')}</div>
+       data-v="${esc(n.v)}" onclick="toggleNeed(this)">${napIcon(n.v, 19)}${esc(n.v)}</button>`).join('')}</div>
      <div class="flab">עוד משהו שעוזר להירדם</div>
      <input type="text" id="rOther" value="${esc(r.needs_other || '')}" placeholder="למשל: מוזיקה שקטה">
      <div class="flab">איך הוא/היא נרדם/ת בדרך כלל</div>

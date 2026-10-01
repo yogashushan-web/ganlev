@@ -213,6 +213,54 @@ function crmIcon(name, size) {
     'stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
 }
 
+// ---- Nap-ritual icons ----
+// The six things parents mark on the nap form. Three of them have no Unicode
+// emoji at all — there is no pacifier, no diaper and no blanket — so the old
+// substitutes were plainly wrong: a baby face for a pacifier, a white heart
+// for a diaper, a cloud for a blanket. These are drawn to mean what they say.
+const NAP_ART = {
+  'בקבוק':
+    '<path d="M10.3 5.3c0-2.1.3-3.8 1.7-3.8s1.7 1.7 1.7 3.8z" fill="#f0c9a8" stroke="#d4a574" stroke-width="1" stroke-linejoin="round"/>' +
+    '<rect x="8.5" y="5.2" width="7" height="2.5" rx="1" fill="#d4a574"/>' +
+    '<rect x="7.4" y="7.6" width="9.2" height="13.9" rx="3" fill="#eaf3fa" stroke="#8fb2cd" stroke-width="1.2"/>' +
+    '<path d="M9.6 11.2h3.2M9.6 14.2h3.2M9.6 17.2h3.2" stroke="#8fb2cd" stroke-width="1.1" stroke-linecap="round"/>',
+  'מוצץ':
+    '<circle cx="12" cy="4.4" r="2.6" fill="none" stroke="#e8a0b4" stroke-width="1.9"/>' +
+    '<path d="M12 7.1c4.2 0 7.6 1.2 7.6 3.6 0 2.6-3 3.9-5.3 3.4-.9-.2-1.5-.6-2.3-.6s-1.4.4-2.3.6c-2.3.5-5.3-.8-5.3-3.4 0-2.4 3.4-3.6 7.6-3.6z" fill="#f6c9d4" stroke="#e8a0b4" stroke-width="1.2" stroke-linejoin="round"/>' +
+    '<path d="M12 13.9c3.5 0 4.8 2.4 4.8 4.2 0 2.1-2.1 3.5-4.8 3.5s-4.8-1.4-4.8-3.5c0-1.8 1.3-4.2 4.8-4.2z" fill="#f0c9a8" stroke="#d4a574" stroke-width="1.2" stroke-linejoin="round"/>',
+  'דובי / בובה':
+    '<circle cx="6.8" cy="7.2" r="3.1" fill="#d8ab7c"/><circle cx="17.2" cy="7.2" r="3.1" fill="#d8ab7c"/>' +
+    '<circle cx="6.8" cy="7.2" r="1.5" fill="#a87d52"/><circle cx="17.2" cy="7.2" r="1.5" fill="#a87d52"/>' +
+    '<circle cx="12" cy="13.6" r="7.5" fill="#d8ab7c"/>' +
+    '<ellipse cx="12" cy="16.4" rx="3.9" ry="3.1" fill="#f0dcc4"/>' +
+    '<circle cx="9.2" cy="11.8" r="1.2" fill="#4a3728"/><circle cx="14.8" cy="11.8" r="1.2" fill="#4a3728"/>' +
+    '<ellipse cx="12" cy="15.1" rx="1.6" ry="1.2" fill="#4a3728"/>',
+  'שמיכה':
+    '<path d="M4.6 6.8c0-1 .8-1.8 1.8-1.8h11.2c1 0 1.8.8 1.8 1.8v8.4c0 .6-.4 1-.9 1.2-1.9.6-3 1.9-5 2.4-1.3.3-2.5.3-3.8 0-2-.5-3.1-1.8-5-2.4-.5-.2-.9-.6-.9-1.2z" fill="#cfe0ec" stroke="#8fb2cd" stroke-width="1.2" stroke-linejoin="round"/>' +
+    '<path d="M4.6 15.2c2.5-.9 4-.9 6 .3 2 1.2 3.5 1.2 6 .3 1-.3 1.9-.4 2.8-.3v2.3c0 .6-.4 1.1-1 1.3-1.9.6-3 1.8-4.9 2.3-1.3.3-2.5.3-3.8 0-2-.5-3-1.7-4.9-2.3-.6-.2-1-.7-1-1.3z" fill="#8fb2cd" opacity=".55"/>' +
+    '<path d="M8.2 9h7.6M8.2 12h7.6" stroke="#8fb2cd" stroke-width="1.1" stroke-linecap="round" opacity=".8"/>',
+  'חיתול':
+    '<path d="M3.6 6.2c0-.7.6-1.3 1.3-1.3h14.2c.7 0 1.3.6 1.3 1.3v3.6c0 5.4-3.6 9.1-8.4 12-4.8-2.9-8.4-6.6-8.4-12z" fill="#fff" stroke="#8fb2cd" stroke-width="1.3" stroke-linejoin="round"/>' +
+    '<path d="M3.6 6.2c0-.7.6-1.3 1.3-1.3h4.3v3.9H3.6zM14.8 4.9h4.3c.7 0 1.3.6 1.3 1.3v2.6h-5.6z" fill="#cfe0ec"/>' +
+    '<path d="M8.3 13.4c2.4 1.3 5 1.3 7.4 0" stroke="#8fb2cd" stroke-width="1.2" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="12" cy="10.4" r=".9" fill="#cfe0ec"/>',
+  'הנקה':
+    '<circle cx="7" cy="5" r="3.3" fill="#e8b48c"/>' +
+    '<path d="M3.6 8.4C2.6 10 2.2 12.2 2.2 14.6c0 3.2.6 5.8 1.6 7.2" fill="none" stroke="#e8b48c" stroke-width="3.4" stroke-linecap="round"/>' +
+    '<path d="M10.4 12.8c4.2-.9 8 .6 8.8 3.4.6 2.2-1.2 4.2-4 4.2h-5.4c-2 0-3.2-1.2-3.2-2.8 0-2 1.6-4.2 3.8-4.8z" fill="#cfe0ec" stroke="#8fb2cd" stroke-width="1.1" stroke-linejoin="round"/>' +
+    '<circle cx="11.8" cy="14" r="2.6" fill="#f0c9a8"/>' +
+    '<circle cx="11.2" cy="13.6" r=".7" fill="#4a3728"/><circle cx="13.1" cy="13.6" r=".7" fill="#4a3728"/>' +
+    '<path d="M5.6 12c1.2 2.6 2.8 4 4.6 4.6" fill="none" stroke="#e8b48c" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<path d="M17.6 4.2c.9-1.4 3-1 3 .8 0 1.4-1.7 2.6-3 3.6-1.3-1-3-2.2-3-3.6 0-1.8 2.1-2.2 3-.8z" fill="#e8a0b4"/>',
+};
+function napIcon(name, size) {
+  const d = NAP_ART[name];
+  if (!d) return '';
+  const s = size || 15;
+  return '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s +
+    '" style="vertical-align:-.18em;flex:0 0 auto" aria-hidden="true">' + d + '</svg>';
+}
+
 // Inject a persistent navigation sidebar (same on every page) so sections are
 // always one click away. Highlights the current page.
 function renderNavSidebar() {
