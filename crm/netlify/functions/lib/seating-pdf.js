@@ -250,23 +250,30 @@ function buildSeatingPdf(sheet) {
         drawCentered(doc, t.name, X(t.x + t.w / 2), Y(t.y + t.h / 2), t.w * k * 0.8, 2);
       });
 
-      // סמני צוות שלא יושבים בתוך שולחן — גלולה בצבע של אותה גננת
+      // סמני צוות שלא יושבים בתוך שולחן. עיגול ולא גלולה: לעיגול יש
+      // מרכז אחד, ולכן ברור איפה בדיוק היא עומדת בחלל. השם יורד מתחתיו.
       (sheet.marks || []).forEach(m => {
-        doc.font('heB').fontSize(Math.max(6, 10.5 * k * z));
+        const col = m.color || C.brand;
+        const r = SEAT_R * k * z, cx = X(m.x) + r, cy = Y(m.y) + r;
+
+        doc.circle(cx, cy, r).fillColor('#ffffff').fill();
+        doc.circle(cx, cy, r).lineWidth(Math.max(0.9, 2.4 * k * z));
+        if (m.open) doc.dash(3, { space: 2 }).strokeColor(col).stroke().undash();
+        else doc.strokeColor(col).stroke();
+        drawMarkIcon(doc, m.icon === 'chair' ? 'chair' : 'watch',
+                     cx - r * 0.42, cy - r * 0.42, r * 0.84, col);
+
+        doc.font('heB').fontSize(Math.max(5.5, 9.5 * k * z));
         const words = wordsOf(m.label);
         const tw = lineWidth(doc, words);
-        const padX = 9 * k * z, hh = 20 * k * z;
-        const ic = hh * 0.62, gap = ic * 0.45;               // הסמל יושב משמאל, כמו במסך
-        const w = tw + padX * 2 + ic + gap, x = X(m.x), y = Y(m.y);
-        doc.roundedRect(x, y, w, hh, hh / 2).fillColor('#ffffff').fill();
-        doc.roundedRect(x, y, w, hh, hh / 2).lineWidth(Math.max(0.7, 1.6 * k));
-        // תפקיד בלי שם מסומן במקווקו, כמו כל דבר שעוד לא סופי
-        if (m.open) doc.dash(3, { space: 2 }).strokeColor(m.color || C.brand).stroke().undash();
-        else doc.strokeColor(m.color || C.brand).stroke();
-        drawMarkIcon(doc, m.icon === 'chair' ? 'chair' : 'watch',
-                     x + padX, y + (hh - ic) / 2, ic, m.color || C.brand);
-        doc.fillColor(m.color || C.brand);
-        drawWordsRtl(doc, words, x + w - padX, y + (hh - doc.currentLineHeight()) / 2);
+        const padX = 7 * k * z, hh = doc.currentLineHeight() + 3 * k * z;
+        const w = tw + padX * 2, bx = cx - w / 2, by = cy + r + 4 * k * z;
+        doc.roundedRect(bx, by, w, hh, hh / 2).fillColor('#ffffff').fill();
+        doc.roundedRect(bx, by, w, hh, hh / 2).lineWidth(Math.max(0.5, 1.2 * k * z));
+        if (m.open) doc.dash(2, { space: 1.5 }).strokeColor(col).stroke().undash();
+        else doc.strokeColor(col).stroke();
+        doc.fillColor(col);
+        drawWordsRtl(doc, words, bx + w - padX, by + 1.5 * k * z);
       });
 
       // מקרא: מה שכל גוון אומר. בלעדיו הדף קריא רק למי שבנתה אותו.
