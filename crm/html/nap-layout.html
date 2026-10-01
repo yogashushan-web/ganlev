@@ -192,6 +192,14 @@
             font-size:11.5px; font-weight:800; color:#6f6457; cursor:grab; touch-action:none; z-index:4; }
     /* מזרן מסומן: קו ירוק מלא, כדי שקבוצה מסומנת תיקרא כגוש אחד */
     .mat.sel { outline:3px solid #1F7a4f; outline-offset:2px; }
+    /* סיבוב מזרן בודד — מופיע בריחוף, כדי שלא יוסיף רעש לדף */
+    .mrot { position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:7px;
+            background:#fff; border:1px solid #d6e1ea; color:#6f8aa0; font-size:13px;
+            line-height:1; cursor:pointer; font-family:'Heebo'; opacity:0;
+            transition:opacity .12s; display:flex; align-items:center; justify-content:center; }
+    .mat:hover .mrot { opacity:1; }
+    .mrot:hover { background:#1F3D34; border-color:#1F3D34; color:#fff; }
+    .mat.potty .mrot { border-color:#e3cfa6; color:#a8842f; }
     .zoombar { display:flex; align-items:center; gap:9px; margin-right:6px;
                padding-right:12px; border-right:1px solid #e8e4de; }
     .zoombar .zv { font-size:12.5px; color:#1F3D34; font-weight:800; min-width:40px;
@@ -336,7 +344,7 @@
       html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
           box-shadow:none !important; }
-      .header, .steps, .toolbar, .status, .rail, .gridbar, .a4note, .err, .ok, .ov, .odel, .ohandle, .rot-tag, .marq, .blockers, .viol,
+      .header, .steps, .toolbar, .status, .rail, .gridbar, .a4note, .err, .ok, .ov, .odel, .ohandle, .rot-tag, .marq, .mrot, .blockers, .viol,
       #crmSidebar, #crmMenuBtn, #trashFab { display:none !important; }
       .wrap { padding:0 !important; max-width:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
@@ -907,6 +915,9 @@ function renderBoard() {
       ${cid ? `<span class="rt ${rt ? '' : 'empty'}" onpointerdown="event.stopPropagation()"
         onclick="event.stopPropagation();openRitual('${cid}')"
         title="לחיצה עורכת את טקס ההירדמות">${esc(rt || 'להוספת טקס הירדמות')}</span>` : ''}
+      <button class="mrot" onpointerdown="event.stopPropagation()"
+        onclick="event.stopPropagation();rotateMat('${m.id}')"
+        title="סיבוב המזרן ברבע סיבוב">⟲</button>
     </div>`;
   }).join('');
 
@@ -1241,6 +1252,20 @@ function rotateSel() {
     const nr = E.rectOf(Object.assign({}, m, { x: 0, y: 0 }));
     m.x = Math.round(nx - nr.w / 2); m.y = Math.round(ny - nr.h / 2);
   });
+  renderBoard();
+}
+
+// סיבוב מזרן בודד, סביב מרכזו שלו כדי שיישאר במקומו. אם הוא מתנגש
+// בשכן אחרי הסיבוב — בדיקת החפיפות תסמן את זה, וזו התנהגות נכונה:
+// עדיף לראות את ההתנגשות מאשר שהמערכת תזיז דברים בלי לשאול.
+function rotateMat(id) {
+  const m = plan.mats.find(x => x.id === id); if (!m) return;
+  pushUndo('סיבוב מזרן');
+  const r = E.rectOf(m);
+  const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+  m.rot = m.rot === 90 ? 0 : 90;
+  const nr = E.rectOf(Object.assign({}, m, { x: 0, y: 0 }));
+  m.x = Math.round(cx - nr.w / 2); m.y = Math.round(cy - nr.h / 2);
   renderBoard();
 }
 
