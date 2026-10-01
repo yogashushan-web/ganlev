@@ -180,9 +180,6 @@
     .mat.h-top .pillow::after, .mat.h-bottom .pillow::after {
       top:50%; left:20%; right:20%; height:1px; }
     .mat .pillow { position:absolute; }
-    .mat .face { position:absolute; border-radius:50%; object-fit:cover; display:block;
-                 max-width:92%; max-height:92%;     /* רשת ביטחון למידה שלא חושבה */
-                 border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.18); z-index:3; }
     .mat .num { position:absolute; bottom:3px; left:5px; font-size:9px; font-weight:700;
                 color:var(--bll); z-index:2; }
     .mat .body { position:absolute; z-index:2; display:flex; flex-direction:column;
@@ -192,19 +189,15 @@
     /* ראש ימינה — כרית ברוחב 34% בצד ימין */
     .mat.h-right .pillow { top:6px; bottom:6px; right:4px; width:30%; }
     .mat.h-right .fold   { top:5px; bottom:5px; right:calc(30% + 7px); width:5px; }
-    .mat.h-right .face   { top:50%; right:4%; transform:translateY(-50%); }
     .mat.h-right .body   { top:0; bottom:0; right:32%; left:2px; }
     .mat.h-left  .pillow { top:6px; bottom:6px; left:4px; width:30%; }
     .mat.h-left  .fold   { top:5px; bottom:5px; left:calc(30% + 7px); width:5px; }
-    .mat.h-left  .face   { top:50%; left:4%; transform:translateY(-50%); }
     .mat.h-left  .body   { top:0; bottom:0; left:32%; right:2px; }
     .mat.h-top   .pillow { left:6px; right:6px; top:4px; height:30%; }
     .mat.h-top   .fold   { left:5px; right:5px; top:calc(30% + 7px); height:5px; }
-    .mat.h-top   .face   { left:50%; top:4%; transform:translateX(-50%); }
     .mat.h-top   .body   { left:0; right:0; top:32%; bottom:2px; }
     .mat.h-bottom .pillow{ left:6px; right:6px; bottom:4px; height:30%; }
     .mat.h-bottom .fold  { left:5px; right:5px; bottom:calc(30% + 7px); height:5px; }
-    .mat.h-bottom .face  { left:50%; bottom:4%; transform:translateX(-50%); }
     .mat.h-bottom .body  { left:0; right:0; bottom:32%; top:2px; }
 
     /* מזרן אנכי: השם נקרא לאורך הגוף במקום להישבר לשתי שורות צרות */
@@ -514,13 +507,6 @@ async function boot() {
   } catch (e) { showErr('שגיאה בטעינת הילדים והצוות: ' + e.message); }
 
   api.getNapPlans().then(r => { rituals = (r && r.rituals) || {}; if (built) renderBoard(); }).catch(() => {});
-  // התמונות נטענות ברקע; הדף לא מחכה להן ומצייר שוב כשהן מגיעות
-  api.getEvents('child-card').then(r => {
-    ((r && r.data) || []).forEach(ev => {
-      try { const p = JSON.parse(ev.notes || '{}'); if (p.photo) faces[ev.category] = p.photo; } catch (e) {}
-    });
-    if (built) renderBoard();
-  }).catch(() => {});
 
   plan = newPlan();
   try {
@@ -956,9 +942,6 @@ const sY = cm => cm * view.pxPerCm + view.panY;
 const sLen = cm => cm * view.pxPerCm;
 
 function ritualOf(cid) { return rituals[cid] || null; }
-// תמונות מהכרטיס האישי. גננת מחליפה לא מכירה שמות — היא מכירה פנים.
-let faces = {};
-function photoOf(cid) { return faces[cid] || ''; }
 // גווני שמיכות. ילדים אמיתיים לא ישנים על מיטות זהות, והגיוון גם
 // מקל למצוא מיטה מסוימת בעין.
 const BLANKETS = [
@@ -1011,19 +994,12 @@ function renderBoard() {
     if (!reach[m.id]) cls.push('unreach');
     if (vert) cls.push('vert');
     const rt = cid ? ritualHtml(cid) : '';
-    const ph = cid ? photoOf(cid) : '';
     const tint = BLANKETS[idx % BLANKETS.length];
-    // גודל התמונה נגזר מגודל הכרית בפועל. בלי מידה מפורשת הדפדפן
-    // מציג את הקובץ בגודלו המקורי — מאות פיקסלים שמכסים את כל הדף.
-    const bw = sLen(r.w), bh = sLen(r.h);
-    const pwPx = vert ? bw - 8 : bw * 0.30, phPx = vert ? bh * 0.30 : bh - 8;
-    const faceSz = Math.max(9, Math.min(pwPx, phPx) * 0.82);
     return `<div class="${cls.join(' ')}" data-m="${m.id}"
       style="left:${sX(r.x)}px;top:${sY(r.y)}px;width:${sLen(r.w)}px;height:${sLen(r.h)}px
              ${cid && plan.potty[cid] ? '' : `;--bl:${tint.bg};--bll:${tint.line}`}"
       onpointerdown="startMatDrag(event,'${m.id}')">
       <i class="blanket"></i><i class="fold"></i><i class="pillow"></i>
-      ${ph ? `<img class="face" src="${ph}" alt="" style="width:${faceSz}px;height:${faceSz}px">` : ''}
       <span class="num">${idx + 1}</span>
       <div class="body">
         <span class="nm">${esc(cid ? kidName(cid) : '—')}</span>
@@ -1658,7 +1634,7 @@ function napSheet() {
       // לצייר אייקון לצד כל אחד — בדיוק כמו במסך
       const rr = cid ? (ritualOf(cid) || {}) : {};
       return { x: r.x, y: r.y, w: r.w, h: r.h,
-               head: E.headSide(m), child_id: cid || null, num: i + 1,
+               head: E.headSide(m), num: i + 1,
                name: cid ? kidName(cid) : '',
                needs: (rr.needs || []).map(napLabel),
                other: rr.needs_other || '',

@@ -209,22 +209,6 @@ function buildNapPdf(sheet) {
         if (potty) doc.dash(4, { space: 2.5 }).strokeColor(bl.ln).stroke().undash();
         else doc.strokeColor(bl.ln).stroke();
 
-        // תמונת הילד, חתוכה לעיגול על הכרית
-        const face = m.child_id && sheet.faces ? sheet.faces[m.child_id] : null;
-        if (face) {
-          try {
-            const b64 = String(face).replace(/^data:[^,]+,/, '');
-            const img = Buffer.from(b64, 'base64');
-            const fr = Math.min(pw, ph) * 0.42;
-            const fcx = px + pw / 2, fcy = py + ph / 2;
-            doc.save();
-            doc.circle(fcx, fcy, fr).clip();
-            doc.image(img, fcx - fr, fcy - fr, { width: fr * 2, height: fr * 2 });
-            doc.restore();
-            doc.circle(fcx, fcy, fr).lineWidth(Math.max(.5, 1.3 * k)).strokeColor('#ffffff').stroke();
-          } catch (e) { /* תמונה פגומה לא תפיל את הדף */ }
-        }
-
         doc.font('he').fontSize(Math.max(4, 7 * k)).fillColor(bl.ln);
         doc.text(String(m.num || idx + 1), x + 3 * k, y + h - 8 * k, { lineBreak: false });
 
