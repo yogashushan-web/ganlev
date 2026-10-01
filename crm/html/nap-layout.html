@@ -162,6 +162,9 @@
     /* המזרן: מלבן פיזי. השם גדול, וטקס ההירדמות מתחתיו בכתב קטן. */
     /* קירות החדר. הם לא קישוט — הם מערכת הצירים שהפכה לנראית: מרגע
        שיש להם מידות, גרירת מזרן לא יכולה להזיז שום דבר אחר. */
+    /* מלבן הסימון בגרירה */
+    .marq { position:absolute; border:1.5px dashed #1F7a4f; background:rgba(31,122,79,.08);
+            border-radius:4px; pointer-events:none; z-index:12; }
     .walls { position:absolute; border:3px solid #cbbfa9; border-radius:3px;
              background:#fffdf9; box-shadow:inset 0 0 0 1px rgba(203,191,169,.3); z-index:1; }
     .mat { position:absolute; border:2px solid #cfe0ec; background:#eef5fb; border-radius:9px;
@@ -333,7 +336,7 @@
       html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
           box-shadow:none !important; }
-      .header, .steps, .toolbar, .status, .rail, .gridbar, .a4note, .err, .ok, .ov, .odel, .ohandle, .rot-tag, .blockers, .viol,
+      .header, .steps, .toolbar, .status, .rail, .gridbar, .a4note, .err, .ok, .ov, .odel, .ohandle, .rot-tag, .marq, .blockers, .viol,
       #crmSidebar, #crmMenuBtn, #trashFab { display:none !important; }
       .wrap { padding:0 !important; max-width:none !important; }
       .room-outer { overflow:hidden !important; margin:0 !important; height:auto !important; }
@@ -961,7 +964,7 @@ function renderBoard() {
     <div class="a4note">📄 A4 ${plan.portrait ? 'לאורך' : 'לרוחב'} · הסידור דורש חדר של
       <b>${(need.w / 100).toFixed(2)} × ${(need.h / 100).toFixed(2)} מטר</b></div>
     <div class="sheet-wrap">
-    <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)"
+    <div class="room-outer" id="roomOuter"><div class="room" id="room" onclick="clearSel(event)" onpointerdown="startMarquee(event)"
       style="width:${ROOM_W()}px;height:${ROOM_H()}px">
       <div class="rscale" id="rscale" style="width:${ROOM_W()}px;height:${ROOM_H()}px;
         transform:scale(${zoomOf()});transform-origin:${ROOM_W() / 2}px ${ROOM_H() / 2}px">
@@ -976,6 +979,8 @@ function renderBoard() {
         <i class="rsep"></i>
         <button class="rb" data-t="${plan.portrait ? 'דף לרוחב' : 'דף לאורך'}" onclick="flipPage()">${crmIcon('rotate')}</button>
         <button class="rb" data-t="סמני הכל" onclick="selectAllMats()">${crmIcon('select')}</button>
+        <button class="rb" data-t="${selMats.size ? 'סובבי ' + selMats.size + ' מזרונים' : 'סובבי הכל'}"
+          onclick="rotateSel()">${crmIcon('rotate')}</button>
         <button class="rb" data-t="סדר יפה" onclick="tidy()">${crmIcon('align')}</button>
         <i class="rsep"></i>
         <div class="rzoom">
@@ -1147,6 +1152,98 @@ function tapMat(id) {
   plan.who[from] = b; plan.who[id] = a;
   selMats.clear(); renderBoard();
 }
+// מסך -> סנטימטרים. מבטל את שלוש השכבות בסדר הפוך: הקטנת הדף למסך,
+// ההגדלה של המשתמשת סביב מרכז הדף, ולבסוף ההיסט וקנה המידה של החדר.
+function sceneAt(ev) {
+  const room = document.getElementById('room');
+  const r = room.getBoundingClientRect();
+  const sc = (r.width / ROOM_W()) || 1, z = zoomOf();
+  let px = (ev.clientX - r.left) / sc, py = (ev.clientY - r.top) / sc;
+  const cx = ROOM_W() / 2, cy = ROOM_H() / 2;
+  px = cx + (px - cx) / z; py = cy + (py - cy) / z;
+  return { x: (px - view.panX) / view.pxPerCm, y: (py - view.panY) / view.pxPerCm };
+}
+
+/* ---------- סימון בגרירה על הרקע ---------- */
+let marq = null;
+function startMarquee(ev) {
+  if (ev.target.closest && ev.target.closest('.mat,.obst,.pmark,.ohandle')) return;
+  ev.preventDefault();
+  const p = sceneAt(ev);
+  marq = { x0: p.x, y0: p.y, x1: p.x, y1: p.y, add: ev.shiftKey || ev.ctrlKey || ev.metaKey };
+  if (!marq.add) selMats.clear();
+  const el = document.createElement('div');
+  el.className = 'marq'; el.id = 'marq';
+  document.getElementById('rscale').appendChild(el);
+  window.addEventListener('pointermove', onMarquee);
+  window.addEventListener('pointerup', endMarquee, { once: true });
+}
+function marqBox() {
+  return { x: Math.min(marq.x0, marq.x1), y: Math.min(marq.y0, marq.y1),
+           x2: Math.max(marq.x0, marq.x1), y2: Math.max(marq.y0, marq.y1) };
+}
+function onMarquee(ev) {
+  if (!marq) return;
+  const p = sceneAt(ev);
+  marq.x1 = p.x; marq.y1 = p.y;
+  const b = marqBox();
+  const el = document.getElementById('marq');
+  if (el) {
+    el.style.left = sX(b.x) + 'px'; el.style.top = sY(b.y) + 'px';
+    el.style.width = sLen(b.x2 - b.x) + 'px'; el.style.height = sLen(b.y2 - b.y) + 'px';
+  }
+  // סימון חי תוך כדי גרירה: כל מזרן שנוגע במלבן
+  plan.mats.forEach(m => {
+    const r = E.rectOf(m);
+    const hit = r.x < b.x2 && b.x < r.x2 && r.y < b.y2 && b.y < r.y2;
+    const d = document.querySelector(`.mat[data-m="${m.id}"]`);
+    if (!d) return;
+    if (hit || (marq.add && selMats.has(m.id))) d.classList.add('sel');
+    else if (!marq.add) d.classList.remove('sel');
+  });
+}
+function endMarquee() {
+  window.removeEventListener('pointermove', onMarquee);
+  const el = document.getElementById('marq'); if (el) el.remove();
+  if (!marq) return;
+  const b = marqBox();
+  const tiny = Math.abs(b.x2 - b.x) < 3 && Math.abs(b.y2 - b.y) < 3;
+  if (!tiny) {
+    plan.mats.forEach(m => {
+      const r = E.rectOf(m);
+      if (r.x < b.x2 && b.x < r.x2 && r.y < b.y2 && b.y < r.y2) selMats.add(m.id);
+    });
+  }
+  marq = null; renderBoard();
+  if (selMats.size) showOk(`${selMats.size} מזרונים מסומנים`);
+}
+
+/* ---------- סיבוב ---------- */
+// 90° בלבד, ובכוונה. מזרן שוכב על רצפה בחדר עם קירות ישרים, ובזווית
+// של 37° לא היה מונח אף פעם. חשוב מזה: כל בדיקות המנוע — מי ליד מי,
+// נגישות, חפיפות — מניחות מלבנים מיושרי צירים, וזווית חופשית הייתה
+// שוברת אותן בשקט.
+function rotateSel() {
+  const ids = selMats.size ? [...selMats] : plan.mats.map(m => m.id);
+  const list = ids.map(id => plan.mats.find(m => m.id === id)).filter(Boolean);
+  if (!list.length) return;
+  pushUndo(selMats.size ? 'סיבוב המסומנים' : 'סיבוב הכל');
+  const rs = list.map(E.rectOf);
+  const cx = (Math.min(...rs.map(r => r.x)) + Math.max(...rs.map(r => r.x2))) / 2;
+  const cy = (Math.min(...rs.map(r => r.y)) + Math.max(...rs.map(r => r.y2))) / 2;
+  list.forEach(m => {
+    const r = E.rectOf(m);
+    const mx = r.x + r.w / 2, my = r.y + r.h / 2;
+    // מרכז המזרן מסתובב ברבע סיבוב סביב מרכז הקבוצה, כך שהשורה כולה
+    // הופכת לטור במקום שבו היא עומדת ולא קופצת הצידה
+    const nx = cx + (my - cy), ny = cy - (mx - cx);
+    m.rot = m.rot === 90 ? 0 : 90;
+    const nr = E.rectOf(Object.assign({}, m, { x: 0, y: 0 }));
+    m.x = Math.round(nx - nr.w / 2); m.y = Math.round(ny - nr.h / 2);
+  });
+  renderBoard();
+}
+
 function selectAllMats() {
   selMats = new Set(plan.mats.map(m => m.id));
   renderBoard(); showOk(`${selMats.size} מזרונים מסומנים · גרירה מזיזה את כולם יחד`);
