@@ -60,6 +60,69 @@ function fontPath(name) {
   return hit;
 }
 
+// אותם ציורים שעל המסך, כאן כרשימת פעולות ציור. PDFKit יודע לקרוא
+// נתיבי SVG דרך doc.path, ולכן נתוני הנתיב זהים מילה במילה לאלה
+// שב-common.js — מה שמונע מהשניים להתרחק זה מזה.
+const NAP_ICONS = {
+  'בקבוק': [
+    { p:'M10.3 5.3c0-2.1.3-3.8 1.7-3.8s1.7 1.7 1.7 3.8z', f:'#f0c9a8', s:'#d4a574', w:1 },
+    { r:[8.5,5.2,7,2.5,1], f:'#d4a574' },
+    { r:[7.4,7.6,9.2,13.9,3], f:'#eaf3fa', s:'#8fb2cd', w:1.2 },
+    { p:'M9.6 11.2h3.2M9.6 14.2h3.2M9.6 17.2h3.2', s:'#8fb2cd', w:1.1 },
+  ],
+  'מוצץ': [
+    { c:[12,4.4,2.6], s:'#e8a0b4', w:1.9 },
+    { p:'M12 7.1c4.2 0 7.6 1.2 7.6 3.6 0 2.6-3 3.9-5.3 3.4-.9-.2-1.5-.6-2.3-.6s-1.4.4-2.3.6c-2.3.5-5.3-.8-5.3-3.4 0-2.4 3.4-3.6 7.6-3.6z', f:'#f6c9d4', s:'#e8a0b4', w:1.2 },
+    { p:'M12 13.9c3.5 0 4.8 2.4 4.8 4.2 0 2.1-2.1 3.5-4.8 3.5s-4.8-1.4-4.8-3.5c0-1.8 1.3-4.2 4.8-4.2z', f:'#f0c9a8', s:'#d4a574', w:1.2 },
+  ],
+  'בובה': [
+    { c:[6.8,7.2,3.1], f:'#d8ab7c' }, { c:[17.2,7.2,3.1], f:'#d8ab7c' },
+    { c:[6.8,7.2,1.5], f:'#a87d52' }, { c:[17.2,7.2,1.5], f:'#a87d52' },
+    { c:[12,13.6,7.5], f:'#d8ab7c' },
+    { e:[12,16.4,3.9,3.1], f:'#f0dcc4' },
+    { c:[9.2,11.8,1.2], f:'#4a3728' }, { c:[14.8,11.8,1.2], f:'#4a3728' },
+    { e:[12,15.1,1.6,1.2], f:'#4a3728' },
+  ],
+  'שמיכה': [
+    { p:'M4.6 6.8c0-1 .8-1.8 1.8-1.8h11.2c1 0 1.8.8 1.8 1.8v8.4c0 .6-.4 1-.9 1.2-1.9.6-3 1.9-5 2.4-1.3.3-2.5.3-3.8 0-2-.5-3.1-1.8-5-2.4-.5-.2-.9-.6-.9-1.2z', f:'#cfe0ec', s:'#8fb2cd', w:1.2 },
+    { p:'M4.6 15.2c2.5-.9 4-.9 6 .3 2 1.2 3.5 1.2 6 .3 1-.3 1.9-.4 2.8-.3v2.3c0 .6-.4 1.1-1 1.3-1.9.6-3 1.8-4.9 2.3-1.3.3-2.5.3-3.8 0-2-.5-3-1.7-4.9-2.3-.6-.2-1-.7-1-1.3z', f:'#a8c4d8' },
+    { p:'M8.2 9h7.6M8.2 12h7.6', s:'#8fb2cd', w:1.1 },
+  ],
+  'חיתול': [
+    { p:'M3.6 6.2c0-.7.6-1.3 1.3-1.3h14.2c.7 0 1.3.6 1.3 1.3v3.6c0 5.4-3.6 9.1-8.4 12-4.8-2.9-8.4-6.6-8.4-12z', f:'#ffffff', s:'#8fb2cd', w:1.3 },
+    { p:'M3.6 6.2c0-.7.6-1.3 1.3-1.3h4.3v3.9H3.6zM14.8 4.9h4.3c.7 0 1.3.6 1.3 1.3v2.6h-5.6z', f:'#cfe0ec' },
+    { p:'M8.3 13.4c2.4 1.3 5 1.3 7.4 0', s:'#8fb2cd', w:1.2 },
+    { c:[12,10.4,.9], f:'#cfe0ec' },
+  ],
+  'הנקה': [
+    { p:'M3.4 21.6c0-5.4 3.2-9.4 7.2-9.4 1.6 0 3 .6 4.2 1.7', s:'#e8b48c', w:4 },
+    { c:[8.6,5.6,3.6], f:'#e8b48c' },
+    { p:'M12.2 15c3.8-1 7.2.6 7.8 3.2.5 2.1-1.2 3.8-3.6 3.8h-4.4c-1.6 0-2.6-1-2.6-2.4 0-1.8 1-3.8 2.8-4.6z', f:'#cfe0ec', s:'#8fb2cd', w:1.1 },
+    { c:[14.6,16,2.9], f:'#f0c9a8' },
+    { c:[13.3,15.6,.5], f:'#4a3728' }, { c:[16,15.6,.5], f:'#4a3728' },
+    { p:'M13.6 17.7c.7.5 1.4.5 2.1 0', s:'#4a3728', w:.85 },
+  ],
+};
+const NAP_ALIAS = { 'דובי / בובה': 'בובה', 'דובי': 'בובה' };
+function drawNapIcon(doc, name, x, y, size) {
+  const ops = NAP_ICONS[NAP_ALIAS[name] || name];
+  if (!ops) return false;
+  doc.save();
+  doc.translate(x, y).scale(size / 24);
+  doc.lineCap('round').lineJoin('round');
+  ops.forEach(o => {
+    if (o.p) doc.path(o.p);
+    else if (o.c) doc.circle(o.c[0], o.c[1], o.c[2]);
+    else if (o.e) doc.ellipse(o.e[0], o.e[1], o.e[2], o.e[3]);
+    else if (o.r) doc.roundedRect(o.r[0], o.r[1], o.r[2], o.r[3], o.r[4] || 0);
+    if (o.f && o.s) doc.fillColor(o.f).strokeColor(o.s).lineWidth(o.w || 1).fillAndStroke();
+    else if (o.f) doc.fillColor(o.f).fill();
+    else if (o.s) doc.strokeColor(o.s).lineWidth(o.w || 1).stroke();
+  });
+  doc.restore();
+  return true;
+}
+
 const C = {
   ink: '#3D3228', muted: '#9B8E82', brand: '#1F3D34',
   wall: '#cbbfa9', floor: '#fffdf9',
@@ -120,21 +183,58 @@ function buildNapPdf(sheet) {
         const nameLines = wrapLines(doc, m.name, w - pad * 2, 2);
         const nameH = nameLines.length * doc.currentLineHeight();
 
-        let ritH = 0, ritLines = [];
-        if (m.ritual) {
-          doc.font('he').fontSize(Math.max(4.6, 8.4 * k));
-          ritLines = wrapLines(doc, m.ritual, w - pad * 2, 3);
-          ritH = ritLines.length * doc.currentLineHeight();
+        // טקס ההירדמות: אייקון לצד כל פריט, בדיוק כמו במסך. הפריטים
+        // נארזים לשורות לפי הרוחב הפנוי, וכל שורה ממורכזת בנפרד.
+        doc.font('he').fontSize(Math.max(4.6, 8.4 * k));
+        const ico = Math.max(5, 11 * k), gp = ico * 0.22, sepW = doc.widthOfString(' · ');
+        const avail = w - pad * 2;
+        const items = (m.needs || []).map(nd => {
+          const tw = lineWidth(doc, wordsOf(nd));
+          return { kind: 'need', label: nd, w: ico + gp + tw, tw };
+        });
+        if (m.other) {
+          const tw = lineWidth(doc, wordsOf(m.other));
+          items.push({ kind: 'text', label: m.other, w: tw, tw });
         }
+        const rows = [];
+        let row = [], rw = 0;
+        items.forEach(it => {
+          const add = (row.length ? sepW : 0) + it.w;
+          if (row.length && rw + add > avail) { rows.push({ items: row, w: rw }); row = []; rw = 0; }
+          row.push(it); rw += (row.length > 1 ? sepW : 0) + it.w;
+        });
+        if (row.length) rows.push({ items: row, w: rw });
+        const rlh = Math.max(doc.currentLineHeight(), ico * 0.95);
+        const ritH = rows.length * rlh;
+
         let top = y + (h - nameH - ritH) / 2;
         doc.font('heB').fontSize(Math.max(5.5, 11 * k)).fillColor(potty ? C.pottyInk : C.matInk);
         const nlh = doc.currentLineHeight();
         nameLines.forEach((ws, i) => drawWordsRtl(doc, ws, x + w / 2 + lineWidth(doc, ws) / 2, top + i * nlh));
-        if (ritLines.length) {
+
+        if (rows.length) {
           top += nameH + 1 * k;
-          doc.font('he').fontSize(Math.max(4.6, 8.4 * k)).fillColor(potty ? C.pottySub : C.matSub);
-          const rlh = doc.currentLineHeight();
-          ritLines.forEach((ws, i) => drawWordsRtl(doc, ws, x + w / 2 + lineWidth(doc, ws) / 2, top + i * rlh));
+          const sub = potty ? C.pottySub : C.matSub;
+          rows.forEach((rr, ri) => {
+            // מימין לשמאל: מתחילים מהקצה הימני של השורה ומתקדמים שמאלה
+            let cur = x + w / 2 + rr.w / 2;
+            const ry = top + ri * rlh;
+            rr.items.forEach((it, ii) => {
+              if (ii) {
+                doc.font('he').fontSize(Math.max(4.6, 8.4 * k)).fillColor(sub);
+                cur -= sepW;
+                doc.text(' · ', cur, ry, { lineBreak: false });
+              }
+              if (it.kind === 'need') {
+                cur -= ico;
+                drawNapIcon(doc, it.label, cur, ry + (rlh - ico) / 2 - ico * 0.08, ico);
+                cur -= gp;
+              }
+              doc.font('he').fontSize(Math.max(4.6, 8.4 * k)).fillColor(sub);
+              drawWordsRtl(doc, wordsOf(it.label), cur, ry + (rlh - doc.currentLineHeight()) / 2);
+              cur -= it.tw;
+            });
+          });
         }
       });
 

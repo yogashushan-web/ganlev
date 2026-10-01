@@ -1577,8 +1577,13 @@ function napSheet() {
     meta: `${dd}  ·  ${plan.mats.length - out.length}/${plan.childIds.length}`,
     mats: plan.mats.map(m => {
       const r = E.rectOf(m), cid = plan.who[m.id];
+      // הפריטים נשלחים כרשימה ולא כמחרוזת מחוברת, כדי שה-PDF יוכל
+      // לצייר אייקון לצד כל אחד — בדיוק כמו במסך
+      const rr = cid ? (ritualOf(cid) || {}) : {};
       return { x: r.x, y: r.y, w: r.w, h: r.h,
-               name: cid ? kidName(cid) : '', ritual: cid ? ritualText(cid) : '',
+               name: cid ? kidName(cid) : '',
+               needs: (rr.needs || []).map(napLabel),
+               other: rr.needs_other || '',
                potty: !!(cid && plan.potty[cid]) };
     }),
     items: (plan.obstacles || []).map(o => ({ x: o.x, y: o.y, w: o.w, h: o.h,
