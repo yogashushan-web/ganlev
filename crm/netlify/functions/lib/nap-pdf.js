@@ -225,9 +225,13 @@ function buildNapPdf(sheet) {
           let fs = Math.max(5, 9.5 * k);
           let lines;
           // מקטינים עד שהשם נכנס לכרית בשלוש שורות לכל היותר
-          for (let t = 0; t < 6; t++) {
+          // שורות מוכנות מהדפדפן: שם פרטי בשורה אחת ושם משפחה בשנייה.
+          // שבירה אוטומטית הייתה מפצלת לפי רוחב ולא לפי משמעות.
+          const given = (m.nameLines && m.nameLines.length) ? m.nameLines : [m.name];
+          for (let t = 0; t < 7; t++) {
             doc.font('heB').fontSize(fs);
-            lines = wrapLines(doc, m.name, pw - npad * 2, 3);
+            lines = [];
+            given.forEach(g => { wrapLines(doc, g, pw - npad * 2, 2).forEach(l => lines.push(l)); });
             if (lines.length * doc.currentLineHeight() <= ph - npad && lines.length <= 3) break;
             fs *= 0.86;
           }

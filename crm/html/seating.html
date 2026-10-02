@@ -581,6 +581,18 @@ function displayName(id) {
   const clash = plan.childIds.some(c => c !== id && kidName(c).split(/\s+/)[0] === first);
   return clash ? full : first;
 }
+// כששם מלא מוצג, השם הפרטי עומד בשורה משלו מעל שם המשפחה. שבירה
+// טבעית הייתה מפצלת לפי רוחב ולא לפי משמעות — "אדם סגל / רוזנבאום"
+// במקום "אדם / סגל רוזנבאום".
+function nameLines(id) {
+  const full = kidName(id);
+  if (!full) return [];
+  const parts = full.split(/\s+/);
+  if (parts.length < 2) return [full];
+  const short = displayName(id);
+  if (short !== full) return [short];
+  return [parts[0], parts.slice(1).join(' ')];
+}
 function toggleNames() {
   pushUndo('שינוי תצוגת שמות');
   plan.fullNames = !plan.fullNames;
@@ -1828,7 +1840,8 @@ function renderBoard() {
         transform:rotate(${-l.rot}deg)"
         onpointerdown="startChildDrag(event,'seat','${k}')"
         oncontextmenu="event.preventDefault();toggleLock('${k}')"
-        title="${p ? esc(p.name) : 'מקום פנוי'}">${p ? esc(p.name) : ''}</div>`;
+        title="${p ? esc(kidName(pid) || p.name) : 'מקום פנוי'}">${
+          p ? (p.kind === 'child' ? nameLines(pid).map(esc).join('<br>') : esc(p.name)) : ''}</div>`;
     }).join('');
 
     // תגי האלרגיה מצויירים כאחים של הכיסא ולא בתוכו: העיגול הוא

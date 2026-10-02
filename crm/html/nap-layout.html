@@ -511,6 +511,18 @@ function displayName(id) {
   const clash = plan.childIds.some(c => c !== id && kidName(c).split(/\s+/)[0] === first);
   return clash ? full : first;
 }
+// כששם מלא מוצג, השם הפרטי עומד בשורה משלו מעל שם המשפחה. שבירה
+// טבעית הייתה מפצלת לפי רוחב ולא לפי משמעות — "אדם סגל / רוזנבאום"
+// במקום "אדם / סגל רוזנבאום".
+function nameLines(id) {
+  const full = kidName(id);
+  if (!full) return [];
+  const parts = full.split(/\s+/);
+  if (parts.length < 2) return [full];
+  const short = displayName(id);
+  if (short !== full) return [short];
+  return [parts[0], parts.slice(1).join(' ')];
+}
 function toggleNames() {
   plan.fullNames = !plan.fullNames;
   saveDraft(); renderBoard();
@@ -1027,7 +1039,7 @@ function renderBoard() {
              ${cid && plan.potty[cid] ? '' : `;--bl:${tint.bg};--bll:${tint.line}`}"
       onpointerdown="startMatDrag(event,'${m.id}')">
       <i class="blanket"></i><i class="fold"></i>
-      <div class="pillow"><span class="nm">${esc(cid ? displayName(cid) : '—')}</span></div>
+      <div class="pillow"><span class="nm">${cid ? nameLines(cid).map(esc).join('<br>') : '—'}</span></div>
       <span class="num">${idx + 1}</span>
       ${cid ? `<div class="body"><span class="rt ${rt ? '' : 'empty'}"
         onpointerdown="event.stopPropagation()"
@@ -1665,6 +1677,7 @@ function napSheet() {
       return { x: r.x, y: r.y, w: r.w, h: r.h,
                head: E.headSide(m), num: i + 1,
                name: cid ? displayName(cid) : '',
+               nameLines: cid ? nameLines(cid) : [],
                needs: (rr.needs || []).map(napLabel),
                other: rr.needs_other || '',
                potty: !!(cid && plan.potty[cid]) };
