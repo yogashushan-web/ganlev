@@ -295,6 +295,9 @@
     .gline { position:absolute; }
     .gline.v { top:0; bottom:0; width:0; border-right:1.5px dashed #C4846C; }
     .gline.h { left:0; right:0; height:0; border-bottom:1.5px dashed #C4846C; }
+    /* רווח שווה מסומן בירוק — זה יישור מסוג אחר מיישור לקצה */
+    .gline.gap.v { border-right-color:#1F7a4f; border-right-style:solid; opacity:.65; }
+    .gline.gap.h { border-bottom-color:#1F7a4f; border-bottom-style:solid; opacity:.65; }
 
     .rlegend { position:absolute; left:0; right:0; bottom:9px; display:flex; flex-wrap:wrap;
                justify-content:center; gap:7px 16px; padding:0 30px; direction:rtl; }
@@ -1212,7 +1215,6 @@ function roomScale() {
   return { sc, cm: sc * view.pxPerCm * zoomOf() };   // פיקסלים על המסך לכל סנטימטר
 }
 let drag = null;
-const SNAP = 8;   // ס"מ — הצמדה לקצה של מזרן אחר
 
 function startMatDrag(ev, id) {
   ev.preventDefault(); ev.stopPropagation();
@@ -1228,7 +1230,13 @@ function startMatDrag(ev, id) {
   pushUndo('הזזת מזרן');
   // גוררים את כל מה שמסומן, אם המזרן הנגרר הוא חלק מהבחירה
   const group = (selMats.size > 1 && selMats.has(id)) ? [...selMats] : [id];
+  buildSnapCache(group);
+  const rs = group.map(g => E.rectOf(plan.mats.find(x => x.id === g)));
+  const bx0 = Math.min(...rs.map(r => r.x)), by0 = Math.min(...rs.map(r => r.y));
   drag = { id, group, sx: ev.clientX, sy: ev.clientY, moved: false,
+           box: { x: bx0, y: by0,
+                  w: Math.max(...rs.map(r => r.x2)) - bx0,
+                  h: Math.max(...rs.map(r => r.y2)) - by0 },
            start: group.map(g => { const t = plan.mats.find(x => x.id === g); return { id: g, x: t.x, y: t.y }; }) };
   try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
   window.addEventListener('pointermove', onMatDrag);
@@ -1245,9 +1253,19 @@ function onMatDrag(ev) {
 
   // ההצמדה מחושבת על המזרן הנגרר, וההיסט שנוצר ממנה מוחל על כל הקבוצה,
   // כדי שהקבוצה תזוז כגוש אחד ולא תתפרק.
-  const sn = drag.group.length > 1
-    ? { x: lead.x + dx, y: lead.y + dy, lines: [] }
-    : snapTo(m, lead.x + dx, lead.y + dy);
+  // הצמדה על תיבת הקבוצה ולא על כל מזרן בנפרד. אחרת כל חבר נצמד
+  // ליעד אחר, והגוש מתפרק תוך כדי הגרירה.
+  let sn;
+  if (ev.altKey) {
+    sn = { x: lead.x + dx, y: lead.y + dy, lines: [] };
+  } else if (drag.group.length > 1) {
+    const box = { id: '__grp', x: drag.box.x + dx, y: drag.box.y + dy,
+                  w: drag.box.w, h: drag.box.h, rot: 0 };
+    const g = snapTo(box, box.x, box.y);
+    sn = { x: lead.x + dx + (g.x - box.x), y: lead.y + dy + (g.y - box.y), lines: g.lines };
+  } else {
+    sn = snapTo(m, lead.x + dx, lead.y + dy);
+  }
   const adjX = sn.x - (lead.x + dx), adjY = sn.y - (lead.y + dy);
 
   drag.start.forEach(st => {
@@ -1268,7 +1286,7 @@ function endMatDrag(ev) {
   window.removeEventListener('pointermove', onMatDrag);
   document.querySelectorAll('.mat.target').forEach(e => e.classList.remove('target'));
   drawGuides([]);
-  const d = drag; drag = null;
+  const d = drag; drag = null; snapCache = null;
   if (!d) return;
   if (!d.moved) { tapMat(d.id); return; }
   if (d.group.length === 1) {
@@ -1418,38 +1436,104 @@ function clearSel(ev) {
   selMats.clear(); renderBoard();
 }
 
-// הצמדה לקצוות של מזרונים אחרים — מה שגורם לשורות להיראות ישרות
-function snapTo(me, x, y) {
-  const w = me.rot === 90 ? me.h : me.w, h = me.rot === 90 ? me.w : me.h;
-  const lines = [];
-  let bx = null, by = null;
+/* ---------- הצמדה ---------- */
+// סף התפיסה נמדד בפיקסלים של המסך ומחולק בקנה המידה, כך שההצמדה
+// מרגישה זהה ב-50% וב-160% זום. סף קבוע בסנטימטרים היה הופך את
+// הדף המוקטן לבלתי אפשרי ואת המוגדל לדביק מדי.
+const SNAP_PX = 8;
+const snapCm = () => SNAP_PX / Math.max(0.01, view.pxPerCm * zoomOf());
+
+// המטרות נאספות פעם אחת בתחילת הגרירה ולא בכל תזוזה — אחרת החישוב
+// רץ מאות פעמים בשנייה על אותם נתונים.
+let snapCache = null;
+function buildSnapCache(skipIds) {
+  const skip = new Set(skipIds || []);
+  const xs = [], ys = [], rects = [];
   plan.mats.forEach(o => {
-    if (o.id === me.id) return;
+    if (skip.has(o.id)) return;
     const r = E.rectOf(o);
-    [[r.x, 0], [r.x2, 0], [r.x + (r.w - w) / 2, 1]].forEach(([v]) => {
-      [[x, 0], [x + w, w], [x + w / 2, w / 2]].forEach(([p, off]) => {
-        if (Math.abs(p - v) <= SNAP && (bx === null || Math.abs(p - v) < Math.abs(bx.d))) {
-          bx = { d: p - v, at: v };
-        }
-      });
-    });
-    [[r.y, 0], [r.y2, 0]].forEach(([v]) => {
-      [[y, 0], [y + h, h]].forEach(([p, off]) => {
-        if (Math.abs(p - v) <= SNAP && (by === null || Math.abs(p - v) < Math.abs(by.d))) {
-          by = { d: p - v, at: v };
-        }
-      });
-    });
+    rects.push(r);
+    xs.push(r.x, r.x2, r.x + r.w / 2);
+    ys.push(r.y, r.y2, r.y + r.h / 2);
   });
-  if (bx) { x -= bx.d; lines.push({ dir: 'v', at: bx.at }); }
-  if (by) { y -= by.d; lines.push({ dir: 'h', at: by.at }); }
-  return { x, y, lines };
+  (plan.obstacles || []).forEach(o => {
+    xs.push(o.x, o.x + o.w); ys.push(o.y, o.y + o.h);
+  });
+  // קירות החדר
+  if (plan.room) { xs.push(0, plan.room.w); ys.push(0, plan.room.h); }
+  snapCache = { xs, ys, rects };
+}
+
+// רווחים קיימים בין מזרונים, לכל ציר. אם שניים מרוחקים 50 ס"מ,
+// השלישי יוצע באותם 50 — זה מה שגורם לשורה להיראות מתוכננת.
+function gapsOn(axis, rects) {
+  const a = axis === 'x' ? 'x' : 'y', a2 = axis === 'x' ? 'x2' : 'y2';
+  const perp = axis === 'x' ? ['y', 'y2'] : ['x', 'x2'];
+  const out = [];
+  for (let i = 0; i < rects.length; i++) {
+    for (let j = 0; j < rects.length; j++) {
+      if (i === j) continue;
+      const A = rects[i], B = rects[j];
+      // רק זוגות שחופפים בציר הניצב — אחרת "הרווח" חסר משמעות
+      if (Math.min(A[perp[1]], B[perp[1]]) - Math.max(A[perp[0]], B[perp[0]]) <= 0) continue;
+      const g = B[a] - A[a2];
+      if (g > 1 && g < 400) out.push({ gap: g, after: B[a2], before: A[a] });
+    }
+  }
+  return out;
+}
+
+function snapAxis(lo, hi, mid, cands, gaps, size, tol) {
+  let best = null;
+  const tryIt = (p, target, kind, at) => {
+    const d = p - target;
+    if (Math.abs(d) <= tol && (!best || Math.abs(d) < Math.abs(best.d))) {
+      best = { d, at, kind };
+    }
+  };
+  cands.forEach(v => {
+    tryIt(lo, v, 'edge', v); tryIt(hi, v, 'edge', v); tryIt(mid, v, 'edge', v);
+  });
+  // רווח שווה: להניח את המזרן כך שייווצר אותו מרחק שכבר קיים
+  gaps.forEach(g => {
+    tryIt(lo, g.after + g.gap, 'gap', g.after + g.gap);
+    tryIt(hi, g.before - g.gap, 'gap', g.before - g.gap);
+  });
+  return best;
+}
+
+// שני מעברים, וזה לא ייתור: המעבר הראשון מוצא את ההיסט, והשני
+// מחשב את קווי העזר *מהמיקום המוצמד*. בלי זה הקווים מצויירים כמה
+// פיקסלים מהמזרן שהם אמורים ליישר, והיישור נראה שבור.
+function snapTo(me, x, y) {
+  if (!snapCache) buildSnapCache([me.id]);
+  const r0 = E.rectOf(me);
+  const w = r0.w, h = r0.h;
+  const tol = snapCm();
+  const gx = gapsOn('x', snapCache.rects), gy = gapsOn('y', snapCache.rects);
+
+  const pass = (px, py) => ({
+    bx: snapAxis(px, px + w, px + w / 2, snapCache.xs, gx, w, tol),
+    by: snapAxis(py, py + h, py + h / 2, snapCache.ys, gy, h, tol),
+  });
+  const p1 = pass(x, y);
+  const nx = p1.bx ? x - p1.bx.d : x;
+  const ny = p1.by ? y - p1.by.d : y;
+  const p2 = pass(nx, ny);
+
+  const lines = [];
+  if (p2.bx) lines.push({ dir: 'v', at: p2.bx.at, kind: p2.bx.kind });
+  if (p2.by) lines.push({ dir: 'h', at: p2.by.at, kind: p2.by.kind });
+  return { x: nx, y: ny, lines };
 }
 function drawGuides(lines) {
   const g = document.getElementById('guides'); if (!g) return;
-  g.innerHTML = (lines || []).map(l => l.dir === 'v'
-    ? `<div class="gline v" style="left:${sX(l.at)}px"></div>`
-    : `<div class="gline h" style="top:${sY(l.at)}px"></div>`).join('');
+  g.innerHTML = (lines || []).map(l => {
+    const k = l.kind === 'gap' ? ' gap' : '';
+    return l.dir === 'v'
+      ? `<div class="gline v${k}" style="left:${sX(l.at)}px"></div>`
+      : `<div class="gline h${k}" style="top:${sY(l.at)}px"></div>`;
+  }).join('');
 }
 
 function startObsDrag(ev, id) { genericDrag(ev, id, plan.obstacles, 'obst', 'data-o', 'הזזת פריט'); }
