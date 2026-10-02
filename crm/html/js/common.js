@@ -204,6 +204,7 @@ const CRM_ICONS = {
   rotate:  '<path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/>',
   select:  '<path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="M10 4h4M10 20h4M4 10v4M20 10v4"/>',
   align:   '<path d="M4 6h16M7 12h10M4 18h16"/>',
+  menu: '<path d="M4 4v6a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V4"/><path d="M6 12v8"/><path d="M16 4c-1.4 1.1-2 2.6-2 4.4 0 1.7.7 2.9 2 3.3V20"/><path d="M16 4c1.4 1.1 2 2.6 2 4.4 0 1.7-.7 2.9-2 3.3"/>',
   layers:  '<path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>',
 };
 function crmIcon(name, size) {
@@ -280,6 +281,8 @@ const CRM_ACTIONS = [
         href: 'seating.html', ico: 'grid' },
       { t: 'יצירת סידור מזרונים', d: 'תוכנית חדר השינה · מיטות, כללים וטקס הירדמות',
         href: 'nap-layout.html', ico: 'layers' },
+      { t: 'יצירת תפריט', d: 'התפריט השבועי · מאגר מנות, בדיקה ודף להורים',
+        href: 'menu-builder.html', ico: 'menu' },
     ],
   },
 ];
@@ -330,7 +333,7 @@ function renderActions() {
             '<span><b>' + a.t + '</b><em>' + a.d + '</em></span></a>';
         }).join('');
     }).join('') +
-    '<div class="soon">עוד פעולות יתווספו כאן בהדרגה.<br>הבאה בתור: יצירת תפריט.</div>' +
+    '<div class="soon">עוד פעולות יתווספו כאן בהדרגה.</div>' +
     '<button class="cls" onclick="closeActions()">סגירה</button></div>';
   ov.addEventListener('click', function (e) { if (e.target === ov) closeActions(); });
   document.body.appendChild(ov);
@@ -355,6 +358,7 @@ function renderNavSidebar() {
     { href: 'tuition-board.html',   icon: '💳', label: 'שכר לימוד' },
     { href: 'seating.html',         icon: '🍽️', label: 'סידור ישיבה' },
     { href: 'nap-layout.html',      icon: '🛏️', label: 'סידור מזרונים' },
+  { href: 'menu-builder.html',    icon: '🍲', label: 'תפריט' },
     { href: 'staff-salaries.html',  icon: '👥', label: 'צוות' },
     { href: 'content.html',         icon: '📚', label: 'תוכן חינוכי' },
     { href: 'forms.html',           icon: '📋', label: 'טפסים' },

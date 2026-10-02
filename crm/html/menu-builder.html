@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>תפריט — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .btn { background:#1F3D34; color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; font-family:'Alef'; font-weight:700; font-size:14px; }
+    .btn.ghost { background:#efe9e0; color:#6f6457; }
+    .btn.soft { background:#fff; color:#1F3D34; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+    .btn:disabled { opacity:.5; cursor:default; }
+    .err,.ok { padding:12px; border-radius:10px; margin-bottom:14px; display:none; }
+    .err { background:#fdf0ef; color:#c94147; } .ok { background:#d4edda; color:#155724; }
+    .err.show,.ok.show { display:block; }
+    .hide { display:none !important; }
+
+    .steps { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
+    .step-pill { padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700; background:#fff; color:#8a7f70; border:1px solid #e8e4de; cursor:pointer; font-family:'Alef'; }
+    .step-pill:hover { border-color:#1F3D34; color:#1F3D34; }
+    .step-pill.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
+    .step-pill.done { background:#e6f4ec; color:#1F7a4f; border-color:#cfe7d9; }
+
+    .card { background:#fff; border-radius:18px; padding:24px 26px; box-shadow:0 2px 14px rgba(0,0,0,.06); margin-bottom:16px; }
+    .card h2 { font-size:20px; color:#1F3D34; margin-bottom:5px; }
+    .card .sub { color:#9B8E82; font-size:13.5px; margin-bottom:18px; line-height:1.6; }
+    .fld { margin-bottom:16px; }
+    .fld label { display:block; font-size:13px; font-weight:700; color:#3D3228; margin-bottom:7px; }
+    .fld input, .fld select, .fld textarea { width:100%; max-width:340px; padding:11px 13px; border:1.5px solid #e8e4de; border-radius:10px; font-family:'Alef'; font-size:14px; outline:none; }
+    .fld textarea { max-width:100%; min-height:72px; resize:vertical; }
+    .fld input:focus, .fld select:focus, .fld textarea:focus { border-color:#1F3D34; }
+    .nav { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
+    .count-line { font-size:12.5px; color:#9B8E82; margin-top:10px; }
+
+    .pick { display:flex; gap:8px; flex-wrap:wrap; }
+    .pick .p { border:1.5px solid #e8e4de; background:#fff; border-radius:999px; padding:8px 15px; font-family:'Alef'; font-size:13.5px; font-weight:700; cursor:pointer; color:#6f6457; }
+    .pick .p.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
+
+    /* ---- לוח השבוע ---- */
+    .grid { display:grid; grid-template-columns:104px repeat(5,minmax(150px,1fr)); gap:8px; }
+    .gh { font-size:13px; font-weight:700; color:#1F3D34; text-align:center; padding:7px 4px; background:#fff; border-radius:10px; }
+    .gh em { display:block; font-style:normal; font-size:11px; color:#9B8E82; font-variant-numeric:tabular-nums; }
+    .mh { display:flex; flex-direction:column; justify-content:center; gap:2px; font-size:12.5px; font-weight:700; color:#6f6457; background:#FAF8F4; border-radius:10px; padding:9px 11px; }
+    .mh em { font-style:normal; font-size:11px; color:#B9AE9F; font-variant-numeric:tabular-nums; }
+    .cell { background:#fff; border:1.5px dashed #e8e4de; border-radius:10px; padding:7px; min-height:62px; display:flex; flex-direction:column; gap:5px; }
+    .cell.tgt { border-color:#1F3D34; background:#f4f9f6; border-style:solid; }
+    .cell.warn { border-color:#f0c9c6; background:#fdf6f5; }
+    .chip { display:flex; align-items:center; gap:5px; background:#FAF8F4; border:1px solid #efe9e0; border-radius:8px; padding:5px 7px; font-size:12.5px; cursor:pointer; text-align:right; }
+    .chip:hover { border-color:#1F3D34; }
+    .chip.sel { background:#1F3D34; border-color:#1F3D34; color:#fff; }
+    .chip .nm { flex:1; min-width:0; }
+    .chip .al { font-size:10.5px; color:#c94147; font-weight:700; }
+    .chip.sel .al { color:#ffd9d6; }
+    .chip .rm { background:none; border:none; font-family:'Alef'; font-size:10.5px; font-weight:700; color:#9B8E82; cursor:pointer; padding:1px 3px; border-radius:5px; }
+    .chip .rm:hover { background:#fdf0ef; color:#c94147; }
+    .chip.sel .rm { color:#cfe0d8; }
+    .add { background:none; border:none; font-family:'Alef'; font-size:12px; font-weight:700; color:#9B8E82; cursor:pointer; padding:4px; border-radius:7px; text-align:center; }
+    .add:hover { background:#f4f9f6; color:#1F3D34; }
+    .daytools { display:flex; gap:5px; justify-content:center; margin-top:5px; }
+    .daytools button { background:none; border:none; font-family:'Alef'; font-size:11px; font-weight:700; color:#B9AE9F; cursor:pointer; padding:2px 6px; border-radius:6px; }
+    .daytools button:hover { background:#f4f9f6; color:#1F3D34; }
+    .movehint { background:#f4f9f6; border:1px solid #cfe7d9; color:#1F7a4f; border-radius:10px; padding:9px 13px; font-size:12.5px; font-weight:700; margin-bottom:11px; display:flex; gap:9px; align-items:center; flex-wrap:wrap; }
+    .movehint button { background:#fff; border:1px solid #cfe7d9; border-radius:7px; padding:4px 10px; font-family:'Alef'; font-size:11.5px; font-weight:700; color:#1F7a4f; cursor:pointer; }
+
+    /* ---- בדיקה ---- */
+    .vrow { display:flex; gap:10px; align-items:flex-start; padding:11px 13px; border-radius:11px; margin-bottom:8px; font-size:13.5px; line-height:1.6; }
+    .vrow.warn { background:#fdf6f5; border:1px solid #f0c9c6; }
+    .vrow.note { background:#FAF8F4; border:1px solid #efe9e0; color:#6f6457; }
+    .vrow .tag { font-size:11px; font-weight:700; border-radius:999px; padding:2px 9px; flex:0 0 auto; }
+    .vrow.warn .tag { background:#f6dedb; color:#9d3b40; }
+    .vrow.note .tag { background:#efe9e0; color:#8a7f70; }
+    .vrow .go { margin-right:auto; background:#fff; border:1px solid #e8e4de; border-radius:7px; padding:4px 10px; font-family:'Alef'; font-size:11.5px; font-weight:700; color:#1F3D34; cursor:pointer; flex:0 0 auto; }
+    .clean { background:#e6f4ec; border:1px solid #cfe7d9; color:#1F7a4f; border-radius:12px; padding:15px 17px; font-size:14px; font-weight:700; }
+
+    /* ---- עיצוב ---- */
+    .tpls { display:grid; grid-template-columns:repeat(auto-fit,minmax(214px,1fr)); gap:12px; }
+    .tpl { background:#FAF8F4; border:1.5px solid #e8e4de; border-radius:14px; padding:14px; cursor:pointer; text-align:right; font-family:'Alef'; }
+    .tpl:hover { border-color:#1F3D34; }
+    .tpl.on { border-color:#1F3D34; background:#f4f9f6; box-shadow:0 0 0 3px rgba(31,61,52,.08); }
+    .tpl b { display:block; font-size:14.5px; color:#1F3D34; margin-bottom:3px; }
+    .tpl em { font-style:normal; font-size:12px; color:#9B8E82; line-height:1.6; }
+    .tpl .mini { height:74px; background:#fff; border:1px solid #efe9e0; border-radius:9px; margin-bottom:10px; padding:6px; display:flex; gap:3px; }
+    .tpl .mini i { background:#e8e4de; border-radius:3px; display:block; }
+
+    /* ---- תצוגה מקדימה ---- */
+    .prev { background:#F4EFE6; border:1px solid #e8e4de; border-radius:14px; padding:4px; overflow:hidden; }
+    .prev .wrap { max-width:none; padding:16px 12px 22px; }
+
+    /* ---- מאגר המנות ---- */
+    .searchbar { background:#FFF; border-radius:14px; padding:12px 16px; box-shadow:0 2px 11px rgba(0,0,0,0.05); margin-bottom:16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .searchbar input { flex:1; min-width:150px; border:none; outline:none; font-family:'Alef'; font-size:15px; background:transparent; }
+    .dishes { display:grid; grid-template-columns:repeat(auto-fill,minmax(236px,1fr)); gap:10px; }
+    .dish { background:#fff; border:1.5px solid #e8e4de; border-radius:13px; padding:12px 14px; cursor:pointer; }
+    .dish:hover { border-color:#1F3D34; }
+    .dish b { display:block; font-size:14.5px; color:#1F3D34; }
+    .dish .meta { font-size:11.5px; color:#9B8E82; margin-top:3px; }
+    .dish .al { font-size:11px; color:#c94147; font-weight:700; margin-top:5px; }
+    .dish .un { font-size:11px; color:#B9AE9F; margin-top:5px; }
+    .dish.off { opacity:.5; }
+    .catbar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+
+    /* ---- חלון ---- */
+    .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center; justify-content:center; z-index:9999; padding:18px; }
+    .ov.show { display:flex; }
+    .modal { background:#fff; border-radius:18px; padding:24px 26px; width:100%; max-width:520px; max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .modal h3 { color:#1F3D34; font-size:19px; margin-bottom:4px; }
+    .modal .msub { color:#9B8E82; font-size:13px; margin-bottom:16px; line-height:1.6; }
+    .modal input[type=text] { width:100%; padding:11px 13px; border:1.5px solid #e8e4de; border-radius:10px; font-family:'Alef'; font-size:14px; outline:none; }
+    .modal input[type=text]:focus { border-color:#1F3D34; }
+    .m-actions { display:flex; gap:9px; margin-top:18px; flex-wrap:wrap; }
+    .empty-note { color:#9B8E82; font-size:13.5px; line-height:1.7; }
+    .plist { max-height:300px; overflow:auto; margin-top:4px; }
+    .prow { display:flex; align-items:center; gap:10px; background:#FAF8F4; border:1px solid #efe9e0; border-radius:11px; padding:10px 12px; margin-bottom:7px; cursor:pointer; }
+    .prow:hover { border-color:#1F3D34; background:#f4f9f6; }
+    .prow .nm { font-weight:700; color:#1F3D34; font-size:14px; }
+    .prow .meta { font-size:11.5px; color:#9B8E82; }
+    .prow .rm { margin-right:auto; background:#f6f2ec; border:1px solid #e8e1d6; color:#8a7f70; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Alef'; }
+    .prow .rm:hover { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
+    mark { background:#fdf2cf; border-radius:3px; }
+
+    @media (max-width:880px) {
+      .grid { grid-template-columns:1fr; }
+      .gh { text-align:right; background:#1F3D34; color:#fff; margin-top:9px; }
+      .gh em { color:#cfe0d8; }
+      .mh { flex-direction:row; align-items:baseline; gap:7px; }
+    }
+    @media print {
+      body { padding:0 !important; background:#fff; }
+      .header, .steps, .err, .ok, .ov, .nav, .movehint, #crmSidebar, #crmMenuBtn,
+      #trashFab, #error, #success, .pbar { display:none !important; }
+      .card { box-shadow:none; padding:0; }
+      .prev { border:0; background:#fff; padding:0; }
+    }
+  </style>
+  <style id="menuCss"></style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🍲 תפריט</h1>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;" id="topActions"></div>
+  </div>
+
+  <div id="error" class="err"></div>
+  <div id="success" class="ok"></div>
+
+  <div class="steps" id="steps"></div>
+  <div id="wizard"></div>
+  <div id="library" class="hide"></div>
+
+  <div class="ov" id="modalOv" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h3 id="modalTitle"></h3>
+      <div class="msub" id="modalSub"></div>
+      <div id="modalBody"></div>
+      <div class="m-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+<script src="js/common.js?v=26"></script>
+<script src="js/api.js?v=22"></script>
+<script src="js/menu-render.js?v=1"></script>
+<script src="js/menu-check.js?v=1"></script>
+<script>
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid = () => 'd' + Math.random().toString(36).slice(2, 9);
+const MR = MenuRender, MC = MenuCheck;
+const DAYS = MR.DAYS, MEALS = MR.MEALS;
+const ALLERGENS = [
+  { code:'milk', name:'חלב' }, { code:'egg', name:'ביצים' }, { code:'peanut', name:'בוטנים' },
+  { code:'nuts', name:'אגוזים' }, { code:'sesame', name:'שומשום' }, { code:'gluten', name:'גלוטן' },
+];
+const CATS = ['בוקר', 'צהריים', 'נשנוש'];
+// לאיזו קטגוריה כל ארוחה פונה כשפותחים את המאגר. חיסכון של סינון ידני
+// בכל פעם — הגננת כמעט תמיד רוצה בדיוק את הקטגוריה הזו.
+const MEAL_CAT = { breakfast:'בוקר', lunch:'צהריים', snack1:'נשנוש', snack2:'נשנוש' };
+
+const STEPS = ['שבוע', 'בניית התפריט', 'בדיקה', 'עיצוב', 'עמוד מידע', 'תצוגה ופרסום'];
+const WELCOME = 0;
+const DRAFT = 'gl_menu_draft';
+
+let dishes = [], weeks = [], settings = { facts: [] };
+let sens = [];                       // [{ name, codes }] — רגישויות הקבוצה
+let step = 1, plan = null, lib = false, libFilter = '', libCat = '', sel = null;
+let picker = null;                   // { day, meal }
+let editing = null;                  // המנה שנערכת במאגר
+
+document.getElementById('menuCss').textContent = MR.MENU_CSS;
+
+/* ---------- תאריכים ---------- */
+// הכל בשעון מקומי. new Date(iso).toISOString() מזיז יום אחורה בישראל.
+const P2 = n => String(n).padStart(2, '0');
+const toIso = d => `${d.getFullYear()}-${P2(d.getMonth() + 1)}-${P2(d.getDate())}`;
+function sundayOf(d) { const x = new Date(d); x.setDate(x.getDate() - x.getDay()); x.setHours(0,0,0,0); return x; }
+const thisSunday = () => toIso(sundayOf(new Date()));
+function shiftWeek(iso, n) {
+  const [y,m,dd] = iso.split('-').map(Number);
+  const x = new Date(y, m-1, dd); x.setDate(x.getDate() + n*7); return toIso(x);
+}
+const fmt = MR.fmt;
+
+/* ---------- המצב ---------- */
+function emptyDays() {
+  const o = {};
+  DAYS.forEach(d => { o[d.key] = {}; MEALS.forEach(m => { o[d.key][m.key] = []; }); });
+  return o;
+}
+function newPlan(weekOf) {
+  const w = weekOf || thisSunday();
+  return { weekOf: w, name: 'תפריט ' + fmt(w), days: emptyDays(),
+           template: 'table', infoPage: true, published: false };
+}
+const dishById = id => dishes.find(d => d.id === id) || null;
+const dishMap = () => { const o = {}; dishes.forEach(d => { o[d.id] = d; }); return o; };
+const at = (day, meal) => ((plan.days[day] || {})[meal] || []);
+const mealOf = k => MEALS.find(m => m.key === k) || MEALS[0];
+
+function saveDraft() { try { localStorage.setItem(DRAFT, JSON.stringify({ plan, step })); } catch (e) {} }
+function clearDraft() { try { localStorage.removeItem(DRAFT); } catch (e) {} }
+
+/* ---------- טעינה ---------- */
+async function boot() {
+  try {
+    const r = await api.getMenu();
+    dishes = (r && r.dishes) || [];
+    weeks = (r && r.weeks) || [];
+    settings = (r && r.settings) || { facts: [] };
+  } catch (e) { showErr('הטעינה נכשלה: ' + e.message); }
+  loadSens();                        // ברקע — הדף לא מחכה לזה
+
+  plan = newPlan();
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT) || 'null');
+    if (d && d.plan && d.plan.weekOf) {
+      plan = Object.assign(newPlan(d.plan.weekOf), d.plan);
+      plan.days = Object.assign(emptyDays(), plan.days);
+      step = d.step || 1;
+      showOk('שוחזרה הטיוטה האחרונה');
+    }
+  } catch (e) {}
+  if (!dishes.length) step = WELCOME;
+  goStep(step);
+}
+
+// רגישויות הקבוצה מגיעות מכרטיסי הבריאות הקיימים — אותם שישה קודים
+// בדיוק, ולכן אין כאן שום תרגום שאפשר לטעות בו.
+async function loadSens() {
+  try {
+    const [rc, rh] = await Promise.all([api.getChildren(), api.getChildHealth()]);
+    const health = (rh && rh.health) || {};
+    const kids = (rc && rc.data) || [];
+    sens = kids.map(c => ({
+      id: c.id,
+      name: (c.first_name_he + ' ' + (c.last_name_he || '')).trim(),
+      codes: health[c.id] || [],
+    })).filter(s => s.codes.length);
+    if (step === 3) renderStep();
+  } catch (e) { sens = []; }
+}
+
+/* ---------- ניווט ---------- */
+function renderTop() {
+  document.getElementById('topActions').innerHTML = lib
+    ? `<button class="btn" onclick="openDish(null)">מנה חדשה</button>
+       <button class="btn ghost" onclick="closeLib()">חזרה לתפריט</button>`
+    : `<button class="btn soft" onclick="openLib()">מאגר המנות</button>
+       <button class="btn soft" onclick="openWeeks()">תפריטים שמורים</button>
+       <button class="btn" onclick="savePlan()">שמירה</button>`;
+}
+function renderSteps() {
+  document.getElementById('steps').innerHTML = STEPS.map((s, i) => {
+    const n = i + 1;
+    return `<button class="step-pill ${n === step ? 'on' : n < step ? 'done' : ''}" onclick="goStep(${n})">${n}. ${s}</button>`;
+  }).join('');
+}
+function goStep(n) {
+  step = n; lib = false; sel = null;
+  document.getElementById('library').classList.add('hide');
+  document.getElementById('wizard').classList.remove('hide');
+  document.getElementById('steps').classList.toggle('hide', n === WELCOME);
+  renderTop(); renderSteps(); renderStep();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function renderStep() {
+  saveDraft();
+  const w = document.getElementById('wizard');
+  if (step === WELCOME) w.innerHTML = stepWelcome();
+  if (step === 1) w.innerHTML = stepWeek();
+  if (step === 2) w.innerHTML = stepBuild();
+  if (step === 3) w.innerHTML = stepCheck();
+  if (step === 4) w.innerHTML = stepDesign();
+  if (step === 5) w.innerHTML = stepInfo();
+  if (step === 6) w.innerHTML = stepPreview();
+  renderSteps();
+}
+
+/* ---------- 0 · פתיחה ---------- */
+function stepWelcome() {
+  return `<div class="card">
+    <h2>בניית התפריט השבועי</h2>
+    <div class="sub">בוחרים שבוע, מרכיבים אותו מתוך מאגר המנות של הגן, והמערכת
+      מעצבת דף מוכן להורים. אחרי השבוע הראשון אפשר לשכפל שבוע קודם
+      ולשנות רק את מה שהשתנה.</div>
+    ${dishes.length
+      ? `<div class="count-line">${dishes.length} מנות במאגר.</div>`
+      : `<div class="empty-note">המאגר עדיין ריק. אפשר להתחיל מ-15 המנות של
+           הגן ולערוך אותן אחר כך, או לבנות מאגר מאפס.</div>`}
+    <div class="nav">
+      ${dishes.length
+        ? `<button class="btn" onclick="goStep(1)">בניית תפריט</button>`
+        : `<button class="btn" onclick="doSeed()">התחלה מ-15 המנות של הגן</button>
+           <button class="btn ghost" onclick="openLib()">בניית מאגר מאפס</button>`}
+    </div>
+  </div>`;
+}
+async function doSeed() {
+  try {
+    const r = await api.seedDishes();
+    const g = await api.getMenu();
+    dishes = (g && g.dishes) || [];
+    showOk(`נוספו ${r.added || dishes.length} מנות · אפשר לערוך כל אחת מהן במאגר`);
+    goStep(1);
+  } catch (e) { showErr('ההוספה נכשלה: ' + e.message); }
+}
+
+/* ---------- 1 · שבוע ---------- */
+function stepWeek() {
+  const opts = [];
+  for (let i = -2; i <= 6; i++) opts.push(shiftWeek(thisSunday(), i));
+  const saved = weeks.find(w => w.weekOf === plan.weekOf);
+  return `<div class="card">
+    <h2>איזה שבוע</h2>
+    <div class="sub">השבוע מתחיל ביום ראשון ונגמר בחמישי. בימי שישי ארוחת הבוקר
+      מגיעה מהבית, ולכן אין עמודה לשישי.</div>
+    <div class="fld"><label>שבוע</label>
+      <select onchange="pickWeek(this.value)">
+        ${opts.map(o => `<option value="${o}" ${o === plan.weekOf ? 'selected' : ''}>
+            ${fmt(o)} – ${fmt(MR.addDays(o, 4))}${o === thisSunday() ? '  (השבוע)' : ''}
+            ${weeks.some(w => w.weekOf === o) ? '  ·  קיים' : ''}</option>`).join('')}
+      </select></div>
+    <div class="fld"><label>שם התפריט</label>
+      <input type="text" value="${esc(plan.name)}" maxlength="60"
+        oninput="plan.name=this.value;saveDraft()"></div>
+    ${saved ? `<div class="count-line">לשבוע הזה כבר קיים תפריט שמור${saved.published ? ' ומפורסם' : ''}.
+        פתיחתו מ"תפריטים שמורים" תטען אותו לעריכה.</div>` : ''}
+    ${weeks.length ? `<div class="fld" style="margin-top:18px"><label>בסיס להתחלה</label>
+      <div class="pick">
+        <button class="p" onclick="copyFrom('')">להתחיל ריק</button>
+        ${weeks.slice(0, 4).map(w => `<button class="p" onclick="copyFrom('${w.weekOf}')">
+            העתקה מ-${fmt(w.weekOf)}</button>`).join('')}
+      </div></div>` : ''}
+    <div class="nav"><button class="btn" onclick="goStep(2)">המשך</button></div>
+  </div>`;
+}
+function pickWeek(v) {
+  plan.weekOf = v;
+  plan.name = 'תפריט ' + fmt(v);
+  renderStep();
+}
+function copyFrom(weekOf) {
+  if (!weekOf) { plan.days = emptyDays(); showOk('השבוע רוקן'); renderStep(); return; }
+  const src = weeks.find(w => w.weekOf === weekOf);
+  if (!src) return;
+  // העתקה עמוקה, אחרת שינוי בשבוע החדש היה משנה גם את הישן בזיכרון
+  plan.days = JSON.parse(JSON.stringify(Object.assign(emptyDays(), src.days || {})));
+  showOk(`הועתק מהתפריט של ${fmt(weekOf)} · אפשר לשנות כל מה שצריך`);
+  goStep(2);
+}
+
+/* ---------- 2 · בנייה ---------- */
+function stepBuild() {
+  const warnCells = {};
+  MC.checkWeek({ week: plan, dishes: dishMap(), sensitivities: sens, meals: MEALS })
+    .filter(v => v.level === 'warn' && v.day && v.meal)
+    .forEach(v => { warnCells[v.day + '|' + v.meal] = true; });
+
+  let g = '<div class="grid"><div></div>';
+  DAYS.forEach((d, i) => {
+    g += `<div class="gh">${esc(d.name)}<em>${fmt(MR.addDays(plan.weekOf, i))}</em>
+      <div class="daytools">
+        <button onclick="clearDay('${d.key}')">ניקוי</button>
+        ${i < 4 ? `<button onclick="copyDay('${d.key}',${i})">שכפול ליום הבא</button>` : ''}
+      </div></div>`;
+  });
+  MEALS.forEach(m => {
+    g += `<div class="mh">${esc(m.name)}<em>${esc(m.time)}</em></div>`;
+    DAYS.forEach(d => {
+      const ids = at(d.key, m.key);
+      const hot = warnCells[d.key + '|' + m.key];
+      g += `<div class="cell ${sel ? 'tgt' : ''} ${hot ? 'warn' : ''}"
+             onclick="cellTap('${d.key}','${m.key}')">`;
+      ids.forEach((id, idx) => {
+        const dd = dishById(id);
+        const nm = dd ? dd.name : 'מנה שנמחקה';
+        const bad = dd ? alertFor(dd) : '';
+        const on = sel && sel.day === d.key && sel.meal === m.key && sel.idx === idx;
+        g += `<div class="chip ${on ? 'sel' : ''}"
+                onclick="event.stopPropagation();chipTap('${d.key}','${m.key}',${idx})">
+                <span class="nm">${esc(nm)}${bad ? `<span class="al"> · ${esc(bad)}</span>` : ''}</span>
+                <button class="rm" onclick="event.stopPropagation();dropDish('${d.key}','${m.key}',${idx})">הסר</button>
+              </div>`;
+      });
+      g += `<button class="add" onclick="event.stopPropagation();openPicker('${d.key}','${m.key}')">הוספת מנה</button>`;
+      g += '</div>';
+    });
+  });
+  g += '</div>';
+
+  const total = DAYS.reduce((n, d) => n + MEALS.reduce((k, m) => k + at(d.key, m.key).length, 0), 0);
+  return `<div class="card">
+    <h2>בניית התפריט</h2>
+    <div class="sub">לחיצה על "הוספת מנה" פותחת את המאגר. לחיצה על מנה בוחרת
+      אותה, ואז לחיצה על משבצת אחרת מעבירה אותה לשם.</div>
+    ${sel ? `<div class="movehint">
+        <span>«${esc((dishById(at(sel.day, sel.meal)[sel.idx]) || {}).name || '')}» נבחרה —
+          עכשיו לחיצה על המשבצת שאליה היא עוברת.</span>
+        <button onclick="sel=null;renderStep()">ביטול הבחירה</button></div>` : ''}
+    ${g}
+    <div class="count-line">${total} מנות בשבוע · ${sens.length
+      ? `${sens.length} ילדים עם רגישות מסומנת`
+      : 'אין רגישויות מסומנות בקבוצה'}</div>
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(1)">חזרה</button>
+      <button class="btn" onclick="goStep(3)">המשך לבדיקה</button>
+      <button class="btn soft" onclick="copyWeekAcross()">שכפול יום ראשון לכל השבוע</button>
+    </div>
+  </div>`;
+}
+// רגישות שרלוונטית לקבוצה הזו, בקצרה — על הצ'יפ עצמו אין מקום לשם ילד
+function alertFor(d) {
+  if (!Array.isArray(d.allergens) || !d.allergens.length) return '';
+  const hit = d.allergens.filter(c => sens.some(s => s.codes.indexOf(c) >= 0));
+  return hit.map(c => MC.ALLERGEN_NAME[c] || c).join(', ');
+}
+function chipTap(day, meal, idx) {
+  if (sel && sel.day === day && sel.meal === meal && sel.idx === idx) sel = null;
+  else sel = { day, meal, idx };
+  renderStep();
+}
+function cellTap(day, meal) {
+  if (!sel) return;
+  const from = at(sel.day, sel.meal);
+  const id = from[sel.idx];
+  if (!id) { sel = null; renderStep(); return; }
+  from.splice(sel.idx, 1);
+  at(day, meal).push(id);
+  sel = null; saveDraft(); renderStep();
+}
+function dropDish(day, meal, idx) { at(day, meal).splice(idx, 1); sel = null; saveDraft(); renderStep(); }
+function clearDay(day) { MEALS.forEach(m => { plan.days[day][m.key] = []; }); saveDraft(); renderStep(); }
+function copyDay(day, i) {
+  const next = DAYS[i + 1]; if (!next) return;
+  MEALS.forEach(m => { plan.days[next.key][m.key] = at(day, m.key).slice(); });
+  showOk(`יום ${DAYS[i].name} שוכפל ליום ${next.name}`);
+  saveDraft(); renderStep();
+}
+function copyWeekAcross() {
+  DAYS.slice(1).forEach(d => MEALS.forEach(m => {
+    plan.days[d.key][m.key] = at('sun', m.key).slice();
+  }));
+  showOk('יום ראשון שוכפל לכל השבוע · עכשיו אפשר לשנות כל יום בנפרד');
+  saveDraft(); renderStep();
+}
+
+/* ---------- 3 · בדיקה ---------- */
+function stepCheck() {
+  const list = MC.checkWeek({ week: plan, dishes: dishMap(), sensitivities: sens, meals: MEALS });
+  const warns = list.filter(v => v.level === 'warn').length;
+  return `<div class="card">
+    <h2>בדיקה</h2>
+    <div class="sub">המערכת מתריעה ולא חוסמת. אפשר להמשיך לפרסם גם עם התרעות —
+      ההחלטה שלך.</div>
+    ${list.length ? list.map((v, i) => `<div class="vrow ${v.level}">
+        <span class="tag">${v.level === 'warn' ? 'לשים לב' : 'הערה'}</span>
+        <span>${esc(v.text)}</span>
+        ${v.day ? `<button class="go" onclick="goStep(2)">לתיקון</button>` : ''}
+      </div>`).join('')
+      : `<div class="clean">הכל תקין — חמישה ימים מלאים, בלי חזרות ובלי אלרגן
+           שסומן בקבוצה.</div>`}
+    ${sens.length ? '' : `<div class="count-line">אין רגישויות מסומנות בקבוצה,
+      ולכן בדיקת האלרגנים לא רצה. סימון רגישות נעשה במסך הילדים.</div>`}
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(2)">חזרה לעריכה</button>
+      <button class="btn" onclick="goStep(4)">${warns ? 'להמשיך בכל זאת' : 'המשך'}</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- 4 · עיצוב ---------- */
+const MINIS = {
+  table:   '<i style="flex:1;height:100%"></i><i style="flex:1"></i><i style="flex:1"></i><i style="flex:1"></i>',
+  cards:   '<i style="flex:1;height:60%"></i><i style="flex:1;height:100%"></i><i style="flex:1;height:75%"></i>',
+  day:     '<i style="width:12px;height:100%"></i><i style="flex:1;height:40%;align-self:flex-start"></i>',
+  kitchen: '<i style="flex:1;height:22%;align-self:flex-start"></i>',
+};
+function stepDesign() {
+  const T = MR.TEMPLATES;
+  const D = {
+    table: 'ימים בעמודות וארוחות בשורות. הכי דחוס, והכי קרוב לתפריט של היום. בטלפון הוא נפרס לכרטיסים.',
+    cards: 'כל יום כרטיס משלו. הכי קריא בטלפון, וגם הכי נוח לתלות על המקרר.',
+    day: 'לפי סדר השעות — 08:30 בוקר, 10:30 נשנוש וכן הלאה. מסביר להורה מתי הילד אוכל.',
+    kitchen: 'מעוצב יותר. שלוש עובדות על האוכל עולות לראש הדף במקום להידחק לסוף.',
+  };
+  return `<div class="card">
+    <h2>בחירת עיצוב</h2>
+    <div class="sub">אותו תפריט בדיוק, ארבע דרכים להציג אותו. אפשר להחליף בכל
+      שבוע — הבחירה נשמרת על התפריט הזה.</div>
+    <div class="tpls">
+      ${Object.keys(T).map(k => `<button class="tpl ${plan.template === k ? 'on' : ''}"
+          onclick="plan.template='${k}';saveDraft();renderStep()">
+          <div class="mini">${MINIS[k] || ''}</div>
+          <b>${esc(T[k].name)}</b><em>${esc(D[k] || '')}</em></button>`).join('')}
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(3)">חזרה</button>
+      <button class="btn" onclick="goStep(5)">המשך</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- 5 · עמוד מידע ---------- */
+function stepInfo() {
+  return `<div class="card">
+    <h2>עמוד המידע</h2>
+    <div class="sub">נכתב פעם אחת ומופיע מתחת לתפריט בכל שבוע. שורה אחת לכל
+      דבר שחשוב שההורים ידעו.</div>
+    <div class="pick" style="margin-bottom:16px">
+      <button class="p ${plan.infoPage ? 'on' : ''}" onclick="plan.infoPage=true;saveDraft();renderStep()">כולל עמוד מידע</button>
+      <button class="p ${!plan.infoPage ? 'on' : ''}" onclick="plan.infoPage=false;saveDraft();renderStep()">התפריט בלבד</button>
+    </div>
+    <div class="fld"><label>המידע הקבוע על האוכל</label>
+      <textarea id="facts" ${plan.infoPage ? '' : 'disabled'}
+        placeholder="שורה אחת לכל משפט">${esc((settings.facts || []).join('\\n'))}</textarea></div>
+    <div class="count-line">${(settings.facts || []).length} שורות. הטקסט הזה משותף
+      לכל התפריטים ולא נכתב מחדש בכל שבוע.</div>
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(4)">חזרה</button>
+      <button class="btn" onclick="saveFacts(6)">המשך</button>
+    </div>
+  </div>`;
+}
+async function saveFacts(next) {
+  const el = document.getElementById('facts');
+  if (el) {
+    settings.facts = el.value.split('\n').map(s => s.trim()).filter(Boolean);
+    try { await api.saveMenuSettings(settings); } catch (e) { showErr('שמירת המידע נכשלה: ' + e.message); }
+  }
+  if (next) goStep(next);
+}
+
+/* ---------- 6 · תצוגה ופרסום ---------- */
+// אותו קוד שמצייר את הדף שההורים מקבלים. תצוגה מקדימה שמצויירת בקוד
+// אחר היא לא תצוגה מקדימה.
+function stepPreview() {
+  const r = MR.renderMenu({
+    week: plan, dishes: dishMap(), settings,
+    // common.js מניח כאן מחרוזת ולא פונקציה, ורק אחרי שבורר הגנים נטען
+    garden: window.crmGardenName || 'הגן',
+  });
+  const warns = MC.checkWeek({ week: plan, dishes: dishMap(), sensitivities: sens, meals: MEALS })
+    .filter(v => v.level === 'warn').length;
+  const url = location.origin + '/menu';
+  return `<div class="card">
+    <h2>כך ההורים יראו את זה</h2>
+    <div class="sub">בדיוק הדף הזה, באותו קישור קבוע. הקישור לא משתנה בין
+      שבוע לשבוע — אפשר לשמור אותו פעם אחת.</div>
+    <div class="prev"><div class="wrap">${MR.wrapMenu(r)}</div></div>
+    ${warns ? `<div class="vrow warn" style="margin-top:14px">
+        <span class="tag">לשים לב</span>
+        <span>יש ${warns} התרעות פתוחות. אפשר לפרסם בכל זאת.</span>
+        <button class="go" onclick="goStep(3)">לבדיקה</button></div>` : ''}
+    <div class="nav">
+      <button class="btn ghost" onclick="goStep(5)">חזרה</button>
+      <button class="btn soft" onclick="window.print()">הדפסה</button>
+      <button class="btn" onclick="publish()">${plan.published ? 'עדכון הפרסום' : 'פרסום להורים'}</button>
+    </div>
+    ${plan.published ? `<div class="count-line">מפורסם · ${esc(url)}</div>` : ''}
+  </div>`;
+}
+
+async function publish() {
+  // שמות המנות נצרבים לתוך השבוע: מנה שתימחק מהמאגר מחר לא תמחק את
+  // עצמה מהדף שההורים כבר קיבלו.
+  const names = {};
+  DAYS.forEach(d => MEALS.forEach(m => at(d.key, m.key).forEach(id => {
+    const dd = dishById(id); if (dd) names[id] = dd.name;
+  })));
+  const week = Object.assign({}, plan, { published: true, names });
+  try {
+    await api.saveMenuWeek(week);
+    plan.published = true;
+    const i = weeks.findIndex(w => w.weekOf === plan.weekOf);
+    if (i >= 0) weeks[i] = week; else weeks.unshift(week);
+    saveDraft(); renderStep();
+    showOk('פורסם · ההורים רואים אותו עכשיו ב-' + location.origin + '/menu');
+  } catch (e) { showErr('הפרסום נכשל: ' + e.message); }
+}
+
+async function savePlan() {
+  const names = {};
+  DAYS.forEach(d => MEALS.forEach(m => at(d.key, m.key).forEach(id => {
+    const dd = dishById(id); if (dd) names[id] = dd.name;
+  })));
+  try {
+    await api.saveMenuWeek(Object.assign({}, plan, { names }));
+    const i = weeks.findIndex(w => w.weekOf === plan.weekOf);
+    const rec = Object.assign({}, plan, { names });
+    if (i >= 0) weeks[i] = rec; else weeks.unshift(rec);
+    showOk('נשמר · מופיע ב"תפריטים שמורים"');
+  } catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+
+/* ---------- בחירת מנה למשבצת ---------- */
+function openPicker(day, meal) {
+  picker = { day, meal };
+  libFilter = '';
+  libCat = MEAL_CAT[meal] || '';
+  openModal(`הוספה · ${mealOf(meal).name}`, 'לחיצה על מנה מוסיפה אותה למשבצת.',
+    '<div id="pickBody"></div>',
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
+  renderPicker();
+  setTimeout(() => { const e = document.getElementById('pf'); if (e) e.focus(); }, 60);
+}
+function renderPicker() {
+  const f = libFilter.trim();
+  const shown = dishes.filter(d => d.active !== false)
+    .filter(d => !libCat || d.cat === libCat)
+    .filter(d => !f || d.name.includes(f));
+  document.getElementById('pickBody').innerHTML = `
+    <div class="searchbar" style="margin-bottom:12px">
+      <input type="text" id="pf" value="${esc(libFilter)}" placeholder="חיפוש מנה…"
+        oninput="libFilter=this.value;renderPicker();refocus('pf')">
+    </div>
+    <div class="catbar">
+      <button class="p ${!libCat ? 'on' : ''}" style="border:1.5px solid #e8e4de;background:${!libCat ? '#1F3D34' : '#fff'};color:${!libCat ? '#fff' : '#6f6457'};border-radius:999px;padding:6px 13px;font-family:Alef;font-size:12.5px;font-weight:700;cursor:pointer"
+        onclick="libCat='';renderPicker()">הכל</button>
+      ${CATS.map(c => `<button style="border:1.5px solid ${libCat === c ? '#1F3D34' : '#e8e4de'};background:${libCat === c ? '#1F3D34' : '#fff'};color:${libCat === c ? '#fff' : '#6f6457'};border-radius:999px;padding:6px 13px;font-family:Alef;font-size:12.5px;font-weight:700;cursor:pointer"
+        onclick="libCat='${c}';renderPicker()">${esc(c)}</button>`).join('')}
+    </div>
+    <div class="plist">
+      ${shown.length ? shown.map(d => {
+        const bad = alertFor(d);
+        return `<div class="prow" onclick="addDish('${d.id}')">
+          <div><div class="nm">${hl(d.name, f)}</div>
+            <div class="meta">${esc(d.cat || '')}${bad ? ` · <span style="color:#c94147;font-weight:700">${esc(bad)}</span>` : ''}</div></div>
+        </div>`;
+      }).join('')
+      : `<div class="empty-note">אין מנה כזו במאגר.<br>
+           <button class="btn soft" style="margin-top:10px" onclick="closeModal();openLib();openDish(null)">הוספת מנה חדשה</button></div>`}
+    </div>`;
+}
+function addDish(id) {
+  if (!picker) return;
+  at(picker.day, picker.meal).push(id);
+  saveDraft(); closeModal(); renderStep();
+}
+function refocus(id) {
+  setTimeout(() => {
+    const e = document.getElementById(id);
+    if (e) { e.focus(); e.setSelectionRange(e.value.length, e.value.length); }
+  }, 0);
+}
+function hl(t, q) {
+  if (!q) return esc(t);
+  const i = t.indexOf(q);
+  if (i < 0) return esc(t);
+  return esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + q.length)) + '</mark>' + esc(t.slice(i + q.length));
+}
+
+/* ---------- מאגר המנות ---------- */
+function openLib() {
+  lib = true; libFilter = ''; libCat = '';
+  document.getElementById('wizard').classList.add('hide');
+  document.getElementById('steps').classList.add('hide');
+  document.getElementById('library').classList.remove('hide');
+  renderTop(); renderLib();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function closeLib() { goStep(step || 1); }
+function renderLib() {
+  const f = libFilter.trim();
+  const shown = dishes.filter(d => !libCat || d.cat === libCat)
+                      .filter(d => !f || d.name.includes(f));
+  const unmarked = dishes.filter(d => !d.allergensSet).length;
+  document.getElementById('library').innerHTML = `<div class="card">
+    <h2>מאגר המנות</h2>
+    <div class="sub">כל מה שהגן מכין. התפריט השבועי מורכב מכאן, ולכן מנה
+      שנוספת פעם אחת זמינה בכל שבוע.</div>
+    <div class="searchbar">
+      <input type="text" id="lf" value="${esc(libFilter)}" placeholder="חיפוש מנה…"
+        oninput="libFilter=this.value;renderLib();refocus('lf')">
+    </div>
+    <div class="catbar">
+      <button class="p ${!libCat ? 'on' : ''}" onclick="libCat='';renderLib()">כל ${dishes.length} המנות</button>
+      ${CATS.map(c => `<button class="p ${libCat === c ? 'on' : ''}" onclick="libCat='${c}';renderLib()">
+        ${esc(c)} · ${dishes.filter(d => d.cat === c).length}</button>`).join('')}
+    </div>
+    ${unmarked ? `<div class="vrow note" style="margin-bottom:12px">
+      <span class="tag">הערה</span>
+      <span>${unmarked} מנות עוד בלי סימון אלרגנים, ולכן הבדיקה מדלגת עליהן.</span></div>` : ''}
+    <div class="dishes">
+      ${shown.length ? shown.map(d => `<div class="dish ${d.active === false ? 'off' : ''}"
+          onclick="openDish('${d.id}')">
+          <b>${hl(d.name, f)}</b>
+          <div class="meta">${esc(d.cat || '')}${d.active === false ? ' · לא פעילה' : ''}</div>
+          ${d.allergensSet
+            ? (d.allergens || []).length
+              ? `<div class="al">${(d.allergens || []).map(c => esc(MC.ALLERGEN_NAME[c] || c)).join(' · ')}</div>`
+              : '<div class="un">בלי אלרגנים</div>'
+            : '<div class="un">עוד לא סומנה</div>'}
+        </div>`).join('')
+      : `<div class="empty-note">אין מנה כזו במאגר.<br>סגרי את החיפוש או לחצי
+           "מנה חדשה" למעלה.</div>`}
+    </div>
+  </div>`;
+}
+
+function openDish(id) {
+  const d = id ? dishById(id) : null;
+  editing = d ? JSON.parse(JSON.stringify(d))
+              : { id: '', name: '', cat: 'צהריים', ingredients: [], allergens: [],
+                  allergensSet: false, note: '', active: true };
+  openModal(d ? 'עריכת מנה' : 'מנה חדשה',
+    'השם הוא מה שההורים רואים על הדף.',
+    dishForm(),
+    `<button class="btn" onclick="doSaveDish()">שמירה</button>
+     <button class="btn ghost" onclick="closeModal()">ביטול</button>
+     ${d ? `<button class="prow rm" style="margin-right:auto" onclick="removeDish('${d.id}')">הסרה מהמאגר</button>` : ''}`);
+  setTimeout(() => { const e = document.getElementById('dn'); if (e) { e.focus(); e.select(); } }, 60);
+}
+function dishForm() {
+  const e = editing;
+  return `<div class="fld"><label>שם המנה</label>
+      <input type="text" id="dn" value="${esc(e.name)}" maxlength="60"></div>
+    <div class="fld"><label>קטגוריה</label>
+      <div class="pick">${CATS.map(c => `<button class="p ${e.cat === c ? 'on' : ''}"
+        onclick="editing.cat='${c}';document.getElementById('modalBody').innerHTML=dishForm()">${esc(c)}</button>`).join('')}</div></div>
+    <div class="fld"><label>מרכיבים</label>
+      <input type="text" id="di" value="${esc((e.ingredients || []).join(', '))}"
+        placeholder="מופרדים בפסיק"></div>
+    <div class="fld"><label>אלרגנים</label>
+      <div class="pick">${ALLERGENS.map(a => `<button class="p ${(e.allergens || []).indexOf(a.code) >= 0 ? 'on' : ''}"
+        onclick="togAl('${a.code}')">${esc(a.name)}</button>`).join('')}</div>
+      <div class="count-line">${e.allergensSet
+        ? 'המנה מסומנת ונכנסת לבדיקה.'
+        : 'עוד לא סומנה. סימון — גם "אין אלרגנים" — מכניס אותה לבדיקה.'}
+        ${e.allergensSet ? '' : `<button class="go" style="margin-right:8px"
+          onclick="editing.allergensSet=true;document.getElementById('modalBody').innerHTML=dishForm()">אין בה אלרגנים</button>`}</div></div>
+    <div class="fld"><label>הערה</label>
+      <input type="text" id="dnote" value="${esc(e.note || '')}" maxlength="120"></div>
+    <div class="fld"><label>סטטוס</label>
+      <div class="pick">
+        <button class="p ${e.active !== false ? 'on' : ''}" onclick="editing.active=true;document.getElementById('modalBody').innerHTML=dishForm()">פעילה</button>
+        <button class="p ${e.active === false ? 'on' : ''}" onclick="editing.active=false;document.getElementById('modalBody').innerHTML=dishForm()">לא פעילה</button>
+      </div></div>`;
+}
+function togAl(code) {
+  const l = editing.allergens || (editing.allergens = []);
+  const i = l.indexOf(code);
+  if (i >= 0) l.splice(i, 1); else l.push(code);
+  // סימון אלרגן הוא גם ההצהרה שהמנה נבדקה
+  editing.allergensSet = true;
+  document.getElementById('modalBody').innerHTML = dishForm();
+}
+async function doSaveDish() {
+  const nm = (document.getElementById('dn').value || '').trim();
+  if (!nm) { showErr('למנה חייב להיות שם'); return; }
+  editing.name = nm;
+  editing.ingredients = (document.getElementById('di').value || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  editing.note = document.getElementById('dnote').value || '';
+  try {
+    const r = await api.saveDish(editing);
+    editing.id = editing.id || r.id;
+    const i = dishes.findIndex(d => d.id === editing.id);
+    if (i >= 0) dishes[i] = editing; else dishes.push(editing);
+    dishes.sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
+    closeModal(); renderLib(); showOk('נשמר');
+  } catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+// מחיקה בלי שאלה — המנה עוברת לפח וניתנת לשחזור
+async function removeDish(id) {
+  dishes = dishes.filter(d => d.id !== id);
+  closeModal(); renderLib();
+  try { await api.deleteDish(id); showOk('הוסרה · ניתן לשחזור מהפח'); }
+  catch (e) { showErr('ההסרה נכשלה: ' + e.message); }
+}
+
+/* ---------- תפריטים שמורים ---------- */
+function openWeeks() {
+  openModal('תפריטים שמורים', '', '<div id="wkList"></div>',
+    `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
+  renderWeeks();
+}
+function renderWeeks() {
+  document.getElementById('wkList').innerHTML = weeks.length
+    ? `<div class="plist">${weeks.map((w, i) => `<div class="prow" onclick="loadWeek(${i})">
+        <div><div class="nm">${esc(w.name || fmt(w.weekOf))}</div>
+          <div class="meta">${fmt(w.weekOf)} – ${fmt(MR.addDays(w.weekOf, 4))}${w.published ? ' · מפורסם' : ''}</div></div>
+        <button class="rm" onclick="event.stopPropagation();removeWeek(${i})">הסר</button>
+      </div>`).join('')}</div>`
+    : `<div class="empty-note">אין עדיין תפריטים שמורים.<br>סגרי את החלון, בני
+         תפריט ולחצי "שמירה".</div>`;
+}
+function loadWeek(i) {
+  const w = weeks[i]; if (!w) return;
+  plan = Object.assign(newPlan(w.weekOf), w);
+  plan.days = Object.assign(emptyDays(), JSON.parse(JSON.stringify(w.days || {})));
+  closeModal(); saveDraft(); goStep(2);
+  showOk('נטען: ' + (w.name || fmt(w.weekOf)));
+}
+async function removeWeek(i) {
+  const w = weeks[i]; if (!w) return;
+  weeks.splice(i, 1); renderWeeks();
+  try { await api.deleteMenuWeek(w.weekOf); showOk('הוסר · ניתן לשחזור מהפח'); }
+  catch (e) { showErr('ההסרה נכשלה: ' + e.message); }
+}
+
+/* ---------- חלון בתוך העמוד ---------- */
+function openModal(title, sub, body, actions) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSub').textContent = sub || '';
+  document.getElementById('modalBody').innerHTML = body || '';
+  document.getElementById('modalActions').innerHTML = actions || '';
+  document.getElementById('modalOv').classList.add('show');
+}
+function closeModal() { document.getElementById('modalOv').classList.remove('show'); picker = null; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function showErr(m) { const el = document.getElementById('error'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 5000); }
+function showOk(m) { const el = document.getElementById('success'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000); }
+
+boot();
+</script>
+</body>
+</html>

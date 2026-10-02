@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>תפריט השבוע</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* הסגנון עצמו מגיע מ-js/menu-render.js ומוזרק למטה, כדי שהתצוגה
+       המקדימה בבונה והדף הזה ייראו זהים לחלוטין. כאן רק מה ששייך
+       לדף הציבורי בלבד. */
+    .state { max-width:420px; margin:70px auto; text-align:center; padding:0 20px;
+             color:#9B8E82; font-size:15px; line-height:1.8; font-family:'Alef',sans-serif; }
+    .state b { color:#1F3D34; display:block; font-size:19px; margin-bottom:8px; }
+    .pbar { display:flex; justify-content:center; margin-top:26px; }
+    .pbar button { font-family:'Alef',sans-serif; font-size:13px; font-weight:700;
+             background:#fff; color:#1F3D34; border:1.5px solid #E4DED4; border-radius:999px;
+             padding:9px 20px; cursor:pointer; }
+    .pbar button:hover { border-color:#1F3D34; }
+    @media print { .pbar { display:none; } }
+  </style>
+  <style id="menuCss"></style>
+</head>
+<body>
+  <div class="wrap" id="wrap">
+    <div class="state">טוען…</div>
+  </div>
+
+  <script src="js/menu-render.js?v=1"></script>
+  <script>
+    // דף ציבורי: בלי common.js ובלי api.js — אין כאן סיידבר ואין טוקן.
+    const API = '/.netlify/functions/menu-public';
+    const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g,
+      c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+    document.getElementById('menuCss').textContent = MenuRender.MENU_CSS;
+
+    function state(title, line) {
+      document.getElementById('wrap').innerHTML =
+        `<div class="state"><b>${esc(title)}</b>${esc(line || '')}</div>`;
+    }
+
+    (async function () {
+      let d;
+      try {
+        const qs = new URLSearchParams(location.search);
+        const w = qs.get('week');
+        d = await (await fetch(API + (w ? '?week=' + encodeURIComponent(w) : ''))).json();
+      } catch (e) {
+        state('התפריט לא נטען', 'אפשר לנסות לרענן את העמוד בעוד רגע.');
+        return;
+      }
+      if (!d || !d.success) {
+        state('התפריט לא נטען', (d && d.error) || 'אפשר לנסות לרענן את העמוד.');
+        return;
+      }
+      // מסך ריק אומר מה קורה ומתי, ולא "אין נתונים"
+      if (!d.week) {
+        state('התפריט עוד לא פורסם', 'ברגע שהתפריט השבועי יהיה מוכן הוא יופיע כאן, '
+            + 'באותו קישור בדיוק — אפשר לשמור אותו.');
+        return;
+      }
+      const r = MenuRender.renderMenu({
+        week: d.week, dishes: d.dishes || {}, settings: d.settings || {},
+        garden: d.garden || 'הגן',
+      });
+      document.getElementById('wrap').innerHTML = MenuRender.wrapMenu(r)
+        + '<div class="pbar"><button onclick="window.print()">הדפסה</button></div>';
+      document.title = 'תפריט השבוע · ' + (d.garden || 'הגן');
+    })();
+  </script>
+</body>
+</html>

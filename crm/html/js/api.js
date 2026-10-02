@@ -94,6 +94,16 @@ const api = {
   deleteNapVersion: (version_id) => apiCall(`/nap-layout?garden_id=${getGardenId()}`, 'POST', { action: 'del-version', version_id }),
   deleteNapPlan: (id) => apiCall(`/nap-layout/${id}?garden_id=${getGardenId()}`, 'DELETE'),
   napPdf: (sheet) => apiCall(`/nap-pdf?garden_id=${getGardenId()}`, 'POST', { sheet }),
+
+  // בניית תפריט (events: calendar='menu-dish' / 'menu' / 'menu-set').
+  // הדף שההורים מקבלים נקרא דרך menu-public, בלי טוקן.
+  getMenu: () => apiCall(`/menu?garden_id=${getGardenId()}`),
+  saveDish: (dish) => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'dish', dish }),
+  seedDishes: () => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'seed' }),
+  saveMenuWeek: (week) => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'week', week }),
+  saveMenuSettings: (settings) => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'settings', settings }),
+  deleteDish: (id) => apiCall(`/menu/${encodeURIComponent(id)}?garden_id=${getGardenId()}&kind=dish`, 'DELETE'),
+  deleteMenuWeek: (weekOf) => apiCall(`/menu/${encodeURIComponent(weekOf)}?garden_id=${getGardenId()}&kind=week`, 'DELETE'),
   saveNapRitual: (data) => apiCall(`/nap-layout?garden_id=${getGardenId()}`, 'POST', Object.assign({ action: 'ritual' }, data)),
 
   // Food allergies per child (stored as JSON in events, calendar='child-health')

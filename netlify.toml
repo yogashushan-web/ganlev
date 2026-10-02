@@ -90,6 +90,12 @@
   to = "/crm/html/nap.html"
   status = 200
 
+# Short link for the weekly menu parents receive (paste in WhatsApp).
+[[redirects]]
+  from = "/menu"
+  to = "/crm/html/menu.html"
+  status = 200
+
 # Parent contact roster — the link goes in the parents' WhatsApp group description.
 [[redirects]]
   from = "/contacts"
