@@ -1597,7 +1597,13 @@ function sheetData() {
   plan.tables.forEach(t => tplOf(t).seats.forEach(s => {
     const c = seatCenter(t, s), pid = plan.seats[E.key(t.id, s.id)];
     const p = pid ? ep.people[pid] : null;
-    seats.push({ x: Math.round(ZX(c.x)), y: Math.round(ZY(c.y)),
+    // לאיזה כיוון פונה הילד. ב-PDF הכיסא מצוייר עם פס גב בצד המרוחק
+    // מהשולחן, ולכן צריך לדעת לאן הגב פונה — וזה תמיד *מהשולחן והלאה*.
+    // נגזר מכאן ולא מהתבנית, כי הסיבוב של השולחן כבר צרוב ב-seatCenter.
+    const l = plan.layout[t.id] || { x: 0, y: 0 }, b = tableBox(t);
+    const dx = c.x - (l.x + b.w / 2), dy = c.y - (l.y + b.h / 2);
+    const face = (dx || dy) ? Math.round(Math.atan2(dx, -dy) * 180 / Math.PI) : 0;
+    seats.push({ x: Math.round(ZX(c.x)), y: Math.round(ZY(c.y)), face,
                  label: p ? p.name : '', kind: p ? p.kind : 'empty',
                  allergy: pid ? allergiesOf(pid).map(allergenName).join(' · ') : '' });
   }));

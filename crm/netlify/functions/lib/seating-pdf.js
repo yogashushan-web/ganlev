@@ -122,16 +122,70 @@ function fontPath(name) {
   return hit;
 }
 
-// אותם צבעים בדיוק כמו על המסך, כדי שהדף המודפס לא יפתיע
+// ---- עובי קו: חמש דרגות, כל אחת כפולה מזו שמתחתיה (ISO 128) ----
+// 1 מ"מ = 2.8346 נקודות. העוביים *לא* מוכפלים ב-k: הדף הוא A4 בגודל
+// קבוע, ולכן מה שהעין רואה הוא העובי הפיזי על הנייר — לא יחס ההקטנה
+// של החדר. קודם כל העוביים נגזרו מ-k, וכך חדר גדול קיבל קווים דקים
+// יותר ממש כמו חדר קטן, והיררכיה לא הייתה בכלל.
+//
+// החריג היחיד הוא `seat`, והוא בכוונה: בתוכנית אדריכלית רהיט כפוף
+// לקיר, אבל בסידור ישיבה הכיסא *הוא* הנושא — עליו יושב ילד ועליו
+// כתוב שם. לכן הכיסא כבד מהשולחן, והשולחן יורד לאפור ניטרלי.
+// אותה היררכיה בדיוק קיימת ב-lib/nap-pdf.js.
+const LW = {
+  cut: 1.70,     // קיר, עמוד — נחתכים על ידי מישור החתך
+  built: 0.99,   // דלת, חלון, מובנה
+  seat: 1.00,    // כיסא — הנושא של הדף הזה
+  furn: 0.71,    // רהיט נייד: שולחן, עמדה
+  det: 0.51,     // פרט פנימי: שפת דלפק, קיפול, גב כיסא
+  note: 0.37,    // מידות והערות
+};
+
+// אותם צבעים בדיוק כמו על המסך, כדי שהדף המודפס לא יפתיע.
+// הרצפה כהה מהרקע של האתר בכוונה: לבן על ‎#F4EFE6 הוא ניגודיות 1.15:1,
+// כלומר רהיט לבן נעלם. על ‎#EDE6DA הוא נראה.
 const C = {
   ink: '#3D3228', muted: '#9B8E82', brand: '#1F3D34',
-  surface: '#efe6d8', surfaceLine: '#ddd0bb',
-  emptyLine: '#ddd0bb',
-  childLine: '#cfe0ec', childFill: '#eef5fb', childInk: '#2c4d66',
-  staffLine: '#eccfc2', staffFill: '#fbf1ec', staffInk: '#8a4d33',
+  floor: '#EDE6DA',
+  surface: '#efe6d8', surfaceLine: '#b8ac9b',
+  emptyLine: '#b5a795', emptyFill: '#f6f2ea', emptyBand: '#e8e0d2',
+  childLine: '#7fa3c0', childFill: '#ffffff', childBand: '#d7e5f2', childInk: '#2c4d66',
+  staffLine: '#c08e72', staffFill: '#ffffff', staffBand: '#f2dcd0', staffInk: '#8a4d33',
 };
 
 const ROOM_W = 1123, ROOM_H = 794, SEAT_R = 27;
+
+// ---- הכיסא ----
+// מה שמבדיל כיסא משרפרף הוא פס גב בצד המרוחק מהשולחן, ולא טרפז ולא
+// הצרה. היחס נמדד ב-SmartDraw: 74% מושב, 13% רווח, 13% פס. נתוני
+// הנתיב כאן זהים לאלה שבמסך, כדי ששני הציורים לא יתרחקו זה מזה.
+//
+// ופס הגב גם *מוסיף מידע* שלא היה על הדף: לאן הילד פונה.
+const CHAIR_BAND = 'M3 0 H37 A3 3 0 0 1 40 3 V7 H0 V3 A3 3 0 0 1 3 0 Z';
+const CHAIR_SEAT = 'M4 6 H36 A2 2 0 0 1 38 8 V33 A7 7 0 0 1 31 40 H9 '
+                 + 'A7 7 0 0 1 2 33 V8 A2 2 0 0 1 4 6 Z';
+// מתחת לגודל הזה פס הגב נסגר אל המושב והכל נהפך לכתם אחד — נמדד.
+// אז מוותרים עליו ומציירים מושב בלבד, כי להשאיר אותו רק מייצר בוץ.
+const BAND_FLOOR = 19;
+
+function drawChair(doc, cx, cy, r, face, skin) {
+  const s = (r * 2) / 40;                     // 40 יחידות = רוחב הכיסא
+  doc.save();
+  doc.translate(cx, cy);
+  if (face) doc.rotate(face);
+  doc.scale(s);
+  doc.translate(-20, -21);
+  doc.lineJoin('round');
+  if (r * 2 >= BAND_FLOOR) {
+    doc.path(CHAIR_BAND).fillColor(skin.band).fill();
+    doc.path(CHAIR_BAND).lineWidth(LW.det / s).strokeColor(skin.line).stroke();
+  }
+  doc.path(CHAIR_SEAT).fillColor(skin.fill).fill();
+  doc.path(CHAIR_SEAT).lineWidth(LW.seat / s);
+  if (skin.dash) doc.dash(3 / s, { space: 2 / s }).strokeColor(skin.line).stroke().undash();
+  else doc.strokeColor(skin.line).stroke();
+  doc.restore();
+}
 
 function buildSeatingPdf(sheet) {
   return new Promise((resolve, reject) => {
@@ -155,8 +209,11 @@ function buildSeatingPdf(sheet) {
       doc.font('he').fontSize(9).fillColor(C.muted);
       doc.text(String(sheet.meta || ''), M, M + 4, { lineBreak: false });
 
-      // הקטנת החדר כך שייכנס לשוליים, במרכז הדף
-      const availW = PW - M * 2, availH = PH - M * 2 - HEAD;
+      // הקטנת החדר כך שייכנס לשוליים, במרכז הדף.
+      // מאז שיש לרצפה גוון, המקרא חייב רצועה לבנה משלו: הוא מידע *על*
+      // הדף ולא רהיט בחדר, וכשהוא יושב על הרצפה הוא נקרא כחלק ממנה.
+      const FOOT = (sheet.legend && sheet.legend.length) ? 30 : (sheet.note ? 18 : 0);
+      const availW = PW - M * 2, availH = PH - M * 2 - HEAD - FOOT;
       const k = Math.min(availW / ROOM_W, availH / ROOM_H);
       const ox = M + (availW - ROOM_W * k) / 2;
       const oy = M + HEAD + (availH - ROOM_H * k) / 2;
@@ -164,6 +221,12 @@ function buildSeatingPdf(sheet) {
       // גודל התוכן שנבחר במסך — הקואורדינטות כבר מגיעות מוגדלות, אבל
       // רדיוס הכיסא וגודל הכתב נגזרים כאן ולכן צריכים אותו במפורש
       const z = sheet.zoom || 1;
+
+      // הרצפה. בלעדיה רהיט לבן על נייר לבן הוא קו מתאר מרחף, ואין שום
+      // דבר שמגדיר "בפנים" ו"בחוץ". אין כאן קירות מלאים כמו בחדר השינה
+      // בכוונה: בסידור הישיבה אנחנו לא יודעים איפה הקירות באמת עוברים,
+      // וקיר מצוייר במקום שלא נמדד הוא שקר על הדף.
+      doc.rect(X(0), Y(0), ROOM_W * k, ROOM_H * k).fillColor(C.floor).fill();
 
       // משטחי השולחנות, בגוון של מי שאחראית עליהם. שתי אחראיות — חצי-חצי,
       // שכל מחצית נחתכת מהמלבן המסובב (clip) כדי שהחלוקה תסתובב עם השולחן.
@@ -185,7 +248,9 @@ function buildSeatingPdf(sheet) {
             doc.restore();
           });
         }
-        if (t.line) { shape(); doc.lineWidth(Math.max(0.8, 2 * k)).strokeColor(t.line).stroke(); }
+        // קו המתאר אפור ניטרלי ודק, גם כששולחן צבוע: הצבע חי במילוי,
+        // והקו נשאר כפוף לכיסא שיושב עליו.
+        shape(); doc.lineWidth(LW.furn).strokeColor(C.surfaceLine).stroke();
         doc.restore();
       });
 
@@ -193,13 +258,38 @@ function buildSeatingPdf(sheet) {
       // הצבע בדף שמור לאחריות של הצוות.
       (sheet.items || []).forEach(it => {
         const x = X(it.x), y = Y(it.y), w = it.w * k, h = it.h * k;
-        if (it.kind === 'door') {                  // דלת = פתח בקיר, לא קופסה
+        if (it.kind === 'door') {
+          // דלת = פתח וכנף. רדיוס הקשת שווה לרוחב הפתח, ולכן הקשת
+          // *מודדת* כמה מקום הדלת גוזלת בחדר — זה מידע, לא קישוט.
           doc.moveTo(x, y + h).lineTo(x + w, y + h)
-             .lineWidth(Math.max(1, 3.5 * k)).strokeColor('#9B8E82').stroke();
+             .lineWidth(LW.cut).strokeColor(C.floor).stroke();
+          // הכנף פתוחה לתוך החדר, והקשת היא רבע מעגל אמיתי — doc.path
+          // קורא נתיבי SVG, כולל פקודת A, ולכן אין כאן קירוב של בזייה.
+          const r0 = Math.min(w, h * 2.2);        // כנף לא ארוכה מהפתח
+          doc.moveTo(x, y + h).lineTo(x, y + h - r0)
+             .lineWidth(LW.built).strokeColor('#8a7f70').stroke();
+          doc.path(`M ${x} ${y + h - r0} A ${r0} ${r0} 0 0 1 ${x + r0} ${y + h}`)
+             .lineWidth(LW.det).dash(2.5, { space: 2 })
+             .strokeColor('#a89c8c').stroke().undash();
         } else {
-          doc.roundedRect(x, y, w, h, 6 * k).fillColor('#f6f2ea').fill();
-          doc.roundedRect(x, y, w, h, 6 * k).lineWidth(Math.max(0.6, 1.4 * k))
-             .dash(3, { space: 2 }).strokeColor('#c9bda9').stroke().undash();
+          doc.roundedRect(x, y, w, h, 6 * k).fillColor('#ffffff').fill();
+          // שפת הדלפק: קו דק לאורך הצד שעומדים מולו. הקו היחיד הזה הוא
+          // כל ההבדל בין "תיבה עם עיגולים" ל"משטח שעומדים מולו".
+          if (it.kind === 'serve' || it.kind === 'clear') {
+            const ins = Math.min(w, h) * 0.17;
+            doc.lineWidth(LW.det).strokeColor('#c0b4a2');
+            if (w >= h) {
+              const bot = Y(it.y) + h / 2 < Y(ROOM_H / 2);
+              const ny = bot ? y + h - ins : y + ins;
+              doc.moveTo(x + ins * 0.6, ny).lineTo(x + w - ins * 0.6, ny).stroke();
+            } else {
+              const rt = X(it.x) + w / 2 < X(ROOM_W / 2);
+              const nx = rt ? x + w - ins : x + ins;
+              doc.moveTo(nx, y + ins * 0.6).lineTo(nx, y + h - ins * 0.6).stroke();
+            }
+          }
+          doc.roundedRect(x, y, w, h, 6 * k).lineWidth(LW.built)
+             .strokeColor('#a29684').stroke();
         }
         doc.font('heB').fontSize(Math.max(5.6, 11 * k * z)).fillColor('#6f6457');
         if (it.kind === 'door') { drawCentered(doc, it.name, x + w / 2, y + h - 5 * k, w * 0.9, 1); }
@@ -215,22 +305,23 @@ function buildSeatingPdf(sheet) {
 
       // הכיסאות — נקודות מוחלטות שהדפדפן כבר חישב, כולל סיבוב
       const r = SEAT_R * k * z;
+      const SKIN = {
+        staff: { fill: C.staffFill, band: C.staffBand, line: C.staffLine },
+        child: { fill: C.childFill, band: C.childBand, line: C.childLine },
+        empty: { fill: C.emptyFill, band: C.emptyBand, line: C.emptyLine, dash: true },
+      };
       (sheet.seats || []).forEach(s => {
         const cx = X(s.x), cy = Y(s.y);
-        doc.circle(cx, cy, r);
-        if (s.kind === 'staff') doc.fillColor(C.staffFill).fill();
-        else if (s.kind === 'child') doc.fillColor(C.childFill).fill();
-        else doc.fillColor('#ffffff').fill();
-
-        doc.circle(cx, cy, r).lineWidth(Math.max(0.7, 1.6 * k));
-        if (s.kind === 'staff') doc.strokeColor(C.staffLine).stroke();
-        else if (s.kind === 'child') doc.strokeColor(C.childLine).stroke();
-        else doc.dash(3, { space: 2 }).strokeColor(C.emptyLine).stroke().undash();
+        drawChair(doc, cx, cy, r, s.face || 0, SKIN[s.kind] || SKIN.empty);
 
         if (!s.label) return;
         doc.font('heB').fontSize(Math.max(5.6, 10.5 * k * z))
            .fillColor(s.kind === 'staff' ? C.staffInk : C.childInk);
-        drawCentered(doc, s.label, cx, cy, r * 1.85, 3);
+        // השם ממורכז על *המושב*, לא על טביעת הרגל של הכיסא: פס הגב
+        // תופס את הקצה הרחוק, ולכן מרכז המושב מוזז מעט אל השולחן.
+        const a = (s.face || 0) * Math.PI / 180, off = r / 10;
+        drawCentered(doc, s.label, cx - Math.sin(a) * off, cy + Math.cos(a) * off,
+                     r * 1.6, 3);
 
         // אלרגיה: הדבר היחיד על הדף שקריאתו דחופה, ולכן אדום ומתחת לשם
         if (!s.allergy) return;
@@ -245,9 +336,12 @@ function buildSeatingPdf(sheet) {
 
       // שם השולחן במרכזו, תמיד זקוף גם כששולחן מסובב — ואחרי הכיסאות,
       // כדי שעיגול שנוגע במרכז לא יחתוך אותיות מהשם
-      doc.font('heB').fontSize(Math.max(7, 12 * k * z)).fillColor(C.muted);
+      // כהה וגדול, ולא אפור בהיר. נמדד בכל המוצרים: Social Tables מריצים
+      // גובה אות של 0.3 מקוטר השולחן בשחור כמעט מלא, והבהיר הוא מיעוט.
       (sheet.tables || []).forEach(t => {
-        drawCentered(doc, t.name, X(t.x + t.w / 2), Y(t.y + t.h / 2), t.w * k * 0.8, 2);
+        const base = Math.min(t.w, t.h) * k;
+        doc.font('heB').fontSize(Math.max(8, Math.min(base * 0.26, 22))).fillColor(C.ink);
+        drawCentered(doc, t.name, X(t.x + t.w / 2), Y(t.y + t.h / 2), t.w * k * 0.82, 2);
       });
 
       // סמני צוות שלא יושבים בתוך שולחן. עיגול ולא גלולה: לעיגול יש
@@ -257,7 +351,7 @@ function buildSeatingPdf(sheet) {
         const r = SEAT_R * k * z, cx = X(m.x) + r, cy = Y(m.y) + r;
 
         doc.circle(cx, cy, r).fillColor('#ffffff').fill();
-        doc.circle(cx, cy, r).lineWidth(Math.max(0.9, 2.4 * k * z));
+        doc.circle(cx, cy, r).lineWidth(LW.seat * 1.3);
         if (m.open) doc.dash(3, { space: 2 }).strokeColor(col).stroke().undash();
         else doc.strokeColor(col).stroke();
         drawMarkIcon(doc, m.icon === 'chair' ? 'chair' : 'watch',
@@ -269,7 +363,7 @@ function buildSeatingPdf(sheet) {
         const padX = 7 * k * z, hh = doc.currentLineHeight() + 3 * k * z;
         const w = tw + padX * 2, bx = cx - w / 2, by = cy + r + 4 * k * z;
         doc.roundedRect(bx, by, w, hh, hh / 2).fillColor('#ffffff').fill();
-        doc.roundedRect(bx, by, w, hh, hh / 2).lineWidth(Math.max(0.5, 1.2 * k * z));
+        doc.roundedRect(bx, by, w, hh, hh / 2).lineWidth(LW.det);
         if (m.open) doc.dash(2, { space: 1.5 }).strokeColor(col).stroke().undash();
         else doc.strokeColor(col).stroke();
         doc.fillColor(col);

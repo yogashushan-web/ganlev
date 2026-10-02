@@ -123,12 +123,34 @@ function drawNapIcon(doc, name, x, y, size) {
   return true;
 }
 
+// ---- עובי קו: אותן חמש דרגות בדיוק כמו ב-lib/seating-pdf.js ----
+// ISO 128, כל דרגה כפולה מזו שמתחתיה, 1 מ"מ = 2.8346 נקודות.
+// לא מוכפלות ב-k: הדף הוא A4 קבוע, ולכן העובי הפיזי על הנייר הוא מה
+// שהעין רואה — לא יחס ההקטנה של החדר. כאן ההיררכיה אדריכלית לגמרי
+// (בניגוד לסידור הישיבה, שם הכיסא הוא הנושא ולכן הוא כבד מהשולחן).
+const LW = {
+  cut: 1.70,     // קיר, עמוד — נחתכים על ידי מישור החתך
+  built: 0.99,   // דלת, חלון, ארון
+  furn: 0.71,    // מזרן — רהיט נייד
+  det: 0.51,     // פרט פנימי: כרית, קיפול, זכוכית
+  note: 0.37,    // מידות והערות
+};
+// עובי הקיר המצוייר. הוא יושב *מחוץ* למלבן החדר בכוונה, כך שהמידות
+// הפנימיות נשארות בדיוק אלה שנמדדו — קיר שנכנס פנימה היה גונב מהחדר
+// סנטימטרים שלא קיימים.
+const WALL_PT = 6;
+
 const C = {
   ink: '#3D3228', muted: '#9B8E82', brand: '#1F3D34',
-  wall: '#cbbfa9', floor: '#fffdf9',
-  matLine: '#cfe0ec', matFill: '#eef5fb', matInk: '#2c4d66', matSub: '#7c93a6',
-  pottyLine: '#e0c08a', pottyFill: '#fdf6e9', pottyInk: '#8a6a23', pottySub: '#b8801f',
-  obsFill: '#e7e0d4', obsLine: '#c9bda9', obsInk: '#6f6457',
+  // הקיר מלא ולא מתואר — במקצוע קוראים לזה פושֵׁה. 75% ולא דיו מלא:
+  // חדר גדול על A4 בשחור מלא הוא הרבה טונר ומסגרת כבדה מדי.
+  wall: '#5A5044',
+  // הרצפה כהה מהרקע של האתר בכוונה: מזרן לבן על ‎#F4EFE6 הוא ניגודיות
+  // 1.15:1, כלומר כמעט בלתי נראה. על ‎#EDE6DA הוא נראה.
+  floor: '#EDE6DA',
+  matLine: '#9db9d0', matFill: '#eef5fb', matInk: '#2c4d66', matSub: '#7c93a6',
+  pottyLine: '#d2ae74', pottyFill: '#fdf6e9', pottyInk: '#8a6a23', pottySub: '#b8801f',
+  obsFill: '#ffffff', obsLine: '#a29684', obsInk: '#6f6457',
   staff: '#C4846C',
 };
 
@@ -162,10 +184,22 @@ function buildNapPdf(sheet) {
       const oy = M + HEAD + (availH - room.h * k) / 2;
       const X = cm => ox + cm * k, Y = cm => oy + cm * k, L = cm => cm * k;
 
-      // קירות — מסגרת החדר
-      doc.roundedRect(X(0), Y(0), L(room.w), L(room.h), 3).fillColor(C.floor).fill();
-      doc.roundedRect(X(0), Y(0), L(room.w), L(room.h), 3)
-         .lineWidth(Math.max(1.4, 3 * k)).strokeColor(C.wall).stroke();
+      // הקירות, מלאים. רצועה סביב החדר ומילוי רצפה בפנים — שני מילויים
+      // ולא קו מתאר, כי קיר נחתך על ידי מישור החתך ולכן הוא *מסה* ולא קו.
+      const W0 = WALL_PT;
+      doc.rect(X(0) - W0, Y(0) - W0, L(room.w) + W0 * 2, L(room.h) + W0 * 2)
+         .fillColor(C.wall).fill();
+      doc.rect(X(0), Y(0), L(room.w), L(room.h)).fillColor(C.floor).fill();
+
+      // לאיזה קיר צמוד פריט — כדי שדלת וחלון ישברו את הקיר במקום לשבת עליו
+      const sideOf = it => {
+        const tol = 22;                                   // סנטימטרים
+        if (it.y <= tol) return 'top';
+        if (it.y + it.h >= room.h - tol) return 'bottom';
+        if (it.x <= tol) return 'left';
+        if (it.x + it.w >= room.w - tol) return 'right';
+        return null;
+      };
 
       // המזרן מצוייר כמיטה: שמיכה, קפל, כרית ותמונה. הכרית אינה
       // קישוט — היא המידע היחיד בדף שאומר לאיזה כיוון פונה הראש.
@@ -194,7 +228,7 @@ function buildNapPdf(sheet) {
         const px = head === 'right' ? x + w - inset - pw : x + inset;
         const py = head === 'bottom' ? y + h - inset - ph : y + inset;
         doc.roundedRect(px, py, pw, ph, 4 * k).fillColor('#fffdfa').fill();
-        doc.roundedRect(px, py, pw, ph, 4 * k).lineWidth(Math.max(.4, .9 * k))
+        doc.roundedRect(px, py, pw, ph, 4 * k).lineWidth(LW.det)
            .strokeColor(bl.ln).stroke();
 
         // אזור השמיכה: כל מה שאינו הכרית
@@ -204,18 +238,20 @@ function buildNapPdf(sheet) {
         const bh2 = vert ? (h - inset * 2) - ph : h - inset * 2;
 
         // קיפול בפינה הימנית-העליונה של השמיכה, כאילו היא פתוחה קצת
-        const fs2 = Math.min(bw2, bh2) * 0.34;
+        // 0.24 ולא 0.34: בגודל הזה שליש מהשמיכה נקרא כפינה *חתוכה*
+        // ולא כשמיכה שנפתחה קצת.
+        const fs2 = Math.min(bw2, bh2) * 0.24;
         if (fs2 > 1.2) {
           doc.save();
           doc.moveTo(bx2 + bw2, by2).lineTo(bx2 + bw2 - fs2, by2)
              .lineTo(bx2 + bw2, by2 + fs2).closePath();
           doc.fillColor('#ffffff').opacity(.72).fill().opacity(1);
           doc.moveTo(bx2 + bw2 - fs2, by2).lineTo(bx2 + bw2, by2 + fs2)
-             .lineWidth(Math.max(.3, .8 * k)).strokeColor(bl.ln).opacity(.6).stroke().opacity(1);
+             .lineWidth(LW.det).strokeColor(bl.ln).opacity(.6).stroke().opacity(1);
           doc.restore();
         }
 
-        doc.roundedRect(x, y, w, h, rad).lineWidth(Math.max(.6, 1.4 * k));
+        doc.roundedRect(x, y, w, h, rad).lineWidth(LW.furn);
         if (potty) doc.dash(4, { space: 2.5 }).strokeColor(bl.ln).stroke().undash();
         else doc.strokeColor(bl.ln).stroke();
 
@@ -297,20 +333,72 @@ function buildNapPdf(sheet) {
         const x = X(it.x), y = Y(it.y), w = L(it.w), h = L(it.h);
         doc.save();
         if (it.rot) doc.rotate(it.rot, { origin: [x + w / 2, y + h / 2] });
+        const side = sideOf(it);
+        const horiz = side === 'top' || side === 'bottom';
+        // הפתח: מחיקת רצועת הקיר לאורך הפריט, כדי שדלת וחלון *ישברו*
+        // את הקיר ולא יישבו עליו כמו מדבקה
+        const cut = () => {
+          if (!side) return;
+          if (side === 'top')    doc.rect(x, Y(0) - WALL_PT - 1, w, WALL_PT + 2).fillColor(C.floor).fill();
+          if (side === 'bottom') doc.rect(x, Y(room.h) - 1, w, WALL_PT + 2).fillColor(C.floor).fill();
+          if (side === 'left')   doc.rect(X(0) - WALL_PT - 1, y, WALL_PT + 2, h).fillColor(C.floor).fill();
+          if (side === 'right')  doc.rect(X(room.w) - 1, y, WALL_PT + 2, h).fillColor(C.floor).fill();
+        };
+
         if (it.kind === 'door') {
-          doc.moveTo(x, y + h / 2).lineTo(x + w, y + h / 2)
-             .lineWidth(Math.max(1.2, 4 * k)).strokeColor('#fff').stroke();
-          doc.moveTo(x, y + h / 2).lineTo(x + w, y + h / 2)
-             .lineWidth(Math.max(.6, 1.4 * k)).dash(3, { space: 2 })
+          cut();
+          // כנף + קשת. רדיוס הקשת שווה לרוחב הפתח, ולכן היא *מודדת* כמה
+          // מקום הדלת גוזלת מהחדר — וזה בדיוק מה שצריך לדעת כאן, כי
+          // מזרן שמונח בתוך הקשת חוסם את הדלת.
+          // A = ציר הצירים, B = הקצה השני של הפתח, P = קצה הכנף הפתוחה.
+          // הכנף ניצבת לקיר ופונה פנימה; הקשת היא רבע מעגל סביב A.
+          const span = horiz || !side ? w : h;
+          let ax, ay, bx2, by2, px2, py2;
+          if (side === 'top')         { ax = x; ay = Y(0);        bx2 = x + w; by2 = ay;      px2 = ax;        py2 = ay + span; }
+          else if (side === 'bottom') { ax = x; ay = Y(room.h);   bx2 = x + w; by2 = ay;      px2 = ax;        py2 = ay - span; }
+          else if (side === 'left')   { ax = X(0);      ay = y;   bx2 = ax; by2 = y + h;      px2 = ax + span; py2 = ay; }
+          else if (side === 'right')  { ax = X(room.w); ay = y;   bx2 = ax; by2 = y + h;      px2 = ax - span; py2 = ay; }
+          else                        { ax = x; ay = y + h;       bx2 = x + w; by2 = ay;      px2 = ax;        py2 = ay - span; }
+          // כיוון הקשת נגזר מהגאומטריה עצמה ולא מרשימת מקרים, כדי
+          // שלא יהיה צד אחד שנשכח ושולח את הקשת אל מחוץ לדף.
+          const cross = (px2 - ax) * (by2 - ay) - (py2 - ay) * (bx2 - ax);
+          doc.moveTo(ax, ay).lineTo(px2, py2)
+             .lineWidth(LW.built).strokeColor(C.obsLine).stroke();
+          doc.path(`M ${px2} ${py2} A ${span} ${span} 0 0 ${cross > 0 ? 1 : 0} ${bx2} ${by2}`)
+             .lineWidth(LW.det).dash(2.5, { space: 2 })
              .strokeColor(C.obsLine).stroke().undash();
+        } else if (it.kind === 'window') {
+          cut();
+          // חלון = שלושה קווים לרוחב הפתח: שתי פאות הקיר וזכוכית ביניהן
+          doc.lineWidth(LW.built).strokeColor(C.wall);
+          if (horiz || !side) {
+            const y0 = side === 'top' ? Y(0) - WALL_PT : side === 'bottom' ? Y(room.h) : y;
+            doc.moveTo(x, y0).lineTo(x + w, y0).stroke();
+            doc.moveTo(x, y0 + WALL_PT).lineTo(x + w, y0 + WALL_PT).stroke();
+            doc.moveTo(x, y0 + WALL_PT / 2).lineTo(x + w, y0 + WALL_PT / 2)
+               .lineWidth(LW.det).strokeColor('#8fb2cd').stroke();
+          } else {
+            const x0 = side === 'left' ? X(0) - WALL_PT : X(room.w);
+            doc.moveTo(x0, y).lineTo(x0, y + h).stroke();
+            doc.moveTo(x0 + WALL_PT, y).lineTo(x0 + WALL_PT, y + h).stroke();
+            doc.moveTo(x0 + WALL_PT / 2, y).lineTo(x0 + WALL_PT / 2, y + h)
+               .lineWidth(LW.det).strokeColor('#8fb2cd').stroke();
+          }
+        } else if (it.kind === 'pillar') {
+          // עמוד נחתך על ידי מישור החתך בדיוק כמו קיר, ולכן הוא מלא
+          // ובמשקל של קיר. קו מתאר ריק היה נקרא כרהיט.
+          doc.rect(x, y, w, h).fillColor(C.wall).fill();
         } else {
           doc.roundedRect(x, y, w, h, 3 * k).fillColor(C.obsFill).fill();
-          doc.roundedRect(x, y, w, h, 3 * k).lineWidth(Math.max(.6, 1.4 * k))
+          doc.roundedRect(x, y, w, h, 3 * k).lineWidth(LW.built)
              .strokeColor(C.obsLine).stroke();
         }
-        doc.font('heB').fontSize(Math.max(5, 9 * k)).fillColor(C.obsInk);
-        const lh = doc.currentLineHeight();
-        drawCentered(doc, it.name, x + w / 2, y + h / 2 - lh / 2, w * 0.9, 1);
+        // שם הפריט: לא בתוך עמוד מלא ולא בתוך פתח — שם הוא לא נקרא
+        if (it.kind !== 'pillar' && it.kind !== 'door' && it.kind !== 'window') {
+          doc.font('heB').fontSize(Math.max(5, 9 * k)).fillColor(C.obsInk);
+          const lh = doc.currentLineHeight();
+          drawCentered(doc, it.name, x + w / 2, y + h / 2 - lh / 2, w * 0.9, 1);
+        }
         doc.restore();
       });
 
@@ -318,12 +406,13 @@ function buildNapPdf(sheet) {
       (sheet.staff || []).forEach(st => {
         const r = Math.max(7, 27 * k), cx = X(st.x) + r, cy = Y(st.y) + r;
         doc.circle(cx, cy, r).fillColor('#ffffff').fill();
-        doc.circle(cx, cy, r).lineWidth(Math.max(.9, 2.4 * k)).strokeColor(C.staff).stroke();
-        // דמות פשוטה: ראש וכתפיים
-        doc.circle(cx, cy - r * 0.22, r * 0.26).fillColor(C.staff).fill();
-        doc.moveTo(cx - r * 0.42, cy + r * 0.46)
-           .quadraticCurveTo(cx, cy - r * 0.1, cx + r * 0.42, cy + r * 0.46)
-           .lineWidth(Math.max(.8, 2 * k)).strokeColor(C.staff).stroke();
+        doc.circle(cx, cy, r).lineWidth(LW.built).strokeColor(C.staff).stroke();
+        // דמות פשוטה: ראש וכתפיים. הכתפיים *מלאות* ולא קו — כקו הן
+        // נקראו יחד עם הראש כפרצוף עצוב, וזה לא מה שצריך לתלות בחדר.
+        doc.circle(cx, cy - r * 0.30, r * 0.25).fillColor(C.staff).fill();
+        doc.path(`M ${cx - r * 0.46} ${cy + r * 0.52} V ${cy + r * 0.14} `
+               + `A ${r * 0.46} ${r * 0.46} 0 0 1 ${cx + r * 0.46} ${cy + r * 0.14} `
+               + `V ${cy + r * 0.52} Z`).fillColor(C.staff).fill();
 
         doc.font('heB').fontSize(Math.max(5, 9.5 * k));
         const words = wordsOf(st.name);
@@ -332,7 +421,7 @@ function buildNapPdf(sheet) {
         const bx = cx - (tw + pad * 2) / 2, by = cy + r + 3 * k;
         doc.roundedRect(bx, by, tw + pad * 2, hh, hh / 2).fillColor('#ffffff').fill();
         doc.roundedRect(bx, by, tw + pad * 2, hh, hh / 2)
-           .lineWidth(Math.max(.5, 1.2 * k)).strokeColor(C.staff).stroke();
+           .lineWidth(LW.det).strokeColor(C.staff).stroke();
         doc.fillColor(C.staff);
         drawWordsRtl(doc, words, bx + tw + pad, by + 1.5 * k);
       });
@@ -370,7 +459,7 @@ function buildNapPdf(sheet) {
       const barX = PW - M - L(100), barY = PH - M - 6;
       doc.moveTo(barX, barY - 5).lineTo(barX, barY).lineTo(barX + L(100), barY)
          .lineTo(barX + L(100), barY - 5)
-         .lineWidth(1).strokeColor(C.muted).stroke();
+         .lineWidth(LW.note).strokeColor(C.muted).stroke();
       doc.font('he').fontSize(7.5).fillColor(C.muted);
       drawWordsRtl(doc, wordsOf('1 מטר'), barX - 4, barY - 8);
 
