@@ -26,7 +26,9 @@
     <div class="state">טוען…</div>
   </div>
 
-  <script src="js/menu-render.js?v=1"></script>
+  <!-- נתיב מוחלט בכוונה: /menu הוא rewrite שמשאיר את הכתובת הקצרה,
+       ולכן נתיב יחסי היה מחפש את הקובץ ב-/js ומקבל HTML של 404. -->
+  <script src="/crm/html/js/menu-render.js?v=1"></script>
   <script>
     // דף ציבורי: בלי common.js ובלי api.js — אין כאן סיידבר ואין טוקן.
     const API = '/.netlify/functions/menu-public';
