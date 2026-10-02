@@ -267,6 +267,81 @@ function napIcon(name, size) {
     '" style="vertical-align:-.18em;flex:0 0 auto" aria-hidden="true">' + d + '</svg>';
 }
 
+// ---- "פעולות" ----
+// שער לכלים, לא מערכת נפרדת. כל פעולה פותחת כלי שכבר קיים, ולכן
+// הוספת פעולה חדשה היא שורה אחת כאן ולא מסך חדש.
+// הקטלוג מתוכנן לגדול: קטגוריות נוספות ייפתחו כשיהיו בהן פעולות
+// שבאמת עובדות — תפריט ריק עם קישורים מתים גרוע מאין תפריט.
+const CRM_ACTIONS = [
+  {
+    cat: 'ילדים וקבוצה', icon: '👧',
+    items: [
+      { t: 'יצירת סידור ישיבה', d: 'מי יושב איפה בארוחה · שולחנות, כללים ודף להדפסה',
+        href: 'seating.html', ico: 'grid' },
+      { t: 'יצירת סידור מזרונים', d: 'תוכנית חדר השינה · מיטות, כללים וטקס הירדמות',
+        href: 'nap-layout.html', ico: 'layers' },
+    ],
+  },
+];
+
+function renderActions() {
+  if (document.getElementById('crmActOv')) return;
+  if (!document.getElementById('crm-act-style')) {
+    const st = document.createElement('style');
+    st.id = 'crm-act-style';
+    st.textContent = [
+      "#crmActOv{position:fixed;inset:0;background:rgba(23,50,41,.5);backdrop-filter:blur(2px);",
+      "display:none;align-items:flex-start;justify-content:center;z-index:9800;padding:7vh 18px 24px;}",
+      "#crmActOv.open{display:flex;}",
+      "#crmActBox{background:#F4EFE6;border-radius:20px;width:100%;max-width:580px;max-height:82vh;",
+      "overflow:auto;padding:24px 24px 20px;font-family:'Alef',sans-serif;direction:rtl;",
+      "box-shadow:0 24px 70px rgba(0,0,0,.34);}",
+      "#crmActBox h3{color:#1F3D34;font-size:21px;margin-bottom:3px;}",
+      "#crmActBox .sub{color:#9B8E82;font-size:13px;margin-bottom:18px;line-height:1.6;}",
+      "#crmActBox .cat{font-size:12px;font-weight:700;color:#9B8E82;margin:16px 2px 8px;",
+      "display:flex;align-items:center;gap:7px;}",
+      "#crmActBox .cat:first-of-type{margin-top:0;}",
+      ".crm-act{display:flex;align-items:center;gap:13px;background:#fff;border:1px solid #e8e4de;",
+      "border-radius:14px;padding:14px 16px;margin-bottom:9px;cursor:pointer;text-decoration:none;",
+      "transition:border-color .14s,background .14s,transform .14s;}",
+      ".crm-act:hover{border-color:#1F3D34;background:#f4f9f6;transform:translateX(-2px);}",
+      ".crm-act .ai{width:38px;height:38px;border-radius:11px;background:#FAF8F4;color:#1F3D34;",
+      "display:flex;align-items:center;justify-content:center;flex-shrink:0;}",
+      ".crm-act b{display:block;color:#1F3D34;font-size:14.5px;margin-bottom:2px;}",
+      ".crm-act em{display:block;font-style:normal;font-size:12px;color:#9B8E82;line-height:1.55;}",
+      "#crmActBox .soon{font-size:12.5px;color:#b3a899;text-align:center;line-height:1.7;",
+      "margin-top:18px;padding-top:15px;border-top:1px dashed #ddd6cb;}",
+      "#crmActBox .cls{width:100%;margin-top:14px;background:#efe9e0;border:0;border-radius:11px;",
+      "padding:11px;font-family:'Alef',sans-serif;font-weight:700;font-size:13.5px;",
+      "color:#6f6457;cursor:pointer;}",
+    ].join('');
+    document.head.appendChild(st);
+  }
+
+  const ov = document.createElement('div');
+  ov.id = 'crmActOv';
+  ov.innerHTML = '<div id="crmActBox"><h3>מה את רוצה לעשות?</h3>' +
+    '<div class="sub">כל פעולה פותחת את הכלי המתאים. הרשימה תגדל.</div>' +
+    CRM_ACTIONS.map(function (c) {
+      return '<div class="cat"><span>' + c.icon + '</span>' + c.cat + '</div>' +
+        c.items.map(function (a) {
+          return '<a class="crm-act" href="' + a.href + '">' +
+            '<span class="ai">' + crmIcon(a.ico, 20) + '</span>' +
+            '<span><b>' + a.t + '</b><em>' + a.d + '</em></span></a>';
+        }).join('');
+    }).join('') +
+    '<div class="soon">עוד פעולות יתווספו כאן בהדרגה.<br>הבאה בתור: יצירת תפריט.</div>' +
+    '<button class="cls" onclick="closeActions()">סגירה</button></div>';
+  ov.addEventListener('click', function (e) { if (e.target === ov) closeActions(); });
+  document.body.appendChild(ov);
+}
+function openActions() { renderActions(); document.getElementById('crmActOv').classList.add('open'); }
+function closeActions() {
+  const o = document.getElementById('crmActOv');
+  if (o) o.classList.remove('open');
+}
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeActions(); });
+
 // Inject a persistent navigation sidebar (same on every page) so sections are
 // always one click away. Highlights the current page.
 function renderNavSidebar() {
@@ -311,6 +386,8 @@ function renderNavSidebar() {
       "#crmSidebar .cs-logo{color:#fff;font-size:18px;font-weight:700;text-align:center;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.13);letter-spacing:.3px;}",
       "#crmSidebar .cs-logo img{width:64px;height:64px;border-radius:50%;background:#fff;display:block;margin:0 auto 9px;object-fit:cover;box-shadow:0 5px 16px rgba(0,0,0,.28),0 0 0 4px rgba(255,255,255,.10);}",
       "#crmSidebar .cs-logo .cs-sub{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.46);letter-spacing:2px;margin-top:3px;}",
+      "#crmSidebar .cs-act{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#C4846C;color:#fff;border:0;border-radius:12px;padding:12px;font-family:'Alef',sans-serif;font-size:14.5px;font-weight:700;cursor:pointer;margin-bottom:14px;box-shadow:0 3px 10px rgba(0,0,0,.18);transition:background .16s;}",
+      "#crmSidebar .cs-act:hover{background:#b0745d;}",
       "#crmSidebar a{display:flex;align-items:center;gap:11px;padding:11px 13px;color:rgba(255,255,255,.72);text-decoration:none;border-radius:11px;font-size:14px;font-weight:700;margin-bottom:4px;transition:background .16s,color .16s,transform .16s,box-shadow .16s;}",
       "#crmSidebar a span:first-child{width:24px;text-align:center;font-size:16px;flex-shrink:0;}",
       "#crmSidebar a:hover{background:rgba(255,255,255,.09);color:#fff;transform:translateX(-3px);}",
@@ -338,6 +415,7 @@ function renderNavSidebar() {
   bar.id = 'crmSidebar';
   bar.innerHTML =
     '<div class="cs-logo"><img src="logo.png" alt="גן לב"><div>גן לב</div><div class="cs-sub">מערכת ניהול</div></div>' +
+    '<button class="cs-act" id="crmActBtn">✨ פעולות</button>' +
     links.map(function (l) {
       return '<a href="' + l.href + '"' + (l.href === current ? ' class="active"' : '') +
         '><span>' + l.icon + '</span><span>' + l.label + '</span></a>';
@@ -345,6 +423,8 @@ function renderNavSidebar() {
     '<button class="cs-logout" id="crmLogout">🚪 התנתקות</button>';
 
   document.body.insertBefore(bar, document.body.firstChild);
+  const ab = document.getElementById('crmActBtn');
+  if (ab) ab.addEventListener('click', openActions);
   const lo = document.getElementById('crmLogout');
   if (lo) lo.addEventListener('click', logout);
 
