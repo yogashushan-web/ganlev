@@ -212,10 +212,14 @@
 
     .mat:active { cursor:grabbing; }
     .mat .nm { font-size:13px; font-weight:700; color:#2c4d66; line-height:1.15; text-align:center; }
-    .mat .ri { display:inline-flex; align-items:center; gap:3px; }
-    .mat .rsep2 { font-style:normal; opacity:.5; margin:0 3px; }
-    .mat .rt { font-size:10px; font-weight:700; color:#7c93a6; line-height:1.3; text-align:center;
-               margin-top:3px; cursor:pointer; border-radius:5px; padding:1px 5px;
+    .mat .ri { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
+    /* הערה חופשית אין לה אייקון, ולכן היא מסומנת בנטוי ובנקודה —
+       אחרת היא נדבקת למילה שלפניה ונקראת כמילה אחת. */
+    .mat .ri.note { font-style:italic; opacity:.85; }
+    .mat .ri.note::before { content:'·'; font-style:normal; opacity:.5; margin-left:4px; }
+    .mat .rt { display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+               gap:1px 6px; font-size:9.5px; font-weight:700; color:#7c93a6; line-height:1.3; text-align:center;
+               cursor:pointer; border-radius:5px; padding:1px 4px;
                border:1px dashed transparent; }
     .mat .rt:hover { border-color:#C4846C; background:rgba(255,255,255,.75); color:#8a5a44; }
     .mat .rt.empty { color:#b9c6d0; font-style:italic; }
@@ -965,10 +969,13 @@ function ritualText(cid) {
 function ritualHtml(cid) {
   const r = ritualOf(cid);
   if (!r) return '';
+  // בלי מפרידים כאלמנטים נפרדים: הם נשברו לשורה משלהם והמילים
+  // משני צידיהם נדבקו זו לזו. המרווח עובר ל-gap של ה-flex, וכל
+  // פריט הוא יחידה שלמה שלא נשברת באמצע.
   const parts = (r.needs || []).map(n =>
-    `<span class="ri">${napIcon(n, 13)}${esc(napLabel(n))}</span>`);
-  if (r.needs_other) parts.push(`<span class="ri">${esc(r.needs_other)}</span>`);
-  return parts.join('<i class="rsep2">·</i>');
+    `<span class="ri">${napIcon(n, 12)}${esc(napLabel(n))}</span>`);
+  if (r.needs_other) parts.push(`<span class="ri note">${esc(r.needs_other)}</span>`);
+  return parts.join('');
 }
 
 function renderBoard() {
