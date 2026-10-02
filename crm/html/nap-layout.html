@@ -482,7 +482,8 @@ let selMats = new Set(), undoStack = [];
 function newPlan() {
   return { id: 'np' + Date.now().toString(36), name: defaultPlanName(),
            childIds: [], mat: { w: 120, h: 60, kind: 'naamat' }, potty: {},
-           mats: [], who: {}, obstacles: [], staff: [], rules: [], zoom: 1, okRules: {}, room: null };
+           mats: [], who: {}, obstacles: [], staff: [], rules: [], zoom: 1, okRules: {}, room: null,
+           fullNames: false };
 }
 // שם ברירת מחדל זהה בכל הכלים: סוג · חודש · שנה · שם הגן הפעיל
 const HE_MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
@@ -499,6 +500,22 @@ function defaultPlanName() {
 }
 function schoolYear() { const d = new Date(), y = d.getFullYear(); const s = d.getMonth() >= 8 ? y : y - 1; return s + '-' + String(s + 1).slice(2); }
 const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
+// שם פרטי בלבד, חוץ מכשהוא לא מזהה: בגן שני אריאלים, ו"אריאל" לבד
+// על שתי מיטות הוא בדיוק הסוג של טעות שמחכה לקרות. במקרה כזה השם
+// המלא חוזר — רק למי שצריך אותו, לא לכולם.
+function displayName(id) {
+  const full = kidName(id);
+  if (!full) return '';
+  if (plan && plan.fullNames) return full;
+  const first = full.split(/\s+/)[0];
+  const clash = plan.childIds.some(c => c !== id && kidName(c).split(/\s+/)[0] === first);
+  return clash ? full : first;
+}
+function toggleNames() {
+  plan.fullNames = !plan.fullNames;
+  saveDraft(); renderBoard();
+  showOk(plan.fullNames ? 'שם מלא' : 'שם פרטי · שם מלא רק כשיש כפילות');
+}
 const nameOf = id => kidName(id) || (allStaff.find(s => s.id === id) || {}).name || '';
 
 /* ---------- טעינה ---------- */
@@ -1010,7 +1027,7 @@ function renderBoard() {
              ${cid && plan.potty[cid] ? '' : `;--bl:${tint.bg};--bll:${tint.line}`}"
       onpointerdown="startMatDrag(event,'${m.id}')">
       <i class="blanket"></i><i class="fold"></i>
-      <div class="pillow"><span class="nm">${esc(cid ? kidName(cid) : '—')}</span></div>
+      <div class="pillow"><span class="nm">${esc(cid ? displayName(cid) : '—')}</span></div>
       <span class="num">${idx + 1}</span>
       ${cid ? `<div class="body"><span class="rt ${rt ? '' : 'empty'}"
         onpointerdown="event.stopPropagation()"
@@ -1097,6 +1114,9 @@ function renderBoard() {
         <button class="rb" data-t="${selMats.size ? 'סובבי ' + selMats.size + ' מזרונים' : 'סובבי הכל'}"
           onclick="rotateSel()">${crmIcon('rotate')}</button>
         <button class="rb" data-t="סדר יפה" onclick="tidy()">${crmIcon('align')}</button>
+        <button class="rb ${plan.fullNames ? 'on' : ''}"
+          data-t="${plan.fullNames ? 'שם מלא · ללחיצה לשם פרטי' : 'שם פרטי · ללחיצה לשם מלא'}"
+          onclick="toggleNames()">${crmIcon('person')}</button>
         <i class="rsep"></i>
         <div class="rzoom">
           <input type="range" id="zoomR" min="50" max="160" step="1" value="${Math.round(zoomOf() * 100)}"
@@ -1644,7 +1664,7 @@ function napSheet() {
       const rr = cid ? (ritualOf(cid) || {}) : {};
       return { x: r.x, y: r.y, w: r.w, h: r.h,
                head: E.headSide(m), num: i + 1,
-               name: cid ? kidName(cid) : '',
+               name: cid ? displayName(cid) : '',
                needs: (rr.needs || []).map(napLabel),
                other: rr.needs_other || '',
                potty: !!(cid && plan.potty[cid]) };

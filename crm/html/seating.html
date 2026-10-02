@@ -567,10 +567,26 @@ function defaultPlanName() {
 }
 function newPlan() {
   return { id: uid(), name: defaultPlanName(), childIds: [], tables: [], staff: {},
-           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {}, marks: {}, parked: {}, items: [], zoom: 1 };
+           rules: [], split: { mode: 'even' }, seats: {}, locks: {}, layout: {}, marks: {}, parked: {}, items: [], zoom: 1, fullNames: false };
 }
 const tplOf = t => E.TEMPLATES[t.templateId] || E.TEMPLATES.rect6_heads;
 const kidName = id => (allKids.find(k => k.id === id) || {}).name || '';
+// שם פרטי בלבד, חוץ מכשהוא לא מזהה. בגן שני אריאלים, ו"אריאל" לבד
+// על שני כיסאות הוא בדיוק הסוג של טעות שמחכה לקרות (כלל 14).
+function displayName(id) {
+  const full = kidName(id);
+  if (!full) return '';
+  if (plan && plan.fullNames) return full;
+  const first = full.split(/\s+/)[0];
+  const clash = plan.childIds.some(c => c !== id && kidName(c).split(/\s+/)[0] === first);
+  return clash ? full : first;
+}
+function toggleNames() {
+  pushUndo('שינוי תצוגת שמות');
+  plan.fullNames = !plan.fullNames;
+  renderBoard();
+  showOk(plan.fullNames ? 'שם מלא' : 'שם פרטי · שם מלא רק כשיש כפילות');
+}
 const staffName = id => (allStaff.find(s => s.id === id) || {}).name || '';
 // שם המשבצת: מי שפעילה כרגע מבין המחליפות
 // משבצת בלי אנשים היא תפקיד ולא אדם — "מחליפה", "סטודנטית", "אחראית
@@ -1175,7 +1191,7 @@ function setCount(tid, v) {
 /* ---------- בנייה ---------- */
 function enginePlan() {
   const people = {};
-  plan.childIds.forEach(id => { people[id] = { name: kidName(id), kind: 'child' }; });
+  plan.childIds.forEach(id => { people[id] = { name: displayName(id), kind: 'child' }; });
   Object.keys(plan.staff).forEach(sid => {
     people[sid] = { name: slotLabel(sid), kind: 'staff', sits: plan.staff[sid].sits, tables: plan.staff[sid].tables };
   });
@@ -1867,6 +1883,9 @@ function renderBoard() {
         <button class="rb" data-t="אלרגיות" onclick="openAllergies()">${crmIcon('alert')}</button>
         <i class="rsep"></i>
         <button class="rb" data-t="התאם לדף" onclick="fitToPage()">${crmIcon('expand')}</button>
+        <button class="rb ${plan.fullNames ? 'on' : ''}"
+          data-t="${plan.fullNames ? 'שם מלא · ללחיצה לשם פרטי' : 'שם פרטי · ללחיצה לשם מלא'}"
+          onclick="toggleNames()">${crmIcon('person')}</button>
         <div class="rzoom">
           <input type="range" id="zoomR" min="50" max="200" step="1" value="${Math.round(zoomOf() * 100)}"
             aria-label="גודל התוכן על הדף"
