@@ -75,6 +75,9 @@ exports.handler = async (event) => {
       meals: food.meals || null,
       days: food.days || null,
       fromHome: food.fromHome || [],
+      // אילו ארוחות מוגשות בכל יום. ארוחה שלא מוגשת לא מופיעה בדף,
+      // כי משבצת ריקה עם מקף אומרת להורה "שכחו למלא".
+      dayMeals: food.dayMeals || null,
     };
     const garden = (gRes.data && gRes.data.length && gRes.data[0].name) || 'הגן';
 

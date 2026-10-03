@@ -109,6 +109,9 @@
     .dish.off { opacity:.5; }
     .catbar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
 
+    .cell.none { background:#FAF8F4; border-style:solid; border-color:#efe9e0; align-items:center;
+                 justify-content:center; }
+    .cell.none span { font-size:11.5px; color:#C9BFB2; }
     .homecell { font-size:11.5px; color:#B9AE9F; font-style:italic; text-align:center; padding:6px 0; }
     .dish { position:relative; }
     .dish .drm { position:absolute; top:9px; left:10px; background:#f6f2ec; border:1px solid #e8e1d6;
@@ -242,11 +245,11 @@
     </div>
   </div>
 
-<script src="js/common.js?v=27"></script>
-<script src="js/api.js?v=23"></script>
-<script src="js/profile.js?v=1"></script>
-<script src="js/menu-render.js?v=2"></script>
-<script src="js/menu-check.js?v=1"></script>
+<script src="js/common.js?v=28"></script>
+<script src="js/api.js?v=24"></script>
+<script src="js/profile.js?v=2"></script>
+<script src="js/menu-render.js?v=3"></script>
+<script src="js/menu-check.js?v=2"></script>
 <script>
 // התפריט **קבוע**. המסך נפתח עליו ולא על אשף: הגננת לא בונה תפריט
 // כל שבוע — היא בונה אותו פעם אחת ועורכת כשמשהו משתנה. אשף שעוברים
@@ -254,10 +257,15 @@
 const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const MR = MenuRender, MC = MenuCheck;
 const DAYS = MR.DAYS;
-const ALLERGENS = [
+const SIX = [
   { code:'milk', name:'חלב' }, { code:'egg', name:'ביצים' }, { code:'peanut', name:'בוטנים' },
   { code:'nuts', name:'אגוזים' }, { code:'sesame', name:'שומשום' }, { code:'gluten', name:'גלוטן' },
 ];
+// שש הנפוצות ועוד מה שהגן הוסיף. בלי זה ילד עם רגישות לסויה או לדגים
+// לא ניתן לרישום, והבדיקה לא תתריע עליו לעולם.
+let extraSens = [];
+const ALLERGENS = () => SIX.concat(extraSens.map(e => ({ code: e.name, name: e.name })));
+const alName = c => (SIX.find(a => a.code === c) || {}).name || c;
 const CATS = ['בוקר', 'צהריים', 'נשנוש'];
 const MEAL_CAT = { breakfast:'בוקר', lunch:'צהריים', snack1:'נשנוש', snack2:'נשנוש' };
 const MEAL_SETS = {
@@ -281,6 +289,12 @@ document.getElementById('menuCss').textContent = MR.MENU_CSS;
 
 const MEALS = () => food.meals;
 const dayList = () => DAYS.filter(d => food.days.indexOf(d.key) >= 0);
+// לא בכל יום מגישים את אותן ארוחות. ברירת המחדל היא הכל, כדי שגן
+// שלא נגע בהגדרות יראה את מה שראה קודם.
+const mealsOn = day => {
+  const only = food.dayMeals && food.dayMeals[day];
+  return only ? MEALS().filter(m => only.indexOf(m.key) >= 0 || isHome(day, m.key)) : MEALS();
+};
 const at = (day, meal) => (((menu.days[day] = menu.days[day] || {})[meal] = menu.days[day][meal] || []));
 const dishById = id => dishes.find(d => d.id === id) || null;
 const dishMap = () => { const o = {}; dishes.forEach(d => { o[d.id] = d; }); return o; };
@@ -296,6 +310,7 @@ async function boot() {
     await GL.load();
     const f = GL.get('food');
     if (f) food = Object.assign(food, f);
+    extraSens = GL.get('health.extra', []) || [];
   } catch (e) {}
   try {
     const r = await api.getMenu();
@@ -373,6 +388,7 @@ function setView(v) { view = v; sel = null; render(); window.scrollTo({ top:0, b
 function render() {
   document.getElementById('topActions').innerHTML = `
     <button class="btn soft" onclick="setView('lib')">מאגר המנות</button>
+    <button class="btn soft" onclick="location.href='garden-settings.html'">הגדרות</button>
     <button class="btn soft" onclick="setView('preview')">תצוגה מקדימה</button>
     <button class="btn" onclick="saveMenu(true)">${menu.live ? 'שמירה' : 'העלאה לאוויר'}</button>`;
   const tabs = [['menu','התפריט'],['exc','שינויים'],['recipes','מתכונים'],['design','עיצוב'],['info','עמוד מידע']];
@@ -394,8 +410,8 @@ function render() {
 /* ---------- התפריט ---------- */
 function viewMenu() {
   const warnCells = {};
-  const checks = MC.checkWeek({ week: menu, dishes: dishMap(), sensitivities: sens,
-                                meals: MEALS(), days: food.days, fromHome: food.fromHome });
+  const checks = MC.checkWeek({ week: menu, dishes: dishMap(), sensitivities: sens, meals: MEALS(),
+                                days: food.days, fromHome: food.fromHome, dayMeals: food.dayMeals });
   checks.filter(v => v.level === 'warn' && v.day && v.meal)
         .forEach(v => { warnCells[v.day + '|' + v.meal] = true; });
   const warns = checks.filter(v => v.level === 'warn');
@@ -410,6 +426,8 @@ function viewMenu() {
   MEALS().forEach(m => {
     g += `<div class="mh">${esc(m.name)}<em>${esc(m.time)}</em></div>`;
     ds.forEach(d => {
+      const served = mealsOn(d.key).some(x => x.key === m.key);
+      if (!served) { g += '<div class="cell none"><span>אין</span></div>'; return; }
       const ids = at(d.key, m.key), home = isHome(d.key, m.key);
       g += `<div class="cell ${sel ? 'tgt' : ''} ${warnCells[d.key+'|'+m.key] ? 'warn' : ''}"
              onclick="cellTap('${d.key}','${m.key}')">`;
@@ -445,13 +463,14 @@ function viewMenu() {
     ${allergenAsk ? `<div class="vrow note" style="margin-bottom:12px">
       <span class="tag">הצעה</span>
       <span>לפי המרכיבים יש ב«${esc((dishById(allergenAsk.id)||{}).name||'')}»
-        ${esc(allergenAsk.codes.map(c => MC.ALLERGEN_NAME[c] || c).join(' ו'))}.</span>
+        ${esc(allergenAsk.codes.map(alName).join(' ו'))}.</span>
       <button class="go" onclick="markAsked(true)">לסמן</button>
       <button class="go" onclick="markAsked(false)">לא עכשיו</button></div>` : ''}
     ${sel ? `<div class="movehint">
       <span>«${esc((dishById(at(sel.day,sel.meal)[sel.idx])||{}).name||'')}» נבחרה —
         לחיצה על מנה אחרת תשים אותה <b>לפניה</b>, ולחיצה על שטח ריק
         במשבצת תשים אותה <b>בסוף</b>.</span>
+      <button onclick="editSel()">עריכת המנה</button>
       <button onclick="sel=null;render()">ביטול</button></div>` : ''}
     ${g}
     <div class="count-line">${total} מנות בתפריט · ${sens.length
@@ -464,12 +483,21 @@ function viewMenu() {
 function alertFor(d) {
   if (!Array.isArray(d.allergens) || !d.allergens.length) return '';
   return d.allergens.filter(c => sens.some(s => s.codes.indexOf(c) >= 0))
-    .map(c => MC.ALLERGEN_NAME[c] || c).join(', ');
+    .map(alName).join(', ');
 }
 // כלל אחד לשני הדברים: בוחרים מנה, ואז מקישים לאן היא הולכת.
 // הקשה על מנה אחרת = "לפני זו" — וזה מה שמאפשר לקבוע סדר *בתוך*
 // המשבצת, כי בגן מגישים בשלבים: קודם סלט, אחר כך כריכים, ואז תוספת.
 // הקשה על שטח ריק במשבצת = "בסוף".
+// עריכת המרכיבים מתוך הלוח. הגן מוסיף פרי העונה לדייסה, וזה לא קיים
+// במתכון המקורי — אין סיבה ללכת בשביל זה למאגר.
+function editSel() {
+  if (!sel) return;
+  const id = at(sel.day, sel.meal)[sel.idx];
+  sel = null;
+  if (id) openDish(id); else render();
+}
+
 function chipTap(day, meal, idx) {
   if (!sel) { sel = { day, meal, idx }; render(); return; }
   if (sel.day === day && sel.meal === meal && sel.idx === idx) { sel = null; render(); return; }
@@ -796,7 +824,7 @@ function renderLib() {
       ${(d.ingredients||[]).length ? `<div class="ing">${esc(d.ingredients.join(' · '))}</div>` : ''}
       ${d.allergensSet
         ? (d.allergens||[]).length
-          ? `<div class="al">${(d.allergens||[]).map(c=>esc(MC.ALLERGEN_NAME[c]||c)).join(' · ')}</div>`
+          ? `<div class="al">${(d.allergens||[]).map(c=>esc(alName(c))).join(' · ')}</div>`
           : '<div class="un">בלי אלרגנים</div>'
         : '<div class="un">עוד לא סומנה</div>'}</div>`).join('')
       : `<div class="empty-note">אין מנה כזו במאגר.<br>
@@ -901,10 +929,10 @@ function dishForm() {
       <input type="text" id="di" value="${esc((e.ingredients||[]).join(', '))}" placeholder="מופרדים בפסיק"></div>
     ${sug.length ? `<div class="vrow note" style="margin-bottom:14px">
       <span class="tag">הצעה</span>
-      <span>לפי המרכיבים יש כאן ${esc(sug.map(c=>MC.ALLERGEN_NAME[c]||c).join(' ו'))}.</span>
+      <span>לפי המרכיבים יש כאן ${esc(sug.map(alName).join(' ו'))}.</span>
       <button class="go" onclick="acceptSug()">לסמן</button></div>` : ''}
     <div class="fld"><label>אלרגנים</label>
-      <div class="pick">${ALLERGENS.map(a => `<button class="p ${(e.allergens||[]).indexOf(a.code)>=0?'on':''}"
+      <div class="pick">${ALLERGENS().map(a => `<button class="p ${(e.allergens||[]).indexOf(a.code)>=0?'on':''}"
         onclick="togAl('${a.code}')">${esc(a.name)}</button>`).join('')}</div>
       <div class="count-line">${e.allergensSet ? 'מסומנת ונכנסת לבדיקה.'
         : `עוד לא סומנה. <button class="go" onclick="editing.allergensSet=true;redrawForm()">אין בה אלרגנים</button>`}</div></div>
@@ -1112,7 +1140,7 @@ function sheetHtml(d) {
   const r = d.recipe || {}, n = kidsN || 1;
   const items = (r.items || []).filter(i => (i.name||'').trim());
   const steps = String(r.steps || '').split('\n').map(x => x.trim()).filter(Boolean);
-  const al = (d.allergens || []).map(c => MC.ALLERGEN_NAME[c] || c);
+  const al = (d.allergens || []).map(alName);
   return `<div class="rsheet">
     <h3>${esc(d.name)}</h3>
     <div class="for">ל-${n} ילדים${r.minutes ? ' · ' + esc(r.minutes) + ' דקות הכנה' : ''}</div>

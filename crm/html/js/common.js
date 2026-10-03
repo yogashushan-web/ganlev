@@ -359,6 +359,7 @@ function renderNavSidebar() {
     { href: 'seating.html',         icon: '🍽️', label: 'סידור ישיבה' },
     { href: 'nap-layout.html',      icon: '🛏️', label: 'סידור מזרונים' },
   { href: 'menu-builder.html',    icon: '🍲', label: 'תפריט' },
+  { href: 'garden-settings.html', icon: '⚙️', label: 'הגדרות הגן' },
     { href: 'staff-salaries.html',  icon: '👥', label: 'צוות' },
     { href: 'content.html',         icon: '📚', label: 'תוכן חינוכי' },
     { href: 'forms.html',           icon: '📋', label: 'טפסים' },

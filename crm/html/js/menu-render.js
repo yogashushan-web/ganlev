@@ -91,6 +91,7 @@ function tplTable(ctx) {
     s += `<tr><th class="mh">${icon(m.icon)}<span>${esc(m.name)}</span>`
        + `<span class="tm">${esc(m.time)}</span></th>`;
     days.forEach(d => {
+      if (!ctx.served(d.key, m.key)) { s += '<td class="off"></td>'; return; }
       const list = cell(d.key, m.key);
       const home = ctx.fromHome(d.key, m.key);
       s += '<td>' + (list.length
@@ -109,6 +110,7 @@ function tplCards(ctx, phoneOnly) {
   days.forEach(d => {
     s += `<section class="day"><h3>${esc(d.name)}</h3>`;
     meals.forEach(m => {
+      if (!ctx.served(d.key, m.key)) return;
       const list = cell(d.key, m.key);
       const home = ctx.fromHome(d.key, m.key);
       if (!list.length && !home) return;
@@ -138,6 +140,7 @@ function tplDay(ctx) {
   days.forEach(d => {
     s += `<section class="day tl"><h3>${esc(d.name)}</h3><ol class="line">`;
     meals.forEach(m => {
+      if (!ctx.served(d.key, m.key)) return;
       const list = cell(d.key, m.key);
       const home = ctx.fromHome(d.key, m.key);
       s += `<li${list.length || home ? '' : ' class="off"'}><span class="hh">${esc(m.time)}</span>`
@@ -206,6 +209,11 @@ function renderMenu(opt) {
   const home = settings.fromHome || [];
   const fromHome = (day, meal) =>
     home.some(h => h.day === day && h.meal === meal);
+  // ארוחה שלא מוגשת ביום מסוים לא מופיעה בדף. משבצת ריקה עם מקף
+  // אומרת להורה "שכחו למלא", וזה לא מה שקרה.
+  const dm = settings.dayMeals || null;
+  const served = (day, meal) =>
+    !dm || !dm[day] || dm[day].indexOf(meal) >= 0 || fromHome(day, meal);
 
   // שם המנה ולא המזהה. מנה שתימחק מהמאגר מחר לא תמחק את עצמה מהתפריט
   // שההורים כבר קיבלו.
@@ -215,7 +223,7 @@ function renderMenu(opt) {
       || (menu.names && menu.names[id]) || '').filter(Boolean);
   };
 
-  const ctx = { meals, cell, settings, days, fromHome };
+  const ctx = { meals, cell, settings, days, fromHome, served };
   return { body: tpl.fn(ctx), garden, updated: menu.updated || '',
            exceptions: renderExceptions(opt.exceptions, meals),
            infoHtml: menu.infoPage === false ? ''
@@ -295,6 +303,7 @@ table.wk{width:100%;border-collapse:separate;border-spacing:0;background:var(--c
 .wk td .d{display:block;font-size:13.5px}
 .wk td .d+.d{margin-top:4px;padding-top:4px;border-top:1px dashed var(--line)}
 .none{color:var(--faint)}
+.wk td.off{background:#faf7f2}
 
 /* ---- כרטיס ליום ---- */
 .days{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:13px}

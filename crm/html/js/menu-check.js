@@ -50,20 +50,27 @@ function checkWeek(opt) {
   // תצעק על יום שישי בכל גן שההורים שולחים בו אוכל.
   const home = opt.fromHome || [];
   const fromHome = (d, m) => home.some(h => h.day === d && h.meal === m);
+  // ארוחה שלא מוגשת ביום הזה בכלל אינה חסרה. גן שסוגר בצהריים ברביעי
+  // לא אמור לקבל התרעה על ארוחת צהריים ברביעי.
+  const dm = opt.dayMeals || null;
+  const served = (d, m) => !dm || !dm[d] || dm[d].indexOf(m) >= 0 || fromHome(d, m);
   const mealName = k => (meals.find(m => m.key === k) || {}).name || k;
 
   const at = (day, meal) => ((days[day] || {})[meal] || []);
 
   // ---- 1 · ארוחה חסרה, ויום ריק לגמרי ----
   DAY_KEYS.forEach(day => {
-    const total = meals.reduce((n, m) => n + at(day, m.key).length, 0)
-      + meals.reduce((n, m) => n + (fromHome(day, m.key) ? 1 : 0), 0);
+    const live = meals.filter(m => served(day, m.key));
+    if (!live.length) return;                 // יום שאין בו ארוחות בכלל
+    const total = live.reduce((n, m) => n + at(day, m.key).length, 0)
+      + live.reduce((n, m) => n + (fromHome(day, m.key) ? 1 : 0), 0);
     if (!total) {
       out.push({ level: 'warn', day, meal: null,
         text: `יום ${DAY_NAMES[day]} ריק לגמרי — אין בו אף מנה.` });
       return;                                   // לא להציף אותו יום בארבע התרעות
     }
     REQUIRED.forEach(mk => {
+      if (!served(day, mk)) return;
       if (!at(day, mk).length && !fromHome(day, mk)) {
         out.push({ level: 'warn', day, meal: mk,
           text: `חסרה ${mealName(mk)} ביום ${DAY_NAMES[day]}.` });

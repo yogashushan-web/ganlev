@@ -35,6 +35,42 @@ function scanHints(text) {
   return ALLERGENS.filter(a => a.words.some(w => t.includes(w))).map(a => a.code);
 }
 
+// רגישות שאינה אחת מהשש. ההורים כותבים אותה בטקסט חופשי בכרטיס האישי,
+// והיא נשארת שם ולא מגיעה לשום בדיקה — ילד עם אלרגיה לסויה או לקטניות
+// פשוט לא ניתן לרישום היום. כאן תופסים את הניסוח ומציעים להוסיף.
+//
+// לא נרשם אוטומטית. זו הצעה שמישהו מאשר, כי טקסט חופשי מכיל גם
+// "אין אלרגיות" ו"בדקנו אלרגיה לחלב ואין".
+// הביטוי לא בולע פסיקים בכוונה: "אלרגי לדגים, וגם רגישות לקיווי" הוא
+// שתי רגישויות ולא אחת ארוכה, והפסיק הוא מה שעוצר את הראשונה.
+const TRIGGER = /(?:אלרגי(?:ה|ת|ת)?|רגיש(?:ות|ה)?)\s*(?:מאוד\s*)?ל\s*([֐-׿\s'"-]{2,40})/g;
+const NEGATE = /(?:אין|ללא|לא\s+ידוע|שלילי|נשלל)/;
+const STOP = /^(?:כלום|שום|מאכלים|אוכל|דברים|משהו|כל\s)/;
+
+function scanOther(text, knownWords) {
+  const t = String(text || '');
+  if (!t.trim()) return [];
+  const out = [];
+  let m;
+  TRIGGER.lastIndex = 0;
+  while ((m = TRIGGER.exec(t)) !== null) {
+    // חלון של 24 תווים לפני הביטוי — "אין אלרגיה לבוטנים" הוא לא רגישות
+    const before = t.slice(Math.max(0, m.index - 24), m.index);
+    if (NEGATE.test(before)) continue;
+    // "סויה ולקטניות" הן שתיים. מפצלים על ו' החיבור ומורידים את הל'
+    // שנשארה מ"ולקטניות".
+    String(m[1] || '').split(/\s+ו/).forEach((part, i) => {
+      let w = part.trim().replace(/^[\s,-]+|[\s,.;-]+$/g, '');
+      if (i > 0) w = w.replace(/^ל/, '');
+      if (w.length < 2 || w.length > 24 || STOP.test(w)) return;
+      if (/רגיש|אלרג/.test(w)) return;
+      if (knownWords.some(k => w.indexOf(k) >= 0)) return;   // כבר אחת מהשש
+      if (out.indexOf(w) < 0) out.push(w);
+    });
+  }
+  return out.slice(0, 4);
+}
+
 const handler = withAuth(async (event) => {
   try {
     const user = event.user;
@@ -59,14 +95,18 @@ const handler = withAuth(async (event) => {
       const { data: cards } = await supabase.from('events')
         .select('category,notes')
         .eq('garden_id', garden_id).eq('calendar', 'child-card');
+      const KNOWN = ALLERGENS.reduce((a, x) => a.concat(x.words), []);
+      const other = {};
       (cards || []).forEach(r => {
         const p = parse(r.notes);
         const text = (p.answers || []).map(a => `${a && a.q} ${a && a.a}`).join(' ');
         const found = scanHints(text);
         if (found.length) hints[r.category] = found;
+        const extra = scanOther(text, KNOWN);
+        if (extra.length) other[r.category] = extra;
       });
 
-      return json(200, { success: true, health, hints, allergens: ALLERGENS });
+      return json(200, { success: true, health, hints, other, allergens: ALLERGENS });
     }
 
     if (event.httpMethod === 'POST') {

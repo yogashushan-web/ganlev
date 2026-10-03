@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>הגדרות הגן</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
+              padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .btn { background:#1F3D34; color:#fff; border:none; padding:11px 20px; border-radius:10px;
+           cursor:pointer; font-family:'Alef'; font-weight:700; font-size:14px; }
+    .btn.ghost { background:#efe9e0; color:#6f6457; }
+    .btn.soft { background:#fff; color:#1F3D34; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+    .btn.sm { padding:6px 13px; font-size:12.5px; }
+    .err,.ok { padding:12px; border-radius:10px; margin-bottom:14px; display:none; }
+    .err { background:#fdf0ef; color:#c94147; } .ok { background:#d4edda; color:#155724; }
+    .err.show,.ok.show { display:block; }
+
+    .card { background:#fff; border-radius:18px; padding:22px 24px; box-shadow:0 2px 14px rgba(0,0,0,.06);
+            margin-bottom:14px; }
+    .card h2 { font-size:19px; color:#1F3D34; margin-bottom:4px; }
+    .card .sub { color:#9B8E82; font-size:13.5px; margin-bottom:16px; line-height:1.6; }
+    .card .sub b { color:#3D3228; }
+    .fld { margin-bottom:15px; }
+    .fld label { display:block; font-size:13px; font-weight:700; color:#3D3228; margin-bottom:7px; }
+    .fld input { width:100%; max-width:320px; padding:10px 13px; border:1.5px solid #e8e4de;
+                 border-radius:10px; font-family:'Alef'; font-size:14px; outline:none; }
+    .fld input:focus { border-color:#1F3D34; }
+    .pick { display:flex; gap:8px; flex-wrap:wrap; }
+    .pick .p { border:1.5px solid #e8e4de; background:#fff; border-radius:999px; padding:8px 15px;
+               font-family:'Alef'; font-size:13.5px; font-weight:700; cursor:pointer; color:#6f6457; }
+    .pick .p.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
+    .note { font-size:12.5px; color:#9B8E82; line-height:1.7; margin-top:9px; }
+
+    /* ---- ארוחות ---- */
+    .meal { display:flex; gap:9px; align-items:center; background:#FAF8F4; border:1px solid #efe9e0;
+            border-radius:12px; padding:9px 12px; margin-bottom:8px; flex-wrap:wrap; }
+    .meal input.n { flex:1; min-width:140px; max-width:none; }
+    .meal input.t { width:104px; max-width:104px; text-align:center;
+                    font-variant-numeric:tabular-nums; }
+    .meal .rm { background:#f6f2ec; border:1px solid #e8e1d6; color:#8a7f70; border-radius:8px;
+                padding:6px 11px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Alef'; }
+    .meal .rm:hover { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
+
+    /* ---- ימים ---- */
+    .dgrid { display:grid; grid-template-columns:86px 1fr; gap:8px; align-items:center; }
+    .dgrid .dn { font-size:13.5px; font-weight:700; color:#3D3228; }
+    .dgrid .ds { display:flex; gap:6px; flex-wrap:wrap; }
+    .dgrid .ds button { border:1.5px solid #e8e4de; background:#fff; border-radius:9px;
+                        padding:5px 11px; font-family:'Alef'; font-size:12px; font-weight:700;
+                        color:#B9AE9F; cursor:pointer; }
+    .dgrid .ds button.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
+    .dgrid .ds button.home { background:#fdf6ef; border-color:#f0dcc4; color:#b8801f; }
+    .dgrid .off .dn { color:#B9AE9F; }
+    .legend { font-size:12px; color:#9B8E82; margin-top:12px; line-height:1.8; }
+    .legend b { color:#3D3228; }
+
+    /* ---- רגישויות ---- */
+    .sugg { background:#fdf6ef; border:1px solid #f0dcc4; border-radius:12px; padding:12px 14px;
+            margin-bottom:9px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+            font-size:13.5px; line-height:1.6; }
+    .sugg .who { font-weight:700; color:#8a6a23; }
+    .sugg .act { margin-right:auto; display:flex; gap:7px; }
+
+    /* ---- מה שנגזר ---- */
+    .drow { display:flex; gap:11px; align-items:baseline; padding:10px 0;
+            border-bottom:1px solid #f2ede6; font-size:14px; flex-wrap:wrap; }
+    .drow:last-child { border-bottom:none; }
+    .drow .k { color:#9B8E82; font-size:13px; min-width:120px; }
+    .drow .v { font-weight:700; color:#1F3D34; }
+    .drow .src { margin-right:auto; font-size:11.5px; color:#B9AE9F; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>⚙️ הגדרות הגן</h1>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="top"></div>
+  </div>
+  <div id="error" class="err"></div>
+  <div id="success" class="ok"></div>
+  <div id="body"></div>
+
+<script src="js/common.js?v=28"></script>
+<script src="js/api.js?v=24"></script>
+<script src="js/profile.js?v=2"></script>
+<script>
+// מסך אחד שמרכז את מה שהמערכת יודעת על הגן. ראו "העיקרון הראשון"
+// ב-CLAUDE.md: כל ערך מראה **מאיפה הוא הגיע**, וכל ערך ניתן לשינוי.
+// מה שהמערכת הסיקה מופיע לקריאה בלבד ונגזר מחדש בכל טעינה.
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const DAYS = [
+  { key:'sun', name:'ראשון' }, { key:'mon', name:'שני' }, { key:'tue', name:'שלישי' },
+  { key:'wed', name:'רביעי' }, { key:'thu', name:'חמישי' }, { key:'fri', name:'שישי' },
+];
+const SIX = [
+  { code:'milk', name:'חלב' }, { code:'egg', name:'ביצים' }, { code:'peanut', name:'בוטנים' },
+  { code:'nuts', name:'אגוזים' }, { code:'sesame', name:'שומשום' }, { code:'gluten', name:'גלוטן' },
+];
+
+let food = { meals: [], days: ['sun','mon','tue','wed','thu'], fromHome: [], facts: [] };
+let extra = [];                 // רגישויות מעבר לשש
+let kids = [], health = {}, otherHints = {}, der = null, gname = '';
+
+const timeKey = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(t||'')); return m ? (+m[1])*60 + (+m[2]) : 9999; };
+const sortMeals = () => food.meals.sort((a,b) => timeKey(a.time) - timeKey(b.time));
+const isHome = (d,m) => food.fromHome.some(h => h.day === d && h.meal === m);
+const uid = () => 'm' + Math.random().toString(36).slice(2,7);
+
+async function boot() {
+  try {
+    await GL.load();
+    gname = GL.gardenName();
+    const f = GL.get('food');
+    if (f) food = Object.assign(food, f);
+    extra = GL.get('health.extra', []) || [];
+  } catch (e) { showErr('הטעינה נכשלה: ' + e.message); }
+  if (!food.meals.length) {
+    food.meals = [
+      { key:'breakfast', name:'ארוחת בוקר', time:'08:30', icon:'bowl' },
+      { key:'snack1', name:'נשנוש', time:'10:30', icon:'fruit' },
+      { key:'lunch', name:'ארוחת צהריים', time:'12:00', icon:'pot' },
+      { key:'snack2', name:'נשנוש', time:'15:30', icon:'fruit' },
+    ];
+  }
+  render();
+  loadHealth(); loadDerived();
+}
+async function loadDerived() { try { der = await GL.derived(); render(); } catch (e) {} }
+async function loadHealth() {
+  try {
+    const [rc, rh] = await Promise.all([api.getChildren(), api.getChildHealth()]);
+    kids = (rc && rc.data) || [];
+    health = (rh && rh.health) || {};
+    otherHints = (rh && rh.other) || {};
+    render();
+  } catch (e) {}
+}
+const kidName = id => {
+  const c = kids.find(k => k.id === id);
+  return c ? (c.first_name_he + ' ' + (c.last_name_he || '')).trim() : '';
+};
+
+function render() {
+  document.getElementById('top').innerHTML =
+    `<button class="btn soft" onclick="location.href='menu-builder.html'">תפריט</button>
+     <button class="btn" onclick="saveAll()">שמירה</button>`;
+  document.getElementById('body').innerHTML = secIdentity() + secMeals() + secDays() + secSens() + secDerived();
+}
+
+/* ---------- זהות ---------- */
+function secIdentity() {
+  const a = GL.addr();
+  return `<div class="card">
+    <h2>הגן</h2>
+    <div class="sub">השם מופיע על כל דף מודפס ועל התפריט שההורים מקבלים.</div>
+    <div class="fld"><label>שם הגן</label>
+      <input type="text" id="gname" value="${esc(gname)}" maxlength="60"></div>
+    <div class="fld"><label>לשון פנייה</label>
+      <div class="pick">
+        ${[['female','בלשון נקבה'],['male','בלשון זכר'],['neutral','בלי לשון פנייה']]
+          .map(([v,l]) => `<button class="p ${a===v?'on':''}" onclick="setAddr('${v}')">${l}</button>`).join('')}
+      </div></div>
+  </div>`;
+}
+async function setAddr(v) {
+  try { await GL.setPrefs({ address: v }); render(); showOk('נשמר'); }
+  catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+
+/* ---------- ארוחות ---------- */
+function secMeals() {
+  sortMeals();
+  return `<div class="card">
+    <h2>ארוחות</h2>
+    <div class="sub">השמות והשעות האלה הם מה שמופיע בתפריט ובדף שההורים מקבלים.
+      <b>הסדר נקבע לפי השעה</b> — אין מה לגרור.</div>
+    <div id="meals">${food.meals.map((m,i) => `<div class="meal">
+      <input class="n" type="text" value="${esc(m.name)}" maxlength="24"
+        oninput="food.meals[${i}].name=this.value">
+      <input class="t" type="text" value="${esc(m.time||'')}" maxlength="5" placeholder="08:30"
+        inputmode="numeric" oninput="food.meals[${i}].time=this.value" onblur="render()">
+      <button class="rm" onclick="dropMeal(${i})">הסרה</button>
+    </div>`).join('')}</div>
+    <button class="btn ghost sm" onclick="addMeal()">הוספת ארוחה</button>
+    <div class="note">${food.meals.length} ארוחות ביום. הסרת ארוחה לא מוחקת מנות מהמאגר —
+      רק את השורה מהתפריט.</div>
+  </div>`;
+}
+function addMeal() { food.meals.push({ key: uid(), name:'ארוחה', time:'', icon:'bowl' }); render(); }
+function dropMeal(i) {
+  const k = food.meals[i].key;
+  food.meals.splice(i,1);
+  food.fromHome = food.fromHome.filter(h => h.meal !== k);
+  render();
+}
+
+/* ---------- ימים ---------- */
+// שלושה מצבים לכל תא: הגן מגיש · מגיע מהבית · אין ארוחה.
+// זה מחליף את הדגל הייעודי שהיה ליום שישי — גן אחד מגיש צהריים בשישי,
+// אחר סוגר בצהריים ברביעי, ושניהם צריכים לבטא את זה בלי "חריג".
+function secDays() {
+  sortMeals();
+  return `<div class="card">
+    <h2>ימים וארוחות</h2>
+    <div class="sub">לא בכל יום מגישים את אותן ארוחות. לחיצה על ארוחה מחליפה
+      בין שלושת המצבים.</div>
+    <div class="dgrid">
+      ${DAYS.map(d => {
+        const on = food.days.indexOf(d.key) >= 0;
+        return `<div class="dn ${on?'':'off'}">${esc(d.name)}</div>
+        <div class="ds">
+          <button class="${on?'on':''}" onclick="toggleDay('${d.key}')">${on?'פתוח':'סגור'}</button>
+          ${on ? food.meals.map(m => {
+            const home = isHome(d.key, m.key), has = (food.dayMeals && food.dayMeals[d.key])
+              ? food.dayMeals[d.key].indexOf(m.key) >= 0 : true;
+            return `<button class="${home?'home':has?'on':''}" onclick="cycleMeal('${d.key}','${m.key}')"
+              >${esc(m.name)}${home?' · מהבית':has?'':' · אין'}</button>`;
+          }).join('') : ''}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="legend">
+      <b>ירוק</b> — הגן מגיש · <b>כתום</b> — ההורים שולחים מהבית ·
+      <b>אפור</b> — אין ארוחה ביום הזה.<br>
+      ארוחה שמגיעה מהבית נכתבת "מהבית" בדף של ההורים, ו<b>לא נספרת כחסרה</b> בבדיקה.
+    </div>
+  </div>`;
+}
+function toggleDay(k) {
+  const i = food.days.indexOf(k);
+  if (i >= 0) food.days.splice(i,1); else food.days.push(k);
+  food.days.sort((a,b) => DAYS.findIndex(d=>d.key===a) - DAYS.findIndex(d=>d.key===b));
+  render();
+}
+function cycleMeal(day, meal) {
+  food.dayMeals = food.dayMeals || {};
+  const all = food.meals.map(m => m.key);
+  const cur = food.dayMeals[day] || all.slice();
+  const has = cur.indexOf(meal) >= 0, home = isHome(day, meal);
+  if (has && !home) {                       // מגיש → מהבית
+    food.fromHome.push({ day, meal });
+  } else if (home) {                        // מהבית → אין
+    food.fromHome = food.fromHome.filter(h => !(h.day === day && h.meal === meal));
+    food.dayMeals[day] = cur.filter(k => k !== meal);
+  } else {                                  // אין → מגיש
+    food.dayMeals[day] = cur.concat([meal]);
+  }
+  render();
+}
+
+/* ---------- רגישויות ---------- */
+function secSens() {
+  // הצעות מהכרטיסים: מה שההורים כתבו בטקסט חופשי ולא קיים ברשימה
+  const known = SIX.map(a=>a.name).concat(extra.map(e=>e.name));
+  const sugg = [];
+  Object.keys(otherHints).forEach(cid => (otherHints[cid]||[]).forEach(w => {
+    if (known.some(k => w.indexOf(k) >= 0)) return;
+    sugg.push({ cid, w });
+  }));
+  return `<div class="card">
+    <h2>רגישויות</h2>
+    <div class="sub">שש הנפוצות קיימות תמיד. אפשר להוסיף כל רגישות אחרת —
+      <b>בלי זה ילד עם אלרגיה לסויה או לדגים פשוט לא ניתן לרישום</b>,
+      והבדיקה לא תתריע עליו לעולם.</div>
+    ${sugg.length ? sugg.map((s,i) => `<div class="sugg">
+      <span>בכרטיס של <span class="who">${esc(kidName(s.cid) || 'ילד/ה')}</span>
+        כתוב «${esc(s.w)}».</span>
+      <span class="act">
+        <button class="btn sm" onclick="acceptSugg(${i})">להוסיף כרגישות</button>
+        <button class="btn ghost sm" onclick="ignoreSugg(${i})">לא</button></span></div>`).join('') : ''}
+    <div class="fld" style="margin-top:${sugg.length?'14px':'0'}"><label>הרשימה</label>
+      <div class="pick">
+        ${SIX.map(a => `<button class="p on" style="cursor:default" title="קבועה">${esc(a.name)}</button>`).join('')}
+        ${extra.map((e,i) => `<button class="p on" onclick="dropExtra(${i})">${esc(e.name)} · הסרה</button>`).join('')}
+      </div></div>
+    <div class="fld"><label>הוספת רגישות</label>
+      <input type="text" id="newSens" maxlength="24" placeholder="למשל: סויה"
+        onkeydown="if(event.key==='Enter')addExtra()"></div>
+    <button class="btn ghost sm" onclick="addExtra()">הוספה</button>
+    <div class="note">${SIX.length + extra.length} רגישויות ברשימה. הן מופיעות בכרטיס
+      הילד ובכרטיס המנה, והבדיקה מתריעה כשהן נפגשות.</div>
+  </div>`;
+}
+window.__sugg = [];
+function currentSugg() {
+  const known = SIX.map(a=>a.name).concat(extra.map(e=>e.name));
+  const out = [];
+  Object.keys(otherHints).forEach(cid => (otherHints[cid]||[]).forEach(w => {
+    if (known.some(k => w.indexOf(k) >= 0)) return;
+    out.push({ cid, w });
+  }));
+  return out;
+}
+async function acceptSugg(i) {
+  const s = currentSugg()[i]; if (!s) return;
+  extra.push({ name: s.w });
+  // נרשם גם על הילד עצמו — אחרת הוספנו רגישות לרשימה ושכחנו למי
+  const list = (health[s.cid] || []).concat([s.w]);
+  health[s.cid] = list;
+  ignoreSugg(i, true);
+  try {
+    await GL.set('health.extra', extra, 'learned');
+    await api.setChildAllergies(s.cid, list);
+    showOk(`«${s.w}» נוספה, ונרשמה אצל ${kidName(s.cid)}`);
+  } catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+  render();
+}
+function ignoreSugg(i, quiet) {
+  const s = currentSugg()[i]; if (!s) return;
+  otherHints[s.cid] = (otherHints[s.cid] || []).filter(w => w !== s.w);
+  if (!quiet) render();
+}
+async function addExtra() {
+  const el = document.getElementById('newSens');
+  const v = (el.value || '').trim();
+  if (!v) return;
+  if (SIX.some(a=>a.name===v) || extra.some(e=>e.name===v)) { showErr('כבר ברשימה'); return; }
+  extra.push({ name: v });
+  render();
+  try { await GL.set('health.extra', extra, 'user'); showOk('נוספה'); }
+  catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+async function dropExtra(i) {
+  extra.splice(i,1); render();
+  try { await GL.set('health.extra', extra, 'user'); showOk('הוסרה'); }
+  catch (e) { showErr('ההסרה נכשלה: ' + e.message); }
+}
+
+/* ---------- מה שהמערכת הסיקה ---------- */
+// לא נשמר ולא נשאל. נגזר מחדש בכל טעינה, ולכן לא יכול להתיישן בשקט.
+function secDerived() {
+  if (!der) return '';
+  return `<div class="card">
+    <h2>מה שהמערכת כבר יודעת</h2>
+    <div class="sub">הערכים האלה <b>לא נשמרים ולא נשאלים</b> — הם נגזרים מהנתונים
+      בכל טעינה. לכן הם לא יכולים להתיישן בלי שאף אחד ירגיש.</div>
+    <div class="drow"><span class="k">ילדים פעילים</span>
+      <span class="v">${der.childCount}</span>
+      <span class="src">מתוך רשימת הילדים</span></div>
+    ${der.ages ? `<div class="drow"><span class="k">טווח גילאים</span>
+      <span class="v">${esc(GL.ageText(der.ages))}</span>
+      <span class="src">מתאריכי הלידה</span></div>` : ''}
+    <div class="drow"><span class="k">אנשי צוות</span>
+      <span class="v">${der.staffCount}</span>
+      <span class="src">מרשימת הצוות</span></div>
+    <div class="drow"><span class="k">כמויות במתכונים</span>
+      <span class="v">מוכפלות ב-${der.childCount || 1}</span>
+      <span class="src">נגזר ממספר הילדים</span></div>
+  </div>`;
+}
+
+/* ---------- שמירה ---------- */
+async function saveAll() {
+  const g = (document.getElementById('gname').value || '').trim();
+  food.meals = food.meals.filter(m => (m.name||'').trim());
+  sortMeals();
+  try {
+    await GL.set('food', { meals: food.meals, days: food.days, fromHome: food.fromHome,
+                           dayMeals: food.dayMeals || null, facts: food.facts || [] }, 'user');
+    if (g && g !== gname) { await api.saveGardenProfile({ gardenName: g }); gname = g; }
+    showOk('נשמר · התפריט ישתמש בזה מיד');
+  } catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+
+function showErr(m) { const el = document.getElementById('error'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 5000); }
+function showOk(m) { const el = document.getElementById('success'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000); }
+
+boot();
+</script>
+</body>
+</html>
