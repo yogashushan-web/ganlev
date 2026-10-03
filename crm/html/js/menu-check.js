@@ -14,8 +14,8 @@
 (function (root) {
 'use strict';
 
-const DAY_NAMES = { sun:'ראשון', mon:'שני', tue:'שלישי', wed:'רביעי', thu:'חמישי' };
-const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu'];
+const DAY_NAMES = { sun:'ראשון', mon:'שני', tue:'שלישי', wed:'רביעי', thu:'חמישי', fri:'שישי' };
+const ALL_DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri'];
 
 // שש הקטגוריות של child-health. אותם קודים בדיוק, כדי שרגישות שנרשמה
 // על כרטיס הילד תיתפס כאן בלי שום תרגום באמצע.
@@ -43,20 +43,28 @@ function checkWeek(opt) {
   const meals = opt.meals || [];
   const days = week.days || {};
   const out = [];
+  // אילו ימים בכלל פעילים — מפרופיל הגן. גן שסגור בשישי לא אמור לקבל
+  // התרעה על יום שישי ריק.
+  const DAY_KEYS = (opt.days && opt.days.length) ? opt.days.slice() : ALL_DAYS.slice(0, 5);
+  // ארוחה שמגיעה מהבית היא לא ארוחה חסרה. זו ההבחנה שבלעדיה הבדיקה
+  // תצעק על יום שישי בכל גן שההורים שולחים בו אוכל.
+  const home = opt.fromHome || [];
+  const fromHome = (d, m) => home.some(h => h.day === d && h.meal === m);
   const mealName = k => (meals.find(m => m.key === k) || {}).name || k;
 
   const at = (day, meal) => ((days[day] || {})[meal] || []);
 
   // ---- 1 · ארוחה חסרה, ויום ריק לגמרי ----
   DAY_KEYS.forEach(day => {
-    const total = meals.reduce((n, m) => n + at(day, m.key).length, 0);
+    const total = meals.reduce((n, m) => n + at(day, m.key).length, 0)
+      + meals.reduce((n, m) => n + (fromHome(day, m.key) ? 1 : 0), 0);
     if (!total) {
       out.push({ level: 'warn', day, meal: null,
         text: `יום ${DAY_NAMES[day]} ריק לגמרי — אין בו אף מנה.` });
       return;                                   // לא להציף אותו יום בארבע התרעות
     }
     REQUIRED.forEach(mk => {
-      if (!at(day, mk).length) {
+      if (!at(day, mk).length && !fromHome(day, mk)) {
         out.push({ level: 'warn', day, meal: mk,
           text: `חסרה ${mealName(mk)} ביום ${DAY_NAMES[day]}.` });
       }
@@ -130,7 +138,7 @@ function checkWeek(opt) {
   return out;
 }
 
-const EXPORTS = { checkWeek, DAY_NAMES, DAY_KEYS, ALLERGEN_NAME };
+const EXPORTS = { checkWeek, DAY_NAMES, ALL_DAYS, ALLERGEN_NAME };
 if (typeof module !== 'undefined' && module.exports) module.exports = EXPORTS;
 root.MenuCheck = EXPORTS;
 

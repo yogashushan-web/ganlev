@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>תפריט השבוע</title>
+  <title>התפריט שלנו</title>
   <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* הסגנון עצמו מגיע מ-js/menu-render.js ומוזרק למטה, כדי שהתצוגה
@@ -28,7 +28,7 @@
 
   <!-- נתיב מוחלט בכוונה: /menu הוא rewrite שמשאיר את הכתובת הקצרה,
        ולכן נתיב יחסי היה מחפש את הקובץ ב-/js ומקבל HTML של 404. -->
-  <script src="/crm/html/js/menu-render.js?v=1"></script>
+  <script src="/crm/html/js/menu-render.js?v=2"></script>
   <script>
     // דף ציבורי: בלי common.js ובלי api.js — אין כאן סיידבר ואין טוקן.
     const API = '/.netlify/functions/menu-public';
@@ -45,9 +45,7 @@
     (async function () {
       let d;
       try {
-        const qs = new URLSearchParams(location.search);
-        const w = qs.get('week');
-        d = await (await fetch(API + (w ? '?week=' + encodeURIComponent(w) : ''))).json();
+        d = await (await fetch(API)).json();
       } catch (e) {
         state('התפריט לא נטען', 'אפשר לנסות לרענן את העמוד בעוד רגע.');
         return;
@@ -57,18 +55,18 @@
         return;
       }
       // מסך ריק אומר מה קורה ומתי, ולא "אין נתונים"
-      if (!d.week) {
-        state('התפריט עוד לא פורסם', 'ברגע שהתפריט השבועי יהיה מוכן הוא יופיע כאן, '
+      if (!d.menu) {
+        state('התפריט עוד לא פורסם', 'ברגע שהתפריט יהיה מוכן הוא יופיע כאן, '
             + 'באותו קישור בדיוק — אפשר לשמור אותו.');
         return;
       }
       const r = MenuRender.renderMenu({
-        week: d.week, dishes: d.dishes || {}, settings: d.settings || {},
-        garden: d.garden || 'הגן',
+        menu: d.menu, dishes: d.dishes || {}, settings: d.settings || {},
+        exceptions: d.exceptions || [], garden: d.garden || 'הגן',
       });
       document.getElementById('wrap').innerHTML = MenuRender.wrapMenu(r)
         + '<div class="pbar"><button onclick="window.print()">הדפסה</button></div>';
-      document.title = 'תפריט השבוע · ' + (d.garden || 'הגן');
+      document.title = 'התפריט של ' + (d.garden || 'הגן');
     })();
   </script>
 </body>

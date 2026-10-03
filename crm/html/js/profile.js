@@ -52,9 +52,27 @@ function nest(path, value) {
   return out;
 }
 
+// מיזוג עמוק מקומי — אותו כלל כמו בשרת
+function deepMerge(base, patch) {
+  const out = Object.assign({}, base);
+  Object.keys(patch || {}).forEach(k => {
+    const v = patch[k];
+    out[k] = (v && typeof v === 'object' && !Array.isArray(v))
+      ? deepMerge(base[k] || {}, v) : v;
+  });
+  return out;
+}
+
 async function set(path, value, source) {
-  const r = await api.saveGardenProfile({ patch: nest(path, value), source: source || 'user' });
-  profile = (r && r.profile) || profile;
+  const patch = nest(path, value);
+  // קודם מעדכנים מקומית. בלי זה שתי שמירות רצופות — "כמה ארוחות" ואז
+  // "מה עם שישי" — עלולות לאבד את מה שכבר ידענו אם תשובת השרת חלקית,
+  // והמערכת תשאל שוב בדיוק את מה שהיא כבר יודעת.
+  profile = deepMerge(profile || {}, patch);
+  const r = await api.saveGardenProfile({ patch, source: source || 'user' });
+  if (r && r.profile && typeof r.profile === 'object' && Object.keys(r.profile).length) {
+    profile = r.profile;
+  }
   return value;
 }
 

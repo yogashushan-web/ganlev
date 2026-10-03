@@ -3,9 +3,18 @@
 // האחסון יושב בטבלת events כ-JSON, בדיוק כמו סידור הישיבה וסידור
 // המזרונים: אין הרשאה ליצור טבלאות, ולכן שלושה ערכי calendar ייעודיים.
 //
-//   menu-dish  · category = מזהה המנה   · title = שם המנה
-//   menu       · category = תאריך ראשון · title = שם התפריט
-//   menu-set   · category = 'settings'  · title = 'מידע על האוכל'
+//   menu-dish  · category = מזהה המנה  · title = שם המנה
+//   menu       · category = 'standing'  · title = שם התפריט
+//   menu-ex    · category = YYYY-MM-DD  · חריג לתאריך מסוים
+//
+// **התפריט קבוע, לא שבועי.** הגננת לא בונה אותו כל שבוע אלא עורכת
+// אותו כשמשהו משתנה; לכן יש רשומה אחת ולא רשומה לשבוע. שינוי חד-פעמי
+// ליום מסוים הוא חריג ולא עריכה של התפריט הקבוע — אחרת היא תצטרך
+// לזכור להחזיר אותו, וזה בדיוק המקום שבו מערכות נשברות.
+//
+// הגדרות האוכל — כמה ארוחות, אילו ימים, מה מגיע מהבית, העובדות
+// להורים — יושבות ב-garden-profile תחת `food` ולא כאן. ראו את
+// "העיקרון הראשון" ב-CLAUDE.md.
 //
 // לטבלת events אין updated_at — זמן העדכון נשמר בתוך ה-JSON עצמו.
 
@@ -13,9 +22,9 @@ const { supabase, auditLog, validateGardenScope, moveToTrash } = require('./lib/
 const { withAuth } = require('./lib/auth');
 
 const CAL_DISH = 'menu-dish';
-const CAL_WEEK = 'menu';
-const CAL_SET = 'menu-set';
-const SET_KEY = 'settings';
+const CAL_MENU = 'menu';
+const CAL_EX = 'menu-ex';
+const STANDING = 'standing';
 
 const json = (c, b) => ({ statusCode: c, body: JSON.stringify(b) });
 const parse = n => { try { return JSON.parse(n || '{}'); } catch (_) { return {}; } };
@@ -45,23 +54,12 @@ const SEED = [
   { cat: 'נשנוש',  name: 'יוגורט ופירות' },
 ];
 
-// העובדות הקבועות של גן לב, כפי שיואל מסר אותן. נכתבות פעם אחת
-// ומופיעות אוטומטית בעמוד המידע שמצורף לתפריט.
-const SEED_FACTS = [
-  'התפריט צמחוני',
-  'האוכל מבושל במקום בגן',
-  'משתמשים בחומרי גלם טריים',
-  'המנות עשויות להשתנות במהלך השנה בהתאם לרגישויות ולצרכים שמתגלים בקבוצה',
-  'בימי שישי ארוחת הבוקר מובאת מהבית על ידי ההורים ומחולקת בגן',
-];
-
 const uid = () => 'd' + Math.random().toString(36).slice(2, 9);
 
 const rowToDish = r => Object.assign({ id: r.category, name: r.title }, parse(r.notes));
-const rowToWeek = r => {
-  const w = parse(r.notes);
-  return Object.assign({ weekOf: r.category, name: r.title, updated: r.event_date }, w);
-};
+const rowToMenu = r => Object.assign(
+  { id: r.category, name: r.title, updated: r.event_date }, parse(r.notes));
+const rowToEx = r => Object.assign({ date: r.category, note: r.title }, parse(r.notes));
 
 async function findRow(garden_id, cal, category) {
   const { data } = await supabase.from('events')
@@ -96,26 +94,28 @@ const handler = withAuth(async (event) => {
     const uidUser = user.sub || user.id;
 
     if (event.httpMethod === 'GET') {
-      const [dishRes, weekRes, setRes] = await Promise.all([
+      const [dishRes, menuRes, exRes] = await Promise.all([
         supabase.from('events').select('id,category,title,notes')
           .eq('garden_id', garden_id).eq('calendar', CAL_DISH),
         supabase.from('events').select('id,category,title,notes,event_date')
-          .eq('garden_id', garden_id).eq('calendar', CAL_WEEK),
-        supabase.from('events').select('notes')
-          .eq('garden_id', garden_id).eq('calendar', CAL_SET)
-          .eq('category', SET_KEY).limit(1),
+          .eq('garden_id', garden_id).eq('calendar', CAL_MENU),
+        supabase.from('events').select('id,category,title,notes')
+          .eq('garden_id', garden_id).eq('calendar', CAL_EX),
       ]);
       if (dishRes.error) throw dishRes.error;
-      if (weekRes.error) throw weekRes.error;
+      if (menuRes.error) throw menuRes.error;
 
       const dishes = (dishRes.data || []).map(rowToDish)
         .sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
-      const weeks = (weekRes.data || []).map(rowToWeek)
-        .sort((a, b) => String(b.weekOf).localeCompare(String(a.weekOf)));
-      const settings = (setRes.data && setRes.data.length)
-        ? parse(setRes.data[0].notes) : { facts: SEED_FACTS, seeded: false };
+      const menus = (menuRes.data || []).map(rowToMenu);
+      const menu = menus.find(m => m.id === STANDING) || null;
+      // חריגים שעברו לא מעניינים אף אחד, והם היו הופכים את הדף לארכיון
+      const t = today();
+      const exceptions = (exRes.data || []).map(rowToEx)
+        .filter(x => x.date >= t)
+        .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
-      return json(200, { success: true, dishes, weeks, settings, seed: SEED });
+      return json(200, { success: true, dishes, menu, menus, exceptions, seed: SEED });
     }
 
     if (event.httpMethod === 'POST') {
@@ -165,33 +165,36 @@ const handler = withAuth(async (event) => {
         return json(200, { success: true, added: rows.length });
       }
 
-      // ---- השבוע ----
-      if (b.action === 'week') {
-        const w = b.week || {};
-        if (!w.weekOf) return json(400, { success: false, error: 'חסר תאריך לשבוע' });
+      // ---- התפריט הקבוע ----
+      if (b.action === 'menu') {
+        const m = b.menu || {};
+        const id = m.id || STANDING;
         const payload = {
-          days: w.days || {},
-          template: w.template || 'table',
-          infoPage: w.infoPage !== false,
-          published: !!w.published,
-          publishedAt: w.published ? (w.publishedAt || new Date().toISOString()) : null,
-          // שמות המנות נצרבים לתוך השבוע בשעת הפרסום. מנה שתימחק
-          // מהמאגר מחר לא תמחק את עצמה מהתפריט שההורים כבר קיבלו.
-          names: w.names || {},
+          days: m.days || {},
+          template: m.template || 'table',
+          infoPage: m.infoPage !== false,
+          live: m.live !== false,
+          // שמות המנות נצרבים לתוך התפריט. מנה שתימחק מהמאגר מחר לא
+          // תמחק את עצמה מהדף שההורים פתוחים עליו.
+          names: m.names || {},
         };
-        await upsert(garden_id, CAL_WEEK, w.weekOf, w.name || ('תפריט ' + w.weekOf), payload);
-        await auditLog(garden_id, uidUser, w.published ? 'published' : 'saved',
-                       'menu-week', w.weekOf, { published: !!w.published });
+        await upsert(garden_id, CAL_MENU, id, m.name || 'התפריט שלנו', payload);
+        await auditLog(garden_id, uidUser, 'saved', 'menu', id, {});
         return json(200, { success: true });
       }
 
-      // ---- מידע קבוע ----
-      if (b.action === 'settings') {
-        const s = b.settings || {};
-        await upsert(garden_id, CAL_SET, SET_KEY, 'מידע על האוכל', {
-          facts: s.facts || [], meals: s.meals || null, cats: s.cats || null, seeded: true,
+      // ---- חריג ליום מסוים ----
+      // לא נוגע בתפריט הקבוע. מופיע להורים כל עוד התאריך לא עבר,
+      // ואחר כך נעלם מעצמו בלי שאף אחד צריך לנקות.
+      if (b.action === 'exception') {
+        const x = b.exception || {};
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(String(x.date || ''))) {
+          return json(400, { success: false, error: 'חסר תאריך לחריג' });
+        }
+        await upsert(garden_id, CAL_EX, x.date, x.note || 'שינוי בתפריט', {
+          day: x.day || '', cancelled: x.cancelled || [], meals: x.meals || null,
         });
-        await auditLog(garden_id, uidUser, 'saved', 'menu-set', SET_KEY, {});
+        await auditLog(garden_id, uidUser, 'saved', 'menu-ex', x.date, {});
         return json(200, { success: true });
       }
 
@@ -202,7 +205,7 @@ const handler = withAuth(async (event) => {
     if (event.httpMethod === 'DELETE') {
       const path = event.path.split('/').filter(Boolean);
       const key = decodeURIComponent(path[path.length - 1] || '');
-      const cal = q.kind === 'week' ? CAL_WEEK : CAL_DISH;
+      const cal = q.kind === 'menu' ? CAL_MENU : q.kind === 'exception' ? CAL_EX : CAL_DISH;
       const { data: rec } = await supabase.from('events')
         .select('*').eq('garden_id', garden_id).eq('calendar', cal)
         .eq('category', key).limit(1);

@@ -17,12 +17,16 @@
 (function (root) {
 'use strict';
 
+// שישה ימים. שישי נכנס כי בגנים רבים יש בו ארוחה — לרוב ארוחת בוקר
+// שמגיעה מהבית — ויום שלא מופיע בתוכנית הוא יום שאף אחד לא תכנן.
+// אילו ימים ואילו ארוחות באמת פעילים נקבע בפרופיל הגן, לא כאן.
 const DAYS = [
   { key: 'sun', name: 'ראשון' },
   { key: 'mon', name: 'שני' },
   { key: 'tue', name: 'שלישי' },
   { key: 'wed', name: 'רביעי' },
   { key: 'thu', name: 'חמישי' },
+  { key: 'fri', name: 'שישי' },
 ];
 
 // ארבע הארוחות, עם השעות שמופיעות בתבנית "היום שלנו".
@@ -77,21 +81,21 @@ function addDays(iso, n) {
 // בטלפון טבלה של חמש עמודות לא קריאה, ולכן מתחת ל-760 פיקסל היא
 // נפרסת לאותם כרטיסים של תבנית 2 — אותו מידע, מבנה שנכנס למסך.
 function tplTable(ctx) {
-  const { meals, cell } = ctx;
+  const { meals, cell, days } = ctx;
   let s = '<div class="scroll"><table class="wk"><thead><tr><th class="corner"></th>';
-  DAYS.forEach((d, i) => {
-    s += `<th><span class="dn">${esc(d.name)}</span>`
-       + `<span class="dd">${fmt(addDays(ctx.weekOf, i))}</span></th>`;
+  days.forEach(d => {
+    s += `<th><span class="dn">${esc(d.name)}</span></th>`;
   });
   s += '</tr></thead><tbody>';
   meals.forEach(m => {
     s += `<tr><th class="mh">${icon(m.icon)}<span>${esc(m.name)}</span>`
        + `<span class="tm">${esc(m.time)}</span></th>`;
-    DAYS.forEach(d => {
+    days.forEach(d => {
       const list = cell(d.key, m.key);
+      const home = ctx.fromHome(d.key, m.key);
       s += '<td>' + (list.length
         ? list.map(n => `<span class="d">${esc(n)}</span>`).join('')
-        : '<span class="none">—</span>') + '</td>';
+        : home ? '<span class="home">מהבית</span>' : '<span class="none">—</span>') + '</td>';
     });
     s += '</tr>';
   });
@@ -100,14 +104,20 @@ function tplTable(ctx) {
 
 // 2 · כרטיס ליום
 function tplCards(ctx, phoneOnly) {
-  const { meals, cell } = ctx;
+  const { meals, cell, days } = ctx;
   let s = `<div class="days${phoneOnly ? ' phone' : ''}">`;
-  DAYS.forEach((d, i) => {
-    s += `<section class="day"><h3>${esc(d.name)}`
-       + `<span class="dd">${fmt(addDays(ctx.weekOf, i))}</span></h3>`;
+  days.forEach(d => {
+    s += `<section class="day"><h3>${esc(d.name)}</h3>`;
     meals.forEach(m => {
       const list = cell(d.key, m.key);
-      if (!list.length) return;
+      const home = ctx.fromHome(d.key, m.key);
+      if (!list.length && !home) return;
+      if (!list.length) {
+        s += `<div class="meal"><div class="mt">${icon(m.icon)}`
+           + `<span>${esc(m.name)}</span><span class="tm">${esc(m.time)}</span></div>`
+           + '<ul><li class="home">מהבית</li></ul></div>';
+        return;
+      }
       // השעה כאן היא מה שמבדיל בין נשנוש הבוקר לנשנוש אחר הצהריים
       s += `<div class="meal"><div class="mt">${icon(m.icon)}`
          + `<span>${esc(m.name)}</span><span class="tm">${esc(m.time)}</span>`
@@ -123,18 +133,18 @@ function tplCards(ctx, phoneOnly) {
 // זו התבנית היחידה שמסבירה להורה *מתי* הילד אוכל, ולכן היא שימושית
 // במיוחד בשבוע הראשון של ילד חדש.
 function tplDay(ctx) {
-  const { meals, cell } = ctx;
+  const { meals, cell, days } = ctx;
   let s = '<div class="days">';
-  DAYS.forEach((d, i) => {
-    s += `<section class="day tl"><h3>${esc(d.name)}`
-       + `<span class="dd">${fmt(addDays(ctx.weekOf, i))}</span></h3><ol class="line">`;
+  days.forEach(d => {
+    s += `<section class="day tl"><h3>${esc(d.name)}</h3><ol class="line">`;
     meals.forEach(m => {
       const list = cell(d.key, m.key);
-      s += `<li${list.length ? '' : ' class="off"'}><span class="hh">${esc(m.time)}</span>`
+      const home = ctx.fromHome(d.key, m.key);
+      s += `<li${list.length || home ? '' : ' class="off"'}><span class="hh">${esc(m.time)}</span>`
          + `<div class="lb"><span class="mn">${esc(m.name)}</span>`
          + (list.length
             ? '<span class="dl">' + list.map(esc).join(' · ') + '</span>'
-            : '<span class="none">—</span>')
+            : home ? '<span class="dl home">מהבית</span>' : '<span class="none">—</span>')
          + '</div></li>';
     });
     s += '</ol></section>';
@@ -174,45 +184,70 @@ function infoSection(settings, skip) {
 }
 
 // ---------- הרכבה ----------
+// התפריט הוא **קבוע**, לא שבועי. הגננת לא בונה אותו כל שבוע — היא
+// בונה אותו פעם אחת ועורכת כשמשהו משתנה. לכן אין כאן טווח תאריכים
+// ואין "שבוע": יש ימי השבוע, ומתי הוא עודכן לאחרונה.
 function renderMenu(opt) {
-  const week = opt.week || {};
+  const menu = opt.menu || opt.week || {};
   const dishes = opt.dishes || {};
   const settings = opt.settings || {};
   const garden = opt.garden || 'הגן';
-  const tpl = TEMPLATES[week.template] || TEMPLATES.table;
+  const tpl = TEMPLATES[menu.template] || TEMPLATES.table;
   const meals = (settings.meals && settings.meals.length) ? settings.meals : MEALS;
-  const weekOf = week.weekOf || new Date().toISOString().slice(0, 10);
 
-  // שם המנה ולא המזהה שלה. מנה שנמחקה מהמאגר אחרי הפרסום עדיין
-  // חייבת להופיע על הדף שההורים כבר קיבלו, ולכן שם שמור בתוך השבוע.
+  // אילו ימים מוצגים בכלל — מהפרופיל. גן שסגור בשישי לא רואה עמודה
+  // ריקה, וגן שפתוח בו כן.
+  const activeKeys = settings.days && settings.days.length
+    ? settings.days : ['sun', 'mon', 'tue', 'wed', 'thu'];
+  const days = DAYS.filter(d => activeKeys.indexOf(d.key) >= 0);
+
+  // "מהבית" — ארוחה שההורים שולחים. לא משבצת ריקה שמישהו שכח למלא,
+  // ולכן היא נכתבת ולא מוצגת כמקף.
+  const home = settings.fromHome || [];
+  const fromHome = (day, meal) =>
+    home.some(h => h.day === day && h.meal === meal);
+
+  // שם המנה ולא המזהה. מנה שתימחק מהמאגר מחר לא תמחק את עצמה מהתפריט
+  // שההורים כבר קיבלו.
   const cell = (day, meal) => {
-    const ids = ((week.days || {})[day] || {})[meal] || [];
+    const ids = ((menu.days || {})[day] || {})[meal] || [];
     return ids.map(id => (dishes[id] && dishes[id].name)
-      || (week.names && week.names[id]) || '').filter(Boolean);
+      || (menu.names && menu.names[id]) || '').filter(Boolean);
   };
 
-  const ctx = { weekOf, meals, cell, settings };
-  const body = tpl.fn(ctx);
-  // כל תאריך ב-span משלו עם dir="ltr". בלי זה שני התאריכים והמקף
-  // נקראים כרצף אחד של ספרות ומתהפכים — הסוף הופיע לפני ההתחלה.
-  const range = `<span dir="ltr">${fmt(weekOf)}</span>`
-              + '<span class="sep">–</span>'
-              + `<span dir="ltr">${fmt(addDays(weekOf, 4))}</span>`;
-
-  return { body, range, garden, weekOf,
-           infoHtml: week.infoPage === false ? ''
+  const ctx = { meals, cell, settings, days, fromHome };
+  return { body: tpl.fn(ctx), garden, updated: menu.updated || '',
+           exceptions: renderExceptions(opt.exceptions, meals),
+           infoHtml: menu.infoPage === false ? ''
              : infoSection(settings, tpl === TEMPLATES.kitchen ? 3 : 0) };
 }
 
-// המעטפת המלאה — הכותרת, הגוף ועמוד המידע. מקבלת את התוצאה של
-// renderMenu ומחזירה את מה שנכנס ל-.wrap בשני הדפים.
+// חריגים לתאריך מסוים — טיול, חג, יום קצר. הם לא משנים את התפריט
+// הקבוע, והם מופיעים רק כל עוד הם רלוונטיים.
+function renderExceptions(list, meals) {
+  const items = (list || []).filter(Boolean);
+  if (!items.length) return '';
+  const mn = k => (meals.find(m => m.key === k) || {}).name || '';
+  return '<section class="exc"><h2>שינויים קרובים</h2><ul>' + items.map(x => {
+    const what = x.cancelled && x.cancelled.length
+      ? 'אין ' + x.cancelled.map(mn).filter(Boolean).join(' ו')
+      : (x.note || 'שינוי בתפריט');
+    return `<li><b>${esc(DAY_NAMES[x.day] || '')} ${esc(fmt(x.date))}</b>`
+         + `<span>${esc(what)}${x.note && x.cancelled && x.cancelled.length
+              ? ' · ' + esc(x.note) : ''}</span></li>`;
+  }).join('') + '</ul></section>';
+}
+const DAY_NAMES = { sun:'ראשון', mon:'שני', tue:'שלישי', wed:'רביעי', thu:'חמישי', fri:'שישי' };
+
+// המעטפת — הכותרת, החריגים, הגוף ועמוד המידע.
 function wrapMenu(r) {
   return `<header>
   <p class="gn">${esc(r.garden)}</p>
-  <h1>התפריט השבועי</h1>
-  <p class="range">${r.range}</p>
+  <h1>התפריט שלנו</h1>
+  ${r.updated ? `<p class="range"><span>עודכן ב-</span><span dir="ltr">${esc(fmt(r.updated))}</span></p>` : ''}
   <div class="rule"></div>
 </header>
+${r.exceptions}
 ${r.body}
 ${r.infoHtml}`;
 }
@@ -310,6 +345,14 @@ table.wk{width:100%;border-collapse:separate;border-spacing:0;background:var(--c
 .info li::before{content:'';position:absolute;right:0;top:.62em;width:6px;height:6px;
  border-radius:50%;background:var(--warm);opacity:.55}
 
+.home{color:var(--muted);font-style:italic}
+.exc{background:#fdf6ef;border:1px solid #f0dcc4;border-radius:14px;padding:15px 17px;
+ margin-bottom:16px}
+.exc h2{font-size:14px;color:var(--warm);margin-bottom:9px}
+.exc ul{list-style:none;display:grid;gap:7px}
+.exc li{font-size:13.5px;display:flex;gap:9px;flex-wrap:wrap;align-items:baseline}
+.exc li b{color:var(--ink)}
+.exc li span{color:var(--muted)}
 footer{margin-top:24px;text-align:center;font-size:12px;color:var(--faint)}
 
 @media (max-width:760px){

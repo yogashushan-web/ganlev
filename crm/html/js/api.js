@@ -105,10 +105,10 @@ const api = {
   getMenu: () => apiCall(`/menu?garden_id=${getGardenId()}`),
   saveDish: (dish) => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'dish', dish }),
   seedDishes: () => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'seed' }),
-  saveMenuWeek: (week) => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'week', week }),
-  saveMenuSettings: (settings) => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'settings', settings }),
+  saveMenu: (menu) => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'menu', menu }),
+  saveMenuException: (exception) => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'exception', exception }),
   deleteDish: (id) => apiCall(`/menu/${encodeURIComponent(id)}?garden_id=${getGardenId()}&kind=dish`, 'DELETE'),
-  deleteMenuWeek: (weekOf) => apiCall(`/menu/${encodeURIComponent(weekOf)}?garden_id=${getGardenId()}&kind=week`, 'DELETE'),
+  deleteMenuException: (date) => apiCall(`/menu/${encodeURIComponent(date)}?garden_id=${getGardenId()}&kind=exception`, 'DELETE'),
   saveNapRitual: (data) => apiCall(`/nap-layout?garden_id=${getGardenId()}`, 'POST', Object.assign({ action: 'ritual' }, data)),
 
   // Food allergies per child (stored as JSON in events, calendar='child-health')
