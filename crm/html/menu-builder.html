@@ -142,6 +142,19 @@
     .meter .bar i { display:block; height:100%; background:#1F3D34; border-radius:99px; }
     .meter .t { font-size:13px; font-weight:700; color:#1F3D34; }
     .meter .n { font-size:12px; color:#9B8E82; }
+    .plist .ghead { font-size:11px; font-weight:700; letter-spacing:.08em; color:#B9AE9F;
+                    margin:12px 2px 7px; }
+    .plist .ghead:first-child { margin-top:2px; }
+    .prow.sug { background:#fff; border-style:dashed; }
+    .prow.sug:hover { background:#f4f9f6; border-style:solid; }
+    .prow.has { opacity:.55; cursor:default; }
+    .prow.has:hover { border-color:#efe9e0; background:#FAF8F4; }
+    .prow .plus { margin-right:auto; font-size:11.5px; font-weight:700; color:#1F3D34;
+                  background:#f4f9f6; border:1px solid #cfe7d9; border-radius:7px; padding:5px 11px;
+                  flex:0 0 auto; }
+    .prow.bad .nm { color:#c94147; }
+    .prow .warnline { font-size:11px; color:#c94147; font-weight:700; margin-top:3px; }
+    .prow .careline { font-size:11px; color:#b8801f; margin-top:3px; }
     .ritem { display:flex; gap:7px; align-items:center; margin-bottom:6px; }
     .ritem input.q { max-width:76px; text-align:center; }
     .ritem input.u { max-width:76px; }
@@ -417,6 +430,12 @@ function viewMenu() {
     ${!menu.live ? `<div class="vrow note" style="margin-bottom:12px">
       <span class="tag">טיוטה</span>
       <span>התפריט עוד לא באוויר. ההורים לא רואים אותו.</span></div>` : ''}
+    ${allergenAsk ? `<div class="vrow note" style="margin-bottom:12px">
+      <span class="tag">הצעה</span>
+      <span>לפי המרכיבים יש ב«${esc((dishById(allergenAsk.id)||{}).name||'')}»
+        ${esc(allergenAsk.codes.map(c => MC.ALLERGEN_NAME[c] || c).join(' ו'))}.</span>
+      <button class="go" onclick="markAsked(true)">לסמן</button>
+      <button class="go" onclick="markAsked(false)">לא עכשיו</button></div>` : ''}
     ${sel ? `<div class="movehint">
       <span>«${esc((dishById(at(sel.day,sel.meal)[sel.idx])||{}).name||'')}» נבחרה —
         עכשיו לחיצה על המשבצת שאליה היא עוברת.</span>
@@ -581,42 +600,142 @@ function viewPreview() {
   </div>`;
 }
 
-/* ---------- בחירת מנה ---------- */
+/* ---------- הוספת מנה — חלון אחד ---------- */
+// קודם היו שני חלונות: אחד שחיפש רק במאגר של הגן, ושני שחיפש בקטלוג.
+// הקלדת "שקשוקה" בראשון לא החזירה כלום, כי השקשוקה יושבת בקטלוג.
+// עכשיו שדה אחד מחפש בשניהם, והקשה אחת מוסיפה.
+//
+// והחיפוש **מתעלם מהקטגוריה**. הסינון קובע רק מה מוצג כשהשדה ריק;
+// ברגע שמקלידים שם, מנה נמצאת גם אם היא מסווגת אחרת — אחרת חוזרים
+// בדיוק לבאג שבגללו נוצרו שלוש שקשוקות.
+let allergenAsk = null;
+
 function openPicker(day, meal) {
-  picker = { day, meal }; libFilter = ''; libCat = MEAL_CAT[meal] || '';
-  openModal(`הוספה · ${mealOf(meal).name}`, 'לחיצה על מנה מוסיפה אותה.',
+  picker = { day, meal }; libFilter = '';
+  openModal(`הוספה · ${mealOf(meal).name}`, '',
     '<div id="pickBody"></div>', `<button class="btn ghost" onclick="closeModal()">סגירה</button>`);
   renderPicker();
   setTimeout(() => { const e = document.getElementById('pf'); if (e) e.focus(); }, 60);
 }
+
+// הצעות פתיחה: מה שמתאים לארוחה הזו, כדי שהחלון לא ייפתח ריק
+function catalogFor(cat, n) {
+  return catalog.filter(c => c.cat === cat && c.toddler !== 'avoid').slice(0, n || 6);
+}
+
 function renderPicker() {
   const f = libFilter.trim();
-  const shown = dishes.filter(d => d.active !== false)
-    .filter(d => !libCat || d.cat === libCat)
-    .filter(d => !f || d.name.includes(f));
+  const cat = MEAL_CAT[picker.meal] || '';
+  const inSlot = at(picker.day, picker.meal);
+
+  const mine = dishes.filter(d => d.active !== false)
+    .filter(d => f ? d.name.indexOf(f) >= 0 : d.cat === cat);
+  // מה שכבר במאגר לא חוזר כהצעה מהקטלוג
+  const have = {};
+  dishes.forEach(d => { have[d.name.trim()] = true; });
+  const sug = (f ? acSearch(f, 8) : catalogFor(cat)).filter(c => !have[c.name.trim()]);
+
+  const mineRow = d => {
+    const bad = alertFor(d), already = inSlot.indexOf(d.id) >= 0;
+    return `<div class="prow ${already ? 'has' : ''}" onclick="${already ? '' : `addDish('${d.id}')`}">
+      <div><div class="nm">${hl(d.name, f)}</div>
+        <div class="meta">${esc(d.cat || '')}${already ? ' · כבר במשבצת' : ''}${
+          bad ? ` · <span style="color:#c94147;font-weight:700">${esc(bad)}</span>` : ''}</div></div>
+      <button class="rm" onclick="event.stopPropagation();openDish('${d.id}')">פרטים</button></div>`;
+  };
+  const sugRow = (c, i) => {
+    const warn = c.toddler === 'avoid', care = c.toddler === 'caution';
+    return `<div class="prow sug ${warn ? 'bad' : ''}" onclick="addFromCatalog(${i})">
+      <div><div class="nm">${hl(c.name, f)}</div>
+        <div class="meta">${esc((c.ingredients || []).slice(0, 4).join(' · '))}</div>
+        ${warn ? `<div class="warnline">לא להגשה בגיל הזה — ${esc(c.toddlerNote || '')}</div>`
+          : care ? `<div class="careline">${esc(c.toddlerNote || '')}</div>` : ''}</div>
+      <span class="plus">הוספה</span></div>`;
+  };
+
   document.getElementById('pickBody').innerHTML = `
     <div class="searchbar" style="margin-bottom:12px">
-      <input type="text" id="pf" value="${esc(libFilter)}" placeholder="חיפוש מנה…"
+      <input type="text" id="pf" value="${esc(libFilter)}" autocomplete="off"
+        placeholder="שם המנה — מחפש גם במאגר שלך וגם בקטלוג"
         oninput="libFilter=this.value;renderPicker();refocus('pf')"></div>
-    <div class="catbar">
-      <button class="p ${!libCat?'on':''}" onclick="libCat='';renderPicker()">הכל</button>
-      ${CATS.map(c => `<button class="p ${libCat===c?'on':''}" onclick="libCat='${c}';renderPicker()">${esc(c)}</button>`).join('')}
-    </div>
-    <div class="plist">${shown.length ? shown.map(d => {
-      const bad = alertFor(d);
-      return `<div class="prow" onclick="addDish('${d.id}')">
-        <div><div class="nm">${hl(d.name,f)}</div>
-          <div class="meta">${esc(d.cat||'')}${bad?` · <span style="color:#c94147;font-weight:700">${esc(bad)}</span>`:''}</div></div>
-        <button class="rm" onclick="event.stopPropagation();removeDish('${d.id}')">הסר</button></div>`;
-    }).join('') : `<div class="empty-note">אין מנה כזו במאגר.<br>
-      <button class="btn soft" style="margin-top:10px" onclick="newDishHere()">הוספת «${esc(f || 'מנה חדשה')}» ל${esc(mealOf(picker ? picker.meal : '').name)}</button></div>`}</div>`;
+    <div class="plist">
+      ${mine.length ? `<div class="ghead">במאגר של הגן</div>${mine.map(mineRow).join('')}` : ''}
+      ${sug.length ? `<div class="ghead">מהקטלוג · הקשה מוסיפה גם למאגר</div>${sug.map(sugRow).join('')}` : ''}
+      ${!mine.length && !sug.length ? `<div class="empty-note">${f
+        ? `לא נמצאה מנה בשם «${esc(f)}», לא במאגר ולא בקטלוג.`
+        : 'אין עדיין מנות בקטגוריה הזו.'}</div>` : ''}
+      <button class="btn ghost" style="width:100%;margin-top:12px" onclick="newDishHere()">
+        ${f ? `יצירת «${esc(f)}» מאפס` : 'יצירת מנה חדשה'}</button>
+    </div>`;
 }
+
 function addDish(id) {
   if (!picker) return;
   const list = at(picker.day, picker.meal);
   if (list.indexOf(id) >= 0) { showErr('המנה הזו כבר במשבצת'); return; }
   list.push(id); saveMenu(); closeModal(); render();
 }
+
+// הקשה על מנה מהקטלוג: נכנסת למאגר של הגן עם המרכיבים שלה, ומיד
+// למשבצת. האלרגנים **לא** מסומנים אוטומטית — הם מוצעים בשורה אחת
+// אחרי ההוספה, כי סימון שקט של "אין אלרגנים" הוא בדיוק מה שמגיע
+// בסוף לילד אלרגי.
+let pendingAvoid = null;
+async function addFromCatalog(i) {
+  const f = libFilter.trim();
+  const cat = MEAL_CAT[picker.meal] || '';
+  const have = {};
+  dishes.forEach(d => { have[d.name.trim()] = true; });
+  const list = (f ? acSearch(f, 8) : catalogFor(cat)).filter(c => !have[c.name.trim()]);
+  const c = list[i];
+  if (!c || !picker) return;
+
+  // מנה שמשרד הבריאות אוסר בגיל הזה דורשת אישור שני ולא נכנסת בהקשה
+  if (c.toddler === 'avoid' && pendingAvoid !== c.name) {
+    pendingAvoid = c.name;
+    document.getElementById('pickBody').innerHTML = `
+      <div class="vrow warn"><span class="tag">אסור בגיל הזה</span>
+        <span>${esc(c.name)} — ${esc(c.toddlerNote || '')}</span></div>
+      <div class="m-actions">
+        <button class="btn ghost" onclick="pendingAvoid=null;renderPicker()">חזרה</button>
+        <button class="btn" onclick="addFromCatalog(${i})">להוסיף בכל זאת</button></div>`;
+    return;
+  }
+  pendingAvoid = null;
+
+  const d = { id: '', name: c.name, cat: cat || c.cat || 'צהריים',
+              ingredients: (c.ingredients || []).slice(), allergens: [],
+              allergensSet: false, note: '', active: true };
+  const slot = { day: picker.day, meal: picker.meal };
+  closeModal();
+  try {
+    const r = await api.saveDish(d);
+    d.id = r.id;
+    dishes.push(d);
+    dishes.sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
+    const l = at(slot.day, slot.meal);
+    if (l.indexOf(d.id) < 0) l.push(d.id);
+    saveMenu();
+    // ההצעה לסמן אלרגנים יושבת על המסך ולא בחלון — היא לא חוסמת
+    allergenAsk = (c.allergenHints || []).length ? { id: d.id, codes: c.allergenHints.slice() } : null;
+    render();
+    if (!allergenAsk) showOk(`«${d.name}» נוספה ל${mealOf(slot.meal).name}`);
+  } catch (e) { showErr('ההוספה נכשלה: ' + e.message); }
+}
+
+async function markAsked(yes) {
+  const a = allergenAsk; allergenAsk = null;
+  if (!a) return;
+  const d = dishById(a.id);
+  if (d) {
+    d.allergens = yes ? a.codes.slice() : [];
+    d.allergensSet = !!yes;
+    if (yes) { try { await api.saveDish(d); } catch (e) {} }
+  }
+  render();
+  if (yes) showOk('סומן');
+}
+
 function refocus(id) {
   setTimeout(() => { const e = document.getElementById(id); if (e) { e.focus(); e.setSelectionRange(e.value.length, e.value.length); } }, 0);
 }
@@ -692,7 +811,7 @@ function openDish(id, preset, cat) {
 }
 // חיפוש בקטלוג: תחילת שם, תחילת מילה בתוך השם, או כינוי. "די" מוצא
 // "דייסת שיבולת שועל", "פ" מוצא פנקייק ופשטידה.
-function acSearch(q) {
+function acSearch(q, limit) {
   const s = q.trim();
   if (s.length < 1) return [];
   const starts = [], inner = [];
@@ -701,7 +820,7 @@ function acSearch(q) {
     if (names.some(n => n.indexOf(s) === 0)) { starts.push(c); return; }
     if (names.some(n => n.split(/\s+/).some(w => w.indexOf(s) === 0))) inner.push(c);
   });
-  return starts.concat(inner).slice(0, 7);
+  return starts.concat(inner).slice(0, limit || 7);
 }
 function onName(v) {
   editing.name = v;
