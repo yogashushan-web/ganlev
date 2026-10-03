@@ -53,6 +53,12 @@
     .chip:hover { border-color:#1F3D34; }
     .chip.sel { background:#1F3D34; border-color:#1F3D34; color:#fff; }
     .chip .nm { flex:1; min-width:0; }
+    .chip .ord { flex:0 0 auto; width:16px; height:16px; border-radius:50%; background:#efe9e0;
+                 color:#8a7f70; font-size:10px; font-weight:700; display:flex; align-items:center;
+                 justify-content:center; font-variant-numeric:tabular-nums; }
+    .chip.sel .ord { background:rgba(255,255,255,.22); color:#fff; }
+    .chip.drop { border-style:dashed; border-color:#cfe7d9; }
+    .chip.drop:hover { border-style:solid; border-color:#1F3D34; background:#f4f9f6; }
     .chip .al { font-size:10.5px; color:#c94147; font-weight:700; }
     .chip.sel .al { color:#ffd9d6; }
     .chip .rm { background:none; border:none; font-family:'Alef'; font-size:10.5px; font-weight:700; color:#9B8E82; cursor:pointer; padding:1px 3px; border-radius:5px; }
@@ -411,8 +417,12 @@ function viewMenu() {
       ids.forEach((id, idx) => {
         const dd = dishById(id), nm = dd ? dd.name : 'מנה שנמחקה', bad = dd ? alertFor(dd) : '';
         const on = sel && sel.day === d.key && sel.meal === m.key && sel.idx === idx;
-        g += `<div class="chip ${on?'sel':''}" onclick="event.stopPropagation();chipTap('${d.key}','${m.key}',${idx})">
-                <span class="nm">${esc(nm)}${bad?`<span class="al"> · ${esc(bad)}</span>`:''}</span>
+        // מספר סדר רק כשיש יותר ממנה אחת — עם מנה אחת אין סדר, והמספר
+        // היה טוען משהו שלא קיים. כשיש כמה, הסדר הוא סדר ההגשה.
+        const ord = ids.length > 1 ? `<span class="ord">${idx + 1}</span>` : '';
+        g += `<div class="chip ${on?'sel':''} ${sel && !on ? 'drop' : ''}"
+                onclick="event.stopPropagation();chipTap('${d.key}','${m.key}',${idx})">
+                ${ord}<span class="nm">${esc(nm)}${bad?`<span class="al"> · ${esc(bad)}</span>`:''}</span>
                 <button class="rm" onclick="event.stopPropagation();dropDish('${d.key}','${m.key}',${idx})">הסר</button>
               </div>`;
       });
@@ -426,7 +436,9 @@ function viewMenu() {
     <h2>${esc(menu.name)}</h2>
     <div class="sub">זה התפריט הקבוע של הגן. הוא לא נבנה מחדש כל שבוע —
       הוא נשאר כמו שהוא עד שמשנים אותו, ושינוי חד-פעמי ליום מסוים נרשם
-      תחת "שינויים" ולא כאן.</div>
+      תחת "שינויים" ולא כאן.<br>
+      <b>הסדר בתוך משבצת הוא סדר ההגשה.</b> לחיצה על מנה בוחרת אותה,
+      ואז לחיצה על מנה אחרת שמה אותה לפניה.</div>
     ${!menu.live ? `<div class="vrow note" style="margin-bottom:12px">
       <span class="tag">טיוטה</span>
       <span>התפריט עוד לא באוויר. ההורים לא רואים אותו.</span></div>` : ''}
@@ -438,7 +450,8 @@ function viewMenu() {
       <button class="go" onclick="markAsked(false)">לא עכשיו</button></div>` : ''}
     ${sel ? `<div class="movehint">
       <span>«${esc((dishById(at(sel.day,sel.meal)[sel.idx])||{}).name||'')}» נבחרה —
-        עכשיו לחיצה על המשבצת שאליה היא עוברת.</span>
+        לחיצה על מנה אחרת תשים אותה <b>לפניה</b>, ולחיצה על שטח ריק
+        במשבצת תשים אותה <b>בסוף</b>.</span>
       <button onclick="sel=null;render()">ביטול</button></div>` : ''}
     ${g}
     <div class="count-line">${total} מנות בתפריט · ${sens.length
@@ -453,15 +466,29 @@ function alertFor(d) {
   return d.allergens.filter(c => sens.some(s => s.codes.indexOf(c) >= 0))
     .map(c => MC.ALLERGEN_NAME[c] || c).join(', ');
 }
+// כלל אחד לשני הדברים: בוחרים מנה, ואז מקישים לאן היא הולכת.
+// הקשה על מנה אחרת = "לפני זו" — וזה מה שמאפשר לקבוע סדר *בתוך*
+// המשבצת, כי בגן מגישים בשלבים: קודם סלט, אחר כך כריכים, ואז תוספת.
+// הקשה על שטח ריק במשבצת = "בסוף".
 function chipTap(day, meal, idx) {
-  sel = (sel && sel.day===day && sel.meal===meal && sel.idx===idx) ? null : { day, meal, idx };
-  render();
+  if (!sel) { sel = { day, meal, idx }; render(); return; }
+  if (sel.day === day && sel.meal === meal && sel.idx === idx) { sel = null; render(); return; }
+  moveTo(day, meal, idx);
 }
-function cellTap(day, meal) {
-  if (!sel) return;
-  const from = at(sel.day, sel.meal), id = from[sel.idx];
+function cellTap(day, meal) { if (sel) moveTo(day, meal, null); }
+
+function moveTo(day, meal, beforeIdx) {
+  const from = at(sel.day, sel.meal);
+  const id = from[sel.idx];
   if (!id) { sel = null; render(); return; }
-  from.splice(sel.idx, 1); at(day, meal).push(id);
+  const same = sel.day === day && sel.meal === meal;
+  from.splice(sel.idx, 1);
+  const to = at(day, meal);
+  // אחרי ההסרה כל מה שהיה אחרי המנה הוזז אחורה בשורה אחת, ולכן יעד
+  // שהיה *אחרי* המקור צריך לרדת באחד. בלי זה הזזה אחת ימינה לא זזה.
+  let pos = (beforeIdx == null) ? to.length : beforeIdx;
+  if (same && beforeIdx != null && sel.idx < beforeIdx) pos -= 1;
+  to.splice(Math.max(0, Math.min(pos, to.length)), 0, id);
   sel = null; saveMenu(); render();
 }
 function dropDish(day, meal, idx) { at(day,meal).splice(idx,1); sel=null; saveMenu(); render(); }
