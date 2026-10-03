@@ -139,6 +139,11 @@ const handler = withAuth(async (event) => {
           tags: d.tags || [],
           note: d.note || '',
           active: d.active !== false,
+          // המתכון הוא שכבה אופציונלית מתחת למנה, ולא שדות של המנה.
+          // גננת שרוצה רק תפריט לא נתקלת בכמויות אף פעם; מי שמבשלת
+          // מקבלת הכל. הכמויות **לילד אחד** — מתכון שכתוב "ל-20 ילדים"
+          // הופך לשגוי ברגע שנרשם ילד, והמערכת כבר יודעת כמה יש.
+          recipe: d.recipe || null,
         };
         await upsert(garden_id, CAL_DISH, d.id, name, payload);
         await auditLog(garden_id, uidUser, 'saved', 'menu-dish', d.id, { name });

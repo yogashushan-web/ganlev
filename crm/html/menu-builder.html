@@ -122,6 +122,42 @@
     .acit .careline { display:block; font-size:11px; color:#b8801f; margin-top:3px; }
     .acit.bad b { color:#c94147; }
 
+    /* ---- ספר המתכונים ---- */
+    .rbook { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:11px; }
+    .rc { background:#fff; border:1.5px solid #e8e4de; border-radius:13px; padding:13px 15px; cursor:pointer; }
+    .rc:hover { border-color:#1F3D34; }
+    .rc b { display:block; font-size:14.5px; color:#1F3D34; }
+    .rc .meta { font-size:11.5px; color:#9B8E82; margin-top:3px; }
+    .rc.none { background:#FAF8F4; border-style:dashed; }
+    .rc.none .meta { color:#B9AE9F; }
+    .meter { background:#FAF8F4; border:1px solid #efe9e0; border-radius:12px; padding:13px 15px; margin-bottom:14px; }
+    .meter .bar { height:7px; background:#efe9e0; border-radius:99px; overflow:hidden; margin:8px 0 7px; }
+    .meter .bar i { display:block; height:100%; background:#1F3D34; border-radius:99px; }
+    .meter .t { font-size:13px; font-weight:700; color:#1F3D34; }
+    .meter .n { font-size:12px; color:#9B8E82; }
+    .ritem { display:flex; gap:7px; align-items:center; margin-bottom:6px; }
+    .ritem input.q { max-width:76px; text-align:center; }
+    .ritem input.u { max-width:76px; }
+    .ritem input.n { flex:1; }
+    .ritem button { background:none; border:none; font-family:'Alef'; font-size:11px; font-weight:700;
+                    color:#9B8E82; cursor:pointer; padding:4px 6px; border-radius:6px; }
+    .ritem button:hover { background:#fdf0ef; color:#c94147; }
+    .scaled { background:#f4f9f6; border:1px solid #cfe7d9; border-radius:11px; padding:12px 14px;
+              font-size:13.5px; line-height:1.9; }
+    .scaled b { color:#1F3D34; }
+
+    /* ---- דף מתכון להדפסה ---- */
+    .rsheet { background:#fff; border:1px solid #e8e4de; border-radius:14px; padding:26px 28px; }
+    .rsheet h3 { font-size:24px; color:#1F3D34; margin-bottom:4px; }
+    .rsheet .for { font-size:13px; color:#C4846C; font-weight:700; margin-bottom:18px; }
+    .rsheet h4 { font-size:13px; letter-spacing:.08em; color:#B9AE9F; margin:18px 0 9px; }
+    .rsheet ul { list-style:none; }
+    .rsheet ul li { font-size:16px; padding:7px 0; border-bottom:1px solid #f2ede6; display:flex; gap:10px; }
+    .rsheet ul li b { color:#1F3D34; min-width:110px; font-variant-numeric:tabular-nums; }
+    .rsheet ol { padding-right:22px; }
+    .rsheet ol li { font-size:16px; padding:7px 0; line-height:1.6; }
+    .rsheet .al { color:#c94147; font-weight:700; font-size:13.5px; margin-top:14px; }
+
     /* ---- חלון ---- */
     .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center; justify-content:center; z-index:9999; padding:18px; }
     .ov.show { display:flex; }
@@ -243,6 +279,7 @@ async function boot() {
   } catch (e) { showErr('הטעינה נכשלה: ' + e.message); }
   loadSens();
   loadCatalog();
+  loadKids();
 
   // שאלה בהקשר, לא בשאלון: כמה ארוחות — רק כשנכנסים לכלי בפעם
   // הראשונה, ורק אם זה לא ידוע כבר.
@@ -312,7 +349,7 @@ function render() {
     <button class="btn soft" onclick="setView('lib')">מאגר המנות</button>
     <button class="btn soft" onclick="setView('preview')">תצוגה מקדימה</button>
     <button class="btn" onclick="saveMenu(true)">${menu.live ? 'שמירה' : 'העלאה לאוויר'}</button>`;
-  const tabs = [['menu','התפריט'],['exc','שינויים'],['design','עיצוב'],['info','עמוד מידע']];
+  const tabs = [['menu','התפריט'],['exc','שינויים'],['recipes','מתכונים'],['design','עיצוב'],['info','עמוד מידע']];
   document.getElementById('steps').innerHTML = (view === 'lib' || view === 'preview')
     ? `<button class="step-pill" onclick="setView('menu')">חזרה לתפריט</button>`
     : tabs.map(([v,l]) => `<button class="step-pill ${view===v?'on':''}" onclick="setView('${v}')">${l}</button>`).join('');
@@ -324,6 +361,7 @@ function render() {
   if (view === 'design') w.innerHTML = viewDesign();
   if (view === 'info') w.innerHTML = viewInfo();
   if (view === 'preview') w.innerHTML = viewPreview();
+  if (view === 'recipes') w.innerHTML = viewRecipes();
   if (view === 'lib') { w.classList.add('hide'); L.classList.remove('hide'); renderLib(); }
 }
 
@@ -618,7 +656,8 @@ function openDish(id, preset) {
     dishForm(),
     `<button class="btn" onclick="doSaveDish()">שמירה</button>
      <button class="btn ghost" onclick="closeModal()">ביטול</button>
-     ${d ? `<button class="prow rm" style="margin-right:auto" onclick="removeDish('${d.id}')">הסרה מהמאגר</button>` : ''}`);
+     ${d ? `<button class="btn soft" onclick="closeModal();openRecipe('${d.id}')">מתכון</button>
+     <button class="prow rm" style="margin-right:auto" onclick="removeDish('${d.id}')">הסרה מהמאגר</button>` : ''}`);
   setTimeout(() => { const e = document.getElementById('dn'); if (e) { e.focus(); e.select(); } }, 60);
 }
 // חיפוש בקטלוג: תחילת שם, תחילת מילה בתוך השם, או כינוי. "די" מוצא
@@ -745,6 +784,160 @@ async function removeDish(id) {
   closeModal(); renderLib();
   try { await api.deleteDish(id); showOk('הוסרה · ניתן לשחזור מהפח'); }
   catch (e) { showErr('ההסרה נכשלה: ' + e.message); }
+}
+
+/* ---------- ספר המתכונים ---------- */
+// קורא אחר לגמרי מהתפריט: התפריט הוא להורים, הספר הוא למי שעומדת
+// במטבח — ולרוב הוא ייפתח ביום שהבשלנית הקבועה לא הגיעה ויש מחליפה.
+// לכן כתב גדול, שלב בשורה, ודף שאפשר לתלות.
+let kidsN = 0;
+async function loadKids() {
+  try { const d = await GL.derived(); kidsN = d.childCount || 0; } catch (e) { kidsN = 0; }
+}
+const hasRecipe = d => !!(d.recipe && ((d.recipe.items||[]).length || (d.recipe.steps||'').trim()));
+
+function viewRecipes() {
+  const used = {};
+  dayList().forEach(d => MEALS().forEach(m => at(d.key, m.key).forEach(id => { used[id] = true; })));
+  // המנות שבתפריט קודם — ספר שמתחיל ממנות שלא מבשלים הוא ספר שלא ייפתח
+  const inMenu = dishes.filter(d => used[d.id]);
+  const rest = dishes.filter(d => !used[d.id]);
+  const done = inMenu.filter(hasRecipe).length;
+  const pct = inMenu.length ? Math.round(done / inMenu.length * 100) : 0;
+
+  const card = d => `<div class="rc ${hasRecipe(d) ? '' : 'none'}" onclick="openRecipe('${d.id}')">
+    <b>${esc(d.name)}</b>
+    <div class="meta">${hasRecipe(d)
+      ? `${(d.recipe.items||[]).length} מרכיבים${d.recipe.minutes ? ' · ' + d.recipe.minutes + ' דקות' : ''}`
+      : 'עוד בלי מתכון'}</div></div>`;
+
+  return `<div class="card">
+    <h2>ספר המתכונים</h2>
+    <div class="sub">הכמויות נשמרות <b>לילד אחד</b>, והמערכת מכפילה לפי מספר
+      הילדים בפועל. מתכון שכתוב "ל-20 ילדים" הופך לשגוי ברגע שנרשם ילד.</div>
+    <div class="meter">
+      <div class="t">${done} מתוך ${inMenu.length} המנות שבתפריט יש להן מתכון</div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="n">${done === inMenu.length && inMenu.length
+        ? 'הספר שלם. מחליפה שתיכנס מחר תסתדר לבד.'
+        : 'אין צורך למלא הכל בבת אחת — מנה אחת בכל פעם.'}</div>
+    </div>
+    ${inMenu.length ? `<div class="rbook">${inMenu.map(card).join('')}</div>` : ''}
+    ${rest.length ? `<h2 style="font-size:15px;margin:22px 0 10px">מנות שלא בתפריט כרגע</h2>
+      <div class="rbook">${rest.map(card).join('')}</div>` : ''}
+    ${!dishes.length ? '<div class="empty-note">אין עדיין מנות במאגר.</div>' : ''}
+    <div class="nav">
+      <button class="btn soft" onclick="printBook()">הדפסת הספר</button>
+      <span class="count-line" style="margin:0;align-self:center">${kidsN
+        ? `הכמויות יחושבו ל-${kidsN} ילדים` : 'אין ילדים פעילים — הכמויות יוצגו לילד אחד'}</span>
+    </div>
+  </div>`;
+}
+
+let rEdit = null;
+function openRecipe(id) {
+  const d = dishById(id); if (!d) return;
+  rEdit = { id, r: JSON.parse(JSON.stringify(d.recipe || { items: [], steps: '', minutes: '' })) };
+  if (!rEdit.r.items.length) {
+    // המרכיבים כבר קיימים על המנה — אין סיבה להקליד אותם שוב
+    rEdit.r.items = (d.ingredients || []).map(n => ({ name: n, qty: '', unit: '' }));
+  }
+  openModal('מתכון · ' + d.name, 'כמויות לילד אחד.', recipeForm(d),
+    `<button class="btn" onclick="saveRecipe()">שמירה</button>
+     <button class="btn ghost" onclick="closeModal()">ביטול</button>
+     <button class="btn soft" style="margin-right:auto" onclick="printOne('${id}')">הדפסה</button>`);
+  drawScaled();
+}
+function recipeForm(d) {
+  const r = rEdit.r;
+  return `<div class="fld"><label>מרכיבים · לילד אחד</label>
+      <div id="ritems">${r.items.map((it, i) => `<div class="ritem">
+        <input class="n" type="text" value="${esc(it.name)}" oninput="rEdit.r.items[${i}].name=this.value">
+        <input class="q" type="text" value="${esc(it.qty)}" placeholder="כמות" inputmode="decimal"
+          oninput="rEdit.r.items[${i}].qty=this.value;drawScaled()">
+        <input class="u" type="text" value="${esc(it.unit)}" placeholder="יחידה"
+          oninput="rEdit.r.items[${i}].unit=this.value;drawScaled()">
+        <button onclick="rEdit.r.items.splice(${i},1);document.getElementById('modalBody').innerHTML=recipeForm()">הסר</button>
+      </div>`).join('')}</div>
+      <button class="btn ghost" style="padding:7px 14px;font-size:12.5px"
+        onclick="rEdit.r.items.push({name:'',qty:'',unit:''});document.getElementById('modalBody').innerHTML=recipeForm()">
+        הוספת מרכיב</button></div>
+    <div class="fld"><label>לכמה דקות הכנה</label>
+      <input type="text" id="rmin" value="${esc(r.minutes||'')}" style="max-width:120px"
+        inputmode="numeric" oninput="rEdit.r.minutes=this.value"></div>
+    <div class="fld"><label>אופן ההכנה</label>
+      <textarea id="rst" placeholder="שורה לכל שלב" style="min-height:120px"
+        oninput="rEdit.r.steps=this.value">${esc(r.steps||'')}</textarea></div>
+    <div class="fld"><label>מה שיודפס במטבח</label><div id="scaled"></div></div>`;
+}
+// הכפלה חיה — זה מה שהופך את "כמות לילד" למשהו שימושי ולא למטלה
+function scaledHtml() {
+  const n = kidsN || 1;
+  const rows = (rEdit.r.items || []).filter(i => (i.name||'').trim());
+  if (!rows.length) return '<div class="count-line">אין עדיין מרכיבים.</div>';
+  return `<div class="scaled"><b>ל-${n} ילדים</b><br>` + rows.map(i => {
+    const q = parseFloat(String(i.qty).replace(',', '.'));
+    const tot = isFinite(q) ? +(q * n).toFixed(2) : null;
+    return esc(i.name) + (tot != null ? ` — <b>${tot} ${esc(i.unit||'')}</b>` : '');
+  }).join('<br>') + '</div>';
+}
+function drawScaled() { const e = document.getElementById('scaled'); if (e) e.innerHTML = scaledHtml(); }
+async function saveRecipe() {
+  const d = dishById(rEdit.id); if (!d) return;
+  const r = rEdit.r;
+  r.items = (r.items || []).filter(i => (i.name||'').trim());
+  const next = Object.assign({}, d, { recipe: r });
+  try {
+    await api.saveDish(next);
+    const i = dishes.findIndex(x => x.id === d.id);
+    if (i >= 0) dishes[i] = next;
+    closeModal(); render(); showOk('המתכון נשמר');
+  } catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+
+/* ---------- דף מתכון להדפסה ---------- */
+function sheetHtml(d) {
+  const r = d.recipe || {}, n = kidsN || 1;
+  const items = (r.items || []).filter(i => (i.name||'').trim());
+  const steps = String(r.steps || '').split('\n').map(x => x.trim()).filter(Boolean);
+  const al = (d.allergens || []).map(c => MC.ALLERGEN_NAME[c] || c);
+  return `<div class="rsheet">
+    <h3>${esc(d.name)}</h3>
+    <div class="for">ל-${n} ילדים${r.minutes ? ' · ' + esc(r.minutes) + ' דקות הכנה' : ''}</div>
+    ${items.length ? `<h4>מרכיבים</h4><ul>${items.map(i => {
+      const q = parseFloat(String(i.qty).replace(',', '.'));
+      const tot = isFinite(q) ? +(q * n).toFixed(2) : '';
+      return `<li><b>${tot ? esc(String(tot)) + ' ' + esc(i.unit||'') : ''}</b><span>${esc(i.name)}</span></li>`;
+    }).join('')}</ul>` : ''}
+    ${steps.length ? `<h4>הכנה</h4><ol>${steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
+    ${al.length ? `<div class="al">מכיל: ${esc(al.join(' · '))}</div>` : ''}
+  </div>`;
+}
+function printOne(id) {
+  const d = dishById(id); if (!d) return;
+  if (rEdit && rEdit.id === id) d.recipe = rEdit.r;
+  openPrint(sheetHtml(d));
+}
+function printBook() {
+  const withR = dishes.filter(hasRecipe);
+  if (!withR.length) { showErr('אין עדיין מתכונים להדפיס'); return; }
+  openPrint(withR.map(sheetHtml).join('<div style="page-break-after:always"></div>'));
+}
+// חלון הדפסה נפרד: דף המטבח הוא מסמך אחר מהמסך, ולא גרסה מוקטנת שלו
+function openPrint(body) {
+  const css = document.querySelector('style').textContent;
+  const w = window.open('', '_blank');
+  if (!w) { showErr('הדפדפן חסם את חלון ההדפסה'); return; }
+  w.document.write(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+    <title>ספר המתכונים</title>
+    <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+    <style>${css}
+      body{background:#fff;padding:0}
+      .rsheet{border:0;border-radius:0;padding:14mm}
+      @page{size:A4;margin:0}
+    </style></head><body>${body}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 500);
 }
 
 /* ---------- חלון ---------- */
