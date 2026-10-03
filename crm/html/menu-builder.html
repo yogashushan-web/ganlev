@@ -104,6 +104,13 @@
     .catbar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
 
     .homecell { font-size:11.5px; color:#B9AE9F; font-style:italic; text-align:center; padding:6px 0; }
+    .dish { position:relative; }
+    .dish .drm { position:absolute; top:9px; left:10px; background:#f6f2ec; border:1px solid #e8e1d6;
+                 color:#8a7f70; border-radius:7px; padding:3px 9px; font-size:11px; font-weight:700;
+                 cursor:pointer; font-family:'Alef'; opacity:0; transition:opacity .12s; }
+    .dish:hover .drm, .dish .drm:focus { opacity:1; }
+    .dish .drm:hover { background:#fdf0ef; border-color:#f3cfc9; color:#c94147; }
+    @media (hover:none) { .dish .drm { opacity:1; } }
     .dish .ing { font-size:11px; color:#B9AE9F; margin-top:4px; line-height:1.5; }
 
     /* ---- השלמה אוטומטית מהקטלוג ---- */
@@ -599,11 +606,17 @@ function renderPicker() {
       const bad = alertFor(d);
       return `<div class="prow" onclick="addDish('${d.id}')">
         <div><div class="nm">${hl(d.name,f)}</div>
-          <div class="meta">${esc(d.cat||'')}${bad?` · <span style="color:#c94147;font-weight:700">${esc(bad)}</span>`:''}</div></div></div>`;
+          <div class="meta">${esc(d.cat||'')}${bad?` · <span style="color:#c94147;font-weight:700">${esc(bad)}</span>`:''}</div></div>
+        <button class="rm" onclick="event.stopPropagation();removeDish('${d.id}')">הסר</button></div>`;
     }).join('') : `<div class="empty-note">אין מנה כזו במאגר.<br>
-      <button class="btn soft" style="margin-top:10px" onclick="closeModal();setView('lib');openDish(null,'${esc(f)}')">הוספת «${esc(f||'מנה חדשה')}»</button></div>`}</div>`;
+      <button class="btn soft" style="margin-top:10px" onclick="newDishHere()">הוספת «${esc(f || 'מנה חדשה')}» ל${esc(mealOf(picker ? picker.meal : '').name)}</button></div>`}</div>`;
 }
-function addDish(id) { if (!picker) return; at(picker.day,picker.meal).push(id); saveMenu(); closeModal(); render(); }
+function addDish(id) {
+  if (!picker) return;
+  const list = at(picker.day, picker.meal);
+  if (list.indexOf(id) >= 0) { showErr('המנה הזו כבר במשבצת'); return; }
+  list.push(id); saveMenu(); closeModal(); render();
+}
 function refocus(id) {
   setTimeout(() => { const e = document.getElementById(id); if (e) { e.focus(); e.setSelectionRange(e.value.length, e.value.length); } }, 0);
 }
@@ -624,13 +637,14 @@ function renderLib() {
     <div class="searchbar">
       <input type="text" id="lf" value="${esc(libFilter)}" placeholder="חיפוש מנה…"
         oninput="libFilter=this.value;renderLib();refocus('lf')">
-      <button class="btn" onclick="openDish(null)">מנה חדשה</button></div>
+      <button class="btn" onclick="newDishLib()">מנה חדשה</button></div>
     <div class="catbar">
       <button class="p ${!libCat?'on':''}" onclick="libCat='';renderLib()">כל ${dishes.length} המנות</button>
       ${CATS.map(c => `<button class="p ${libCat===c?'on':''}" onclick="libCat='${c}';renderLib()">${esc(c)} · ${dishes.filter(d=>d.cat===c).length}</button>`).join('')}</div>
     ${unmarked ? `<div class="vrow note" style="margin-bottom:12px"><span class="tag">הערה</span>
       <span>${unmarked} מנות עוד בלי סימון אלרגנים, ולכן הבדיקה מדלגת עליהן.</span></div>` : ''}
     <div class="dishes">${shown.length ? shown.map(d => `<div class="dish ${d.active===false?'off':''}" onclick="openDish('${d.id}')">
+      <button class="drm" onclick="event.stopPropagation();removeDish('${d.id}')">הסר</button>
       <b>${hl(d.name,f)}</b>
       <div class="meta">${esc(d.cat||'')}${d.active===false?' · לא פעילה':''}</div>
       ${(d.ingredients||[]).length ? `<div class="ing">${esc(d.ingredients.join(' · '))}</div>` : ''}
@@ -640,15 +654,31 @@ function renderLib() {
           : '<div class="un">בלי אלרגנים</div>'
         : '<div class="un">עוד לא סומנה</div>'}</div>`).join('')
       : `<div class="empty-note">אין מנה כזו במאגר.<br>
-          <button class="btn soft" style="margin-top:10px" onclick="openDish(null,'${esc(f)}')">הוספת «${esc(f||'מנה')}»</button></div>`}</div>
+          <button class="btn soft" style="margin-top:10px" onclick="newDishLib()">הוספת «${esc(f || 'מנה')}»</button></div>`}</div>
   </div>`;
 }
 
 /* ---------- כרטיס מנה + השלמה מהקטלוג ---------- */
-function openDish(id, preset) {
+// המשבצת שממנה נפתחה יצירת מנה חדשה. בלי זה המנה נשמרת, המסך נסגר,
+// והגננת צריכה למצוא אותה שוב ולהוסיף ידנית.
+let pendingSlot = null;
+
+// נפתח מתוך חלון הבחירה: הקטגוריה נגזרת מהארוחה שבה עומדים.
+// קודם היא הייתה קבועה ל"צהריים", ולכן מנה שנוספה משורת הבוקר נשמרה
+// כצהריים, לא חזרה בסינון של הבוקר, ונוצרה שוב ושוב.
+function newDishHere() {
+  const name = libFilter.trim();
+  const cat = picker ? (MEAL_CAT[picker.meal] || '') : libCat;
+  pendingSlot = picker ? { day: picker.day, meal: picker.meal } : null;
+  closeModal();
+  openDish(null, name, cat);
+}
+function newDishLib() { pendingSlot = null; openDish(null, libFilter.trim(), libCat); }
+
+function openDish(id, preset, cat) {
   const d = id ? dishById(id) : null;
   editing = d ? JSON.parse(JSON.stringify(d))
-              : { id:'', name: preset || '', cat:'צהריים', ingredients:[], allergens:[],
+              : { id:'', name: preset || '', cat: cat || 'צהריים', ingredients:[], allergens:[],
                   allergensSet:false, note:'', active:true };
   acOpen = false; acHits = [];
   openModal(d ? 'עריכת מנה' : 'מנה חדשה',
@@ -768,21 +798,57 @@ async function doSaveDish() {
   grabForm();
   const nm = (editing.name || '').trim();
   if (!nm) { showErr('למנה חייב להיות שם'); return; }
+
+  // שתי מנות באותו שם הן תמיד תקלה, לא כוונה. אם היא כבר קיימת —
+  // משתמשים בה במקום ליצור עותק שני.
+  const dup = dishes.find(d => d.name.trim() === nm && d.id !== editing.id);
+  if (dup && !editing.id) {
+    const slot = pendingSlot; pendingSlot = null;
+    closeModal();
+    if (slot) {
+      const list = at(slot.day, slot.meal);
+      if (list.indexOf(dup.id) < 0) { list.push(dup.id); saveMenu(); }
+      render(); showOk(`«${dup.name}» כבר במאגר — נוספה מהמאגר הקיים`);
+    } else { renderLib(); showOk(`«${dup.name}» כבר קיימת במאגר`); }
+    return;
+  }
+
   editing.name = nm;
   delete editing.suggest;
+  const isNew = !editing.id;
   try {
     const r = await api.saveDish(editing);
     editing.id = editing.id || r.id;
     const i = dishes.findIndex(d => d.id === editing.id);
     if (i >= 0) dishes[i] = editing; else dishes.push(editing);
     dishes.sort((a,b) => String(a.name).localeCompare(String(b.name),'he'));
-    closeModal(); renderLib(); showOk('נשמר');
+    const slot = pendingSlot; pendingSlot = null;
+    closeModal();
+    // מנה שנוצרה מתוך משבצת נכנסת אליה מיד. אחרת הגננת שומרת, המסך
+    // נסגר, והיא צריכה לחפש אותה שוב.
+    if (isNew && slot) {
+      const list = at(slot.day, slot.meal);
+      if (list.indexOf(editing.id) < 0) list.push(editing.id);
+      saveMenu(); render();
+      showOk(`«${editing.name}» נוספה ל${mealOf(slot.meal).name}`);
+    } else { render(); showOk('נשמר'); }
   } catch (e) { showErr('השמירה נכשלה: ' + e.message); }
 }
 async function removeDish(id) {
+  const name = (dishById(id) || {}).name || 'המנה';
   dishes = dishes.filter(d => d.id !== id);
-  closeModal(); renderLib();
-  try { await api.deleteDish(id); showOk('הוסרה · ניתן לשחזור מהפח'); }
+  // מנה שנמחקה מהמאגר יורדת גם מהתפריט — אחרת היא נשארת שם כ"מנה
+  // שנמחקה" וההורים רואים משבצת שבורה.
+  let touched = false;
+  Object.keys(menu.days || {}).forEach(day => Object.keys(menu.days[day] || {}).forEach(mk => {
+    const l = menu.days[day][mk] || [], n = l.filter(x => x !== id);
+    if (n.length !== l.length) { menu.days[day][mk] = n; touched = true; }
+  }));
+  const wasPicker = !!picker;
+  closeModal();
+  if (touched) saveMenu();
+  if (wasPicker) render(); else if (view === 'lib') renderLib(); else render();
+  try { await api.deleteDish(id); showOk(`«${name}» הוסרה · ניתן לשחזור מהפח`); }
   catch (e) { showErr('ההסרה נכשלה: ' + e.message); }
 }
 
