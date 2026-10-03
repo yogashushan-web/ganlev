@@ -558,4 +558,20 @@ function debounce(func, wait) {
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', initializePage);
+// גן שעוד לא עבר את הכניסה הראשונה מועבר אליה. הבדיקה לא חוסמת את
+// טעינת המסך: אם היא נכשלת, המסך נטען כרגיל ולא נתקע על רשת.
+const SETUP_SKIP = ['welcome.html', 'login.html', 'menu.html', 'nap.html',
+                    'card.html', 'id.html', 'contacts.html', 'meeting.html'];
+async function checkFirstRun() {
+  const here = (location.pathname.split('/').pop() || '').toLowerCase();
+  if (SETUP_SKIP.indexOf(here) >= 0) return;
+  if (!localStorage.getItem('crm_token')) return;
+  try {
+    const r = await api.getGardenProfile();
+    if (r && r.success && !r.setup) location.replace('welcome.html');
+  } catch (e) {}
+}
+document.addEventListener('DOMContentLoaded', function () {
+  initializePage();
+  if (typeof api !== 'undefined' && api.getGardenProfile) checkFirstRun();
+});

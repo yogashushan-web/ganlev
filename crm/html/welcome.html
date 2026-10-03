@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ברוכים הבאים</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl;
+           min-height:100vh; display:flex; align-items:center; justify-content:center;
+           padding:26px 18px; }
+    .box { width:100%; max-width:520px; }
+    .dots { display:flex; gap:6px; justify-content:center; margin-bottom:20px; }
+    .dots i { width:7px; height:7px; border-radius:50%; background:#e0d8ca; display:block; }
+    .dots i.on { background:#1F3D34; width:20px; border-radius:4px; }
+    .card { background:#fff; border-radius:20px; padding:30px 28px 26px;
+            box-shadow:0 4px 26px rgba(0,0,0,.07); }
+    .eyebrow { font-size:11.5px; font-weight:700; letter-spacing:.14em; color:#C4846C;
+               margin-bottom:9px; }
+    h1 { font-size:24px; color:#1F3D34; line-height:1.3; margin-bottom:8px; }
+    .sub { color:#9B8E82; font-size:14px; line-height:1.7; margin-bottom:20px; }
+    .opts { display:flex; flex-direction:column; gap:9px; }
+    .opt { background:#FAF8F4; border:1.5px solid #e8e4de; border-radius:13px;
+           padding:14px 16px; font-family:'Alef'; font-size:15px; font-weight:700;
+           color:#3D3228; cursor:pointer; text-align:right; }
+    .opt:hover { border-color:#1F3D34; background:#f4f9f6; }
+    .opt.on { border-color:#1F3D34; background:#f4f9f6; box-shadow:0 0 0 3px rgba(31,61,52,.08); }
+    .opt em { display:block; font-style:normal; font-size:12.5px; color:#9B8E82;
+              font-weight:400; margin-top:3px; line-height:1.6; }
+    input { width:100%; padding:13px 15px; border:1.5px solid #e8e4de; border-radius:12px;
+            font-family:'Alef'; font-size:16px; outline:none; }
+    input:focus { border-color:#1F3D34; }
+    .act { display:flex; gap:10px; margin-top:22px; flex-wrap:wrap; align-items:center; }
+    .btn { background:#1F3D34; color:#fff; border:none; padding:12px 24px; border-radius:11px;
+           cursor:pointer; font-family:'Alef'; font-weight:700; font-size:15px; }
+    .btn.ghost { background:#efe9e0; color:#6f6457; }
+    .btn:disabled { opacity:.5; cursor:default; }
+    .err { background:#fdf0ef; color:#c94147; padding:11px 13px; border-radius:10px;
+           font-size:13.5px; margin-bottom:14px; display:none; }
+    .err.show { display:block; }
+    .note { font-size:12px; color:#B9AE9F; line-height:1.7; margin-top:14px; }
+    .done .big { font-size:42px; margin-bottom:10px; }
+    .nexts { display:flex; flex-direction:column; gap:9px; margin-top:4px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="dots" id="dots"></div>
+    <div class="err" id="err"></div>
+    <div class="card" id="card"></div>
+  </div>
+
+<script src="js/common.js?v=27"></script>
+<script src="js/api.js?v=23"></script>
+<script src="js/profile.js?v=1"></script>
+<script>
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PREVIEW = new URLSearchParams(location.search).has('preview');
+
+// שלוש שאלות. זהו.
+// הכניסה הראשונה לומדת *איך לדבר עם הלקוח*, לא איך הגן שלו עובד —
+// ארוחות, חדרים ושגרת יום נשאלים בהקשר, כשהכלי הרלוונטי נפתח בפעם
+// הראשונה. שאלון ארוך לפני שהוכחנו ערך הוא איפה שמאבדים אנשים.
+let step = 0, ans = { address: 'female', name: '', branches: 1 };
+
+function dots() {
+  document.getElementById('dots').innerHTML =
+    [0,1,2,3].map(i => `<i class="${i === step ? 'on' : ''}"></i>`).join('');
+}
+function show(html) { document.getElementById('card').innerHTML = html; dots(); }
+function showErr(m) {
+  const e = document.getElementById('err');
+  e.textContent = m; e.classList.add('show');
+  setTimeout(() => e.classList.remove('show'), 5000);
+}
+
+/* ---- 1 · לשון פנייה ---- */
+// זה הערך הראשון בשכבת הגן, והוא היה כתוב כהנחיה ב-CLAUDE.md הרבה
+// לפני שהייתה שכבה שתחזיק אותו.
+function s0() {
+  show(`<p class="eyebrow">שאלה 1 מתוך 3</p>
+    <h1>איך לפנות אלייך?</h1>
+    <div class="sub">כל הטקסטים באתר יתאימו את עצמם לבחירה הזו. אפשר לשנות
+      בכל רגע בהגדרות.</div>
+    <div class="opts">
+      ${[['female','בלשון נקבה','"ברוכה הבאה · את יכולה לערוך"'],
+         ['male','בלשון זכר','"ברוך הבא · אתה יכול לערוך"'],
+         ['neutral','בלי לשון פנייה','"ברוכים הבאים · אפשר לערוך"']]
+        .map(([v,l,ex]) => `<button class="opt ${ans.address===v?'on':''}"
+          onclick="ans.address='${v}';s1()">${l}<em>${esc(ex)}</em></button>`).join('')}
+    </div>`);
+}
+
+/* ---- 2 · שם הגן ---- */
+function s1() {
+  step = 1;
+  show(`<p class="eyebrow">שאלה 2 מתוך 3</p>
+    <h1>איך קוראים לגן?</h1>
+    <div class="sub">השם הזה יופיע על כל דף שתדפיסי ועל התפריט שההורים
+      מקבלים בוואטסאפ.</div>
+    <input type="text" id="nm" value="${esc(ans.name)}" maxlength="60"
+      placeholder="למשל: גן לב" onkeydown="if(event.key==='Enter')goName()">
+    <div class="act">
+      <button class="btn" onclick="goName()">המשך</button>
+      <button class="btn ghost" onclick="step=0;s0()">חזרה</button>
+    </div>`);
+  setTimeout(() => { const e = document.getElementById('nm'); if (e) { e.focus(); e.select(); } }, 60);
+}
+function goName() {
+  const v = (document.getElementById('nm').value || '').trim();
+  if (!v) { showErr('צריך שם לגן — הוא מופיע על כל דף מודפס'); return; }
+  ans.name = v; s2();
+}
+
+/* ---- 3 · סניפים ---- */
+function s2() {
+  step = 2;
+  show(`<p class="eyebrow">שאלה 3 מתוך 3</p>
+    <h1>כמה סניפים יש?</h1>
+    <div class="sub">ברשת עם כמה סניפים התפריט וספר המתכונים משותפים,
+      אבל הילדים, הצוות וסידורי החדר נפרדים לכל סניף.</div>
+    <div class="opts">
+      ${[[1,'סניף אחד',''],
+         [2,'שניים או שלושה',''],
+         [4,'ארבעה ומעלה','נוסיף אותם יחד אחרי ההתקנה']]
+        .map(([v,l,n]) => `<button class="opt ${ans.branches===v?'on':''}"
+          onclick="ans.branches=${v};finish()">${l}${n?`<em>${esc(n)}</em>`:''}</button>`).join('')}
+    </div>
+    <div class="act"><button class="btn ghost" onclick="s1()">חזרה</button></div>`);
+}
+
+/* ---- סיום ---- */
+// מסך אחרון שנגמר ב"סיימת" הוא רושם ראשוני גרוע. הוא נגמר בצעד הבא
+// האמיתי, לפי כלל 15.
+async function finish() {
+  step = 3;
+  show(`<div class="sub">שומר…</div>`);
+  if (!PREVIEW) {
+    try {
+      await api.saveGardenProfile({
+        prefs: { address: ans.address },
+        patch: { branches: ans.branches },
+        gardenName: ans.name,
+        source: 'setup', setup: true,
+      });
+    } catch (e) { showErr('השמירה נכשלה: ' + e.message); s2(); return; }
+  }
+  const t = (f, m, n) => ans.address === 'male' ? m : ans.address === 'neutral' ? n : f;
+  show(`<div class="done">
+    <div class="big">🌿</div>
+    <h1>${t('הכל מוכן','הכל מוכן','הכל מוכן')}, ${esc(ans.name)}</h1>
+    <div class="sub">${t('מכאן המערכת תתאים את עצמה לדרך שבה את עובדת. כל פעם שתגדירי משהו — היא תזכור ולא תשאל שוב.',
+                         'מכאן המערכת תתאים את עצמה לדרך שבה אתה עובד. כל פעם שתגדיר משהו — היא תזכור ולא תשאל שוב.',
+                         'מכאן המערכת תתאים את עצמה לדרך העבודה שלכם. כל הגדרה נשמרת ולא נשאלת שוב.')}</div>
+    <div class="nexts">
+      <button class="opt" onclick="location.href='children-manage.html'">
+        ${t('הוספת הילדים','הוספת הילדים','הוספת הילדים')}
+        <em>${t('זה הדבר שכל השאר נשען עליו — סידור ישיבה, מזרונים, תפריט ואלרגיות',
+                'זה הדבר שכל השאר נשען עליו — סידור ישיבה, מזרונים, תפריט ואלרגיות',
+                'זה הדבר שכל השאר נשען עליו — סידור ישיבה, מזרונים, תפריט ואלרגיות')}</em></button>
+      <button class="opt" onclick="location.href='dashboard.html'">
+        ${t('להסתכל קודם','להסתכל קודם','להסתכל קודם')}
+        <em>${t('אפשר להוסיף ילדים אחר כך','אפשר להוסיף ילדים אחר כך','אפשר להוסיף ילדים אחר כך')}</em></button>
+    </div>
+    ${PREVIEW ? '<div class="note">תצוגה מקדימה — שום דבר לא נשמר.</div>' : ''}
+  </div>`);
+}
+
+(async function () {
+  try {
+    const r = await api.getGardenProfile();
+    ans.name = (r && r.gardenName) || '';
+    if (r && r.prefs && r.prefs.address) ans.address = r.prefs.address;
+    // גן שכבר מוגדר לא אמור להגיע לכאן, אבל אם הגיע — לא מתחילים
+    // מחדש בלי לומר למה.
+    if (r && r.setup && !PREVIEW) { location.replace('dashboard.html'); return; }
+  } catch (e) {}
+  s0();
+})();
+</script>
+</body>
+</html>

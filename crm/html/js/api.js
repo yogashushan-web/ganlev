@@ -97,6 +97,11 @@ const api = {
 
   // בניית תפריט (events: calendar='menu-dish' / 'menu' / 'menu-set').
   // הדף שההורים מקבלים נקרא דרך menu-public, בלי טוקן.
+  // פרופיל הגן — השכבה שכל הכלים קוראים ממנה. ראו "העיקרון הראשון"
+  // ב-CLAUDE.md ואת js/profile.js.
+  getGardenProfile: () => apiCall(`/garden-profile?garden_id=${getGardenId()}`),
+  saveGardenProfile: (body) => apiCall(`/garden-profile?garden_id=${getGardenId()}`, 'POST', body),
+
   getMenu: () => apiCall(`/menu?garden_id=${getGardenId()}`),
   saveDish: (dish) => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'dish', dish }),
   seedDishes: () => apiCall(`/menu?garden_id=${getGardenId()}`, 'POST', { action: 'seed' }),
