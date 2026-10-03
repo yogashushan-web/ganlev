@@ -1,0 +1,3637 @@
+{
+  "meta": {
+    "sources": [
+      "משרד הבריאות, אגף התזונה – חוזר 1/2023 'לאכול ולגדול': המלצות למעונות מגיל 3 חודשים עד 5 שנים (טבלאות תדירות וגודל מנה לארוחת בוקר/צהריים/ביניים/ערב, הרכב מרקים נבחרים, רשימת המזונות המותרים, מאכלים סמליים לחגים) — https://www.gov.il/he/pages/bz01-2023 (עותק PDF שנקרא בפועל: https://www.shoham.muni.il/uploads/n/1684759325.2634.pdf)",
+      "משרד הבריאות, אגף התזונה – נוהל 'לאכול ולגדול' מהדורת מאי 2020 (המהדורה הקודמת, נספח 3 רשימת מזונות ונספח 4 מאכלי חג) — https://www.gov.il/BlobFolder/reports/eatandgrow/he/files_publications_MISC_eatandgrow.pdf",
+      "משרד הבריאות, 'מניעת חנק באכילה' – רשימת מאכלים מסוכנים וכללי חיתוך עד גיל 5 — https://me.health.gov.il/parenting/raising-children/safe-environment/home-safety/prevent-choking/safe-baby-feeding/",
+      "תפריט שבועי מלא (12 עמ') של רשת מעונות יום דובדבן, חתום ע\"י דיאטנית קלינית – כולל תפריט צמחוני, תפריט בשרי, תפריט תינוקייה והערות לתפריט — http://www.rdm.co.il/wp-content/uploads/full-menu.pdf",
+      "רשת מעונות דובדבן – עמוד התפריטים — http://www.rdm.co.il/תפריט_מזון_במעון_יום/",
+      "'תפריט בסיסי מומלץ לגני ילדים – פעוטות' לפי לאכול ולגדול, מאת מיטל מינסטר דיאטנית קלינית (יועצת תזונה לעיריית רעננה), כולל תחלופות לגן צמחוני — https://www.shoham.muni.il/uploads/n/1684759168.1726.pdf (דף: https://www.shoham.muni.il/988/)",
+      "מועצה מקומית קרני שומרון – תפריט ארוחות במעונות היום (תפריט שבועי מלא, בוקר/צהריים/מנחה) — https://karneishomron.co.il/תפריט-ארוחות-במעונות/",
+      "גן חיבוקי אשדוד – 'תזונה בגן': פירוט שמות המנות בפועל (דייסות, קציצות, מרקים, סלטים, ארוחת ארבע) — https://www.ganhibuki.com/menu",
+      "משפחתון/פעוטון גן קשת חדרה – סדר יום ותפריט שבועי — https://www.gan-keshet.co.il/תפריט-וסדר-יום/",
+      "הגן של חגית – תפריט המזון, כולל מאכלי חג (סופגניות, אוזני המן, מצות, לביבות) — https://www.gan-hagit.co.il/תפריט-המזון/",
+      "מעון דפנה (ytlv) – תפריט ומעבר למזון מוצק בגילי 10–12 חודשים — https://www.ytlv.co.il/dafna/menu",
+      "קייטרינג 'זר מטעמים' – תפריט לגני ילדים ומעונות (מנות עיקריות, פחמימות, ירקות מבושלים, מנות צמחוניות) — https://zer-matamim.co.il/catering/factories-institutions/kindgard-sharon/",
+      "ויצו – התזונה במעונות — https://wizo.org.il/התזונה-במעונות/",
+      "'צעדים – מרכזים חינוכיים לגיל הרך' (חוויות) – תפריט ארוחות במעונות — https://www.havayot.org.il/תפריט-ארוחות-במעונות/"
+    ],
+    "notes": "מה אומת: שמות המנות, הקטגוריות ותדירויות ההגשה נבדקו מול חוזר משרד הבריאות 'לאכול ולגדול' (מהדורת 1/2023 ומהדורת מאי 2020) ומול חמישה תפריטים שבועיים אמיתיים שפורסמו ע\"י מעונות/גנים (רשת דובדבן, קרני שומרון, גן חיבוקי, גן קשת, הגן של חגית) ותפריט קייטרינג לגנים (זר מטעמים). מנות שמופיעות שם בשמן הופיעו כאן כ-confidence=high.\nמה לא אומת: (1) הרכב המצרכים המדויק של כל מנה – החוזר קובע קבוצות מזון, תדירויות וגודלי מנה אבל לא מתכונים, ולכן רשימות המצרכים הן השחזור הסטנדרטי של ההכנה בגן ולא ציטוט ממקור. (2) לא הושגו תפריטים רשמיים של רשתות ויצו / נעמ\"ת / אמונה – עמוד 'התזונה במעונות' של ויצו נטען ללא תוכן תפריט, ולנעמ\"ת ואמונה לא נמצא תפריט שבועי מפורסם. (3) אתר gov.il חוסם הורדה ישירה; חוזר 1/2023 נקרא מעותק PDF זהה שמתארח באתר מועצה מקומית שוהם, ומהדורת 2020 נקראה דרך פרוקסי קריאה. (4) החיפוש בוצע בעיקר בעברית ומוגבל לתפריטים שפורסמו באינטרנט – תפריטים של גנים פרטיים רבים מופצים רק להורים.\nהחלטות שקופות לגבי allergenHints: הקוד נגזר אוטומטית מרשימת המצרכים שרשומה בכל מנה בלבד. שיבולת שועל סומנה gluten – בישראל היא כמעט תמיד מסומנת 'עלול להכיל גלוטן' ואינה מוסמכת ללא גלוטן. זעתר סומן sesame כי תערובת הזעתר הישראלית מכילה שומשום. קמח חומוס/קטניות/תירס/אורז ופריכיות אורז לא סומנו gluten. סויה, טופו ודגים אינם בין שש הקטגוריות המבוקשות ולכן אינם מסומנים – מנות עם דג/טונה/סרדינים מסומנות vegetarian=false.\n18 רשומות (פירות שלמים, ירקות בודדים, חטיפי דגן שלמים וארבע רשומות האזהרה) מכילות פחות משלושה מצרכים – כי זה באמת כל מה שיש בהן; עדיף על פני המצאת מצרכים.\nארבע רשומות הן 'מלכודות' מכוונות עם toddler=avoid, כדי שגננת שתקליד אותן תקבל התראה ולא רק השלמה: פופקורן, פיצוחים ואגוזים, נקניקיות, כריך דבש. כולן נאסרות במפורש בהנחיות משרד הבריאות לגיל הרך.\nסטטיסטיקה: סך הכל 175 מנות – בוקר=38, צהריים=91, נשנוש=46. צמחוניות: 147 (84%), מהן טבעוניות: 96. רמות ודאות: high=144, medium=28, low=3. התאמה לגיל: ok=122, caution=49, avoid=4."
+  },
+  "dishes": [
+    {
+      "name": "דייסת שיבולת שועל",
+      "aliases": [
+        "דייסה",
+        "קוואקר",
+        "דייסת קוואקר"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "שיבולת שועל",
+        "חלב",
+        "בננה",
+        "טחינה גולמית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "דייסת סולת",
+      "aliases": [
+        "סולת",
+        "דייסת סולת בחלב"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "סולת",
+        "חלב",
+        "קינמון"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "קורנפלקס עם חלב",
+      "aliases": [
+        "קורנפלקס",
+        "פתיתי תירס עם חלב"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "קורנפלקס",
+        "חלב",
+        "בננה"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "אורז בחלב",
+      "aliases": [
+        "דייסת אורז",
+        "פודינג אורז"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "אורז",
+        "חלב",
+        "קינמון"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk"
+      ],
+      "toddler": "ok",
+      "confidence": "low"
+    },
+    {
+      "name": "דייסת תירס",
+      "aliases": [
+        "פולנטה חלבית",
+        "דייסת קמח תירס"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "קמח תירס",
+        "חלב",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk"
+      ],
+      "toddler": "ok",
+      "confidence": "low"
+    },
+    {
+      "name": "שיבולת שועל עם יוגורט ופרי",
+      "aliases": [
+        "דייסה קרה",
+        "שיבולת שועל ביוגורט"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "שיבולת שועל",
+        "יוגורט",
+        "תפוח עץ מגורד"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "low"
+    },
+    {
+      "name": "חביתה",
+      "aliases": [
+        "אומלט",
+        "חביתת ביצים"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "ביצים",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "ביצה קשה",
+      "aliases": [
+        "ביצים קשות",
+        "ביצה מבושלת"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "ביצים",
+        "מים",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "להגיש חצויה לאורך וחתוכה לרצועות או מפוררת – לא בטבעות עגולות"
+    },
+    {
+      "name": "ביצה מקושקשת",
+      "aliases": [
+        "מקושקשת",
+        "ביצה מקושקשת בחלב"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "ביצים",
+        "חלב",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "egg"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "חביתת קישואים",
+      "aliases": [
+        "חביתת ירק",
+        "חביתת קישוא"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "ביצים",
+        "קישואים",
+        "שמן זית",
+        "פטרוזיליה"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "חביתה מקמח קטניות",
+      "aliases": [
+        "חביתה טבעונית",
+        "חביתת קמח חומוס"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "קמח חומוס",
+        "מים",
+        "כורכום",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "כריך גבינה לבנה",
+      "aliases": [
+        "לחם עם גבינה",
+        "כריך גבינה"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "גבינה לבנה",
+        "מלפפון"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "כריך גבינה צהובה",
+      "aliases": [
+        "לחם עם גבינה צהובה"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "גבינה צהובה",
+        "עגבנייה"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "טוסט גבינה",
+      "aliases": [
+        "טוסט",
+        "טוסט גבינה צהובה"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "גבינה צהובה",
+        "עגבנייה"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "כריך אבוקדו",
+      "aliases": [
+        "לחם עם אבוקדו"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "אבוקדו",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פיתה עם גבינה",
+      "aliases": [
+        "פיתה גבינה",
+        "פיתה עם גבינה לבנה"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "פיתה מחיטה מלאה",
+        "גבינה לבנה",
+        "מלפפון"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "ממרח חומוס",
+      "aliases": [
+        "חומוס",
+        "סלט חומוס",
+        "ממרח גרגירי חומוס"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "גרגירי חומוס",
+        "טחינה גולמית",
+        "לימון",
+        "שום",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "sesame"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "סלט טחינה",
+      "aliases": [
+        "טחינה",
+        "ממרח טחינה",
+        "טחינה גולמית"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "טחינה גולמית",
+        "מים",
+        "לימון",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "sesame"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "ממרח אבוקדו",
+      "aliases": [
+        "אבוקדו מרוסק",
+        "מחית אבוקדו"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "אבוקדו",
+        "לימון",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "ממרח טופו",
+      "aliases": [
+        "ממרח טופו טבעי",
+        "טופו ממרח"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "טופו",
+        "טחינה גולמית",
+        "לימון",
+        "כורכום"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "sesame"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "ממרח עדשים",
+      "aliases": [
+        "ממרח קטניות",
+        "פטה עדשים"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "עדשים כתומות",
+        "שמן זית",
+        "לימון",
+        "כמון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "ממרח שעועית לבנה",
+      "aliases": [
+        "ממרח שעועית",
+        "מחית שעועית לבנה"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "שעועית לבנה",
+        "שמן זית",
+        "לימון",
+        "שום"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "סלט טונה",
+      "aliases": [
+        "טונה",
+        "ממרח טונה"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "טונה בשימורים",
+        "מלפפון חמוץ",
+        "שמן זית",
+        "לימון"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "ממרח סרדינים",
+      "aliases": [
+        "סרדינים",
+        "ממרח דגים"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "סרדינים בשימורים",
+        "לימון",
+        "שמן זית"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "לוודא שאין עצמות ולמעוך היטב; מלוח – לא יותר מפעם בשבוע"
+    },
+    {
+      "name": "סלט ביצים",
+      "aliases": [
+        "ממרח ביצים",
+        "ביצים קצוצות"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "ביצים",
+        "שמן זית",
+        "בצל ירוק"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "קוטג' עם ירקות",
+      "aliases": [
+        "קוטג'",
+        "גבינת קוטג'"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "קוטג'",
+        "מלפפון",
+        "עגבנייה",
+        "שמיר"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "גבינה צפתית עם ירקות",
+      "aliases": [
+        "גבינה צפתית",
+        "צפתית"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "גבינה צפתית",
+        "עגבנייה",
+        "מלפפון",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "גבינה קשה – לחתוך לקוביות קטנות או לפורר"
+    },
+    {
+      "name": "גבינה לבנה עם זיתים",
+      "aliases": [
+        "גבינה עם זיתים"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "גבינה לבנה",
+        "זיתים",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "להוציא גלעין ולחצות את הזית לאורך – זית שלם הוא סיכון חנק"
+    },
+    {
+      "name": "לאבנה בשמן זית",
+      "aliases": [
+        "לאבנה",
+        "ממרח לבנה"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "לאבנה",
+        "שמן זית",
+        "זעתר"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "sesame"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "סלט גבינה בולגרית וירקות",
+      "aliases": [
+        "גבינה בולגרית",
+        "סלט בולגרית"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "גבינה בולגרית",
+        "עגבנייה",
+        "מלפפון",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk"
+      ],
+      "toddler": "caution",
+      "confidence": "medium",
+      "toddlerNote": "גבינה מלוחה – לשטוף ולהגיש בכמות קטנה"
+    },
+    {
+      "name": "יוגורט עם פירות",
+      "aliases": [
+        "יוגורט",
+        "יוגורט עם פרי",
+        "יוגורט עם סילאן"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "יוגורט טבעי",
+        "בננה",
+        "תפוח עץ מגורד"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "לבן עם ירקות",
+      "aliases": [
+        "לבן",
+        "אשל עם ירקות"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "לבן",
+        "מלפפון",
+        "שמיר"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "סלט ירקות קצוץ",
+      "aliases": [
+        "סלט ישראלי",
+        "סלט ירקות",
+        "סלט"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "עגבנייה",
+        "מלפפון",
+        "פלפל",
+        "שמן זית",
+        "לימון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "ירקות חתוכים",
+      "aliases": [
+        "מגש ירקות",
+        "ירקות טריים",
+        "מקלוני ירקות"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "מלפפון",
+        "גזר",
+        "פלפל",
+        "קולרבי"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "לחתוך לרצועות דקות לאורך ולא לטבעות; גזר נא – לגרד או לאדות קלות"
+    },
+    {
+      "name": "פיתה עם זעתר ושמן זית",
+      "aliases": [
+        "פיתה זעתר",
+        "פיתה עם זעתר"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "פיתה מחיטה מלאה",
+        "זעתר",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "חלה",
+      "aliases": [
+        "חלה לשבת",
+        "לחם חלה"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "קמח חיטה",
+        "שמרים",
+        "שמן קנולה",
+        "ביצה",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "לחמניות מחיטה מלאה",
+      "aliases": [
+        "לחמנייה",
+        "לחמניות בהכנה בגן"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "קמח חיטה מלא",
+        "שמרים",
+        "שמן זית",
+        "מלח",
+        "מים"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פנקייק שיבולת שועל ובננה",
+      "aliases": [
+        "פנקייק",
+        "פנקייק בננה",
+        "לביבות בננה"
+      ],
+      "cat": "בוקר",
+      "ingredients": [
+        "שיבולת שועל",
+        "בננה",
+        "ביצים",
+        "חלב"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "מרק ירקות",
+      "aliases": [
+        "מרק ירקות עשיר",
+        "מרק צח"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גזר",
+        "קישוא",
+        "תפוח אדמה",
+        "סלרי",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק עדשים",
+      "aliases": [
+        "מרק עדשים וירקות",
+        "מרק עדשים ירוקות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "עדשים",
+        "גזר",
+        "בצל",
+        "תפוח אדמה",
+        "שמן זית",
+        "כמון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק עדשים כתומות",
+      "aliases": [
+        "מרק עדשים אדומות",
+        "מרק עדשים כתומות וירקות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "עדשים כתומות",
+        "גזר",
+        "בטטה",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק אפונה",
+      "aliases": [
+        "מרק אפונה יבשה",
+        "מרק אפונה ושיבולת שועל"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "אפונה יבשה",
+        "שיבולת שועל",
+        "ירקות מעורבים",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק גריסים",
+      "aliases": [
+        "מרק גריסי פנינה",
+        "מרק שעורה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גריסים",
+        "גזר",
+        "סלרי",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק שעועית לבנה ברסק עגבניות",
+      "aliases": [
+        "מרק שעועית לבנה",
+        "מרק שעועית"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "שעועית לבנה",
+        "רסק עגבניות",
+        "אורז",
+        "ירקות מעורבים",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק עגבניות עם אורז",
+      "aliases": [
+        "מרק עגבניות",
+        "מרק אורז ועגבניות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "עגבניות",
+        "רסק עגבניות",
+        "אורז",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק כתום",
+      "aliases": [
+        "מרק דלעת",
+        "מרק בטטה ודלעת",
+        "מרק דלורית"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "דלעת",
+        "בטטה",
+        "גזר",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק ירקות עם אטריות",
+      "aliases": [
+        "מרק אטריות",
+        "מרק נודלס"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "אטריות",
+        "גזר",
+        "סלרי",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק ירקות וגרגירי חומוס",
+      "aliases": [
+        "מרק חומוס",
+        "מרק קוסקוס וחומוס"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גרגירי חומוס",
+        "ירקות מעורבים",
+        "שמן זית",
+        "כמון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק כוסמת",
+      "aliases": [
+        "מרק כוסמת וירקות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "כוסמת",
+        "גזר",
+        "בצל",
+        "סלרי",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק בורגול",
+      "aliases": [
+        "מרק בורגול עבה",
+        "מרק חיטה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "בורגול",
+        "ירקות מעורבים",
+        "רסק עגבניות",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק דגים",
+      "aliases": [
+        "מרק דג",
+        "מרק ירקות עם טונה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "טונה",
+        "אורז",
+        "גזר",
+        "סלרי",
+        "שמן זית"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "medium",
+      "toddlerNote": "לוודא שאין עצמות לפני ההגשה"
+    },
+    {
+      "name": "מרק ירקות עם בשר טחון",
+      "aliases": [
+        "מרק בשר",
+        "מרק ירקות ובשר טחון"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "בשר בקר טחון",
+        "גזר",
+        "תפוח אדמה",
+        "דלעת",
+        "בצל"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מרק עוף עם אטריות",
+      "aliases": [
+        "מרק עוף",
+        "מרק עוף ואטריות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "עוף",
+        "אטריות",
+        "גזר",
+        "סלרי",
+        "בצל"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "medium",
+      "toddlerNote": "לסנן עצמות ועצמות קטנות; להגיש את העוף פרוס דק"
+    },
+    {
+      "name": "מג'דרה",
+      "aliases": [
+        "מגדרה",
+        "אורז ועדשים",
+        "תבשיל מג'דרה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "אורז",
+        "עדשים",
+        "בצל",
+        "שמן זית",
+        "כמון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "תבשיל עדשים ובטטה",
+      "aliases": [
+        "תבשיל עדשים",
+        "עדשים עם בטטה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "עדשים",
+        "בטטה",
+        "גזר",
+        "בצל",
+        "רסק עגבניות",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "תבשיל שעועית לבנה ברוטב עגבניות",
+      "aliases": [
+        "שעועית לבנה ברוטב",
+        "פסוליה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "שעועית לבנה",
+        "רסק עגבניות",
+        "בצל",
+        "גזר",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "חומוס מבושל ברוטב",
+      "aliases": [
+        "תבשיל חומוס",
+        "חומוס גרגירים מבושל"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גרגירי חומוס",
+        "רסק עגבניות",
+        "בצל",
+        "כמון",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "קטניות יוגשו במרקם מבושל מעוך; גרגיר שלם עלול לגרום חנק"
+    },
+    {
+      "name": "קציצות עדשים",
+      "aliases": [
+        "קציצות עדשים כתומות",
+        "קציצות קטניות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "עדשים",
+        "גזר",
+        "בצל",
+        "פירורי לחם",
+        "ביצה",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "קציצות חומוס",
+      "aliases": [
+        "קציצות גרגירי חומוס",
+        "קציצות חומוס אפויות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גרגירי חומוס",
+        "פטרוזיליה",
+        "בצל",
+        "קמח חומוס",
+        "כמון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פלאפל אפוי",
+      "aliases": [
+        "פלאפל",
+        "פלאפל בתנור",
+        "כדורי פלאפל"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גרגירי חומוס",
+        "פטרוזיליה",
+        "כוסברה",
+        "בצל",
+        "שום",
+        "כמון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "מרקם יבש ומתפורר – להגיש עם טחינה או ברוטב ולמעוך לפעוטות"
+    },
+    {
+      "name": "קציצות קינואה וירקות",
+      "aliases": [
+        "קציצות קינואה",
+        "קציצות ירקות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "קינואה",
+        "גזר",
+        "קישואים",
+        "ביצה",
+        "פירורי לחם"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "בולונז סויה",
+      "aliases": [
+        "תבשיל בולונז סויה",
+        "רוטב בולונז צמחוני"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גרנולת סויה",
+        "רסק עגבניות",
+        "בצל",
+        "גזר",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "קציצות סויה ברוטב עגבניות",
+      "aliases": [
+        "קציצות סויה",
+        "קציצות צמחוניות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גרנולת סויה",
+        "בצל",
+        "פירורי לחם",
+        "ביצה",
+        "רסק עגבניות"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מוקפץ טופו וירקות",
+      "aliases": [
+        "טופו מוקפץ",
+        "מוקפץ טופו"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "טופו",
+        "גזר",
+        "קישואים",
+        "פלפל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "קציצות טופו",
+      "aliases": [
+        "קציצות טופו וירקות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "טופו",
+        "גזר",
+        "קמח חומוס",
+        "פטרוזיליה",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פשטידת גבינות וקישואים",
+      "aliases": [
+        "פשטידת קישואים",
+        "פשטידת גבינה וירק"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "קישואים",
+        "גבינה לבנה",
+        "גבינה צהובה",
+        "ביצים",
+        "קמח חיטה מלא"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פשטידת כרובית",
+      "aliases": [
+        "פשטידת כרובית וגבינה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "כרובית",
+        "ביצים",
+        "גבינה לבנה",
+        "קמח חיטה מלא",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פשטידת תפוחי אדמה",
+      "aliases": [
+        "פשטידת פירה",
+        "פשטידת תפוח אדמה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "תפוחי אדמה",
+        "ביצים",
+        "גבינה צהובה",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "egg"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "פשטידת ירקות",
+      "aliases": [
+        "פשטידה",
+        "פשטידת ירקות אפויה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גזר",
+        "קישואים",
+        "בצל",
+        "ביצים",
+        "קמח חיטה מלא",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מאפה זעתר וגבינות",
+      "aliases": [
+        "מאפה זעתר",
+        "מאפה גבינות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "קמח חיטה מלא",
+        "גבינה לבנה",
+        "זעתר",
+        "שמן זית",
+        "שמרים"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "לביבות קישואים",
+      "aliases": [
+        "לביבות קישוא",
+        "לביבות ירק"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "קישואים",
+        "ביצים",
+        "קמח חיטה מלא",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "לביבות כרובית",
+      "aliases": [
+        "לביבות כרובית אפויות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "כרובית",
+        "ביצים",
+        "קמח חיטה מלא",
+        "פטרוזיליה",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "לביבות תפוחי אדמה",
+      "aliases": [
+        "לביבות",
+        "לביבות חנוכה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "תפוחי אדמה",
+        "ביצים",
+        "קמח חיטה מלא",
+        "בצל",
+        "שמן קנולה"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "מאכל חג (חנוכה) – עדיף אפוי ולא מטוגן, יחידה אחת לילד"
+    },
+    {
+      "name": "שקשוקה",
+      "aliases": [
+        "שקשוקה ביתית",
+        "ביצים ברוטב עגבניות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "ביצים",
+        "עגבניות",
+        "רסק עגבניות",
+        "פלפל",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "מוסקה חצילים",
+      "aliases": [
+        "מוסקה",
+        "חצילים בתנור עם עגבניות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "חצילים",
+        "תפוחי אדמה",
+        "רסק עגבניות",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "לזניה ירקות",
+      "aliases": [
+        "לזניה",
+        "לזניית ירקות וגבינות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "דפי לזניה",
+        "גבינה לבנה",
+        "גבינה צהובה",
+        "קישואים",
+        "רסק עגבניות"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פיצה ביתית",
+      "aliases": [
+        "פיצה",
+        "פיצה בהכנה עצמית"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "קמח חיטה מלא",
+        "רסק עגבניות",
+        "גבינה צהובה",
+        "שמרים",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "ממולאים",
+      "aliases": [
+        "כרוב ממולא",
+        "פלפל ממולא",
+        "קישואים ממולאים"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פלפל",
+        "קישואים",
+        "אורז",
+        "עדשים",
+        "רסק עגבניות",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "אורז לבן",
+      "aliases": [
+        "אורז"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "אורז",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "אורז עם ירקות",
+      "aliases": [
+        "אורז ירקות",
+        "אורז עם גזר ואפונה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "אורז",
+        "גזר",
+        "אפונה",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "אורז צהוב",
+      "aliases": [
+        "אורז בכורכום",
+        "אורז עם כורכום"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "אורז",
+        "כורכום",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "קוסקוס",
+      "aliases": [
+        "קוסקוס מלא",
+        "קוסקוס חיטה מלאה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "קוסקוס מחיטה מלאה",
+        "שמן זית",
+        "מים",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פתיתים",
+      "aliases": [
+        "פתיתים אפויים",
+        "פתיתים מחיטה מלאה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פתיתים",
+        "שמן זית",
+        "בצל",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פסטה ברוטב עגבניות",
+      "aliases": [
+        "פסטה",
+        "פסטה בעגבניות",
+        "ספגטי ברוטב עגבניות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פסטה מחיטה מלאה",
+        "רסק עגבניות",
+        "עגבניות",
+        "שמן זית",
+        "בזיליקום"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "בורגול",
+      "aliases": [
+        "בורגול עם ירקות",
+        "בורגול מבושל"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "בורגול",
+        "בצל",
+        "גזר",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פירה",
+      "aliases": [
+        "פירה תפוחי אדמה",
+        "מחית תפוחי אדמה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "תפוחי אדמה",
+        "חלב",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "תפוחי אדמה בתנור",
+      "aliases": [
+        "תפוח אדמה אפוי",
+        "קוביות תפוח אדמה בתנור"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "תפוחי אדמה",
+        "שמן זית",
+        "פפריקה",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "בטטה בתנור",
+      "aliases": [
+        "בטטה אפויה",
+        "קוביות בטטה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "בטטה",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "קינואה",
+      "aliases": [
+        "קינואה עם ירקות",
+        "קינואה מבושלת"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "קינואה",
+        "גזר",
+        "קישואים",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "גריסים",
+      "aliases": [
+        "גריסים מבושלים",
+        "גריסי פנינה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גריסים",
+        "בצל",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "כוסמת",
+      "aliases": [
+        "כוסמת מבושלת",
+        "כוסמת עם בצל"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "כוסמת",
+        "בצל",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "תירס מבושל",
+      "aliases": [
+        "תירס",
+        "גרעיני תירס"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "תירס",
+        "מים",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "גרעינים עגובים – למעוך או להגיש בכמות קטנה בפיקוח"
+    },
+    {
+      "name": "פריקה",
+      "aliases": [
+        "פריקה מבושלת",
+        "חיטה ירוקה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פריקה",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "ירקות מאודים",
+      "aliases": [
+        "ירקות מבושלים",
+        "ירקות בסיר אדים"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גזר",
+        "קישואים",
+        "כרובית",
+        "ברוקולי"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "אפונה וגזר",
+      "aliases": [
+        "גזר ואפונה",
+        "אפונה גזר"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "אפונה",
+        "גזר",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "שעועית ירוקה ברוטב עגבניות",
+      "aliases": [
+        "שעועית ירוקה",
+        "לוביה ברוטב"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "שעועית ירוקה",
+        "רסק עגבניות",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "גזר מבושל",
+      "aliases": [
+        "גזר גמדי",
+        "גזר מתוק מבושל"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גזר",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "לחתוך לאורך לרצועות ולא לטבעות; לבשל עד ריכוך מלא"
+    },
+    {
+      "name": "דלעת אפויה",
+      "aliases": [
+        "דלעת בתנור",
+        "קוביות דלעת"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "דלעת",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "כרובית בתנור",
+      "aliases": [
+        "כרובית אפויה",
+        "פרחי כרובית בתנור"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "כרובית",
+        "שמן זית",
+        "פפריקה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "ברוקולי מאודה",
+      "aliases": [
+        "ברוקולי",
+        "פרחי ברוקולי"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "ברוקולי",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "סלט כרוב וגזר",
+      "aliases": [
+        "סלט כרוב",
+        "כרוב וגזר"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "כרוב לבן",
+        "גזר",
+        "שמן זית",
+        "לימון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "סלט גזר מגורד",
+      "aliases": [
+        "סלט גזר",
+        "גזר מגורד"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "גזר",
+        "לימון",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "סלט סלק",
+      "aliases": [
+        "סלק",
+        "סלט סלק מבושל"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "סלק",
+        "לימון",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "סלט מלפפונים",
+      "aliases": [
+        "מלפפונים בשמן זית",
+        "סלט מלפפון"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "מלפפון",
+        "שמן זית",
+        "לימון",
+        "שמיר"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "סלט כרוב סגול",
+      "aliases": [
+        "כרוב סגול",
+        "סלט כרוב אדום"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "כרוב סגול",
+        "גזר",
+        "לימון",
+        "שמן זית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "סלט חמוצים",
+      "aliases": [
+        "חמוצים",
+        "מלפפון חמוץ"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "כרוב לבן",
+        "גזר",
+        "מלפפון חמוץ",
+        "פלפל"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "עשיר במלח – כמות קטנה ולא בכל יום"
+    },
+    {
+      "name": "קציצות עוף ברוטב עגבניות",
+      "aliases": [
+        "קציצות עוף",
+        "קציצות של סבתא"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "חזה עוף טחון",
+        "בצל",
+        "פירורי לחם",
+        "ביצה",
+        "רסק עגבניות"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "קציצות עוף ברוטב צהוב",
+      "aliases": [
+        "קציצות עוף בכורכום",
+        "קציצות ברוטב צהוב"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "חזה עוף טחון",
+        "בצל",
+        "כורכום",
+        "פירורי לחם",
+        "ביצה"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "קציצות הודו ברוטב עגבניות",
+      "aliases": [
+        "קציצות הודו",
+        "קציצות הודו מבושלות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "הודו טחון",
+        "בצל",
+        "פירורי לחם",
+        "ביצה",
+        "רסק עגבניות"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "קציצות בקר ברוטב",
+      "aliases": [
+        "קציצות בשר",
+        "כדורי בשר ברוטב עגבניות"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "בשר בקר טחון",
+        "בצל",
+        "פירורי לחם",
+        "ביצה",
+        "רסק עגבניות"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פסטה בולונז",
+      "aliases": [
+        "בולונז",
+        "פסטה ברוטב בולונז",
+        "ספגטי בולונז"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פסטה מחיטה מלאה",
+        "בשר בקר טחון",
+        "רסק עגבניות",
+        "בצל",
+        "גזר"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "גולש בקר",
+      "aliases": [
+        "תבשיל בקר",
+        "גולש"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "בשר בקר",
+        "גזר",
+        "תפוח אדמה",
+        "בצל",
+        "רסק עגבניות"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "נתחי בשר – לחתוך לחתיכות קטנות מאוד בהתאם ליכולת האכילה"
+    },
+    {
+      "name": "אורז עם בשר טחון",
+      "aliases": [
+        "אורז עם בשר",
+        "אורז ובשר טחון"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "אורז",
+        "בשר בקר טחון",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "כרוב ממולא בבשר",
+      "aliases": [
+        "ממולאים בבשר",
+        "כרוב במלית בשר"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "כרוב",
+        "בשר בקר טחון",
+        "אורז",
+        "רסק עגבניות"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "רצועות חזה עוף מוקפצות",
+      "aliases": [
+        "חזה עוף מוקפץ",
+        "רצועות עוף"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "חזה עוף",
+        "פלפל",
+        "בצל",
+        "שמן זית",
+        "פפריקה"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "לחתוך לרצועות דקות וקצרות; עוף יבש מקשה על הבליעה"
+    },
+    {
+      "name": "נתחוני עוף ברוטב",
+      "aliases": [
+        "נתחוני עוף",
+        "עוף ברוטב"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "חזה עוף",
+        "רסק עגבניות",
+        "בצל",
+        "פלפל",
+        "שמן זית"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "medium",
+      "toddlerNote": "לחתוך לחתיכות קטנות ולהגיש עם רוטב"
+    },
+    {
+      "name": "שוקי עוף בתנור",
+      "aliases": [
+        "שוקיים בתנור",
+        "שוק עוף אפוי"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "שוקי עוף",
+        "שמן זית",
+        "פפריקה",
+        "שום"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "להסיר עצמות ועור ולפרק לחתיכות קטנות"
+    },
+    {
+      "name": "עוף בתנור עם תפוחי אדמה",
+      "aliases": [
+        "עוף אפוי",
+        "כרעיים בתנור"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "כרעיים עוף",
+        "תפוחי אדמה",
+        "שמן זית",
+        "פפריקה",
+        "שום"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "להסיר עצמות ועור לפני ההגשה"
+    },
+    {
+      "name": "פרגית בתנור",
+      "aliases": [
+        "פרגיות",
+        "נתחי פרגית בתנור"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פרגית",
+        "שמן זית",
+        "פפריקה",
+        "שום"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "לחתוך לחתיכות קטנות; להסיר שומן ועור"
+    },
+    {
+      "name": "שניצל עוף אפוי",
+      "aliases": [
+        "שניצל",
+        "שניצלונים אפויים",
+        "שניצל בתנור"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "חזה עוף",
+        "פירורי לחם",
+        "ביצה",
+        "שמן זית"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "שיפודי עוף",
+      "aliases": [
+        "שיפודים",
+        "שיפודי פרגית"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "חזה עוף",
+        "שמן זית",
+        "פפריקה"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "medium",
+      "toddlerNote": "להוציא מהשיפוד לפני ההגשה ולחתוך לחתיכות קטנות"
+    },
+    {
+      "name": "תבשיל עוף וירקות",
+      "aliases": [
+        "עוף עם ירקות",
+        "תבשיל עוף"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "חזה עוף",
+        "גזר",
+        "קישואים",
+        "בצל",
+        "רסק עגבניות"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "פילה דג בתנור",
+      "aliases": [
+        "פילה דג",
+        "דג אפוי",
+        "פילה מושט"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פילה דג",
+        "שמן זית",
+        "לימון",
+        "מלח"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "לבדוק עצמות אחת אחת לפני ההגשה"
+    },
+    {
+      "name": "פילה דג ברוטב עגבניות",
+      "aliases": [
+        "דג ברוטב",
+        "חריימה עדינה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פילה דג",
+        "רסק עגבניות",
+        "פלפל",
+        "שום",
+        "כוסברה"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "medium",
+      "toddlerNote": "לבדוק עצמות; להגיש ללא חריף"
+    },
+    {
+      "name": "קציצות דג",
+      "aliases": [
+        "קציצות דגים",
+        "קציצות דג ברוטב"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פילה דג טחון",
+        "בצל",
+        "פירורי לחם",
+        "ביצה",
+        "פטרוזיליה"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "לוודא שאין עצמות בטחינת הדג"
+    },
+    {
+      "name": "פשטידת דג",
+      "aliases": [
+        "פשטידת דג אפויה",
+        "מאפה דג"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פילה דג",
+        "תפוחי אדמה",
+        "ביצים",
+        "בצל",
+        "שמן זית"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "egg"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "לוודא שאין עצמות"
+    },
+    {
+      "name": "פילה סלמון בתנור",
+      "aliases": [
+        "סלמון",
+        "סלמון אפוי"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פילה סלמון",
+        "שמן זית",
+        "לימון"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "medium",
+      "toddlerNote": "לבדוק עצמות ולחתוך לפתיתים קטנים"
+    },
+    {
+      "name": "סלט פסטה עם טונה",
+      "aliases": [
+        "פסטה עם טונה",
+        "סלט פסטה"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "פסטה מחיטה מלאה",
+        "טונה בשימורים",
+        "תירס",
+        "מלפפון חמוץ",
+        "שמן זית"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "תירס בגרעינים שלמים – למעוך; מלפפון חמוץ מלוח"
+    },
+    {
+      "name": "נקניקיות",
+      "aliases": [
+        "נקניקייה",
+        "פרנקפורטר"
+      ],
+      "cat": "צהריים",
+      "ingredients": [
+        "נקניקיות"
+      ],
+      "vegetarian": false,
+      "vegan": false,
+      "allergenHints": [],
+      "toddler": "avoid",
+      "confidence": "high",
+      "toddlerNote": "בשר מעובד – אין להגיש במעון; גם סיכון חנק גבוה בגיל הרך"
+    },
+    {
+      "name": "פירות העונה",
+      "aliases": [
+        "פרי העונה",
+        "פירות חתוכים",
+        "פירות"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תפוח עץ",
+        "בננה",
+        "אגס"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "להגיש ללא גרעינים, חתוך לרצועות או קוביות קטנות"
+    },
+    {
+      "name": "סלט פירות",
+      "aliases": [
+        "סלט פירות ללא סוכר"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תפוח עץ",
+        "בננה",
+        "אגס",
+        "תות שדה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "ללא תוספת סוכר; לחתוך קטן ולהוציא גרעינים"
+    },
+    {
+      "name": "תפוח מגורד",
+      "aliases": [
+        "תפוח עץ מגורד",
+        "תפוח בפומפייה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תפוח עץ"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "בננה",
+      "aliases": [
+        "בננה חתוכה",
+        "בננה קטנה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "בננה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "אבטיח חתוך",
+      "aliases": [
+        "אבטיח",
+        "קוביות אבטיח"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "אבטיח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "להוציא גרעינים ולחתוך לקוביות קטנות"
+    },
+    {
+      "name": "מלון חתוך",
+      "aliases": [
+        "מלון",
+        "קוביות מלון"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "מלון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "לחתוך לקוביות קטנות"
+    },
+    {
+      "name": "קלמנטינה",
+      "aliases": [
+        "קלמנטינות",
+        "מנדרינה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "קלמנטינה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "להפריד לפלחים, להוציא גרעינים וקרומים"
+    },
+    {
+      "name": "תות שדה",
+      "aliases": [
+        "תותים",
+        "תותי שדה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תות שדה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "לחתוך לאורך; תות שלם עגול הוא סיכון חנק"
+    },
+    {
+      "name": "ענבים חצויים לאורך",
+      "aliases": [
+        "ענבים",
+        "ענבים חתוכים"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "ענבים"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "סיכון חנק גבוה – לחצות לאורך ולהוציא גרעינים עד גיל 5"
+    },
+    {
+      "name": "תמרים חתוכים",
+      "aliases": [
+        "תמרים",
+        "תמר מגולען"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תמרים"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "דביק ועלול להידבק לקנה הנשימה – להוציא גלעין ולחתוך קטן"
+    },
+    {
+      "name": "פירות יבשים",
+      "aliases": [
+        "פירות מיובשים",
+        "משמש מיובש"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "משמש מיובש",
+        "תפוח עץ מיובש",
+        "צימוקים"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "מרקם דביק – להוציא גלעין ולחתוך לחתיכות קטנות עד גיל 5"
+    },
+    {
+      "name": "כריך טחינה וסילאן",
+      "aliases": [
+        "לחם עם טחינה וסילאן",
+        "טחינה סילאן"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "טחינה גולמית",
+        "סילאן"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "כריך ממרח תמרים",
+      "aliases": [
+        "ממרח תמרים",
+        "לחם עם ממרח תמרים"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "ממרח תמרים",
+        "טחינה גולמית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "כריך ממרח חרובים",
+      "aliases": [
+        "ממרח חרובים",
+        "לחם עם חרובים"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "ממרח חרובים",
+        "טחינה גולמית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "כריך ממרח שקדיה",
+      "aliases": [
+        "ממרח שקדיה",
+        "שקדיה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "ממרח שקדים",
+        "בננה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "nuts",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "כריך חמאת בוטנים",
+      "aliases": [
+        "חמאת בוטנים",
+        "לחם עם חמאת בוטנים"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "חמאת בוטנים",
+        "בננה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "peanut",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "כריך לבנה",
+      "aliases": [
+        "לחם עם לבנה",
+        "כריך ממרח לבנה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "לאבנה",
+        "זעתר"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "כריך ממרח עדשים",
+      "aliases": [
+        "כריך ממרח קטניות",
+        "ממרח קטניות ביתי"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "ממרח עדשים",
+        "מלפפון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "פיתה עם חומוס",
+      "aliases": [
+        "פיתה חומוס",
+        "חומוס בפיתה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "פיתה מחיטה מלאה",
+        "ממרח חומוס",
+        "מלפפון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "לחמנייה עם גבינה",
+      "aliases": [
+        "לחמנייה גבינה",
+        "כריך לחמנייה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "לחמנייה מחיטה מלאה",
+        "גבינה לבנה",
+        "מלפפון"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "לחם עם שמן זית וזעתר",
+      "aliases": [
+        "לחם זעתר",
+        "שמן זית וזעתר"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "שמן זית",
+        "זעתר"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "קרקרים מחיטה מלאה",
+      "aliases": [
+        "קרקרים",
+        "קרקר מלא"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "קרקרים מחיטה מלאה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "מרקם קשה ומתפורר – להגיש בפיקוח או עם ממרח"
+    },
+    {
+      "name": "פריכיות אורז",
+      "aliases": [
+        "פריכיות",
+        "פריכיות אורז מלא"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "פריכיות אורז"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "מתפורר לחתיכות חדות – להגיש בפיקוח"
+    },
+    {
+      "name": "בייגלה",
+      "aliases": [
+        "בייגלה מלוח",
+        "בייגלה טבעות"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "בייגלה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "זהירות מחנק בגיל צעיר ועשיר במלח – לא בשגרה"
+    },
+    {
+      "name": "תירס על הקלח",
+      "aliases": [
+        "קלח תירס",
+        "תירס חם"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תירס"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "גרעינים עגולים – להגיש בפיקוח או לגרד מהקלח ולמעוך"
+    },
+    {
+      "name": "אדממה",
+      "aliases": [
+        "פולי סויה ירוקים",
+        "אדממה מאודה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "אדממה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "פול עגול – להוציא מהתרמיל ולמעוך לפעוטות"
+    },
+    {
+      "name": "אפונה ירוקה מאודה",
+      "aliases": [
+        "אפונה ירוקה",
+        "אפונה מאודה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "אפונה ירוקה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "גרגירי חומוס מבושלים",
+      "aliases": [
+        "חומוס גרגירים",
+        "גרגירי חומוס"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "גרגירי חומוס",
+        "שמן זית",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "להגיש מבושל היטב ומעוך; גרגיר שלם הוא סיכון חנק"
+    },
+    {
+      "name": "תורמוס",
+      "aliases": [
+        "תורמוסים",
+        "גרעיני תורמוס"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תורמוס"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "עגול, קשה ומלוח – לקלף, למעוך ולהגיש בפיקוח"
+    },
+    {
+      "name": "עוגת בננה",
+      "aliases": [
+        "עוגת בננות",
+        "עוגת בננה ושיבולת שועל"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "בננה",
+        "קמח חיטה מלא",
+        "שמן קנולה",
+        "ביצים",
+        "אבקת אפייה"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "עוגת גזר",
+      "aliases": [
+        "עוגת גזר אפויה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "גזר",
+        "קמח חיטה מלא",
+        "שמן קנולה",
+        "ביצים",
+        "קינמון"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "עוגת תפוחים",
+      "aliases": [
+        "עוגת תפוח עץ",
+        "פאי תפוחים"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תפוח עץ",
+        "קמח חיטה מלא",
+        "שמן קנולה",
+        "ביצים",
+        "קינמון"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "מאפין פירות",
+      "aliases": [
+        "מאפינס",
+        "מאפין על בסיס פרי"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "קמח חיטה מלא",
+        "בננה",
+        "תפוח עץ",
+        "שמן קנולה",
+        "ביצים"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "עוגיות שיבולת שועל",
+      "aliases": [
+        "עוגיות שיבולת שועל ובננה",
+        "קוקיז שיבולת שועל"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "שיבולת שועל",
+        "בננה",
+        "שמן קנולה",
+        "קינמון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "עוגת גבינה",
+      "aliases": [
+        "עוגת גבינה אפויה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "גבינה לבנה",
+        "ביצים",
+        "קמח חיטה מלא",
+        "שמן קנולה"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "כדורי תמרים ושיבולת שועל",
+      "aliases": [
+        "כדורי תמרים",
+        "כדורי תמרים ללא סוכר"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תמרים",
+        "שיבולת שועל",
+        "טחינה גולמית"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "דביק – להגיש קטן ובפיקוח"
+    },
+    {
+      "name": "סופגניות",
+      "aliases": [
+        "סופגנייה",
+        "סופגניות חנוכה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "קמח חיטה",
+        "שמרים",
+        "חלב",
+        "ביצים",
+        "סוכר",
+        "שמן קנולה"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "egg",
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "מאכל חג (חנוכה) – מטוגן ועתיר סוכר; יחידה אחת לילד ובמועד בלבד"
+    },
+    {
+      "name": "אוזני המן",
+      "aliases": [
+        "אוזן המן",
+        "אוזני המן מקמח מלא"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "קמח חיטה מלא",
+        "שמן קנולה",
+        "ביצים",
+        "ממרח תמרים"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "egg",
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "מאכל חג (פורים) – יחידה אחת לילד; עדיף מקמח מלא ושמן ולא מרגרינה"
+    },
+    {
+      "name": "מצה עם ממרח",
+      "aliases": [
+        "מצה",
+        "מצה עם טחינה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "מצה",
+        "טחינה גולמית",
+        "אבוקדו"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "מאכל חג (פסח) – קשה ומתפורר; לשבור קטן ולמרוח ממרח"
+    },
+    {
+      "name": "בלינצ'ס גבינה",
+      "aliases": [
+        "בלינצ'ס",
+        "קרפ גבינה"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "קמח חיטה מלא",
+        "חלב",
+        "ביצים",
+        "גבינה לבנה",
+        "שמן קנולה"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "egg",
+        "gluten"
+      ],
+      "toddler": "ok",
+      "confidence": "medium"
+    },
+    {
+      "name": "בורקס גבינה",
+      "aliases": [
+        "בורקס",
+        "בורקסים"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "בצק עלים",
+        "גבינה לבנה",
+        "ביצה",
+        "שומשום"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "milk",
+        "egg",
+        "sesame",
+        "gluten"
+      ],
+      "toddler": "caution",
+      "confidence": "medium",
+      "toddlerNote": "עתיר שומן ומלח ומוצר מתועש – לאירועים בלבד, לא בשגרה"
+    },
+    {
+      "name": "תפוח אפוי בקינמון",
+      "aliases": [
+        "תפוח אפוי",
+        "תפוחים בתנור"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תפוח עץ",
+        "קינמון"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "ok",
+      "confidence": "high"
+    },
+    {
+      "name": "טנא פירות וירקות",
+      "aliases": [
+        "טנא שבועות",
+        "מגש פירות וירקות"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "תפוח עץ",
+        "ענבים",
+        "מלפפון",
+        "גזר",
+        "תאנים"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "caution",
+      "confidence": "high",
+      "toddlerNote": "מאכל חג (שבועות) – לחצות ענבים ותאנים לאורך ולחתוך קטן"
+    },
+    {
+      "name": "פופקורן",
+      "aliases": [
+        "פופקורן מלוח",
+        "קורנפלקס מתפוצץ"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "גרעיני תירס",
+        "שמן קנולה",
+        "מלח"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [],
+      "toddler": "avoid",
+      "confidence": "high",
+      "toddlerNote": "אסור עד גיל 5 – סיכון חנק גבוה לפי הנחיות משרד הבריאות ובטרם"
+    },
+    {
+      "name": "פיצוחים ואגוזים",
+      "aliases": [
+        "אגוזים",
+        "שקדים",
+        "גרעינים",
+        "פיצוחים"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "אגוזים",
+        "שקדים",
+        "בוטנים",
+        "גרעיני חמנייה"
+      ],
+      "vegetarian": true,
+      "vegan": true,
+      "allergenHints": [
+        "peanut",
+        "nuts"
+      ],
+      "toddler": "avoid",
+      "confidence": "high",
+      "toddlerNote": "אסור עד גיל 5 – אגוזים, שקדים, בוטנים וגרעינים שלמים הם סיכון חנק; מותר רק טחון לממרח חלק"
+    },
+    {
+      "name": "כריך דבש",
+      "aliases": [
+        "דבש",
+        "לחם עם דבש"
+      ],
+      "cat": "נשנוש",
+      "ingredients": [
+        "לחם מחיטה מלאה",
+        "דבש"
+      ],
+      "vegetarian": true,
+      "vegan": false,
+      "allergenHints": [
+        "gluten"
+      ],
+      "toddler": "avoid",
+      "confidence": "high",
+      "toddlerNote": "אין לתת דבש לפני גיל שנה (סכנת בוטוליזם); דבש גם אינו ברשימת המזונות המותרים במעון"
+    }
+  ]
+}
