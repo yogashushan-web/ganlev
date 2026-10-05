@@ -4,7 +4,7 @@
 // PUT /salaries/:id { status, ... }
 
 const { supabase, validateGardenScope, auditLog } = require('./lib/db');
-const { withAuth } = require('./lib/auth');
+const { withAuth, canSeeMoney, denyMoney } = require('./lib/auth');
 
 const handler = withAuth(async (event) => {
   try {
@@ -14,6 +14,8 @@ const handler = withAuth(async (event) => {
     const salaryId = path[path.length - 1];
 
     validateGardenScope(user.garden_id, garden_id, user.role);
+    // שכר ושכר לימוד הם לבעלים בלבד, בכל שיטה ולא רק בקריאה
+    if (!canSeeMoney(user)) return denyMoney(user);
 
     if (event.httpMethod === 'GET') {
       // List salaries with staff info

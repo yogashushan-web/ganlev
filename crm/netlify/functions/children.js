@@ -5,7 +5,10 @@
 // DELETE /children/:id
 
 const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
-const { withAuth } = require('./lib/auth');
+const { withAuth, canSeeMoney, strip } = require('./lib/auth');
+// שכר לימוד חריג הוא מידע כספי. הוא נחתך מהתשובה למי שאינו בעלים,
+// כי המסך משותף לכל הצוות — סידור ישיבה ומזרונים קוראים אותו גם הם.
+const FEE_FIELDS = ['monthly_fee', 'fee_note'];
 const { syncBirthdayToCalendar } = require('./lib/calendar');
 const { createBirthdayCallReminder } = require('./lib/birthday-call');
 
@@ -31,7 +34,7 @@ const handler = withAuth(async (event) => {
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ success: true, data }),
+        body: JSON.stringify({ success: true, data: canSeeMoney(user) ? data : strip(data, FEE_FIELDS) }),
       };
     }
 
@@ -59,7 +62,9 @@ const handler = withAuth(async (event) => {
           prev_framework: prev_framework || null,
           school_year: school_year || null,
           // ריק/לא נשלח = שכר לימוד רגיל. 0 = פטור מלא.
-          monthly_fee: (monthly_fee === 0 || monthly_fee) ? Number(monthly_fee) : null,
+          // מי שלא רואה שכר לימוד גם לא קובע אותו. בלי זה אפשר לכתוב
+          // ערך שלא ניתן לראות, וזה הדרך הארוכה לשבור את ההגבלה.
+          monthly_fee: canSeeMoney(user) && (monthly_fee === 0 || monthly_fee) ? Number(monthly_fee) : null,
           fee_note: fee_note || null,
           status: 'active',
         })
@@ -84,7 +89,10 @@ const handler = withAuth(async (event) => {
 
     if (event.httpMethod === 'PUT') {
       // Update child
-      const body = JSON.parse(event.body || '{}');
+      const raw = JSON.parse(event.body || '{}');
+      // העדכון עובר כמו שהוא ל-update, ולכן בלי החיתוך הזה אפשר לשלוח
+      // monthly_fee בבקשה ולכתוב ערך שאי אפשר לראות.
+      const body = canSeeMoney(user) ? raw : strip(raw, FEE_FIELDS);
 
       const { data: existing } = await supabase
         .from('children')
@@ -113,7 +121,7 @@ const handler = withAuth(async (event) => {
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ success: true, data }),
+        body: JSON.stringify({ success: true, data: canSeeMoney(user) ? data : strip(data, FEE_FIELDS) }),
       };
     }
 
@@ -134,7 +142,7 @@ const handler = withAuth(async (event) => {
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ success: true, data }),
+        body: JSON.stringify({ success: true, data: canSeeMoney(user) ? data : strip(data, FEE_FIELDS) }),
       };
     }
 

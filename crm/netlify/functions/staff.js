@@ -5,7 +5,11 @@
 // DELETE /staff/:id
 
 const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
-const { withAuth } = require('./lib/auth');
+const { withAuth, canSeeMoney, strip } = require('./lib/auth');
+// שישה מסכים קוראים את רשימת הצוות — סידור ישיבה, מזרונים, ימי הולדת.
+// לכן לא חוסמים את ה-endpoint אלא חותכים את השדות הכספיים: חסימה
+// הייתה שוברת את הכלים שאין בהם שום קשר לשכר.
+const PAY_FIELDS = ['salary_type', 'job_scope'];
 const { syncBirthdayToCalendar, cancelBirthdayFromCalendar } = require('./lib/calendar');
 
 const handler = withAuth(async (event) => {
@@ -30,7 +34,7 @@ const handler = withAuth(async (event) => {
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ success: true, data }),
+        body: JSON.stringify({ success: true, data: canSeeMoney(user) ? data : strip(data, PAY_FIELDS) }),
       };
     }
 
@@ -75,7 +79,7 @@ const handler = withAuth(async (event) => {
 
       return {
         statusCode: 201,
-        body: JSON.stringify({ success: true, data }),
+        body: JSON.stringify({ success: true, data: canSeeMoney(user) ? data : strip(data, PAY_FIELDS) }),
       };
     }
 
@@ -115,7 +119,7 @@ const handler = withAuth(async (event) => {
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ success: true, data }),
+        body: JSON.stringify({ success: true, data: canSeeMoney(user) ? data : strip(data, PAY_FIELDS) }),
       };
     }
 
@@ -137,7 +141,7 @@ const handler = withAuth(async (event) => {
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ success: true, data }),
+        body: JSON.stringify({ success: true, data: canSeeMoney(user) ? data : strip(data, PAY_FIELDS) }),
       };
     }
 

@@ -69,6 +69,37 @@ function verifyToken(token) {
   }
 }
 
+// ---- מי רשאי לראות כסף ----
+// שלושה תפקידים קיימים בטבלת users: admin, manager, staff.
+// שכר עובדים ושכר לימוד הם לבעלים בלבד.
+//
+// **זו בדיקת שרת ולא הסתרה במסך.** הסתרת עמוד לא מונעת כלום: מי שיש לו
+// טוקן תקף יכול לקרוא ל-API ישירות ולקבל את אותם נתונים. לכן הערכים
+// נחתכים כאן, והמסך רק משלים את החוויה.
+const MONEY_ROLES = ['admin'];
+const canSeeMoney = user => MONEY_ROLES.indexOf(String(user && user.role)) >= 0;
+
+// מסיר שדות מרשומה או ממערך רשומות
+function strip(data, fields) {
+  const one = r => {
+    if (!r || typeof r !== 'object') return r;
+    const o = Object.assign({}, r);
+    fields.forEach(f => { delete o[f]; });
+    return o;
+  };
+  return Array.isArray(data) ? data.map(one) : one(data);
+}
+
+// חוסם endpoint שלם. למי שאין הרשאה זה 403 ולא עמוד ריק — שקט
+// הוא מה שגורם לאנשים לחשוב שמשהו נשבר.
+function denyMoney(user) {
+  return {
+    statusCode: 403,
+    body: JSON.stringify({ success: false,
+      error: 'המידע הזה פתוח לבעלי הגן בלבד' }),
+  };
+}
+
 function withAuth(handler) {
   return async (event) => {
     try {
@@ -96,6 +127,9 @@ function withAuth(handler) {
 }
 
 module.exports = {
+  canSeeMoney,
+  strip,
+  denyMoney,
   hashPassword,
   verifyPassword,
   generateToken,

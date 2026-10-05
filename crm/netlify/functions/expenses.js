@@ -4,7 +4,7 @@
 // PUT /expenses/:id
 
 const { supabase, validateGardenScope, auditLog, moveToTrash } = require('./lib/db');
-const { withAuth } = require('./lib/auth');
+const { withAuth, canSeeMoney, denyMoney } = require('./lib/auth');
 
 const handler = withAuth(async (event) => {
   try {
@@ -14,6 +14,8 @@ const handler = withAuth(async (event) => {
     const expenseId = path[path.length - 1];
 
     validateGardenScope(user.garden_id, garden_id, user.role);
+    // הכנסות והוצאות הן כסף בדיוק כמו שכר — לבעלים בלבד
+    if (!canSeeMoney(user)) return denyMoney(user);
 
     if (event.httpMethod === 'GET') {
       // List expenses

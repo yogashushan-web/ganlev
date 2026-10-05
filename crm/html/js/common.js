@@ -368,6 +368,11 @@ function renderNavSidebar() {
     { href: 'import.html',          icon: '📥', label: 'ייבוא מטבלה' },
   ];
   const current = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
+  // מסכים כספיים — לבעלים בלבד. ההסתרה כאן היא חוויה; החסימה האמיתית
+  // יושבת בשרת (lib/auth.js · canSeeMoney), כי מי שיש לו טוקן תקף יכול
+  // לקרוא ל-API ישירות בלי לעבור דרך שום מסך.
+  const money = links.filter(l => MONEY_PAGES.indexOf(l.href) >= 0);
+  const shown = canSeeMoney() ? links : links.filter(l => money.indexOf(l) < 0);
 
   if (!document.getElementById('crm-sidebar-style')) {
     const st = document.createElement('style');
@@ -421,7 +426,7 @@ function renderNavSidebar() {
   bar.innerHTML =
     '<div class="cs-logo"><img src="logo.png" alt="גן לב"><div>גן לב</div><div class="cs-sub">מערכת ניהול</div></div>' +
     '<button class="cs-act" id="crmActBtn">✨ פעולות</button>' +
-    links.map(function (l) {
+    shown.map(function (l) {
       return '<a href="' + l.href + '"' + (l.href === current ? ' class="active"' : '') +
         '><span>' + l.icon + '</span><span>' + l.label + '</span></a>';
     }).join('') +
@@ -561,6 +566,34 @@ function debounce(func, wait) {
 // Initialize on page load
 // גן שעוד לא עבר את הכניסה הראשונה מועבר אליה. הבדיקה לא חוסמת את
 // טעינת המסך: אם היא נכשלת, המסך נטען כרגיל ולא נתקע על רשת.
+// שלושה מסכים נוגעים בכסף. שימו לב ש-parents-tuition.html *אינו* אחד
+// מהם למרות השם: הוא ספר הטלפונים של ההורים, בלי שקל אחד, והגננות
+// צריכות אותו כל יום.
+const MONEY_PAGES = ['staff-salaries.html', 'tuition-board.html',
+                     'income-expenses.html'];
+function canSeeMoney() {
+  try {
+    const u = JSON.parse(localStorage.getItem('crm_user') || 'null');
+    return !!u && u.role === 'admin';
+  } catch (e) { return false; }
+}
+// מי שאין לו הרשאה ופתח את הכתובת ישירות מקבל הסבר ולא מסך שבור
+function guardMoneyPage() {
+  const here = (location.pathname.split('/').pop() || '').toLowerCase();
+  if (MONEY_PAGES.indexOf(here) < 0 || canSeeMoney()) return;
+  document.body.innerHTML =
+    '<div style="font-family:Alef,sans-serif;direction:rtl;max-width:430px;margin:90px auto;' +
+    'text-align:center;padding:0 20px;color:#9B8E82;line-height:1.8">' +
+    '<div style="font-size:40px;margin-bottom:12px">🔒</div>' +
+    '<div style="font-size:20px;font-weight:700;color:#1F3D34;margin-bottom:8px">' +
+    'המסך הזה פתוח לבעלי הגן בלבד</div>' +
+    '<div style="font-size:14.5px">שכר עובדים ושכר לימוד אינם חלק מההרשאות שלך. ' +
+    'כל שאר הכלים פתוחים כרגיל.</div>' +
+    '<a href="dashboard.html" style="display:inline-block;margin-top:22px;background:#1F3D34;' +
+    'color:#fff;text-decoration:none;padding:11px 22px;border-radius:11px;font-weight:700;' +
+    'font-size:14px">חזרה לעמוד הבית</a></div>';
+}
+
 const SETUP_SKIP = ['welcome.html', 'login.html', 'menu.html', 'nap.html',
                     'card.html', 'id.html', 'contacts.html', 'meeting.html'];
 async function checkFirstRun() {
@@ -573,6 +606,7 @@ async function checkFirstRun() {
   } catch (e) {}
 }
 document.addEventListener('DOMContentLoaded', function () {
+  guardMoneyPage();
   initializePage();
   if (typeof api !== 'undefined' && api.getGardenProfile) checkFirstRun();
 });

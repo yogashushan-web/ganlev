@@ -2,7 +2,7 @@
 // Returns: { success, data: { children_count, pending_tuition_count, pending_tuition_amount, staff_count, monthly_expenses } }
 
 const { supabase, validateGardenScope } = require('./lib/db');
-const { withAuth } = require('./lib/auth');
+const { withAuth, canSeeMoney } = require('./lib/auth');
 
 const handler = withAuth(async (event) => {
   try {
@@ -64,10 +64,12 @@ const handler = withAuth(async (event) => {
         success: true,
         data: {
           children_count: childrenData?.length || 0,
-          pending_tuition_count: tuitionData?.length || 0,
-          pending_tuition_amount: pendingAmount,
+          // הסכומים יורדים מלוח המחוונים למי שאינו בעלים. המספר
+          // "חסרים 12,400 ש"ח" הוא מידע כספי בדיוק כמו הטבלה עצמה.
+          pending_tuition_count: canSeeMoney(user) ? (tuitionData?.length || 0) : null,
+          pending_tuition_amount: canSeeMoney(user) ? pendingAmount : null,
           staff_count: staffData?.length || 0,
-          monthly_expenses: monthlyExpenses,
+          monthly_expenses: canSeeMoney(user) ? monthlyExpenses : null,
         },
       }),
     };
