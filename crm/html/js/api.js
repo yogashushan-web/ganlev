@@ -99,6 +99,14 @@ const api = {
   // הדף שההורים מקבלים נקרא דרך menu-public, בלי טוקן.
   // פרופיל הגן — השכבה שכל הכלים קוראים ממנה. ראו "העיקרון הראשון"
   // ב-CLAUDE.md ואת js/profile.js.
+  // סיסמת כניסה ושאלת ביטחון. הסיסמה עצמה לא נשמרת בשום מקום בצורה
+  // קריאה, ולכן אין כאן שום קריאה שמחזירה אותה.
+  getAccount: () => apiCall('/account'),
+  changePassword: (current, next) => apiCall('/account', 'POST', { action: 'password', current, next }),
+  setSecurityQuestion: (current, question, answer) =>
+    apiCall('/account', 'POST', { action: 'question', current, question, answer }),
+  clearSecurityQuestion: (current) => apiCall('/account', 'POST', { action: 'clear', current }),
+
   getGardenProfile: () => apiCall(`/garden-profile?garden_id=${getGardenId()}`),
   saveGardenProfile: (body) => apiCall(`/garden-profile?garden_id=${getGardenId()}`, 'POST', body),
 

@@ -86,7 +86,7 @@
   <div id="body"></div>
 
 <script src="js/common.js?v=29"></script>
-<script src="js/api.js?v=24"></script>
+<script src="js/api.js?v=25"></script>
 <script src="js/profile.js?v=2"></script>
 <script>
 // מסך אחד שמרכז את מה שהמערכת יודעת על הגן. ראו "העיקרון הראשון"
@@ -128,7 +128,7 @@ async function boot() {
     ];
   }
   render();
-  loadHealth(); loadDerived();
+  loadHealth(); loadDerived(); loadAccount();
 }
 async function loadDerived() { try { der = await GL.derived(); render(); } catch (e) {} }
 async function loadHealth() {
@@ -149,7 +149,8 @@ function render() {
   document.getElementById('top').innerHTML =
     `<button class="btn soft" onclick="location.href='menu-builder.html'">תפריט</button>
      <button class="btn" onclick="saveAll()">שמירה</button>`;
-  document.getElementById('body').innerHTML = secIdentity() + secMeals() + secDays() + secSens() + secDerived();
+  document.getElementById('body').innerHTML =
+    secIdentity() + secLogin() + secMeals() + secDays() + secSens() + secDerived();
 }
 
 /* ---------- זהות ---------- */
@@ -170,6 +171,80 @@ function secIdentity() {
 async function setAddr(v) {
   try { await GL.setPrefs({ address: v }); render(); showOk('נשמר'); }
   catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+
+/* ---------- סיסמת כניסה ---------- */
+// **הסיסמה לא מוצגת כאן ולא בשום מקום אחר.** מה ששמור במערכת הוא גיבוב
+// חד-כיווני, ולכן אין מה להציג. אם היא הייתה ניתנת להצגה, בסיס הנתונים
+// היה הופך למסמך שבו כתובות כל הסיסמאות.
+let acc = { hasQuestion: false, question: '' };
+async function loadAccount() {
+  try { const r = await api.getAccount(); acc = { hasQuestion: !!r.hasQuestion, question: r.question || '' }; render(); }
+  catch (e) {}
+}
+function secLogin() {
+  return `<div class="card">
+    <h2>סיסמת כניסה</h2>
+    <div class="sub">הסיסמה שמורה כגיבוב חד-כיווני ולכן <b>אי אפשר להציג אותה</b> —
+      לא כאן ולא בבסיס הנתונים. מה שאפשר זה להחליף אותה, ולהגדיר שאלת ביטחון
+      שתאפשר לך להיכנס אם תשכח.</div>
+
+    <div class="fld"><label>הסיסמה הנוכחית</label>
+      <input type="password" id="pwCur" autocomplete="current-password" placeholder="••••••••"></div>
+    <div class="fld"><label>סיסמה חדשה</label>
+      <input type="password" id="pwNew" autocomplete="new-password" placeholder="שמונה תווים לפחות"></div>
+    <div class="fld"><label>שוב, לאימות</label>
+      <input type="password" id="pwNew2" autocomplete="new-password"></div>
+    <button class="btn" onclick="doChangePw()">החלפת סיסמה</button>
+
+    <div style="margin-top:22px;padding-top:18px;border-top:1px solid #f2ede6">
+      <label style="display:block;font-size:13px;font-weight:700;margin-bottom:7px">שאלת ביטחון</label>
+      <div class="note" style="margin:0 0 12px">
+        ${acc.hasQuestion
+          ? `מוגדרת: <b style="color:#1F3D34">${esc(acc.question)}</b>`
+          : 'לא מוגדרת. בלעדיה, סיסמה שנשכחה דורשת גישה לבסיס הנתונים.'}
+      </div>
+      <div class="fld"><label>השאלה</label>
+        <input type="text" id="sqQ" maxlength="80" value="${esc(acc.question)}"
+          placeholder="למשל: איך קראו לגן הראשון שפתחתי?"></div>
+      <div class="fld"><label>התשובה</label>
+        <input type="password" id="sqA" autocomplete="off" placeholder="נשמרת מגובבת, בדיוק כמו סיסמה"></div>
+      <div class="fld"><label>הסיסמה הנוכחית, לאישור</label>
+        <input type="password" id="sqCur" autocomplete="current-password"></div>
+      <button class="btn" onclick="doSetQ()">${acc.hasQuestion ? 'עדכון השאלה' : 'הגדרת שאלה'}</button>
+      ${acc.hasQuestion ? `<button class="btn ghost" onclick="doClearQ()">הסרה</button>` : ''}
+      <div class="note"><b>התשובה היא סיסמה שנייה לכל דבר</b> — מי שיודע אותה נכנס.
+        עדיף משהו שאינך מפרסם: לא שם של ילד ולא עיר מגורים. אחרי חמישה
+        ניסיונות שגויים המסך ננעל לשעה.</div>
+    </div>
+  </div>`;
+}
+const val = id => (document.getElementById(id) || {}).value || '';
+async function doChangePw() {
+  const cur = val('pwCur'), a = val('pwNew'), b = val('pwNew2');
+  if (!cur) { showErr('צריך את הסיסמה הנוכחית'); return; }
+  if (a.length < 8) { showErr('הסיסמה החדשה צריכה להיות באורך שמונה תווים לפחות'); return; }
+  if (a !== b) { showErr('שתי ההקלדות של הסיסמה החדשה אינן זהות'); return; }
+  try { await api.changePassword(cur, a); render(); showOk('הסיסמה הוחלפה'); }
+  catch (e) { showErr(e.message); }
+}
+async function doSetQ() {
+  const q = val('sqQ').trim(), a = val('sqA'), cur = val('sqCur');
+  if (!cur) { showErr('צריך את הסיסמה הנוכחית'); return; }
+  if (q.length < 5) { showErr('השאלה קצרה מדי'); return; }
+  if (a.trim().length < 2) { showErr('התשובה קצרה מדי'); return; }
+  try {
+    await api.setSecurityQuestion(cur, q, a);
+    acc = { hasQuestion: true, question: q };
+    render(); showOk('שאלת הביטחון נשמרה');
+  } catch (e) { showErr(e.message); }
+}
+async function doClearQ() {
+  const cur = val('sqCur');
+  if (!cur) { showErr('צריך את הסיסמה הנוכחית כדי להסיר'); return; }
+  try { await api.clearSecurityQuestion(cur); acc = { hasQuestion: false, question: '' };
+        render(); showOk('השאלה הוסרה'); }
+  catch (e) { showErr(e.message); }
 }
 
 /* ---------- ארוחות ---------- */

@@ -70,6 +70,17 @@
     <p>מערכת ניהול הגן · כניסה למשתמשים מורשים</p>
   </div>
 
+  <div id="reset" style="display:none">
+    <div style="font-size:19px;font-weight:700;color:#1F3D34;margin-bottom:5px">שחזור גישה</div>
+    <div id="rStep" style="font-size:13.5px;color:#9B8E82;line-height:1.7;margin-bottom:15px"></div>
+    <div id="rBody"></div>
+    <div style="text-align:center;margin-top:14px">
+      <button type="button" id="backBtn"
+        style="background:none;border:none;font-family:inherit;font-size:13px;
+               color:#9B8E82;cursor:pointer;text-decoration:underline">חזרה לכניסה</button>
+    </div>
+  </div>
+
   <div id="error" class="error"></div>
   <div id="success" class="success"></div>
 
@@ -96,6 +107,11 @@
     </label>
 
     <button type="submit" class="btn-login" id="loginBtn">כניסה</button>
+    <div style="text-align:center;margin-top:14px">
+      <button type="button" id="forgotBtn"
+        style="background:none;border:none;font-family:inherit;font-size:13px;
+               color:#9B8E82;cursor:pointer;text-decoration:underline">שכחתי סיסמה</button>
+    </div>
   </form>
 
   <div class="foot">🌿 גן לב · מערכת ניהול</div>
@@ -103,6 +119,88 @@
 
 <script>
 const API = '/.netlify/functions/auth-login';
+
+// ---- שחזור גישה דרך שאלת הביטחון ----
+// המסך הזה לא מגלה אילו כתובות רשומות: כתובת לא קיימת וכתובת בלי
+// שאלה מקבלות בדיוק את אותה תשובה.
+const $r = id => document.getElementById(id);
+let rEmail = '', rQuestion = '';
+
+function showReset(on) {
+  $r('reset').style.display = on ? 'block' : 'none';
+  $r('loginForm').style.display = on ? 'none' : 'block';
+  $r('forgotBtn').parentElement.style.display = on ? 'none' : 'block';
+  if (on) askStep();
+}
+function askStep() {
+  $r('rStep').textContent = 'נתחיל מהכתובת שאיתה את/ה נכנס/ת.';
+  $r('rBody').innerHTML =
+    '<div class="form-group"><label>אימייל</label>' +
+    '<input type="email" id="rEmail" placeholder="user@example.com"></div>' +
+    '<button type="button" class="btn-login" id="rAsk">המשך</button>';
+  $r('rEmail').value = $r('email').value || '';
+  $r('rAsk').onclick = doAsk;
+}
+async function doAsk() {
+  const e = ($r('rEmail').value || '').trim();
+  if (!e) return;
+  $r('rAsk').disabled = true;
+  try {
+    const d = await (await fetch('/.netlify/functions/account', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'ask', email: e }),
+    })).json();
+    if (!d.question) {
+      $r('rStep').textContent = '';
+      $r('rBody').innerHTML =
+        '<div style="font-size:14px;color:#9B8E82;line-height:1.8">' +
+        'לכתובת הזו אין שאלת ביטחון מוגדרת, ולכן אי אפשר לשחזר ממנה גישה. ' +
+        'בעל/ת הגן יכול/ה לקבוע סיסמה חדשה מתוך <b>הגדרות הגן</b>.</div>';
+      return;
+    }
+    rEmail = e; rQuestion = d.question;
+    answerStep();
+  } catch (err) {
+    $r('rStep').textContent = 'שגיאת רשת. אפשר לנסות שוב.';
+  } finally { if ($r('rAsk')) $r('rAsk').disabled = false; }
+}
+function answerStep() {
+  $r('rStep').textContent = rQuestion;
+  $r('rBody').innerHTML =
+    '<div class="form-group"><label>התשובה</label>' +
+    '<input type="password" id="rAns" autocomplete="off"></div>' +
+    '<div class="form-group"><label>סיסמה חדשה</label>' +
+    '<input type="password" id="rNew" autocomplete="new-password" placeholder="שמונה תווים לפחות"></div>' +
+    '<div class="form-group"><label>שוב, לאימות</label>' +
+    '<input type="password" id="rNew2" autocomplete="new-password"></div>' +
+    '<button type="button" class="btn-login" id="rGo">קביעת הסיסמה</button>';
+  $r('rGo').onclick = doReset;
+}
+async function doReset() {
+  const ans = $r('rAns').value, a = $r('rNew').value, b = $r('rNew2').value;
+  const err = document.getElementById('error');
+  const fail = m => { err.textContent = m; err.classList.add('show'); };
+  err.classList.remove('show');
+  if (a.length < 8) return fail('הסיסמה החדשה צריכה להיות באורך שמונה תווים לפחות');
+  if (a !== b) return fail('שתי ההקלדות אינן זהות');
+  $r('rGo').disabled = true;
+  try {
+    const d = await (await fetch('/.netlify/functions/account', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reset', email: rEmail, answer: ans, next: a }),
+    })).json();
+    if (!d.success) return fail(d.error || 'השחזור נכשל');
+    showReset(false);
+    const ok = document.getElementById('success');
+    ok.textContent = 'הסיסמה הוחלפה. אפשר להיכנס איתה עכשיו.';
+    ok.classList.add('show');
+    document.getElementById('email').value = rEmail;
+    document.getElementById('password').value = '';
+  } catch (e) { fail('שגיאת רשת: ' + e.message); }
+  finally { if ($r('rGo')) $r('rGo').disabled = false; }
+}
+document.getElementById('forgotBtn').addEventListener('click', () => showReset(true));
+document.getElementById('backBtn').addEventListener('click', () => showReset(false));
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
