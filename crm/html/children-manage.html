@@ -169,11 +169,12 @@
   <div id="form" class="form-container">
     <div id="contractDrop" class="contract-drop">
       <span class="cd-icon">📄⬇️</span>
-      <div><b>גררו לכאן חוזה חתום של הילד/ה</b> (PDF או תמונה)</div>
-      <div class="cd-sub">המערכת תקרא את החוזה ותמלא את הפרטים אוטומטית — כולל שני ההורים</div>
+      <div><b>גררו לכאן חוזה חתום של הילד/ה</b> (Pages, PDF או תמונה)</div>
+      <div class="cd-sub">המערכת תקרא אותו ותמלא את הפרטים — כולל שני ההורים.<br>
+        <b>קובץ Pages נקרא כאן במחשב ולא נשלח לשום מקום.</b></div>
       <div class="cd-status" id="cdStatus"></div>
     </div>
-    <input type="file" id="contractInput" accept="application/pdf,image/*" style="display:none">
+    <input type="file" id="contractInput" accept="application/pdf,image/*,.pages" style="display:none">
     <h2 style="margin-bottom:18px; color:#1F3D34;">הוסף / ערוך ילד</h2>
     <form id="childForm">
       <div class="form-row">
@@ -207,6 +208,8 @@
 
 <script src="js/common.js?v=29"></script>
 <script src="js/api.js?v=25"></script>
+<script src="js/pages-read.js?v=1"></script>
+<script src="js/form-parse.js?v=1"></script>
 <script>
 let children = [];
 let editingId = null;
@@ -693,6 +696,26 @@ async function handleContract(file) {
   if (file.size > 15 * 1024 * 1024) { st.textContent = '❌ הקובץ גדול מדי (עד 15MB)'; return; }
   dz.classList.add('busy');
   try {
+    // ---- טופס Pages: נקרא כאן במחשב, בלי AI ובלי להעלות לשרת ----
+    // טופס הרשמה חתום מכיל ת"ז של ילד וטלפונים של ההורים. כשאפשר
+    // לקרוא אותו מקומית אין סיבה לשלוח אותו לשום מקום.
+    if (/\.pages$/i.test(file.name || '')) {
+      st.textContent = '🔎 קורא את הטופס כאן במחשב...';
+      const lines = PagesRead.linesFromBuffer(await file.arrayBuffer());
+      const p = FormParse.parseForm(lines);
+      const d = Object.assign({}, p.child, {
+        school_year: p.school_year,
+        gender_he: '',            // לא מופיע בטופס, ואין לנחש
+        name_en: '',
+        parents: p.parents,
+      });
+      const b64 = await fileToB64(file);
+      const cf = (b64.length * 3 / 4) > CONTRACT_MAX_BYTES ? null
+        : { base64: b64, contentType: 'application/vnd.apple.pages', fileName: file.name };
+      await applyContractData(d, cf, st, extraFromForm(p));
+      return;
+    }
+
     let base64, srcMime = file.type || '';
     if (isHeicFile(file)) {
       st.textContent = '⏳ ממיר תמונה...';
@@ -717,6 +740,32 @@ async function handleContract(file) {
     const res = await api.parseChildContract(base64, contentType);
     const d = (res && res.data) || {};
 
+    const contractFile0 = (base64.length * 3 / 4) > CONTRACT_MAX_BYTES
+      ? null
+      : { base64, contentType, fileName: file.name || 'contract.pdf' };
+    await applyContractData(d, contractFile0, st, '');
+    return;
+  } catch (e) {
+    st.textContent = '❌ שגיאה בקריאת החוזה: ' + e.message;
+  } finally {
+    dz.classList.remove('busy');
+    document.getElementById('contractInput').value = '';
+  }
+}
+
+// מה שהטופס החתום הוסיף מעבר לשדות הילד — מוצג בשורת הסטטוס כדי
+// שיהיה ברור מה נקרא, גם מה שלא נכנס לטופס.
+function extraFromForm(p) {
+  const bits = [];
+  if (p.hmo && p.hmo.name) bits.push('קופ"ח ' + p.hmo.name);
+  if (p.hours) bits.push('שעות ' + p.hours.from + '–' + p.hours.to);
+  if (p.contract && p.contract.monthly) bits.push('שכר לימוד ' + p.contract.monthly.toLocaleString('he-IL') + ' ₪');
+  if (p.health && p.health.none) bits.push('הוצהר: בלי אלרגיות');
+  return bits.length ? ' · נקרא גם: ' + bits.join(' · ') : '';
+}
+
+// החלק המשותף לשני המסלולים — מילוי הטופס, זיהוי כפילות, והכנה לשמירה
+async function applyContractData(d, contractFile, st, extra) {
     if (!document.getElementById('form').classList.contains('show')) document.getElementById('form').classList.add('show');
     fillYearSelect(d.school_year || selectedYear);
     document.getElementById('firstName').value = d.first_name_he || '';
@@ -726,11 +775,6 @@ async function handleContract(file) {
     document.getElementById('nationalId').value = d.national_id || '';
     document.getElementById('birthDate').value = d.birth_date || '';
     if (d.school_year) document.getElementById('schoolYear').value = d.school_year;
-
-    // החוזה עצמו, כדי לצרף אותו לילד (PDF כמו שהוא, תמונה בגרסה המוקטנת).
-    const contractFile = (base64.length * 3 / 4) > CONTRACT_MAX_BYTES
-      ? null
-      : { base64, contentType, fileName: file.name || 'contract.pdf' };
 
     // הילד כבר קיים? מצרפים אליו את החוזה במקום ליצור כפילות.
     const existing = findExistingChild(d);
@@ -752,14 +796,8 @@ async function handleContract(file) {
     editingId = null; // ensure this saves as a NEW child (so parents attach)
     const pTxt = pendingParents.length ? ` · ${pendingParents.length} הורים יתווספו עם השמירה (${pendingParents.map(p => p.full_name_he).join(', ')})` : '';
     const cTxt = pendingContract ? ' · החוזה יישמר כקובץ מצורף' : ' · ⚠️ החוזה גדול מדי לשמירה כקובץ מצורף — אפשר לצרף אותו ידנית מכרטיס הילד';
-    st.textContent = `✅ הפרטים מולאו${pTxt}${cTxt}. בדקו, השלימו חוסרים ולחצו "שמור".`;
+    st.textContent = `✅ הפרטים מולאו${pTxt}${cTxt}${extra || ''}. בדקו, השלימו חוסרים ולחצו "שמור".`;
     document.getElementById('firstName').focus();
-  } catch (e) {
-    st.textContent = '❌ שגיאה בקריאת החוזה: ' + e.message;
-  } finally {
-    dz.classList.remove('busy');
-    document.getElementById('contractInput').value = '';
-  }
 }
 
 (function wireContractDrop() {
