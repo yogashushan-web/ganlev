@@ -118,7 +118,7 @@ function shapeSvg(s, size) {
   if (s.star) {
     let d = '';
     for (let i = 0; i < 10; i++) {
-      const r = i % 2 ? 19 : 46, a = -Math.PI / 2 + i * Math.PI / 5;
+      const r = i % 2 ? 27 : 47, a = -Math.PI / 2 + i * Math.PI / 5;
       d += (i ? 'L' : 'M') + (50 + r * Math.cos(a)).toFixed(1) + ' ' + (52 + r * Math.sin(a)).toFixed(1) + ' ';
     }
     inner = `<path d="${d}Z"/>`;
@@ -145,7 +145,12 @@ let kids = [], picked = {}, shape = 'cloud';
 // אחד, אבל על מדבקה רוצים "ליה" — ורק מי שמכיר את הילדה יודע את זה,
 // ולכן זה נשמר ולא מנוחש.
 let short = {};
-const printed = k => (short[k.id] || k.first).trim();
+// שם פרטי מורכב — "ליה אמיליה" — מתקצר למילה הראשונה כברירת מחדל,
+// כי על מדבקה רוצים את השם שקוראים לו בגן. זו ברירת מחדל ולא כלל:
+// "בת אל" היא מילה אחת בשתי מילים, ולכן יש "עריכת השמות שיודפסו".
+const autoShort = n => String(n || '').trim().split(/\s+/)[0] || '';
+const isAuto = k => !short[k.id] && autoShort(k.first) !== k.first.trim();
+const printed = k => (short[k.id] || autoShort(k.first)).trim();
 
 async function boot() {
   try {
@@ -198,12 +203,12 @@ function render() {
       </div>
       <div class="bulk" style="margin-top:4px">
         <button class="kid" onclick="openEdit()">עריכת השמות שיודפסו</button>
-        <span class="note">למשל «ליה אמיליה» שעל המדבקה צריכה להיות «ליה»</span>
+        <span class="note">שם משתי מילים מתקצר לבד לראשונה (✂). אפשר להחזיר כאן.</span>
       </div>
       <div class="kids">
         ${kids.map(k => `<button class="kid ${picked[k.id] ? 'on' : ''}" onclick="tog('${k.id}')">
           ${esc(printed(k))}${dup[printed(k)] > 1 && k.last ? ` <small>${esc(k.last)}</small>` : ''}
-          ${short[k.id] ? ' ·' : ''}</button>`).join('')}
+          ${isAuto(k) ? ' <small title="קוצר אוטומטית">✂</small>' : short[k.id] ? ' ·' : ''}</button>`).join('')}
       </div>
       <div class="count-line">נבחרו <b>${chosen().length}</b> מתוך ${kids.length} ·
         ${Math.ceil(chosen().length / 8) || 0} דפים, שמונה מדבקות בדף</div>
@@ -250,15 +255,19 @@ function openEdit() {
   if (!list.length) { showErr('לא נבחר אף ילד'); return; }
   document.getElementById('ovBody').innerHTML = list.map(k => `
     <div class="erow">
-      <span class="who">${esc(k.first)}${k.last ? ' ' + esc(k.last) : ''}</span>
+      <span class="who">${esc(k.first)}${k.last ? ' ' + esc(k.last) : ''}${isAuto(k) ? ' ✂' : ''}</span>
       <input type="text" data-id="${k.id}" value="${esc(printed(k))}" maxlength="24">
-      ${short[k.id] ? `<button class="rst" onclick="resetOne('${k.id}')">לשם המלא</button>` : ''}
+      ${printed(k) !== k.first.trim()
+        ? `<button class="rst" onclick="fullOne('${k.id}')">לשם המלא</button>` : ''}
     </div>`).join('');
   document.getElementById('ov').classList.add('show');
 }
 function closeEdit() { document.getElementById('ov').classList.remove('show'); }
-function resetOne(id) {
-  delete short[id];
+// מחזיר את השם המלא — כולל ביטול הקיצור האוטומטי, ולכן הוא נשמר
+// כערך מפורש ולא כמחיקה
+function fullOne(id) {
+  const k = kids.find(x => x.id === id);
+  if (k) short[id] = k.first.trim();
   closeEdit(); render(); openEdit();
 }
 async function saveEdit() {
@@ -267,7 +276,7 @@ async function saveEdit() {
     const k = kids.find(x => x.id === id);
     const v = (inp.value || '').trim();
     if (!k) return;
-    if (!v || v === k.first) delete short[id];
+    if (!v || v === autoShort(k.first)) delete short[id];
     else short[id] = v;
   });
   closeEdit(); render();
