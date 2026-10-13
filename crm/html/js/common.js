@@ -286,6 +286,8 @@ const CRM_ACTIONS = [
         href: 'menu-builder.html', ico: 'menu' },
       { t: 'הדפסת מדבקות שמות', d: 'שם כל ילד בתוך ענן, כוכב, לב, פרח או בלון · גיליון לגזירה',
         href: 'name-tags.html', ico: 'tag' },
+      { t: 'ניהול ימי שישי', d: 'הרשמת הורים · לוח חגים, קיבולת, שיבוץ צוות ואישור בקשות',
+        href: 'fridays.html', ico: 'grid' },
     ],
   },
 ];
@@ -362,6 +364,7 @@ function renderNavSidebar() {
     { href: 'seating.html',         icon: '🍽️', label: 'סידור ישיבה' },
     { href: 'nap-layout.html',      icon: '🛏️', label: 'סידור מזרונים' },
   { href: 'menu-builder.html',    icon: '🍲', label: 'תפריט' },
+  { href: 'fridays.html',         icon: '🗓️', label: 'ימי שישי' },
   { href: 'name-tags.html',       icon: '🏷️', label: 'מדבקות שמות' },
   { href: 'garden-settings.html', icon: '⚙️', label: 'הגדרות הגן' },
     { href: 'staff-salaries.html',  icon: '👥', label: 'צוות' },

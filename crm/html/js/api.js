@@ -110,6 +110,14 @@ const api = {
   // מדבקות שמות — ה-PDF יורד דרך fetch ישיר ב-name-tags.html, כי
   // apiCall מצפה ל-JSON ולא ל-blob.
 
+  // ימי שישי. ההורים נרשמים דרך friday-public, בלי טוקן.
+  getFridays: () => apiCall(`/fridays?garden_id=${getGardenId()}`),
+  setGanCalendar: (date, name, kind) => apiCall(`/fridays?garden_id=${getGardenId()}`, 'POST', { action:'calendar', date, name, kind }),
+  removeGanCalendar: (date) => apiCall(`/fridays?garden_id=${getGardenId()}`, 'POST', { action:'calendar', date, remove:true }),
+  setFridayStaff: (date, staff) => apiCall(`/fridays?garden_id=${getGardenId()}`, 'POST', { action:'staff', date, staff }),
+  decideFriday: (date, regId, approve) => apiCall(`/fridays?garden_id=${getGardenId()}`, 'POST', { action:'decide', date, regId, approve }),
+  updateFridayDay: (date, body) => apiCall(`/fridays?garden_id=${getGardenId()}`, 'POST', Object.assign({ action:'day', date }, body)),
+
   getGardenProfile: () => apiCall(`/garden-profile?garden_id=${getGardenId()}`),
   saveGardenProfile: (body) => apiCall(`/garden-profile?garden_id=${getGardenId()}`, 'POST', body),
 

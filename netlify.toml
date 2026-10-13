@@ -96,6 +96,12 @@
   to = "/crm/html/menu.html"
   status = 200
 
+# Short link for the Friday sign-up page parents use.
+[[redirects]]
+  from = "/friday"
+  to = "/crm/html/friday.html"
+  status = 200
+
 # Parent contact roster — the link goes in the parents' WhatsApp group description.
 [[redirects]]
   from = "/contacts"

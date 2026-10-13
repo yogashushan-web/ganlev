@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ימי שישי — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
+              padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .btn { background:#1F3D34; color:#fff; border:none; padding:11px 20px; border-radius:10px;
+           cursor:pointer; font-family:'Alef'; font-weight:700; font-size:14px; }
+    .btn.ghost { background:#efe9e0; color:#6f6457; }
+    .btn.sm { padding:6px 12px; font-size:12px; }
+    .err,.ok { padding:12px; border-radius:10px; margin-bottom:14px; display:none; }
+    .err { background:#fdf0ef; color:#c94147; } .ok { background:#d4edda; color:#155724; }
+    .err.show,.ok.show { display:block; }
+
+    .tabs { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
+    .tab { padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700; background:#fff;
+           color:#8a7f70; border:1px solid #e8e4de; cursor:pointer; font-family:'Alef'; }
+    .tab.on { background:#1F3D34; color:#fff; border-color:#1F3D34; }
+
+    .card { background:#fff; border-radius:18px; padding:21px 23px; box-shadow:0 2px 14px rgba(0,0,0,.06);
+            margin-bottom:14px; }
+    .card h2 { font-size:19px; color:#1F3D34; margin-bottom:4px; }
+    .card .sub { color:#9B8E82; font-size:13.5px; margin-bottom:16px; line-height:1.6; }
+    .card .sub b { color:#3D3228; }
+    .fld { margin-bottom:14px; }
+    .fld label { display:block; font-size:13px; font-weight:700; margin-bottom:6px; }
+    .fld input { width:100%; max-width:220px; padding:9px 12px; border:1.5px solid #e8e4de;
+                 border-radius:9px; font-family:'Alef'; font-size:14px; outline:none; }
+    .fld input:focus { border-color:#1F3D34; }
+    .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+    .pick { display:flex; gap:7px; flex-wrap:wrap; }
+    .pick .p { border:1.5px solid #e8e4de; background:#fff; border-radius:999px; padding:7px 13px;
+               font-family:'Alef'; font-size:13px; font-weight:700; cursor:pointer; color:#6f6457; }
+    .pick .p.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
+    .note { font-size:12.5px; color:#9B8E82; line-height:1.7; margin-top:9px; }
+    .note b { color:#1F3D34; }
+
+    .mon { font-size:12px; font-weight:700; letter-spacing:.08em; color:#B9AE9F; margin:20px 2px 9px; }
+    .row { background:#fff; border:1px solid #e8e4de; border-radius:13px; padding:12px 15px;
+           margin-bottom:8px; }
+    .row.closed { background:#FAF8F4; border-style:dashed; }
+    .row.need { border-color:#f0dcc4; background:#fdf9f3; }
+    .rh { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+    .rh b { font-size:15px; color:#1F3D34; font-variant-numeric:tabular-nums; }
+    .cnt { font-size:12px; color:#9B8E82; }
+    .cnt.full { color:#c94147; font-weight:700; }
+    .shut { font-size:11.5px; font-weight:700; background:#f2ede6; color:#8a7f70;
+            border-radius:999px; padding:3px 10px; }
+    .lock { margin-right:auto; font-size:11px; color:#B9AE9F; }
+    .kids { font-size:12.5px; color:#6f6457; margin-top:8px; line-height:1.9; }
+    .kid { display:inline-flex; align-items:center; gap:5px; background:#FAF8F4; border:1px solid #efe9e0;
+           border-radius:8px; padding:3px 8px; margin-left:5px; }
+    .kid.pend { background:#fdf6ef; border-color:#f0dcc4; color:#8a6a23; }
+    .kid button { background:none; border:none; font-family:'Alef'; font-size:10.5px; font-weight:700;
+                  color:#9B8E82; cursor:pointer; padding:1px 3px; border-radius:5px; }
+    .kid button:hover { background:#fdf0ef; color:#c94147; }
+    .staffline { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:9px;
+                 padding-top:9px; border-top:1px solid #f2ede6; }
+    .staffline .lbl { font-size:11.5px; color:#B9AE9F; font-weight:700; }
+    .sbtn { border:1.5px solid #e8e4de; background:#fff; border-radius:999px; padding:4px 11px;
+            font-family:'Alef'; font-size:12px; font-weight:700; color:#8a7f70; cursor:pointer; }
+    .sbtn.on { background:#C4846C; border-color:#C4846C; color:#fff; }
+    .empty-note { color:#9B8E82; font-size:13.5px; line-height:1.7; }
+    .cal { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; }
+    .crow { display:flex; gap:9px; align-items:center; background:#FAF8F4; border:1px solid #efe9e0;
+            border-radius:10px; padding:8px 12px; margin-bottom:7px; font-size:13.5px; flex-wrap:wrap; }
+    .crow .d { font-weight:700; color:#1F3D34; font-variant-numeric:tabular-nums; min-width:92px; }
+    .crow .rm { margin-right:auto; background:#f6f2ec; border:1px solid #e8e1d6; color:#8a7f70;
+                border-radius:8px; padding:4px 10px; font-size:11px; font-weight:700;
+                cursor:pointer; font-family:'Alef'; }
+    @media print { .header,.tabs,.btn,.sbtn,.kid button { display:none !important; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🗓️ ימי שישי</h1>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="top"></div>
+  </div>
+  <div id="error" class="err"></div>
+  <div id="success" class="ok"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="body"></div>
+
+<script src="js/common.js?v=29"></script>
+<script src="js/api.js?v=27"></script>
+<script src="js/profile.js?v=2"></script>
+<script>
+// מסך הצוות. ההורים רואים דף אחר לגמרי ב-/friday, ובו אין שיבוץ צוות
+// ואין תפוסה — רק מה שנוגע להם.
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const P2 = n => String(n).padStart(2,'0');
+const MON = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const fmt = s => { const [y,m,d] = String(s).split('-'); return `${d}.${m}.${y}`; };
+const monName = k => { const [y,m] = k.split('-'); return MON[+m-1] + ' ' + y; };
+const iso = d => `${d.getFullYear()}-${P2(d.getMonth()+1)}-${P2(d.getDate())}`;
+const todayIso = () => iso(new Date());
+
+const DEF = { active:true, price:150, capacity:12, siblings:true, showNames:true,
+              openFrom:'', closeDaysBefore:5, cancelDaysBefore:14, staffReminderDays:10 };
+let set = Object.assign({}, DEF), days = {}, cal = {}, staff = [], view = 'list';
+
+function fridaysOfYear(sy) {
+  const start = Number(String(sy).slice(0,4));
+  const out = [], d = new Date(start, 8, 1), end = new Date(start+1, 7, 31);
+  while (d.getDay() !== 5) d.setDate(d.getDate()+1);
+  while (d <= end) { out.push(iso(d)); d.setDate(d.getDate()+7); }
+  return out;
+}
+function lockFor(date) {
+  const [y,m] = date.split('-').map(Number);
+  const f = new Date(y, m-1, 1);
+  f.setDate(f.getDate() - Number(set.closeDaysBefore||0));
+  return iso(f);
+}
+const schoolYear = () => {
+  const d = new Date(), y = d.getFullYear(), s = d.getMonth() >= 8 ? y : y-1;
+  return s + '-' + String(s+1).slice(2);
+};
+const seats = r => 1 + ((r.siblings||[]).length);
+const regsOf = d => ((days[d] && days[d].regs) || []).filter(r => r.status !== 'rejected');
+const takenOn = d => regsOf(d).reduce((n,r) => n + seats(r), 0);
+const capOn = d => (days[d] && days[d].capacity) || set.capacity;
+
+async function boot() {
+  try {
+    const [r, s] = await Promise.all([api.getFridays(), api.getStaff()]);
+    days = (r && r.days) || {}; cal = (r && r.calendar) || {};
+    set = Object.assign({}, DEF, (r && r.settings) || {});
+    staff = ((s && s.data) || []).filter(x => x.status !== 'inactive')
+      .map(x => ({ id: x.id, name: x.full_name_he }));
+  } catch (e) { showErr('הטעינה נכשלה: ' + e.message); }
+  render();
+}
+
+function render() {
+  document.getElementById('top').innerHTML = `
+    <button class="btn ghost" onclick="copyLink()">העתקת הקישור להורים</button>
+    <button class="btn" onclick="window.print()">הדפסה</button>`;
+  document.getElementById('tabs').innerHTML =
+    [['list','ימי שישי'],['cal','לוח השנה'],['set','הגדרות']]
+      .map(([v,l]) => `<button class="tab ${view===v?'on':''}" onclick="view='${v}';render()">${l}</button>`).join('');
+  const b = document.getElementById('body');
+  if (view === 'list') b.innerHTML = viewList();
+  if (view === 'cal') b.innerHTML = viewCal();
+  if (view === 'set') b.innerHTML = viewSet();
+}
+
+/* ---------- ימי שישי ---------- */
+function viewList() {
+  const t = todayIso();
+  const all = fridaysOfYear(schoolYear()).filter(d => d >= t);
+  const pend = all.reduce((n,d) => n + regsOf(d).filter(r => r.status==='pending').length, 0);
+  const byMon = {};
+  all.forEach(d => { (byMon[d.slice(0,7)] = byMon[d.slice(0,7)] || []).push(d); });
+
+  return `<div class="card">
+    <h2>ימי שישי · ${schoolYear()}</h2>
+    <div class="sub">${all.length} ימי שישי שנותרו בשנה.
+      ${pend ? `<b>${pend} בקשות ממתינות לאישור.</b>` : 'אין בקשות ממתינות.'}
+      הצוות רואה כאן גם את השיבוץ; ההורים לא רואים אותו כלל.</div>
+  </div>
+  ${Object.keys(byMon).sort().map(k => `
+    <div class="mon">${monName(k+'-01')} · ההרשמה נסגרה ב-${fmt(lockFor(k+'-01'))}</div>
+    ${byMon[k].map(rowHtml).join('')}`).join('')}`;
+}
+
+function rowHtml(d) {
+  const c = cal[d];
+  const regs = regsOf(d), taken = takenOn(d), cap = capOn(d);
+  const pend = regs.filter(r => r.status === 'pending');
+  const assigned = (days[d] && days[d].staff) || [];
+  const locked = todayIso() >= lockFor(d);
+
+  if (c) return `<div class="row closed">
+    <div class="rh"><b>${fmt(d)}</b><span class="shut">${esc(c.name)}</span>
+      <span class="lock">אין הרשמה</span></div></div>`;
+
+  return `<div class="row ${pend.length ? 'need' : ''}">
+    <div class="rh"><b>${fmt(d)}</b>
+      <span class="cnt ${taken>=cap?'full':''}">${taken} מתוך ${cap}</span>
+      ${pend.length ? `<span class="shut" style="background:#fdf6ef;color:#8a6a23">${pend.length} ממתינות</span>` : ''}
+      <span class="lock">${locked ? 'נעול' : 'פתוח עד ' + fmt(lockFor(d))}</span></div>
+    ${regs.length ? `<div class="kids">${regs.map(r => `<span class="kid ${r.status==='pending'?'pend':''}">
+        ${esc(r.name)}${(r.siblings||[]).length ? ' +' + r.siblings.map(esc).join(', ') : ''}
+        ${r.status==='pending'
+          ? `<button onclick="decide('${d}','${r.id}',true)">אישור</button>
+             <button onclick="decide('${d}','${r.id}',false)">דחייה</button>`
+          : `<button onclick="removeReg('${d}','${r.id}')">הסר</button>`}
+      </span>`).join('')}</div>` : '<div class="kids" style="color:#B9AE9F">אין נרשמים</div>'}
+    <div class="staffline"><span class="lbl">צוות:</span>
+      ${staff.map(s => `<button class="sbtn ${assigned.indexOf(s.id)>=0?'on':''}"
+        onclick="togStaff('${d}','${s.id}')">${esc(s.name)}</button>`).join('')
+        || '<span class="note" style="margin:0">אין אנשי צוות במערכת</span>'}
+    </div></div>`;
+}
+
+async function decide(date, regId, approve) {
+  const r = (days[date].regs || []).find(x => x.id === regId);
+  if (r) r.status = approve ? 'ok' : 'rejected';
+  render();
+  try { await api.decideFriday(date, regId, approve); showOk(approve ? 'אושר' : 'נדחה'); }
+  catch (e) { showErr(e.message); }
+}
+async function removeReg(date, regId) {
+  days[date].regs = (days[date].regs || []).filter(x => x.id !== regId);
+  render();
+  try { await api.updateFridayDay(date, { removeReg: regId }); showOk('הוסר'); }
+  catch (e) { showErr(e.message); }
+}
+async function togStaff(date, id) {
+  days[date] = days[date] || {};
+  const l = days[date].staff || (days[date].staff = []);
+  const i = l.indexOf(id);
+  if (i >= 0) l.splice(i,1); else l.push(id);
+  render();
+  try { await api.setFridayStaff(date, l); } catch (e) { showErr(e.message); }
+}
+
+/* ---------- לוח השנה ---------- */
+// יום שמופיע כאן חוסם הרשמה ומציג את הסיבה במקומה. "פסח" במקום טופס
+// אומר להורה יותר מאשר שורה ריקה.
+function viewCal() {
+  const keys = Object.keys(cal).sort();
+  const t = todayIso();
+  const fr = fridaysOfYear(schoolYear()).filter(d => d >= t && !cal[d]);
+  return `<div class="card">
+    <h2>לוח השנה של הגן</h2>
+    <div class="sub">חגים, חופשות וימים שהגן סגור. <b>יום שמופיע כאן ייחסם
+      להרשמה</b>, והסיבה תוצג להורים במקום הטופס.</div>
+    <div class="cal">
+      <div class="fld" style="margin:0"><label>תאריך</label>
+        <input type="date" id="cd" value="${fr[0] || t}" style="max-width:170px"></div>
+      <div class="fld" style="margin:0"><label>מה קורה</label>
+        <input type="text" id="cn" placeholder="למשל: פסח" maxlength="40"></div>
+      <button class="btn" onclick="addCal()">הוספה</button>
+    </div>
+    <div class="note">אפשר להוסיף כל תאריך, לא רק שישי — אבל רק ימי שישי
+      משפיעים על ההרשמה.</div>
+  </div>
+  <div class="card">
+    <h2>מה שמוגדר</h2>
+    ${keys.length ? keys.map(d => `<div class="crow">
+      <span class="d">${fmt(d)}</span><span>${esc(cal[d].name)}</span>
+      ${new Date(d+'T00:00:00').getDay()===5 ? '<span style="font-size:11px;color:#C4846C;font-weight:700">שישי</span>' : ''}
+      <button class="rm" onclick="delCal('${d}')">הסרה</button></div>`).join('')
+      : '<div class="empty-note">לוח השנה ריק. כל ימי שישי פתוחים להרשמה.</div>'}
+  </div>`;
+}
+async function addCal() {
+  const d = document.getElementById('cd').value, n = (document.getElementById('cn').value||'').trim();
+  if (!d || !n) { showErr('צריך תאריך ושם'); return; }
+  cal[d] = { name: n, kind: 'holiday' };
+  render();
+  try { await api.setGanCalendar(d, n, 'holiday'); showOk('נוסף'); }
+  catch (e) { showErr(e.message); }
+}
+async function delCal(d) {
+  delete cal[d]; render();
+  try { await api.removeGanCalendar(d); showOk('הוסר'); }
+  catch (e) { showErr(e.message); }
+}
+
+/* ---------- הגדרות ---------- */
+function viewSet() {
+  const sample = ['2026-11-06','2026-12-04','2027-02-05','2027-03-05'];
+  return `<div class="card">
+    <h2>הגדרות ההרשמה</h2>
+    <div class="sub">כל גן קובע לעצמו. מה שמוגדר כאן הוא מה שההורים רואים
+      ומה שהמערכת אוכפת.</div>
+    <div class="grid2">
+      <div class="fld"><label>מחיר ליום (₪)</label>
+        <input type="number" id="s_price" value="${set.price}" min="0"></div>
+      <div class="fld"><label>מקומות ביום</label>
+        <input type="number" id="s_cap" value="${set.capacity}" min="1"></div>
+      <div class="fld"><label>סגירה — ימים לפני תחילת החודש</label>
+        <input type="number" id="s_close" value="${set.closeDaysBefore}" min="0"
+          oninput="previewLocks(this.value)"></div>
+      <div class="fld"><label>ביטול עצמאי — ימים לפני</label>
+        <input type="number" id="s_cancel" value="${set.cancelDaysBefore}" min="0"></div>
+      <div class="fld"><label>ההרשמה נפתחת בתאריך</label>
+        <input type="date" id="s_open" value="${set.openFrom || ''}"></div>
+    </div>
+    <div class="note" id="lockPrev"></div>
+    <div class="fld" style="margin-top:16px"><label>אחים ואחיות</label>
+      <div class="pick">
+        <button class="p ${set.siblings?'on':''}" onclick="set.siblings=true;render()">מותר לצרף</button>
+        <button class="p ${!set.siblings?'on':''}" onclick="set.siblings=false;render()">ילדי הגן בלבד</button>
+      </div></div>
+    <div class="fld"><label>שמות הנרשמים</label>
+      <div class="pick">
+        <button class="p ${set.showNames?'on':''}" onclick="set.showNames=true;render()">ההורים רואים מי נרשם</button>
+        <button class="p ${!set.showNames?'on':''}" onclick="set.showNames=false;render()">מוסתר</button>
+      </div></div>
+    <div class="fld"><label>המערכת פעילה</label>
+      <div class="pick">
+        <button class="p ${set.active?'on':''}" onclick="set.active=true;render()">פתוחה</button>
+        <button class="p ${!set.active?'on':''}" onclick="set.active=false;render()">סגורה</button>
+      </div></div>
+    <button class="btn" onclick="saveSet()">שמירה</button>
+    <div class="note">הקישור להורים: <b>${location.origin}/friday</b> — קבוע, לא משתנה.</div>
+  </div>`;
+}
+// מראה בפועל מתי כל חודש ננעל, כי "חמישה ימים לפני" הוא ניסוח שקל
+// לטעות בו ביום-יומיים
+function previewLocks(v) {
+  const n = Number(v||0);
+  const el = document.getElementById('lockPrev');
+  if (!el) return;
+  const rows = ['2026-11-06','2026-12-04','2027-02-05','2027-03-05'].map(d => {
+    const [y,m] = d.split('-').map(Number);
+    const f = new Date(y, m-1, 1); f.setDate(f.getDate()-n);
+    return monName(d.slice(0,7)+'-01') + ' → ' + fmt(iso(f));
+  });
+  el.innerHTML = 'עם ' + n + ' ימים, ההרשמה תיסגר: <b>' + rows.join('</b> · <b>') + '</b>';
+}
+async function saveSet() {
+  set.price = Number(document.getElementById('s_price').value) || 0;
+  set.capacity = Number(document.getElementById('s_cap').value) || 12;
+  set.closeDaysBefore = Number(document.getElementById('s_close').value) || 0;
+  set.cancelDaysBefore = Number(document.getElementById('s_cancel').value) || 0;
+  set.openFrom = document.getElementById('s_open').value || '';
+  try { await GL.set('fridays', set, 'user'); showOk('נשמר'); render(); }
+  catch (e) { showErr('השמירה נכשלה: ' + e.message); }
+}
+
+function copyLink() {
+  const url = location.origin + '/friday';
+  try { navigator.clipboard.writeText(url); showOk('הקישור הועתק · ' + url); }
+  catch (e) { showOk(url); }
+}
+function showErr(m) { const el=document.getElementById('error'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),5000); }
+function showOk(m) { const el=document.getElementById('success'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3000); }
+
+(async () => { try { await GL.load(); } catch (e) {} boot(); })();
+</script>
+</body>
+</html>

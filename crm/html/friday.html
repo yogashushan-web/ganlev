@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ימי שישי</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#3D3228;--mut:#9B8E82;--faint:#B9AE9F;--brand:#1F3D34;--warm:#C4846C;
+          --bg:#F4EFE6;--card:#fff;--soft:#FAF8F4;--line:#E4DED4;--good:#1F7a4f}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Alef',system-ui,sans-serif;background:var(--bg);color:var(--ink);
+         direction:rtl;line-height:1.6;-webkit-text-size-adjust:100%}
+    .wrap{max-width:620px;margin:0 auto;padding:22px 16px 48px}
+    header{text-align:center;margin-bottom:18px}
+    .gn{font-size:11.5px;font-weight:700;letter-spacing:.16em;color:var(--warm);margin-bottom:6px}
+    h1{font-size:26px;color:var(--brand);line-height:1.25}
+    .sub{font-size:13.5px;color:var(--mut);margin-top:5px}
+
+    .who{background:var(--card);border:1px solid var(--line);border-radius:14px;
+         padding:14px 16px;margin-bottom:16px}
+    .who label{display:block;font-size:12.5px;font-weight:700;margin-bottom:7px}
+    .who select{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;
+                font-family:'Alef';font-size:15px;outline:none;background:#fff}
+    .who select:focus{border-color:var(--brand)}
+
+    .mon{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--faint);
+         margin:20px 2px 9px}
+    .day{background:var(--card);border:1px solid var(--line);border-radius:14px;
+         padding:13px 15px;margin-bottom:9px}
+    .day.closed{background:var(--soft);border-style:dashed}
+    .day.on{border-color:var(--good);box-shadow:0 0 0 2px rgba(31,122,79,.1)}
+    .dh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+    .dh b{font-size:15.5px;color:var(--brand);font-variant-numeric:tabular-nums}
+    .dh .wd{font-size:12.5px;color:var(--mut)}
+    .dh .st{margin-right:auto;font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 10px}
+    .st.ok{background:rgba(31,122,79,.12);color:var(--good)}
+    .st.pend{background:#fdf6ef;color:#b8801f}
+    .st.shut{background:#f2ede6;color:#8a7f70}
+    .names{font-size:12.5px;color:var(--mut);margin-top:7px;line-height:1.8}
+    .names b{color:var(--ink);font-weight:400}
+    .act{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap;align-items:center}
+    .btn{background:var(--brand);color:#fff;border:none;padding:9px 18px;border-radius:10px;
+         cursor:pointer;font-family:'Alef';font-weight:700;font-size:13.5px}
+    .btn.ghost{background:#efe9e0;color:#6f6457}
+    .btn:disabled{opacity:.45;cursor:default}
+    .note{font-size:12px;color:var(--faint);line-height:1.7}
+    .sibs{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+    .sibs input{flex:1;min-width:120px;padding:8px 11px;border:1.5px solid var(--line);
+                border-radius:9px;font-family:'Alef';font-size:13px;outline:none}
+    .plus{background:#efe9e0;border:none;border-radius:9px;padding:8px 13px;font-family:'Alef';
+          font-size:13px;font-weight:700;color:#6f6457;cursor:pointer}
+    .msg{padding:11px 14px;border-radius:11px;margin-bottom:14px;font-size:13.5px;display:none}
+    .msg.show{display:block}
+    .msg.err{background:#fdf0ef;color:#c94147}
+    .msg.ok{background:#d4edda;color:#155724}
+    .state{text-align:center;color:var(--mut);padding:60px 16px;font-size:15px;line-height:1.8}
+    .state b{display:block;color:var(--brand);font-size:19px;margin-bottom:8px}
+    .price{background:var(--soft);border:1px solid var(--line);border-radius:12px;
+           padding:11px 14px;font-size:13px;color:var(--mut);margin-bottom:16px;line-height:1.7}
+    .price b{color:var(--ink)}
+  </style>
+</head>
+<body>
+  <div class="wrap" id="wrap"><div class="state">טוען…</div></div>
+
+<script>
+const API = '/.netlify/functions/friday-public';
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const P2 = n => String(n).padStart(2,'0');
+const MON = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const fmt = s => { const [y,m,d] = s.split('-'); return `${d}.${m}.${y}`; };
+const monKey = s => s.slice(0,7);
+const monName = s => { const [y,m] = s.split('-'); return MON[+m-1] + ' ' + y; };
+
+let D = null, childId = '', sibs = {};
+
+function msg(kind, text) {
+  const el = document.getElementById('msg');
+  if (!el) return;
+  el.className = 'msg show ' + kind;
+  el.textContent = text;
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+async function boot() {
+  let d;
+  try { d = await (await fetch(API)).json(); }
+  catch (e) { return state('הדף לא נטען', 'אפשר לנסות לרענן בעוד רגע.'); }
+  if (!d || !d.success) return state('הדף לא נטען', (d && d.error) || '');
+  if (!d.active) return state('ההרשמה לימי שישי סגורה', 'כשהיא תיפתח היא תופיע כאן, באותו קישור.');
+  D = d;
+  try { childId = localStorage.getItem('gl_friday_child') || ''; } catch (e) {}
+  if (!D.children.some(c => c.id === childId)) childId = '';
+  render();
+}
+function state(t, s) {
+  document.getElementById('wrap').innerHTML =
+    `<div class="state"><b>${esc(t)}</b>${esc(s||'')}</div>`;
+}
+
+function render() {
+  const byMon = {};
+  D.fridays.filter(f => !f.past).forEach(f => { (byMon[monKey(f.date)] = byMon[monKey(f.date)] || []).push(f); });
+
+  document.getElementById('wrap').innerHTML = `
+    <header>
+      <p class="gn">${esc(D.garden)}</p>
+      <h1>ימי שישי</h1>
+      <p class="sub">הרשמה לימי שישי של השנה</p>
+    </header>
+    <div class="msg" id="msg"></div>
+    <div class="price">
+      <b>${D.settings.price} ₪</b> ליום, משולם במזומן לצוות בגן.
+      ביטול עצמאי אפשרי עד <b>${D.settings.cancelDaysBefore} ימים</b> לפני.
+      ${D.settings.siblings ? 'אפשר לצרף אח או אחות.' : ''}
+    </div>
+    <div class="who">
+      <label>מי נרשם/ת?</label>
+      <select onchange="pick(this.value)">
+        <option value="">בחרו ילד/ה…</option>
+        ${D.children.map(c => `<option value="${c.id}" ${c.id===childId?'selected':''}>${esc(c.name)}</option>`).join('')}
+      </select>
+    </div>
+    ${Object.keys(byMon).sort().map(k => `
+      <div class="mon">${esc(monName(k + '-01'))}</div>
+      ${byMon[k].map(dayHtml).join('')}`).join('')}`;
+}
+
+function dayHtml(f) {
+  const mine = f.mine.find(m => m.child_id === childId);
+  const wd = new Date(f.date + 'T00:00:00').getDay() === 5 ? 'שישי' : '';
+  const st = f.closed ? `<span class="st shut">${esc(f.closed)}</span>`
+    : mine ? `<span class="st ${mine.pending ? 'pend' : 'ok'}">${mine.pending ? 'ממתין לאישור' : 'רשום/ה'}</span>`
+    : '';
+  const names = (D.settings.showNames && f.names.length)
+    ? `<div class="names">${f.names.map(n =>
+        `<b>${esc(n.name)}${(n.siblings||[]).length ? ' +' + n.siblings.length : ''}${n.pending ? ' (ממתין)' : ''}</b>`).join(' · ')}</div>`
+    : '';
+
+  let act = '';
+  if (!f.closed) {
+    if (mine) {
+      act = f.canCancel
+        ? `<button class="btn ghost" onclick="go('cancel','${f.date}')">ביטול</button>`
+        : `<span class="note">מועד הביטול העצמאי עבר. אפשר לפנות לגננת.</span>`;
+    } else if (!childId) {
+      act = `<span class="note">בחרו ילד/ה למעלה כדי להירשם.</span>`;
+    } else if (f.canRegister) {
+      act = sibRow(f) + `<button class="btn" onclick="go('register','${f.date}')">הרשמה</button>`;
+    } else if (f.canRequest) {
+      act = sibRow(f)
+        + `<button class="btn" onclick="go('register','${f.date}')">בקשה להרשמה</button>`
+        + `<span class="note">ההרשמה לחודש נסגרה — הבקשה תעבור לאישור הגננת.</span>`;
+    } else {
+      act = `<span class="note">${esc(f.why || '')}</span>`;
+    }
+  }
+
+  return `<div class="day ${f.closed ? 'closed' : ''} ${mine ? 'on' : ''}">
+    <div class="dh"><b>${fmt(f.date)}</b><span class="wd">${wd}</span>${st}</div>
+    ${names}
+    ${act ? `<div class="act">${act}</div>` : ''}</div>`;
+}
+
+// אח או אחות — שדה שנפתח בלחיצה על פלוס, ולא שדה ריק שתמיד על המסך
+function sibRow(f) {
+  if (!D.settings.siblings) return '';
+  const list = sibs[f.date] || [];
+  return `<div class="sibs">
+    ${list.map((v,i) => `<input type="text" value="${esc(v)}" placeholder="שם האח/ות"
+       oninput="sibs['${f.date}'][${i}]=this.value">`).join('')}
+    <button class="plus" onclick="addSib('${f.date}')">+ אח/ות</button></div>`;
+}
+function addSib(date) {
+  sibs[date] = sibs[date] || [];
+  if (sibs[date].length >= 4) return;
+  sibs[date].push('');
+  render();
+}
+function pick(v) {
+  childId = v;
+  try { localStorage.setItem('gl_friday_child', v); } catch (e) {}
+  render();
+}
+
+async function go(action, date) {
+  if (!childId) { msg('err', 'צריך לבחור ילד/ה'); return; }
+  try {
+    const r = await (await fetch(API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, date, child_id: childId,
+                             siblings: (sibs[date] || []).filter(Boolean) }),
+    })).json();
+    if (!r.success) { msg('err', r.error || 'הפעולה נכשלה'); return; }
+    delete sibs[date];
+    const d = await (await fetch(API)).json();
+    if (d && d.success) D = d;
+    render();
+    msg('ok', action === 'cancel' ? 'ההרשמה בוטלה'
+      : r.pending ? 'הבקשה נשלחה וממתינה לאישור הגננת' : 'נרשמת. נתראה ביום שישי');
+  } catch (e) { msg('err', 'שגיאת רשת: ' + e.message); }
+}
+
+boot();
+</script>
+</body>
+</html>
