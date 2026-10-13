@@ -103,7 +103,8 @@ const iso = d => `${d.getFullYear()}-${P2(d.getMonth()+1)}-${P2(d.getDate())}`;
 const todayIso = () => iso(new Date());
 
 const DEF = { active:true, price:150, capacity:12, siblings:true, showNames:true,
-              openFrom:'', closeDaysBefore:5, cancelDaysBefore:14, staffReminderDays:10 };
+              openFrom:'', closeDaysBefore:5, cancelDaysBefore:14, staffReminderDays:10,
+              yearEnd:'' };
 let set = Object.assign({}, DEF), days = {}, cal = {}, staff = [], view = 'list';
 
 function fridaysOfYear(sy) {
@@ -172,7 +173,9 @@ function viewList() {
 }
 
 function rowHtml(d) {
-  const c = cal[d];
+  // סוף שנת הגן חוסם לבד. בלי זה צריך לסמן ידנית כל שישי של אוגוסט
+  // בכל שנה מחדש, וזה בדיוק מה שנשכח.
+  const c = cal[d] || (set.yearEnd && d > set.yearEnd ? { name: 'אחרי סיום שנת הגן' } : null);
   const regs = regsOf(d), taken = takenOn(d), cap = capOn(d);
   const pend = regs.filter(r => r.status === 'pending');
   const assigned = (days[d] && days[d].staff) || [];
@@ -245,6 +248,21 @@ function viewCal() {
       משפיעים על ההרשמה.</div>
   </div>
   <div class="card">
+    <h2>חופשה בטווח תאריכים</h2>
+    <div class="sub">לוח חופשות מגיע בטווחים — "פסח, 19 עד 28 באפריל". כאן
+      מזינים את הטווח פעם אחת, <b>והמערכת מסמנת רק את ימי השישי שבתוכו</b>.</div>
+    <div class="cal">
+      <div class="fld" style="margin:0"><label>מתאריך</label>
+        <input type="date" id="rf" style="max-width:170px"></div>
+      <div class="fld" style="margin:0"><label>עד תאריך</label>
+        <input type="date" id="rt" style="max-width:170px"></div>
+      <div class="fld" style="margin:0"><label>שם החופשה</label>
+        <input type="text" id="rn" placeholder="למשל: פסח" maxlength="40"></div>
+      <button class="btn" onclick="addRange()">הוספה</button>
+    </div>
+    <div class="note" id="rPrev"></div>
+  </div>
+  <div class="card">
     <h2>מה שמוגדר</h2>
     ${keys.length ? keys.map(d => `<div class="crow">
       <span class="d">${fmt(d)}</span><span>${esc(cal[d].name)}</span>
@@ -260,6 +278,21 @@ async function addCal() {
   render();
   try { await api.setGanCalendar(d, n, 'holiday'); showOk('נוסף'); }
   catch (e) { showErr(e.message); }
+}
+async function addRange() {
+  const f = document.getElementById('rf').value, t = document.getElementById('rt').value;
+  const n = (document.getElementById('rn').value || '').trim();
+  if (!f || !t || !n) { showErr('צריך טווח ושם'); return; }
+  if (t < f) { showErr('תאריך הסיום לפני ההתחלה'); return; }
+  try {
+    const r = await api.addGanRange(f, t, n);
+    (r.dates || []).forEach(d => { cal[d] = { name: n, kind: 'holiday' }; });
+    document.getElementById('rn').value = '';
+    render();
+    showOk((r.dates || []).length
+      ? `נוספו ${r.dates.length} ימי שישי: ${(r.dates||[]).map(fmt).join(', ')}`
+      : 'אין ימי שישי בטווח הזה — לא נוסף דבר');
+  } catch (e) { showErr(e.message); }
 }
 async function delCal(d) {
   delete cal[d]; render();
@@ -286,6 +319,8 @@ function viewSet() {
         <input type="number" id="s_cancel" value="${set.cancelDaysBefore}" min="0"></div>
       <div class="fld"><label>ההרשמה נפתחת בתאריך</label>
         <input type="date" id="s_open" value="${set.openFrom || ''}"></div>
+      <div class="fld"><label>יום אחרון בגן</label>
+        <input type="date" id="s_end" value="${set.yearEnd || ''}"></div>
     </div>
     <div class="note" id="lockPrev"></div>
     <div class="fld" style="margin-top:16px"><label>אחים ואחיות</label>
@@ -326,6 +361,8 @@ async function saveSet() {
   set.closeDaysBefore = Number(document.getElementById('s_close').value) || 0;
   set.cancelDaysBefore = Number(document.getElementById('s_cancel').value) || 0;
   set.openFrom = document.getElementById('s_open').value || '';
+  // כל שישי שאחרי התאריך הזה נחסם לבד, בלי שצריך לסמן אותו
+  set.yearEnd = document.getElementById('s_end').value || '';
   try { await GL.set('fridays', set, 'user'); showOk('נשמר'); render(); }
   catch (e) { showErr('השמירה נכשלה: ' + e.message); }
 }

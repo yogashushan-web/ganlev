@@ -31,6 +31,7 @@ const DEFAULTS = {
   closeDaysBefore: 5,    // לפני תחילת החודש שבו חל השישי
   cancelDaysBefore: 14,  // ביטול עצמאי עד
   staffReminderDays: 10, // תזכורת לצוות לפני סוף החודש הקודם
+  yearEnd: '',           // היום האחרון של שנת הגן. אחריו אין הרשמה.
 };
 const settingsOf = s => Object.assign({}, DEFAULTS, s || {});
 
@@ -60,7 +61,11 @@ function lockDateFor(dateIso, closeDaysBefore) {
 function stateOf(dateIso, rec, set, todayIso) {
   const s = settingsOf(set);
   const today = todayIso || iso(new Date());
-  const closed = rec && rec.closed && rec.closed.reason;
+  // יום אחרון לגן. בלי זה צריך לסמן ידנית כל שישי של אוגוסט, בכל שנה
+  // מחדש, וזה בדיוק סוג הדבר שנשכח.
+  const afterEnd = s.yearEnd && dateIso > s.yearEnd;
+  const closed = (rec && rec.closed && rec.closed.reason)
+    || (afterEnd ? 'אחרי סיום שנת הגן' : '');
   const cap = (rec && rec.capacity) || s.capacity;
   const regs = (rec && rec.regs) || [];
   const taken = regs.filter(r => r.status !== 'rejected')

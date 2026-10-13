@@ -112,6 +112,7 @@ const api = {
 
   // ימי שישי. ההורים נרשמים דרך friday-public, בלי טוקן.
   getFridays: () => apiCall(`/fridays?garden_id=${getGardenId()}`),
+  addGanRange: (from, to, name) => apiCall(`/fridays?garden_id=${getGardenId()}`, 'POST', { action:'range', from, to, name }),
   setGanCalendar: (date, name, kind) => apiCall(`/fridays?garden_id=${getGardenId()}`, 'POST', { action:'calendar', date, name, kind }),
   removeGanCalendar: (date) => apiCall(`/fridays?garden_id=${getGardenId()}`, 'POST', { action:'calendar', date, remove:true }),
   setFridayStaff: (date, staff) => apiCall(`/fridays?garden_id=${getGardenId()}`, 'POST', { action:'staff', date, staff }),

@@ -93,6 +93,34 @@ const handler = withAuth(async (event) => {
         return json(200, { success: true });
       }
 
+      // ---- טווח חופשה ----
+      // לוח חופשות מגיע בטווחים ("פסח 19–28.4"), לא בתאריכים בודדים.
+      // נרשמים רק ימי השישי שבתוך הטווח: שאר הימים אינם משפיעים על
+      // ההרשמה, ורשימה של עשרה תאריכים מיותרים רק מקשה לקרוא את הלוח.
+      if (b.action === 'range') {
+        const from = String(b.from || ''), to = String(b.to || '');
+        const name = String(b.name || '').trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+          return json(400, { success: false, error: 'תאריכים לא תקינים' });
+        }
+        if (!name) return json(400, { success: false, error: 'צריך שם לחופשה' });
+        if (to < from) return json(400, { success: false, error: 'תאריך הסיום לפני ההתחלה' });
+
+        const dates = [];
+        const d = F.parseIso(from), end = F.parseIso(to);
+        while (d <= end) {
+          if (d.getDay() === 5 || b.allDays) dates.push(F.iso(d));
+          d.setDate(d.getDate() + 1);
+          if (dates.length > 200) break;
+        }
+        for (const dt of dates) {
+          await upsert(garden_id, CAL_CAL, dt, name, { kind: b.kind || 'holiday' });
+        }
+        await auditLog(garden_id, me, 'saved', 'gan-cal', from + '..' + to,
+                       { name, n: dates.length });
+        return json(200, { success: true, dates });
+      }
+
       // ---- שיבוץ צוות ----
       if (b.action === 'staff') {
         const d = String(b.date || '');
