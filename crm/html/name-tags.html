@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מדבקות שמות — גן לב</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Alef',sans-serif; background:#F4EFE6; color:#3D3228; direction:rtl; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
+              padding-bottom:14px; border-bottom:2px solid #e8e4de; flex-wrap:wrap; gap:12px; }
+    .header h1 { font-size:26px; color:#1F3D34; }
+    .btn { background:#1F3D34; color:#fff; border:none; padding:11px 20px; border-radius:10px;
+           cursor:pointer; font-family:'Alef'; font-weight:700; font-size:14px; }
+    .btn.ghost { background:#efe9e0; color:#6f6457; }
+    .btn:disabled { opacity:.5; cursor:default; }
+    .err,.ok { padding:12px; border-radius:10px; margin-bottom:14px; display:none; }
+    .err { background:#fdf0ef; color:#c94147; } .ok { background:#d4edda; color:#155724; }
+    .err.show,.ok.show { display:block; }
+
+    .card { background:#fff; border-radius:18px; padding:22px 24px; box-shadow:0 2px 14px rgba(0,0,0,.06);
+            margin-bottom:14px; }
+    .card h2 { font-size:19px; color:#1F3D34; margin-bottom:4px; }
+    .card .sub { color:#9B8E82; font-size:13.5px; margin-bottom:16px; line-height:1.6; }
+    .card .sub b { color:#3D3228; }
+
+    .shapes { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; }
+    .sh { background:#FAF8F4; border:1.5px solid #e8e4de; border-radius:14px; padding:14px 10px 11px;
+          cursor:pointer; text-align:center; font-family:'Alef'; }
+    .sh:hover { border-color:#1F3D34; }
+    .sh.on { border-color:#1F3D34; box-shadow:0 0 0 3px rgba(31,61,52,.1); }
+    .sh svg { display:block; margin:0 auto 8px; }
+    .sh b { font-size:13.5px; color:#1F3D34; }
+
+    .kids { display:flex; gap:8px; flex-wrap:wrap; }
+    .kid { border:1.5px solid #e8e4de; background:#fff; border-radius:999px; padding:7px 14px;
+           font-family:'Alef'; font-size:13.5px; font-weight:700; cursor:pointer; color:#6f6457; }
+    .kid.on { background:#1F3D34; border-color:#1F3D34; color:#fff; }
+    .kid small { font-weight:400; opacity:.75; }
+    .bulk { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+    .bulk .note { font-size:12.5px; color:#9B8E82; }
+    .count-line { font-size:12.5px; color:#9B8E82; margin-top:12px; }
+    .count-line b { color:#1F3D34; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🏷️ מדבקות שמות</h1>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn ghost" onclick="location.href='children-manage.html'">חזרה לילדים</button>
+      <button class="btn" id="dl" onclick="download()">הורדה ל-PDF</button>
+    </div>
+  </div>
+  <div id="error" class="err"></div>
+  <div id="success" class="ok"></div>
+  <div id="body"></div>
+
+<script src="js/common.js?v=29"></script>
+<script src="js/api.js?v=26"></script>
+<script>
+// גיליון לגזירה, שמונה בדף. צורה אחת לכל הגיליון — כך אפשר להדפיס
+// עוד מדבקה אחת לילד שמצטרף והיא תיראה בדיוק כמו של כולם.
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// אותן צורות שב-lib/tags-pdf.js, כאן רק לתצוגה מקדימה קטנה
+const SHAPES = [
+  { k:'cloud',   n:'ענן',   fill:'#DCE9F3', line:'#A9C6DC',
+    svg:'<circle cx="32" cy="50" r="19"/><circle cx="53" cy="42" r="23"/><circle cx="74" cy="52" r="17"/><rect x="15" y="50" width="72" height="22" rx="11"/>' },
+  { k:'star',    n:'כוכב',  fill:'#FBEFCF', line:'#E3C274', star:true },
+  { k:'heart',   n:'לב',    fill:'#F7DFE2', line:'#E0A9B2',
+    svg:'<path d="M50 88 C20 66 8 52 8 36 C8 22 19 13 31 13 C40 13 46 18 50 25 C54 18 60 13 69 13 C81 13 92 22 92 36 C92 52 80 66 50 88 Z"/>' },
+  { k:'flower',  n:'פרח',   fill:'#E7E2EF', line:'#BDB2CF', flower:true },
+  { k:'balloon', n:'בלון',  fill:'#DEEDE4', line:'#A5C6BD',
+    svg:'<ellipse cx="50" cy="40" rx="33" ry="37"/><path d="M45 75 L55 75 L50 85 Z"/>' },
+];
+function shapeSvg(s, size) {
+  let inner = s.svg || '';
+  if (s.star) {
+    let d = '';
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 ? 19 : 46, a = -Math.PI / 2 + i * Math.PI / 5;
+      d += (i ? 'L' : 'M') + (50 + r * Math.cos(a)).toFixed(1) + ' ' + (52 + r * Math.sin(a)).toFixed(1) + ' ';
+    }
+    inner = `<path d="${d}Z"/>`;
+  }
+  if (s.flower) {
+    inner = '';
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 3;
+      inner += `<ellipse cx="${(50 + 31 * Math.cos(a)).toFixed(1)}" cy="${(50 + 31 * Math.sin(a)).toFixed(1)}" rx="17" ry="13"/>`;
+    }
+    inner += '<circle cx="50" cy="50" r="24"/>';
+  }
+  // אותו תעלול כמו ב-PDF: ציור כפול במקום קו מתאר, אחרת רואים את
+  // הקשתות הפנימיות של הצורות המורכבות
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}">
+    <g fill="${s.line}">${inner}</g>
+    <g fill="${s.fill}" transform="translate(50 50) scale(.955) translate(-50 -50)">${inner}</g></svg>`;
+}
+
+let kids = [], picked = {}, shape = 'cloud';
+
+async function boot() {
+  try {
+    const r = await api.getChildren();
+    const year = (function () {
+      const d = new Date(), y = d.getFullYear();
+      const s = d.getMonth() >= 7 ? y : y - 1;
+      return s + '-' + String(s + 1).slice(2);
+    })();
+    kids = ((r && r.data) || [])
+      .filter(c => (c.school_year || year) === year && c.status === 'active')
+      .map(c => ({ id: c.id, first: (c.first_name_he || '').trim(), last: (c.last_name_he || '').trim() }))
+      .filter(c => c.first)
+      .sort((a, b) => a.first.localeCompare(b.first, 'he'));
+    kids.forEach(k => { picked[k.id] = true; });
+  } catch (e) { showErr('טעינת הילדים נכשלה: ' + e.message); }
+  render();
+}
+
+// שם שחוזר יותר מפעם אחת מקבל גם שם משפחה — ורק הוא. כלל 14.
+function dupNames() {
+  const n = {};
+  chosen().forEach(k => { n[k.first] = (n[k.first] || 0) + 1; });
+  return n;
+}
+const chosen = () => kids.filter(k => picked[k.id]);
+
+function render() {
+  const dup = dupNames();
+  document.getElementById('body').innerHTML = `
+    <div class="card">
+      <h2>הצורה</h2>
+      <div class="sub">צורה אחת לכל הגיליון, כדי שמדבקה שתודפס בנפרד לילד
+        שמצטרף תיראה בדיוק כמו של כולם.</div>
+      <div class="shapes">
+        ${SHAPES.map(s => `<button class="sh ${shape === s.k ? 'on' : ''}" onclick="shape='${s.k}';render()">
+          ${shapeSvg(s, 78)}<b>${esc(s.n)}</b></button>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>מי מודפס</h2>
+      <div class="sub">שם פרטי בלבד. <b>שם משפחה נוסף רק למי שיש לו כפול בגן</b> —
+        בגן שני אריאלים, ומדבקה בלי שם משפחה לא תעזור לאף אחד.</div>
+      <div class="bulk">
+        <button class="kid on" onclick="allOn()">✓ כל ${kids.length} הילדים</button>
+        ${chosen().length ? `<button class="kid" onclick="allOff()">ניקוי בחירה</button>` : ''}
+        <span class="note">או לסמן אחד-אחד למטה</span>
+      </div>
+      <div class="kids">
+        ${kids.map(k => `<button class="kid ${picked[k.id] ? 'on' : ''}" onclick="tog('${k.id}')">
+          ${esc(k.first)}${dup[k.first] > 1 && k.last ? ` <small>${esc(k.last)}</small>` : ''}</button>`).join('')}
+      </div>
+      <div class="count-line">נבחרו <b>${chosen().length}</b> מתוך ${kids.length} ·
+        ${Math.ceil(chosen().length / 8) || 0} דפים, שמונה מדבקות בדף</div>
+    </div>`;
+}
+function tog(id) { picked[id] = !picked[id]; render(); }
+function allOn() { kids.forEach(k => { picked[k.id] = true; }); render(); }
+function allOff() { picked = {}; render(); }
+
+async function download() {
+  const list = chosen();
+  if (!list.length) { showErr('לא נבחר אף ילד'); return; }
+  const btn = document.getElementById('dl');
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'מכין…';
+  try {
+    const res = await fetch('/.netlify/functions/name-tags?garden_id=' + encodeURIComponent(getGardenId()), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json',
+                 'Authorization': 'Bearer ' + localStorage.getItem('crm_token') },
+      body: JSON.stringify({ shape, children: list.map(k => ({ first: k.first, last: k.last })) }),
+    });
+    if (!res.ok) {
+      let msg = 'השרת החזיר ' + res.status;
+      try { msg = (await res.json()).error || msg; } catch (e) {}
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'מדבקות שמות - ' + (SHAPES.find(s => s.k === shape) || {}).n + '.pdf';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    showOk(`ירדו ${list.length} מדבקות · ${Math.ceil(list.length / 8)} דפים`);
+  } catch (e) { showErr('ההורדה נכשלה: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = label; }
+}
+
+function showErr(m) { const el = document.getElementById('error'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 5000); }
+function showOk(m) { const el = document.getElementById('success'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000); }
+
+boot();
+</script>
+</body>
+</html>

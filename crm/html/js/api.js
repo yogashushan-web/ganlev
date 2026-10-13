@@ -107,6 +107,9 @@ const api = {
     apiCall('/account', 'POST', { action: 'question', current, question, answer }),
   clearSecurityQuestion: (current) => apiCall('/account', 'POST', { action: 'clear', current }),
 
+  // מדבקות שמות — ה-PDF יורד דרך fetch ישיר ב-name-tags.html, כי
+  // apiCall מצפה ל-JSON ולא ל-blob.
+
   getGardenProfile: () => apiCall(`/garden-profile?garden_id=${getGardenId()}`),
   saveGardenProfile: (body) => apiCall(`/garden-profile?garden_id=${getGardenId()}`, 'POST', body),
 

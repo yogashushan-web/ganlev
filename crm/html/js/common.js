@@ -204,6 +204,7 @@ const CRM_ICONS = {
   rotate:  '<path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/>',
   select:  '<path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="M10 4h4M10 20h4M4 10v4M20 10v4"/>',
   align:   '<path d="M4 6h16M7 12h10M4 18h16"/>',
+  tag: '<path d="M20.6 13.4 12 22a2 2 0 0 1-2.8 0L3 15.8a2 2 0 0 1 0-2.8L11.6 4H19a2 2 0 0 1 2 2v7.4z"/><circle cx="16.2" cy="8.2" r="1.4"/>',
   menu: '<path d="M4 4v6a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V4"/><path d="M6 12v8"/><path d="M16 4c-1.4 1.1-2 2.6-2 4.4 0 1.7.7 2.9 2 3.3V20"/><path d="M16 4c1.4 1.1 2 2.6 2 4.4 0 1.7-.7 2.9-2 3.3"/>',
   layers:  '<path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>',
 };
@@ -283,6 +284,8 @@ const CRM_ACTIONS = [
         href: 'nap-layout.html', ico: 'layers' },
       { t: 'יצירת תפריט', d: 'התפריט השבועי · מאגר מנות, בדיקה ודף להורים',
         href: 'menu-builder.html', ico: 'menu' },
+      { t: 'הדפסת מדבקות שמות', d: 'שם כל ילד בתוך ענן, כוכב, לב, פרח או בלון · גיליון לגזירה',
+        href: 'name-tags.html', ico: 'tag' },
     ],
   },
 ];
@@ -359,6 +362,7 @@ function renderNavSidebar() {
     { href: 'seating.html',         icon: '🍽️', label: 'סידור ישיבה' },
     { href: 'nap-layout.html',      icon: '🛏️', label: 'סידור מזרונים' },
   { href: 'menu-builder.html',    icon: '🍲', label: 'תפריט' },
+  { href: 'name-tags.html',       icon: '🏷️', label: 'מדבקות שמות' },
   { href: 'garden-settings.html', icon: '⚙️', label: 'הגדרות הגן' },
     { href: 'staff-salaries.html',  icon: '👥', label: 'צוות' },
     { href: 'content.html',         icon: '📚', label: 'תוכן חינוכי' },
