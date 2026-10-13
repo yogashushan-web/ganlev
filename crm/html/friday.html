@@ -56,6 +56,12 @@
     .msg.ok{background:#d4edda;color:#155724}
     .state{text-align:center;color:var(--mut);padding:60px 16px;font-size:15px;line-height:1.8}
     .state b{display:block;color:var(--brand);font-size:19px;margin-bottom:8px}
+    .adm{background:#f4f9f6;border:1px solid #cfe7d9;color:#1F7a4f;border-radius:11px;
+         padding:10px 13px;font-size:12.5px;font-weight:700;margin-bottom:14px;line-height:1.6}
+    .mrm{background:#f6f2ec;border:1px solid #e8e1d6;color:#8a7f70;border-radius:7px;
+         padding:2px 8px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:'Alef';
+         margin-right:4px}
+    .mrm:hover{background:#fdf0ef;border-color:#f3cfc9;color:#c94147}
     .price{background:var(--soft);border:1px solid var(--line);border-radius:12px;
            padding:11px 14px;font-size:13px;color:var(--mut);margin-bottom:16px;line-height:1.7}
     .price b{color:var(--ink)}
@@ -75,6 +81,33 @@ const monKey = s => s.slice(0,7);
 const monName = s => { const [y,m] = s.split('-'); return MON[+m-1] + ' ' + y; };
 
 let D = null, childId = '', sibs = {};
+
+// הדף הזה ציבורי ואין בו התחברות. אבל אם *מנהל* פותח אותו מאותו
+// דפדפן שבו הוא מחובר למערכת, אין סיבה שיצטרך לעבור למסך אחר כדי
+// להסיר הרשמה שהוא רואה מולו. השרת עדיין בודק את הטוקן — זו נוחות,
+// לא הרשאה.
+function admin() {
+  try {
+    const u = JSON.parse(localStorage.getItem('crm_user') || 'null');
+    return (u && u.role === 'admin' && localStorage.getItem('crm_token')) ? u : null;
+  } catch (e) { return null; }
+}
+async function adminRemove(date, regId, who) {
+  const gid = localStorage.getItem('crm_garden_id') || '';
+  try {
+    const r = await (await fetch('/.netlify/functions/fridays?garden_id=' + encodeURIComponent(gid), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json',
+                 'Authorization': 'Bearer ' + localStorage.getItem('crm_token') },
+      body: JSON.stringify({ action: 'day', date, removeReg: regId }),
+    })).json();
+    if (!r.success) { msg('err', r.error || 'ההסרה נכשלה'); return; }
+    const d = await (await fetch(API)).json();
+    if (d && d.success) D = d;
+    render();
+    msg('ok', `${who} הוסר/ה מ-${fmt(date)}`);
+  } catch (e) { msg('err', 'שגיאת רשת: ' + e.message); }
+}
 
 function msg(kind, text) {
   const el = document.getElementById('msg');
@@ -111,6 +144,8 @@ function render() {
       <p class="sub">הרשמה לימי שישי של השנה</p>
     </header>
     <div class="msg" id="msg"></div>
+    ${admin() ? `<div class="adm">את/ה מחובר/ת כמנהל/ת — אפשר להסיר הרשמות
+      ישירות מכאן. ההורים לא רואים את הכפתורים האלה.</div>` : ''}
     <div class="price">
       <b>${D.settings.price} ₪</b> ליום, משולם במזומן לצוות בגן.
       ביטול עצמאי אפשרי עד <b>${D.settings.cancelDaysBefore} ימים</b> לפני.
@@ -134,9 +169,13 @@ function dayHtml(f) {
   const st = f.closed ? `<span class="st shut">${esc(f.closed)}</span>`
     : mine ? `<span class="st ${mine.pending ? 'pend' : 'ok'}">${mine.pending ? 'ממתין לאישור' : 'רשום/ה'}</span>`
     : '';
+  const isAdmin = !!admin();
   const names = (D.settings.showNames && f.names.length)
     ? `<div class="names">${f.names.map(n =>
-        `<b>${esc(n.name)}${(n.siblings||[]).length ? ' +' + n.siblings.length : ''}${n.pending ? ' (ממתין)' : ''}</b>`).join(' · ')}</div>`
+        `<b>${esc(n.name)}${(n.siblings||[]).length ? ' +' + n.siblings.length : ''}${n.pending ? ' (ממתין)' : ''}` +
+        (isAdmin && !f.past
+          ? ` <button class="mrm" onclick="adminRemove('${f.date}','${n.id}','${esc(n.name)}')">הסרה</button>`
+          : '') + '</b>').join(' · ')}</div>`
     : '';
 
   let act = '';
