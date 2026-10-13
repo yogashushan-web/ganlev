@@ -42,6 +42,22 @@
     .bulk .note { font-size:12.5px; color:#9B8E82; }
     .count-line { font-size:12.5px; color:#9B8E82; margin-top:12px; }
     .count-line b { color:#1F3D34; }
+
+    .ov { position:fixed; inset:0; background:rgba(31,61,52,.45); display:none; align-items:center;
+          justify-content:center; z-index:9999; padding:18px; }
+    .ov.show { display:flex; }
+    .modal { background:#fff; border-radius:18px; padding:24px 26px; width:100%; max-width:500px;
+             max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .modal h3 { color:#1F3D34; font-size:19px; margin-bottom:4px; }
+    .modal .msub { color:#9B8E82; font-size:13px; margin-bottom:16px; line-height:1.6; }
+    .m-actions { display:flex; gap:9px; margin-top:18px; flex-wrap:wrap; }
+    .erow { display:flex; gap:9px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+    .erow .who { font-size:12.5px; color:#9B8E82; min-width:132px; }
+    .erow input { flex:1; min-width:120px; padding:9px 12px; border:1.5px solid #e8e4de;
+                  border-radius:9px; font-family:'Alef'; font-size:14px; font-weight:700; outline:none; }
+    .erow input:focus { border-color:#1F3D34; }
+    .erow .rst { background:#f6f2ec; border:1px solid #e8e1d6; color:#8a7f70; border-radius:8px;
+                 padding:6px 10px; font-size:11px; font-weight:700; cursor:pointer; font-family:'Alef'; }
   </style>
 </head>
 <body>
@@ -57,8 +73,22 @@
   <div id="success" class="ok"></div>
   <div id="body"></div>
 
+  <div class="ov" id="ov" onclick="if(event.target===this)closeEdit()">
+    <div class="modal">
+      <h3>השמות שיודפסו</h3>
+      <div class="msub">מה שכתוב כאן הוא מה שיופיע בתוך הצורה. שם משפחה
+        יתווסף לבד רק אם שני ילדים מקבלים את אותו שם.</div>
+      <div id="ovBody"></div>
+      <div class="m-actions">
+        <button class="btn" onclick="saveEdit()">שמירה</button>
+        <button class="btn ghost" onclick="closeEdit()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
 <script src="js/common.js?v=29"></script>
 <script src="js/api.js?v=26"></script>
+<script src="js/profile.js?v=2"></script>
 <script>
 // גיליון לגזירה, שמונה בדף. צורה אחת לכל הגיליון — כך אפשר להדפיס
 // עוד מדבקה אחת לילד שמצטרף והיא תיראה בדיוק כמו של כולם.
@@ -67,14 +97,20 @@ const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&am
 // אותן צורות שב-lib/tags-pdf.js, כאן רק לתצוגה מקדימה קטנה
 const SHAPES = [
   { k:'cloud',   n:'ענן',   fill:'#DCE9F3', line:'#A9C6DC',
-    svg:'<circle cx="32" cy="50" r="19"/><circle cx="53" cy="42" r="23"/><circle cx="74" cy="52" r="17"/><rect x="15" y="50" width="72" height="22" rx="11"/>' },
+    svg:'<circle cx="26" cy="56" r="15"/><circle cx="40" cy="46" r="20"/>'
+       +'<circle cx="59" cy="42" r="23"/><circle cx="77" cy="53" r="17"/>'
+       +'<rect x="13" y="53" width="76" height="20" rx="10"/>' },
   { k:'star',    n:'כוכב',  fill:'#FBEFCF', line:'#E3C274', star:true },
   { k:'heart',   n:'לב',    fill:'#F7DFE2', line:'#E0A9B2',
     svg:'<path d="M50 88 C20 66 8 52 8 36 C8 22 19 13 31 13 C40 13 46 18 50 25 C54 18 60 13 69 13 C81 13 92 22 92 36 C92 52 80 66 50 88 Z"/>' },
   { k:'flower',  n:'פרח',   fill:'#E7E2EF', line:'#BDB2CF', flower:true },
   { k:'balloon', n:'בלון',  fill:'#DEEDE4', line:'#A5C6BD',
-    svg:'<ellipse cx="50" cy="40" rx="33" ry="37"/><path d="M45 75 L55 75 L50 85 Z"/>' },
+    svg:'<path d="M50 80 C32 70 19 57 19 40 C19 21 33 8 50 8 C67 8 81 21 81 40 C81 57 68 70 50 80 Z"/>'
+       +'<path d="M45 83 L55 83 L50 90 Z"/>',
+    detail:'<path d="M50 90 C58 94 42 96 50 100" fill="none" stroke-width="2.4" stroke-linecap="round"/>' },
 ];
+// אותן צורות שב-lib/tags-pdf.js. אם משנים שם — משנים גם כאן, אחרת
+// התצוגה המקדימה מבטיחה משהו אחר ממה שיוצא מהמדפסת.
 function shapeSvg(s, size) {
   let inner = s.svg || '';
   if (s.star) {
@@ -87,20 +123,28 @@ function shapeSvg(s, size) {
   }
   if (s.flower) {
     inner = '';
-    for (let i = 0; i < 6; i++) {
-      const a = -Math.PI / 2 + i * Math.PI / 3;
-      inner += `<ellipse cx="${(50 + 31 * Math.cos(a)).toFixed(1)}" cy="${(50 + 31 * Math.sin(a)).toFixed(1)}" rx="17" ry="13"/>`;
+    for (let i = 0; i < 5; i++) {
+      const deg = -90 + i * 72, a = deg * Math.PI / 180;
+      const cx = (50 + 30 * Math.cos(a)).toFixed(1), cy = (50 + 30 * Math.sin(a)).toFixed(1);
+      inner += `<ellipse cx="${cx}" cy="${cy}" rx="14" ry="21"
+                 transform="rotate(${deg + 90} ${cx} ${cy})"/>`;
     }
-    inner += '<circle cx="50" cy="50" r="24"/>';
+    inner += '<circle cx="50" cy="50" r="20"/>';
   }
   // אותו תעלול כמו ב-PDF: ציור כפול במקום קו מתאר, אחרת רואים את
   // הקשתות הפנימיות של הצורות המורכבות
   return `<svg viewBox="0 0 100 100" width="${size}" height="${size}">
     <g fill="${s.line}">${inner}</g>
-    <g fill="${s.fill}" transform="translate(50 50) scale(.955) translate(-50 -50)">${inner}</g></svg>`;
+    <g fill="${s.fill}" transform="translate(50 50) scale(.955) translate(-50 -50)">${inner}</g>
+    ${s.detail ? `<g stroke="${s.line}" fill="none">${s.detail}</g>` : ''}</svg>`;
 }
 
 let kids = [], picked = {}, shape = 'cloud';
+// מה שמודפס בפועל, כשהוא שונה מהשם הפרטי. "ליה אמיליה" הוא שם פרטי
+// אחד, אבל על מדבקה רוצים "ליה" — ורק מי שמכיר את הילדה יודע את זה,
+// ולכן זה נשמר ולא מנוחש.
+let short = {};
+const printed = k => (short[k.id] || k.first).trim();
 
 async function boot() {
   try {
@@ -117,13 +161,14 @@ async function boot() {
       .sort((a, b) => a.first.localeCompare(b.first, 'he'));
     kids.forEach(k => { picked[k.id] = true; });
   } catch (e) { showErr('טעינת הילדים נכשלה: ' + e.message); }
+  try { await GL.load(); short = GL.get('names.short', {}) || {}; } catch (e) {}
   render();
 }
 
 // שם שחוזר יותר מפעם אחת מקבל גם שם משפחה — ורק הוא. כלל 14.
 function dupNames() {
   const n = {};
-  chosen().forEach(k => { n[k.first] = (n[k.first] || 0) + 1; });
+  chosen().forEach(k => { const t = printed(k); n[t] = (n[t] || 0) + 1; });
   return n;
 }
 const chosen = () => kids.filter(k => picked[k.id]);
@@ -150,9 +195,14 @@ function render() {
         ${chosen().length ? `<button class="kid" onclick="allOff()">ניקוי בחירה</button>` : ''}
         <span class="note">או לסמן אחד-אחד למטה</span>
       </div>
+      <div class="bulk" style="margin-top:4px">
+        <button class="kid" onclick="openEdit()">עריכת השמות שיודפסו</button>
+        <span class="note">למשל «ליה אמיליה» שעל המדבקה צריכה להיות «ליה»</span>
+      </div>
       <div class="kids">
         ${kids.map(k => `<button class="kid ${picked[k.id] ? 'on' : ''}" onclick="tog('${k.id}')">
-          ${esc(k.first)}${dup[k.first] > 1 && k.last ? ` <small>${esc(k.last)}</small>` : ''}</button>`).join('')}
+          ${esc(printed(k))}${dup[printed(k)] > 1 && k.last ? ` <small>${esc(k.last)}</small>` : ''}
+          ${short[k.id] ? ' ·' : ''}</button>`).join('')}
       </div>
       <div class="count-line">נבחרו <b>${chosen().length}</b> מתוך ${kids.length} ·
         ${Math.ceil(chosen().length / 8) || 0} דפים, שמונה מדבקות בדף</div>
@@ -173,7 +223,7 @@ async function download() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json',
                  'Authorization': 'Bearer ' + localStorage.getItem('crm_token') },
-      body: JSON.stringify({ shape, children: list.map(k => ({ first: k.first, last: k.last })) }),
+      body: JSON.stringify({ shape, children: list.map(k => ({ first: printed(k), last: k.last })) }),
     });
     if (!res.ok) {
       let msg = 'השרת החזיר ' + res.status;
@@ -189,6 +239,39 @@ async function download() {
     showOk(`ירדו ${list.length} מדבקות · ${Math.ceil(list.length / 8)} דפים`);
   } catch (e) { showErr('ההורדה נכשלה: ' + e.message); }
   finally { btn.disabled = false; btn.textContent = label; }
+}
+
+/* ---------- עריכת השמות שיודפסו ---------- */
+// שינוי כאן נשמר בפרופיל הגן, ולכן הוא תקף גם בהדפסה הבאה ולא צריך
+// לזכור אותו כל פעם מחדש.
+function openEdit() {
+  const list = chosen();
+  if (!list.length) { showErr('לא נבחר אף ילד'); return; }
+  document.getElementById('ovBody').innerHTML = list.map(k => `
+    <div class="erow">
+      <span class="who">${esc(k.first)}${k.last ? ' ' + esc(k.last) : ''}</span>
+      <input type="text" data-id="${k.id}" value="${esc(printed(k))}" maxlength="24">
+      ${short[k.id] ? `<button class="rst" onclick="resetOne('${k.id}')">לשם המלא</button>` : ''}
+    </div>`).join('');
+  document.getElementById('ov').classList.add('show');
+}
+function closeEdit() { document.getElementById('ov').classList.remove('show'); }
+function resetOne(id) {
+  delete short[id];
+  closeEdit(); render(); openEdit();
+}
+async function saveEdit() {
+  document.querySelectorAll('#ovBody input').forEach(inp => {
+    const id = inp.dataset.id;
+    const k = kids.find(x => x.id === id);
+    const v = (inp.value || '').trim();
+    if (!k) return;
+    if (!v || v === k.first) delete short[id];
+    else short[id] = v;
+  });
+  closeEdit(); render();
+  try { await GL.set('names.short', short, 'user'); showOk('נשמר · יופיע כך גם בפעם הבאה'); }
+  catch (e) { showErr('השמירה נכשלה: ' + e.message); }
 }
 
 function showErr(m) { const el = document.getElementById('error'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 5000); }

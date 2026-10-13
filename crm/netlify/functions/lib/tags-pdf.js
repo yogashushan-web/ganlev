@@ -48,15 +48,44 @@ function fontPath(name) {
 // ---- הצורות ----
 // כל צורה מציירת בתוך ריבוע 100×100, ומחזירה את התיבה שבה מותר
 // לכתוב — כי במרכז של כוכב יש הרבה פחות מקום מאשר במרכז של ענן.
+//
+// `draw` מצייר את הגוף שנצבע במילוי. `detail` הוא קווים דקים שמצויירים
+// מעל בצבע הקו — חוט של בלון, גבעול של פרח — ושאסור שייכנסו לגוף,
+// אחרת ההקטנה שיוצרת את קו המתאר תעוות אותם.
+
+// אליפסה מסובבת כנתיב. pdfkit לא יודע לסובב אליפסה, ו-q/Q באמצע
+// בניית נתיב אינו חוקי ב-PDF — ולכן מחשבים את ארבע עקומות הבזייה.
+const K = 0.5523;
+function rotEllipse(cx, cy, rx, ry, deg) {
+  const a = deg * Math.PI / 180, co = Math.cos(a), si = Math.sin(a);
+  const P = (x, y) => [cx + x * co - y * si, cy + x * si + y * co];
+  const pts = [[0, -ry], [rx, 0], [0, ry], [-rx, 0]];
+  const ctl = [
+    [[K * rx, -ry], [rx, -K * ry]],
+    [[rx, K * ry], [K * rx, ry]],
+    [[-K * rx, ry], [-rx, K * ry]],
+    [[-rx, -K * ry], [-K * rx, -ry]],
+  ];
+  let d = 'M' + P(...pts[0]).map(n => n.toFixed(2)).join(' ');
+  for (let i = 0; i < 4; i++) {
+    const c1 = P(...ctl[i][0]), c2 = P(...ctl[i][1]), e = P(...pts[(i + 1) % 4]);
+    d += ' C' + [c1, c2, e].map(p => p.map(n => n.toFixed(2)).join(' ')).join(' ');
+  }
+  return d + ' Z';
+}
+
 const SHAPES = {
   cloud: {
     name: 'ענן',
-    box: [0.13, 0.36, 0.87, 0.70],
+    box: [0.14, 0.38, 0.86, 0.70],
     draw(doc) {
-      doc.circle(32, 50, 19);
-      doc.circle(53, 42, 23);
-      doc.circle(74, 52, 17);
-      doc.roundedRect(15, 50, 72, 22, 11);
+      // חמש אונות בגדלים שונים ובסיס רחב ושטוח. אונות זהות בגודלן
+      // נראות כשרשרת עיגולים; ענן אמיתי אינו סימטרי.
+      doc.circle(26, 56, 15);
+      doc.circle(40, 46, 20);
+      doc.circle(59, 42, 23);
+      doc.circle(77, 53, 17);
+      doc.roundedRect(13, 53, 76, 20, 10);
     },
   },
   star: {
@@ -78,30 +107,42 @@ const SHAPES = {
     name: 'לב',
     box: [0.19, 0.30, 0.81, 0.60],
     draw(doc) {
-      // שני חצאי עיגול למעלה ושתי עקומות שנפגשות בקצה התחתון
       doc.path('M50 88 C20 66 8 52 8 36 C8 22 19 13 31 13 C40 13 46 18 50 25 '
              + 'C54 18 60 13 69 13 C81 13 92 22 92 36 C92 52 80 66 50 88 Z');
     },
   },
   flower: {
     name: 'פרח',
-    box: [0.24, 0.38, 0.76, 0.62],
+    box: [0.29, 0.40, 0.71, 0.60],
     draw(doc) {
-      // שש עלי כותרת צרים סביב מרכז גדול. עלים רחבים מדי נבלעים זה
-      // בזה והצורה נקראת ככתם ולא כפרח.
-      for (let i = 0; i < 6; i++) {
-        const a = -Math.PI / 2 + i * Math.PI / 3;
-        doc.ellipse(50 + 31 * Math.cos(a), 50 + 31 * Math.sin(a), 17, 13);
+      // חמישה עלים שהציר הארוך שלהם יוצא מהמרכז החוצה. עלים
+      // אופקיים נראים כמו גלגל שיניים, לא כמו פרח.
+      //
+      // בלי גבעול בכוונה: הפרח ממלא את הריבוע, וגבעול נופל על העלה
+      // התחתון ונראה ככתם. מדבקה צריכה פרח, לא איור בוטני.
+      for (let i = 0; i < 5; i++) {
+        const deg = -90 + i * 72;
+        const a = deg * Math.PI / 180;
+        doc.path(rotEllipse(50 + 30 * Math.cos(a), 50 + 30 * Math.sin(a), 14, 21, deg + 90));
       }
-      doc.circle(50, 50, 24);
+      doc.circle(50, 50, 20);
     },
   },
   balloon: {
     name: 'בלון',
-    box: [0.19, 0.24, 0.81, 0.56],
+    box: [0.20, 0.24, 0.80, 0.56],
     draw(doc) {
-      doc.ellipse(50, 40, 33, 37);
-      doc.path('M45 75 L55 75 L50 85 Z');
+      // גוף טיפתי: רחב למעלה ומתכנס כלפי מטה. אליפסה עגולה עם משולש
+      // צמוד נקראת כבועת דיבור ולא כבלון.
+      doc.path('M50 80 C32 70 19 57 19 40 C19 21 33 8 50 8 '
+             + 'C67 8 81 21 81 40 C81 57 68 70 50 80 Z');
+      // הקשר, מופרד מהגוף — הרווח הוא מה שאומר "זה נקשר", והוא גם
+      // מה שמונע מהשניים להיראות כצורה אחת מחודדת
+      doc.path('M45 83 L55 83 L50 90 Z');
+    },
+    detail(doc) {
+      doc.moveTo(50, 90).bezierCurveTo(58, 94, 42, 96, 50, 100)
+         .lineWidth(2.4).lineCap('round').stroke();
     },
   },
 };
@@ -180,6 +221,13 @@ function buildTagsPdf(sheet) {
         };
         paint(1, C.line);
         paint(0.955, C.fill);
+        if (S.detail) {
+          doc.save();
+          doc.translate(sx, sy).scale(side / 100);
+          doc.strokeColor(C.line).fillColor(C.line);
+          S.detail(doc);
+          doc.restore();
+        }
 
         // ---- השם ----
         const [bx0, by0, bx1, by1] = S.box;
