@@ -190,7 +190,7 @@ function dayHtml(f) {
     } else if (f.canRequest) {
       act = sibRow(f)
         + `<button class="btn" onclick="go('register','${f.date}')">בקשה להרשמה</button>`
-        + `<span class="note">ההרשמה לחודש נסגרה — הבקשה תעבור לאישור הגננת.</span>`;
+        + `<span class="note">${esc(f.requestNote || '')}</span>`;
     } else {
       act = `<span class="note">${esc(f.why || '')}</span>`;
     }

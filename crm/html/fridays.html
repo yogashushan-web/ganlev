@@ -104,7 +104,7 @@ const todayIso = () => iso(new Date());
 
 const DEF = { active:true, price:150, capacity:12, siblings:true, showNames:true,
               openFrom:'', closeDaysBefore:5, cancelDaysBefore:14, staffReminderDays:10,
-              yearEnd:'' };
+              yearEnd:'', approval:'never' };
 let set = Object.assign({}, DEF), days = {}, cal = {}, staff = [], view = 'list';
 
 function fridaysOfYear(sy) {
@@ -157,7 +157,7 @@ function render() {
 function viewList() {
   const t = todayIso();
   const all = fridaysOfYear(schoolYear()).filter(d => d >= t);
-  const pend = all.reduce((n,d) => n + regsOf(d).filter(r => r.status==='pending').length, 0);
+  const pend = all.reduce((n,d) => n + regsOf(d).filter(pendOf).length, 0);
   const byMon = {};
   all.forEach(d => { (byMon[d.slice(0,7)] = byMon[d.slice(0,7)] || []).push(d); });
 
@@ -172,12 +172,15 @@ function viewList() {
     ${byMon[k].map(rowHtml).join('')}`).join('')}`;
 }
 
+// בקשה ממתינה רק אם הגן באמת דורש אישור. אחרת זו הרשמה, והכפתורים
+// לאישור ולדחייה לא אמורים להופיע בכלל.
+const pendOf = r => r.status === 'pending' && (set.approval || 'never') !== 'never';
 function rowHtml(d) {
   // סוף שנת הגן חוסם לבד. בלי זה צריך לסמן ידנית כל שישי של אוגוסט
   // בכל שנה מחדש, וזה בדיוק מה שנשכח.
   const c = cal[d] || (set.yearEnd && d > set.yearEnd ? { name: 'אחרי סיום שנת הגן' } : null);
   const regs = regsOf(d), taken = takenOn(d), cap = capOn(d);
-  const pend = regs.filter(r => r.status === 'pending');
+  const pend = regs.filter(pendOf);
   const assigned = (days[d] && days[d].staff) || [];
   const locked = todayIso() >= lockFor(d);
 
@@ -190,9 +193,9 @@ function rowHtml(d) {
       <span class="cnt ${taken>=cap?'full':''}">${taken} מתוך ${cap}</span>
       ${pend.length ? `<span class="shut" style="background:#fdf6ef;color:#8a6a23">${pend.length} ממתינות</span>` : ''}
       <span class="lock">${locked ? 'נעול' : 'פתוח עד ' + fmt(lockFor(d))}</span></div>
-    ${regs.length ? `<div class="kids">${regs.map(r => `<span class="kid ${r.status==='pending'?'pend':''}">
+    ${regs.length ? `<div class="kids">${regs.map(r => `<span class="kid ${pendOf(r)?'pend':''}">
         ${esc(r.name)}${(r.siblings||[]).length ? ' +' + r.siblings.map(esc).join(', ') : ''}
-        ${r.status==='pending'
+        ${pendOf(r)
           ? `<button onclick="decide('${d}','${r.id}',true)">אישור</button>
              <button onclick="decide('${d}','${r.id}',false)">דחייה</button>`
           : `<button onclick="removeReg('${d}','${r.id}')">הסר</button>`}
@@ -302,11 +305,23 @@ async function delCal(d) {
 
 /* ---------- הגדרות ---------- */
 function viewSet() {
+  const app = set.approval || 'never';
   const sample = ['2026-11-06','2026-12-04','2027-02-05','2027-03-05'];
   return `<div class="card">
     <h2>הגדרות ההרשמה</h2>
     <div class="sub">כל גן קובע לעצמו. מה שמוגדר כאן הוא מה שההורים רואים
       ומה שהמערכת אוכפת.</div>
+    <div class="fld"><label>אישור הגננת</label>
+      <div class="pick">
+        <button class="p ${app==='never'?'on':''}" onclick="set.approval='never';render()">לא נדרש</button>
+        <button class="p ${app==='late'?'on':''}" onclick="set.approval='late';render()">רק אחרי הסגירה</button>
+        <button class="p ${app==='always'?'on':''}" onclick="set.approval='always';render()">לכל הרשמה</button>
+      </div>
+      <div class="note">${app==='never'
+        ? 'ההורה נרשם וזה סופי. אין מה לאשר, ואף אחד לא מחכה לך.'
+        : app==='late'
+        ? 'הרשמה רגילה נכנסת מיד. אחרי שההרשמה לחודש נסגרת היא הופכת לבקשה שממתינה לך.'
+        : 'כל הרשמה ממתינה לאישור שלך לפני שהיא נכנסת.'}</div></div>
     <div class="grid2">
       <div class="fld"><label>מחיר ליום (₪)</label>
         <input type="number" id="s_price" value="${set.price}" min="0"></div>
@@ -314,7 +329,10 @@ function viewSet() {
         <input type="number" id="s_cap" value="${set.capacity}" min="1"></div>
       <div class="fld"><label>סגירה — ימים לפני תחילת החודש</label>
         <input type="number" id="s_close" value="${set.closeDaysBefore}" min="0"
-          oninput="previewLocks(this.value)"></div>
+          oninput="previewLocks(this.value)"${app==='never'?' disabled':''}>
+        ${app==='never' ? '<div class="note">אין אישור, ולכן אין סגירה — '
+          + 'הורה שנרשם מאוחר פשוט נרשם. נעילה שאין דרך לעבור אותה רק '
+          + 'חוסמת.</div>' : ''}</div>
       <div class="fld"><label>ביטול עצמאי — ימים לפני</label>
         <input type="number" id="s_cancel" value="${set.cancelDaysBefore}" min="0"></div>
       <div class="fld"><label>ההרשמה נפתחת בתאריך</label>

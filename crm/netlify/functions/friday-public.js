@@ -89,10 +89,12 @@ exports.handler = async (event) => {
           names: st.settings.showNames
             ? regs.filter(r => r.status !== 'rejected')
                   .map(r => ({ id: r.id, child_id: r.child_id, name: r.name,
-                               siblings: r.siblings || [], pending: r.status === 'pending' }))
+                               siblings: r.siblings || [],
+                               pending: F.effStatus(r, st.settings) === 'pending' }))
             : [],
           mine: regs.filter(r => r.status !== 'rejected')
-                    .map(r => ({ id: r.id, child_id: r.child_id, pending: r.status === 'pending' })),
+                    .map(r => ({ id: r.id, child_id: r.child_id,
+                                 pending: F.effStatus(r, st.settings) === 'pending' })),
         });
       });
       return json(200, {
@@ -145,8 +147,8 @@ exports.handler = async (event) => {
         const sibs = st.settings.siblings && Array.isArray(b.siblings)
           ? b.siblings.map(x => String(x || '').trim()).filter(Boolean).slice(0, 4) : [];
 
-        // אחרי הנעילה אפשר עדיין לבקש, אבל זו בקשה שממתינה לאישור —
-        // ולכן היא גם לא תופסת מקום עד שמאשרים אותה.
+        // בקשה שממתינה לאישור קיימת רק אם הגן ביקש אישור. בברירת
+        // המחדל (`approval: 'never'`) ההורה נרשם וזה סופי.
         if (!s.canRegister && !s.canRequest) {
           return json(400, { success: false, error: s.why || 'לא ניתן להירשם' });
         }
